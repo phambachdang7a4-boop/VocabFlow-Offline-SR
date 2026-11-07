@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getDictionaryEntry } from '@/data/dictionary';
-import { exampleSegments, type DictionaryEntry, type DictionaryPartOfSpeech, type DictionarySense } from '@/domain/dictionary';
+import { dictionaryDraft, exampleSegments, type DictionaryEntry, type DictionaryPartOfSpeech, type DictionarySense } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
 import { PartOfSpeechFilter } from '@/components/PartOfSpeechFilter';
@@ -15,7 +15,17 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
   id: number; bottomPad: number; onBack: () => void; backLabel?: string;
 }) {
   const c = useColors();
-  const { words } = useVocabulary();
+  const { words, saveWord, loading: bookLoading, error: bookError, reload } = useVocabulary();
+  const [saving, setSaving] = useState(false);
+  const [savedEntryId, setSavedEntryId] = useState<number | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const saveLock = useRef(false);
+  const committedEntry = useRef<number | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   const [entry, setEntry] = useState<DictionaryEntry | null>(null);
   const [senses, setSenses] = useState<DictionarySense[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -82,6 +92,23 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
     () => (entry ? words.find((w) => normalizeTerm(w.term) === normalizeTerm(entry.term)) : undefined),
     [words, entry],
   );
+  const saveSense = async (sense: DictionarySense) => {
+    if (!entry || existing || bookLoading || bookError || saveLock.current || committedEntry.current === entry.id) return;
+    const snapshot = entry;
+    saveLock.current = true;
+    setSaving(true); setSaveError(null);
+    try {
+      await saveWord(dictionaryDraft(snapshot, sense));
+      // Commit can succeed even if the provider's subsequent read fails.
+      committedEntry.current = snapshot.id;
+      if (mounted.current) setSavedEntryId(snapshot.id);
+    } catch (failure) {
+      if (mounted.current) setSaveError(failure instanceof Error ? failure.message : 'Không thể lưu từ. Hãy thử lại.');
+    } finally {
+      saveLock.current = false;
+      if (mounted.current) setSaving(false);
+    }
+  };
 
   const backRow = (
     <Pressable testID="entry-back" accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} hitSlop={8}
@@ -103,10 +130,15 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
   }
 
   const openExisting = () => { if (existing) router.push({ pathname: '/word', params: { id: String(existing.id) } }); };
+  const justSaved = savedEntryId === entry.id;
+  const inBook = !!existing || justSaved;
 
   const header = (
     <View style={{ gap: 14, marginBottom: 8 }}>
       {backRow}
+      {bookError ? <ErrorBanner message={bookError} onRetry={reload} /> : null}
+      {saveError ? <ErrorBanner message={saveError} /> : null}
+      {justSaved ? <Text testID="entry-save-success" accessibilityLiveRegion="polite" style={[styles.noticeTitle, { color: c.dictAdd }]}>Đã lưu vào Sổ từ.</Text> : null}
       <View style={{ gap: 10 }}>
         <Text style={[styles.term, { color: c.dictHead }]} selectable>{entry.term}</Text>
         {entry.pronunciations.map((p, i) => (
@@ -141,18 +173,19 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
             ) : null}
             <Text style={[styles.def, { color: c.dictHead }]} selectable>{item.definition}</Text>
           </View>
-          <Pressable testID={existing ? `entry-sense-open-${item.id}` : `entry-add-${item.id}`} accessibilityRole="button"
-            accessibilityLabel={existing ? `Mở ${entry.term} trong sổ` : `Lưu nghĩa ${index + 1} vào sổ`}
+          <Pressable testID={inBook ? `entry-sense-open-${item.id}` : `entry-add-${item.id}`} accessibilityRole="button"
+            disabled={saving || !!bookLoading || !!bookError || (justSaved && !existing)}
+            accessibilityLabel={inBook ? `Mở ${entry.term} trong sổ` : `Lưu nghĩa ${index + 1} vào sổ`}
             onPress={() => {
               if (existing) { openExisting(); return; }
-              router.push({ pathname: '/word', params: { dictionaryWordId: String(entry.id), senseId: String(item.id) } });
+              void saveSense(item);
             }}
             hitSlop={6}
             style={({ pressed }) => [styles.add, existing
               ? { backgroundColor: c.dictChip, opacity: pressed ? 0.7 : 1 }
               : { backgroundColor: pressed ? c.dictAddPressed : c.dictAdd }]}>
-            <Feather name={existing ? 'book-open' : 'plus-circle'} size={16} color={existing ? c.dictHead : c.dictAddInk} />
-            <Text style={[styles.addText, { color: existing ? c.dictHead : c.dictAddInk }]}>{existing ? 'Trong sổ' : 'Lưu từ'}</Text>
+            <Feather name={inBook ? 'book-open' : 'plus-circle'} size={16} color={existing ? c.dictHead : c.dictAddInk} />
+            <Text style={[styles.addText, { color: existing ? c.dictHead : c.dictAddInk }]}>{inBook ? 'Trong sổ' : saving ? 'Đang lưu…' : 'Lưu từ'}</Text>
           </Pressable>
         </View>
         {item.example ? (

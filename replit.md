@@ -10,6 +10,7 @@
 - Theo yêu cầu hiện tại: tạo bản không giới hạn số từ, kể cả từ đóng băng. Tạm hoãn giới hạn Free 100 từ và màn mời Premium; chỉ triển khai lại khi người dùng yêu cầu.
 - Không thêm dữ liệu mẫu, từ khởi tạo hoặc thanh toán thật.
 - Người dùng đã duyệt mở rộng Tra Từ: tích hợp kho Skypedia Anh–Việt riêng để tra cứu; chỉ đưa từ vào sổ và SRS khi người dùng chọn nghĩa rồi lưu.
+- Nút **Lưu từ** ở Tra Từ ghi ngay nghĩa được chọn vào SQLite và giữ màn tra cứu; không chuyển sang Từ mới để xác nhận. Giữ IPA, ví dụ, nguồn; chống nhấn trùng và không ghi đè từ/tiến độ đã có.
 - Người dùng yêu cầu Tra Từ theo bố cục ảnh Mochi: phần tìm kiếm xanh, nội dung nghĩa/ví dụ rõ ràng trên nền sáng và nút thêm cạnh nghĩa; tab Tra Từ nằm ngoài cùng bên trái. Giữ tên VocabFlow, không tự thêm đồng nghĩa, IELTS, cấp CEFR hay âm thanh không có dữ liệu/chức năng thật.
 - Tra Từ có gợi ý sai chính tả offline khi không khớp tiền tố: câu “Có phải bạn đang tìm từ này?” và các từ gần đúng có thể chạm để xem nghĩa. Chỉ lấy mục từ thật trong SQLite, không API/AI hoặc tự lưu; giữ lựa chọn tự ghi từ mới.
 - Người dùng yêu cầu gạch chân từ đang tra trong câu ví dụ ở Tra Từ.

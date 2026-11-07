@@ -64,7 +64,10 @@ function mount(file, services, personalWords = [], properties = {}) {
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
     'expo-router': { router: { push: route => routes.push(route) } },
-    '@/contexts/VocabularyContext': { useVocabulary: () => ({ words: personalWords }) },
+    '@/contexts/VocabularyContext': { useVocabulary: () => ({
+      words: personalWords, saveWord: services.saveWord,
+      loading: services.bookLoading ?? false, error: services.bookError ?? null, reload: async () => {},
+    }) },
     '@/data/vocabulary': { normalizeTerm }, '@/data/dictionary': services,
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
     '@/components/DictionaryEntryView': { DictionaryEntryView: 'DictionaryEntryView' },
@@ -192,16 +195,63 @@ function mount(file, services, personalWords = [], properties = {}) {
     senses: [{ id: 7, definition: 'công việc', pos: 'noun', subPos: null, example: null },
       { id: 9, definition: 'làm việc', pos: 'verb', subPos: null, example: null }] };
   for (const words of [[], [{ id: 123, term: 'WORK', frozen: true }]]) {
-    const view = mount('../components/DictionaryEntryView.tsx', { getDictionaryEntry: async () => entry }, words);
+    const savedInputs = [];
+    const view = mount('../components/DictionaryEntryView.tsx', {
+      getDictionaryEntry: async () => entry, saveWord: async input => savedInputs.push(input),
+    }, words);
     await view.settle();
     const sense = view.byId('entry-senses').props.renderItem({ item: entry.senses[1], index: 1 });
     find(sense, node => node.props?.accessibilityRole === 'button').props.onPress();
-    assert.deepEqual(view.routes[0], words.length
-      ? { pathname: '/word', params: { id: '123' } }
-      : { pathname: '/word', params: { dictionaryWordId: '42', senseId: '9' } });
+    await view.settle();
+    if (words.length) {
+      assert.deepEqual(view.routes[0], { pathname: '/word', params: { id: '123' } });
+      assert.deepEqual(savedInputs, [], 'Existing/frozen words must never be overwritten');
+    } else {
+      assert.deepEqual(view.routes, [], 'Save directly without opening a confirmation form');
+      assert.deepEqual(savedInputs, [dictionaryDomain.dictionaryDraft(entry, entry.senses[1])]);
+      assert.ok(find(view.byId('entry-senses').props.ListHeaderComponent, node => node.props?.testID === 'entry-save-success'));
+    }
+  }
+  const writes = [];
+  let completeWrite;
+  const direct = mount('../components/DictionaryEntryView.tsx', {
+    getDictionaryEntry: async () => entry,
+    saveWord: input => new Promise(resolve => { writes.push(input); completeWrite = resolve; }),
+  });
+  await direct.settle();
+  const add = sense => find(direct.byId('entry-senses').props.renderItem({ item: sense, index: 0 }), node => node.props?.accessibilityRole === 'button').props.onPress;
+  const firstPress = add(entry.senses[0]);
+  firstPress(); firstPress(); add(entry.senses[1])();
+  assert.equal(writes.length, 1, 'Double taps and competing senses cannot create two writes');
+  completeWrite(); await direct.settle();
+  firstPress();
+  assert.equal(writes.length, 1, 'Committed local marker prevents duplicate writes before context refresh');
+  assert.deepEqual(direct.routes, []);
+  let failures = 0;
+  const retrySave = mount('../components/DictionaryEntryView.tsx', {
+    getDictionaryEntry: async () => entry,
+    saveWord: async () => { if (++failures === 1) throw Error('Không thể lưu từ.'); },
+  });
+  await retrySave.settle();
+  const retryPress = () => find(retrySave.byId('entry-senses').props.renderItem({ item: entry.senses[0], index: 0 }), node => node.props?.accessibilityRole === 'button').props.onPress();
+  retryPress(); await retrySave.settle();
+  assert.ok(find(retrySave.byId('entry-senses').props.ListHeaderComponent, node => node.type === 'ErrorBanner'));
+  retryPress(); await retrySave.settle();
+  assert.equal(failures, 2);
+  assert.ok(find(retrySave.byId('entry-senses').props.ListHeaderComponent, node => node.props?.testID === 'entry-save-success'));
+  for (const state of [{ bookLoading: true }, { bookError: 'Không đọc được sổ từ' }]) {
+    const blocked = mount('../components/DictionaryEntryView.tsx', {
+      ...state, getDictionaryEntry: async () => entry, saveWord: async () => { throw Error('Must not save while blocked'); },
+    });
+    await blocked.settle();
+    const button = find(blocked.byId('entry-senses').props.renderItem({ item: entry.senses[0], index: 0 }), node => node.props?.accessibilityRole === 'button');
+    assert.equal(button.props.disabled, true);
+    button.props.onPress(); await blocked.settle();
   }
   const pending = [];
+  const filteredSaves = [];
   const filteredView = mount('../components/DictionaryEntryView.tsx', {
+    saveWord: async input => filteredSaves.push(input),
     getDictionaryEntry: (id, offset, parts) => new Promise((resolve, reject) => pending.push({ id, offset, parts: Array.isArray(parts) ? [...parts] : parts, resolve, reject })),
   });
   await filteredView.settle();
@@ -232,7 +282,9 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.deepEqual(filteredView.byId('entry-senses').props.data.map(sense => sense.id), [9], 'Old pagination must not leak nouns into verb results');
   const filteredSense = filteredView.byId('entry-senses').props.renderItem({ item: entry.senses[1], index: 0 });
   find(filteredSense, node => node.props?.testID === 'entry-add-9').props.onPress();
-  assert.deepEqual(filteredView.routes.at(-1), { pathname: '/word', params: { dictionaryWordId: '42', senseId: '9' } });
+  await filteredView.settle();
+  assert.deepEqual(filteredView.routes, []);
+  assert.deepEqual(filteredSaves, [dictionaryDomain.dictionaryDraft(entry, entry.senses[1])]);
   filteredView.byType('PartOfSpeechFilter').props.onChange([]);
   filteredView.byId('entry-senses');
   pending.at(-1).reject(Error('Cannot read filtered senses'));
