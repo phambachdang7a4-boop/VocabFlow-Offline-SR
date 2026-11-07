@@ -1,8 +1,9 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import {
   DICTIONARY_PAGE_SIZE, dictionaryDraft, lookupPrefix, validDictionaryId,
-  type DictionaryEntry, type DictionaryMatch, type DictionaryMatches, type DictionaryPronunciation, type DictionarySense,
+  type DictionaryEntry, type DictionaryMatch, type DictionaryMatches, type DictionaryPronunciation, type DictionarySense, type DictionarySuggestion,
 } from '../domain/dictionary';
+import { canSuggest, rankSuggestions, spellingVariants, suggestionTerm } from '../domain/dictionary-suggestions';
 
 function checkPage(offset: number) {
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) {
@@ -43,6 +44,34 @@ export async function entryInDictionary(db: SQLiteDatabase, id: number, offset =
     id, DICTIONARY_PAGE_SIZE + 1, offset,
   );
   return { ...word, pronunciations, senses: senses.slice(0, DICTIONARY_PAGE_SIZE), hasMore: senses.length > DICTIONARY_PAGE_SIZE };
+}
+
+export async function suggestInDictionary(db: SQLiteDatabase, query: string): Promise<DictionarySuggestion[]> {
+  const term = suggestionTerm(query);
+  if (!canSuggest(term)) return [];
+  const candidates: DictionarySuggestion[] = [];
+  const variants = spellingVariants(term);
+  // Keep bind counts below SQLite's conservative parameter limit.
+  for (let start = 0; start < variants.length; start += 160) {
+    const batch = variants.slice(start, start + 160);
+    candidates.push(...await db.getAllAsync<DictionarySuggestion>(
+      `SELECT id, word AS term FROM words
+       WHERE word COLLATE NOCASE IN (${batch.map(() => '?').join(',')})
+       ORDER BY word COLLATE NOCASE, id LIMIT 160`,
+      ...batch,
+    ));
+  }
+  // Two bounded indexed prefix ranges cover common two-edit suffix mistakes.
+  // Ranking runs only on this small pool, never all 104k dictionary words.
+  for (const prefix of new Set([term.slice(0, 3), term.slice(0, 2)])) {
+    candidates.push(...await db.getAllAsync<DictionarySuggestion>(
+      `SELECT id, word AS term FROM words
+       WHERE word LIKE ? ESCAPE '\\' AND LENGTH(word) BETWEEN ? AND ?
+       ORDER BY ABS(LENGTH(word) - ?), word COLLATE NOCASE, id LIMIT 192`,
+      `${lookupPrefix(prefix)}%`, Math.max(1, term.length - 2), term.length + 2, term.length,
+    ));
+  }
+  return rankSuggestions(term, candidates);
 }
 
 export async function draftInDictionary(db: SQLiteDatabase, id: number, senseId: number) {

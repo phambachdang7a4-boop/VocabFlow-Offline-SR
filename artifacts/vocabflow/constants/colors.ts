@@ -38,6 +38,7 @@ const colors = {
     dictAdd: '#2F9E44',
     dictAddInk: '#F4FFF6',
     dictAddPressed: '#24803A',
+    dictSuggest: '#9C6A15',
   },
   radius: 14,
 };

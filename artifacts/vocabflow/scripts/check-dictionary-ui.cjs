@@ -16,7 +16,7 @@ function find(node, predicate) {
 
 // Exercise real screen callbacks/effects without a private-preview login or
 // native UI dependency. This is a logic regression test, not a touch/E2E test.
-function mount(file, services, personalWords = []) {
+function mount(file, services, personalWords = [], properties = {}) {
   const slots = [], effects = [], timers = new Map();
   let cursor, dirty = true, tree, timerId = 0;
   const react = {
@@ -52,6 +52,7 @@ function mount(file, services, personalWords = []) {
     '@/data/vocabulary': { normalizeTerm }, '@/data/dictionary': services,
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
     '@/components/DictionaryEntryView': { DictionaryEntryView: 'DictionaryEntryView' },
+    '@/components/DictionarySuggestions': { DictionarySuggestions: 'DictionarySuggestions' },
     '@/hooks/useDictionary': { useDictionary: () => ({ ready: true }) },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/components/ui': { Button: 'Button', EmptyState: 'EmptyState', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
@@ -61,8 +62,8 @@ function mount(file, services, personalWords = []) {
     setTimeout: fn => { const id = ++timerId; timers.set(id, fn); return id; },
     clearTimeout: id => timers.delete(id),
   });
-  const Component = loaded.default ?? loaded.DictionaryEntryView;
-  const props = { id: 42, bottomPad: 100, onBack() {} };
+  const Component = loaded.default ?? loaded.DictionaryEntryView ?? loaded.DictionarySuggestions;
+  const props = { id: 42, bottomPad: 100, onBack() {}, ...properties };
   const render = () => {
     for (let limit = 0; dirty; limit++) {
       assert.ok(limit < 30, 'Screen must settle without an effect loop');
@@ -83,8 +84,10 @@ function mount(file, services, personalWords = []) {
 
 (async () => {
   const calls = [];
+  const suggestionCalls = [];
   const screen = mount('../app/(tabs)/dictionary.tsx', {
     searchDictionary: (term, offset) => new Promise(resolve => calls.push({ term, offset, resolve })),
+    suggestDictionary: term => new Promise((resolve, reject) => suggestionCalls.push({ term, resolve, reject })),
   });
   screen.byId('dictionary-search').props.onChangeText('job');
   screen.byId('dictionary-submit').props.onPress();
@@ -114,6 +117,58 @@ function mount(file, services, personalWords = []) {
   await screen.settle();
   assert.equal(screen.byId('dictionary-search').props.value, '');
   assert.equal(screen.byType('DictionaryEntryView'), undefined);
+  assert.equal(suggestionCalls.length, 0, 'Ordinary prefix matches never invoke spelling suggestions');
+
+  screen.byId('dictionary-search').props.onChangeText('sincth');
+  screen.timers();
+  calls.at(-1).resolve({ items: [], hasMore: false });
+  await screen.settle();
+  assert.equal(suggestionCalls.at(-1).term, 'sincth');
+  assert.ok(screen.byType('Skeleton'), 'Keep loading until suggestions finish');
+  suggestionCalls.at(-1).resolve([{ id: 91, term: 'since' }]);
+  await screen.settle();
+  screen.byType('DictionarySuggestions').props.onAddManual();
+  assert.equal(screen.routes.at(-1), '/word', 'A near-match must not prevent deliberate manual creation');
+  screen.byType('DictionarySuggestions').props.onPick({ id: 91, term: 'since' });
+  assert.equal(screen.byId('dictionary-search').props.value, 'since');
+  assert.equal(screen.byType('DictionaryEntryView').props.id, 91);
+  calls.at(-1).resolve({ items: [{ id: 91, term: 'since', meaning: 'kể từ' }], hasMore: false });
+  await screen.settle();
+  screen.byType('DictionaryEntryView').props.onBack();
+  assert.equal(screen.byId('dictionary-results').props.data[0].term, 'since');
+
+  screen.byId('dictionary-search').props.onChangeText('oldtypo');
+  screen.timers();
+  calls.at(-1).resolve({ items: [], hasMore: false });
+  await screen.settle();
+  screen.byId('dictionary-search').props.onChangeText('hello');
+  suggestionCalls.at(-1).resolve([{ id: 91, term: 'since' }]);
+  await screen.settle();
+  assert.equal(screen.byType('DictionarySuggestions'), undefined, 'Late suggestions cannot replace a newer query');
+  screen.byId('dictionary-clear').props.onPress();
+
+  screen.byId('dictionary-search').props.onChangeText('heelo');
+  screen.byId('dictionary-submit').props.onPress();
+  await screen.settle();
+  calls.at(-1).resolve({ items: [], hasMore: false });
+  await screen.settle();
+  suggestionCalls.at(-1).reject(Error('SQLite suggestion read failed'));
+  await screen.settle();
+  assert.equal(screen.byType('ErrorBanner').props.message, 'SQLite suggestion read failed', 'Storage failures must not pretend no matches exist');
+
+  screen.byId('dictionary-search').props.onChangeText('zzzzzzz');
+  screen.timers();
+  calls.at(-1).resolve({ items: [], hasMore: false });
+  await screen.settle();
+  suggestionCalls.at(-1).resolve([]);
+  await screen.settle();
+  assert.ok(screen.byId('dictionary-add-manual'), 'Keep deliberate manual entry if there is no close word');
+  const picked = [];
+  const suggestionList = mount('../components/DictionarySuggestions.tsx', {}, [], {
+    items: [{ id: 91, term: 'since' }], onPick: item => picked.push(item),
+  });
+  suggestionList.byId('dictionary-suggestion-91').props.onPress();
+  assert.deepEqual(picked, [{ id: 91, term: 'since' }]);
 
   const entry = { id: 42, term: 'work', pronunciations: [], hasMore: false,
     senses: [{ id: 7, definition: 'công việc', pos: 'noun', subPos: null, example: null },
@@ -131,5 +186,5 @@ function mount(file, services, personalWords = []) {
   for (const pattern of [/NativeTabs\.Trigger name="([^"]+)"/g, /Tabs\.Screen name="([^"]+)"/g]) {
     assert.deepEqual([...tabs.matchAll(pattern)].map(match => match[1]), ['dictionary', 'index', 'review', 'settings']);
   }
-  console.log('PASS: immediate/exact search without duplicate requests; stale response protection; inline selection/back/clear; correct per-sense draft; existing frozen word preservation; both leftmost tab orders.');
+  console.log('PASS: exact/prefix search; typo suggestion loading/select/back/clear; stale lookup/suggestion rejection; visible suggestion errors; manual fallback; correct per-sense save; existing/frozen preservation; leftmost tab order.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

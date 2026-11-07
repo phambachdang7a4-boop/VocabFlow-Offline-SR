@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
-import { searchDictionary } from '@/data/dictionary';
-import { type DictionaryMatch } from '@/domain/dictionary';
+import { searchDictionary, suggestDictionary } from '@/data/dictionary';
+import { type DictionaryMatch, type DictionarySuggestion } from '@/domain/dictionary';
+import { DictionarySuggestions } from '@/components/DictionarySuggestions';
 import { DictionaryGate } from '@/components/DictionaryGate';
 import { DictionaryEntryView } from '@/components/DictionaryEntryView';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -31,6 +32,7 @@ export default function DictionaryScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
+  const [suggestions, setSuggestions] = useState<DictionarySuggestion[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const reqRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,6 +49,7 @@ export default function DictionaryScreen() {
     const id = ++reqRef.current;
     setError(null);
     setLoadingMore(false);
+    setSuggestions([]);
     if (!dict.ready || !debounced) { setItems([]); setHasMore(false); setLoading(false); return; }
     setLoading(true);
     searchDictionary(debounced, 0).then(
@@ -57,9 +60,18 @@ export default function DictionaryScreen() {
           const exact = r.items.find((item) => normalizeTerm(item.term) === normalizeTerm(debounced));
           if (exact) setOpenId(exact.id);
         }
+        if (r.items.length === 0) {
+          // Typo help only after an empty first page; loading stays on until done.
+          return suggestDictionary(debounced).then(
+            (s) => { if (reqRef.current === id) setSuggestions(s); },
+          );
+        }
       },
-      (e) => { if (reqRef.current === id) { setItems([]); setHasMore(false); setError(e instanceof Error ? e.message : 'Không thể tra cứu.'); } },
-    ).finally(() => { if (reqRef.current === id) setLoading(false); });
+    ).catch(e => {
+      if (reqRef.current !== id) return;
+      setItems([]); setSuggestions([]); setHasMore(false);
+      setError(e instanceof Error ? e.message : 'Không thể tra cứu hoặc gợi ý từ.');
+    }).finally(() => { if (reqRef.current === id) setLoading(false); });
   }, [lookup, dict.ready, retryTick]);
 
   const onChange = (v: string) => {
@@ -67,7 +79,7 @@ export default function DictionaryScreen() {
     // must not reopen a word after the user has started typing something else.
     reqRef.current += 1;
     if (debounceRef.current !== null) clearTimeout(debounceRef.current);
-    setQ(v); setOpenId(null); setItems([]); setHasMore(false);
+    setQ(v); setOpenId(null); setItems([]); setSuggestions([]); setHasMore(false);
     setError(null); setLoadingMore(false); setLoading(!!v.trim());
     if (!v.trim()) {
       setLookup({ term: '', openExact: false });
@@ -87,10 +99,22 @@ export default function DictionaryScreen() {
     reqRef.current += 1;
     if (debounceRef.current !== null) clearTimeout(debounceRef.current);
     debounceRef.current = null;
-    setOpenId(null); setItems([]); setLoading(true);
+    setOpenId(null); setItems([]); setSuggestions([]); setLoading(true);
     // One effect owns both typed and submitted searches, so submit cannot race
     // a second debounce-triggered request and lose its exact-match action.
     setLookup({ term, openExact: true });
+  };
+
+  const pickSuggestion = (s: DictionarySuggestion) => {
+    Keyboard.dismiss();
+    reqRef.current += 1;
+    if (debounceRef.current !== null) clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    setQ(s.term); setSuggestions([]); setItems([]); setHasMore(false);
+    setError(null); setLoadingMore(false); setLoading(true);
+    setOpenId(s.id);
+    // Refresh the list for the corrected term behind the inline entry so Back is right.
+    setLookup({ term: s.term, openExact: false });
   };
 
   const loadMore = () => {
@@ -150,6 +174,10 @@ export default function DictionaryScreen() {
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: bottom }} keyboardShouldPersistTaps="handled">
       <ErrorBanner message={error} onRetry={() => setRetryTick((n) => n + 1)} />
     </ScrollView>
+  );
+  else if (items.length === 0 && suggestions.length > 0) body = (
+    <DictionarySuggestions items={suggestions} onPick={pickSuggestion} bottomPad={bottom}
+      onAddManual={() => router.push('/word')} />
   );
   else if (items.length === 0) body = (
     <EmptyState icon="feather" title="Không có mục từ phù hợp" body={`Không tìm thấy từ bắt đầu bằng “${debounced}”. Bạn vẫn có thể tự ghi từ này vào sổ.`}>

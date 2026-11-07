@@ -33,13 +33,21 @@ function adapter(filename, readOnly = false) {
   const domain = loadTs(join(__dirname, '../domain/dictionary.ts'));
   const download = loadTs(join(__dirname, '../domain/dictionary-download.ts'), { './dictionary': domain });
   const importer = loadTs(join(__dirname, '../domain/dictionary-import.ts'));
+  const spelling = loadTs(join(__dirname, '../domain/dictionary-suggestions.ts'));
+  assert.equal(spelling.spellingDistance('recieve', 'receive'), 1);
+  assert.equal(spelling.spellingDistance('sincth', 'since'), 2);
+  assert.equal(spelling.suggestionTerm('  HÉLLO  '), 'hello');
+  assert.ok(spelling.spellingVariants('a'.repeat(32)).length <= spelling.SPELLING_VARIANT_LIMIT);
   const publicUrl = `https://raw.githubusercontent.com/skypediacode/english-vietnamese-dictionary/${domain.DICTIONARY.commit}/dictionary_en_vi.db`;
   assert.equal(download.dictionaryDownloadUrl(), publicUrl, 'Public data must not require preview login or an API domain');
   const { DICTIONARY, DICTIONARY_PAGE_SIZE } = domain;
   const bytes = readFileSync(source);
   assert.equal(bytes.length, DICTIONARY.bytes);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), DICTIONARY.sha256);
-  const queries = loadTs(join(__dirname, '../data/dictionary-queries.ts'), { '../domain/dictionary': domain });
+  const queries = loadTs(join(__dirname, '../data/dictionary-queries.ts'), {
+    '../domain/dictionary': domain,
+    '../domain/dictionary-suggestions': spelling,
+  });
   const reference = adapter(source, true);
   assert.equal(reference.handle.prepare('SELECT count(*) AS n FROM words').get().n, DICTIONARY.wordCount);
   assert.equal(reference.handle.prepare('SELECT count(*) AS n FROM definitions').get().n, DICTIONARY.definitionCount);
@@ -134,11 +142,26 @@ function adapter(filename, readOnly = false) {
   await assert.rejects(repo.searchDictionary('hello'), /Cần xác nhận/);
   await assert.rejects(repo.getDictionaryEntry(hello.id), /Cần xác nhận/);
   await assert.rejects(repo.getDictionaryDraft(hello.id, sense.id), /Cần xác nhận/);
+  await assert.rejects(repo.suggestDictionary('helo'), /Cần xác nhận/);
   assert.equal(downloads, 0, 'Deep links and background readers cannot bypass consent');
   assert.equal(deleted.length, 0, 'Waiting for permission does not delete any cache');
   const loaded = await repo.openDictionary(stage => stages.push(stage), { allowDownload: true });
   assert.deepEqual(stages, ['checking', 'downloading', 'verifying', 'importing', 'ready']);
   assert.equal(downloads, 1);
+  for (const [typo, expected] of [['sincth', 'since'], ['helo', 'hello'], ['recieve', 'receive'], ['langauge', 'language'], ['xello', 'hello']]) {
+    let reads = 0;
+    const results = await queries.suggestInDictionary({
+      getAllAsync: async (sql, ...parameters) => { reads++; return loaded.getAllAsync(sql, ...parameters); },
+    }, typo);
+    assert.ok(results.some(item => item.term.toLowerCase() === expected), `${typo} should suggest ${expected}: ${results.map(item => item.term).join(', ')}`);
+    assert.ok(results.length <= 10);
+    assert.equal(new Set(results.map(item => item.term.toLowerCase())).size, results.length);
+    assert.ok(reads <= Math.ceil(spelling.SPELLING_VARIANT_LIMIT / 160) + 2, 'Every fuzzy lookup has a bounded number of indexed probes');
+  }
+  assert.match(loaded.handle.prepare('EXPLAIN QUERY PLAN SELECT id,word FROM words WHERE word COLLATE NOCASE IN (?)').all('hello').map(row => row.detail).join(' '), /SEARCH.*idx_vocabflow_words_nocase/i);
+  for (const query of ['', '%', '_', "' OR 1=1--", 'a'.repeat(33), 'zzzzzzzz']) {
+    assert.deepEqual(await repo.suggestDictionary(query), []);
+  }
   assert.match(loaded.handle.prepare('EXPLAIN QUERY PLAN SELECT id FROM words WHERE word LIKE ? ORDER BY word COLLATE NOCASE,id').all('a%').map(row => row.detail).join(' '), /idx_vocabflow_words_nocase/);
   await assert.rejects(loaded.runAsync("DELETE FROM words"), /readonly/);
   await loaded.closeAsync();
@@ -148,6 +171,7 @@ function adapter(filename, readOnly = false) {
   const reopened = await repo.openDictionary(stage => offlineStages.push(stage));
   assert.deepEqual(offlineStages, ['checking', 'ready'], 'Reopening cached dictionary is fully offline');
   assert.ok((await repo.searchDictionary('hello')).items.some(row => row.id === hello.id));
+  assert.ok((await repo.suggestDictionary('helo')).some(row => row.id === hello.id), 'Spelling suggestions must work without a network');
   assert.equal((await repo.getDictionaryDraft(hello.id, sense.id)).meaning, draft.meaning);
   await reopened.closeAsync();
 
@@ -172,7 +196,7 @@ function adapter(filename, readOnly = false) {
   repo = repository(async () => new Response(Buffer.alloc(DICTIONARY.bytes)));
   await assert.rejects(repo.openDictionary(undefined, { allowDownload: true }), /không đúng phiên bản/);
   assert.deepEqual((await personal.repo.listWords())[0], snapshot);
-  console.log('PASS: pinned public no-login download URL; no cookies; no transfer before consent; fresh permission on retry; offline cache; real 104,829-word SQLite; paging; draft/save/SRS; duplicate/freeze preservation; verified import and personal-data isolation.');
+  console.log('PASS: bounded indexed typo suggestions on real data and offline; pinned public no-login download; no transfer before consent; retry approval; paging; draft/save/SRS; duplicate/freeze preservation; verified import and personal-data isolation.');
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;

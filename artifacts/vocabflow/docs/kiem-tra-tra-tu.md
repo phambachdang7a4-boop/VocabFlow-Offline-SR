@@ -21,6 +21,8 @@
 - Sau khi xác minh, app hiện **Đã tải xong. Đang nhập từ điển vào SQLite trên máy…**. Bản tải gốc được kiểm SHA-256 trước; bản sao để nhập được chuẩn hóa chế độ nhật ký SQLite, không sửa nội dung từ hay sổ cá nhân.
 - Nhập một từ tiếng Anh, chẳng hạn từ bạn đang cần học. Tìm theo tiền tố, bấm một kết quả, kiểm tra nghĩa/IPA/ví dụ.
 - Thử một chuỗi không có trong nguồn: app báo không có mục từ, vẫn cho tự ghi từ mới.
+- Thử gõ `sincth`, `recieve` hoặc `langauge` sau khi kho đã nạp: nếu không có kết quả tiền tố, app hiện **Có phải bạn đang tìm từ này?** và gợi ý từ gần đúng (`since`, `receive`, `language`). Chạm gợi ý để sửa ô tìm và mở đúng mục từ; không tự lưu vào sổ.
+- Gợi ý chạy trên SQLite đã nạp, không tải thêm dữ liệu hay gửi từ tra cứu lên mạng. Tối đa 10 từ gần đúng cho truy vấn 2–32 ký tự, có xử lý thiếu/thừa/sai/đảo chữ. Đổi hoặc xóa truy vấn trong lúc đang gợi ý không được hiện lại kết quả cũ. Không có từ đủ gần thì giữ nút tự ghi từ mới.
 
 ### 2. Lưu để ôn và chống trùng
 

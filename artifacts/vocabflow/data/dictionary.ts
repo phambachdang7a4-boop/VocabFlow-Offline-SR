@@ -3,7 +3,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { DICTIONARY, type DictionaryStage } from '../domain/dictionary';
 import { dictionaryDownloadUrl } from '../domain/dictionary-download';
 import { dictionaryImportBytes } from '../domain/dictionary-import';
-import { draftInDictionary, entryInDictionary, searchInDictionary } from './dictionary-queries';
+import { draftInDictionary, entryInDictionary, searchInDictionary, suggestInDictionary } from './dictionary-queries';
 import { openDatabaseSafely, storageFailureMessage } from './sqlite-connection';
 
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
@@ -93,6 +93,9 @@ export function openDictionary(onStage?: (stage: DictionaryStage) => void, optio
 
 export async function searchDictionary(query: string, offset = 0) {
   return searchInDictionary(await openDictionary(), query, offset);
+}
+export async function suggestDictionary(query: string) {
+  return suggestInDictionary(await openDictionary(), query);
 }
 export async function getDictionaryEntry(id: number, offset = 0) {
   return entryInDictionary(await openDictionary(), id, offset);
