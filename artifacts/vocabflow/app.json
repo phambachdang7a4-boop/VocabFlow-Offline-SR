@@ -10,7 +10,9 @@
     "ios": {
       "supportsTablet": false
     },
-    "android": {},
+    "android": {
+      "package": "com.vocabflow.app"
+    },
     "web": {
       "favicon": "./assets/images/vocabflow-icon.png",
       "output": "static"
