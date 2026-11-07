@@ -90,42 +90,62 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const graded = outcome?.action === 'grade' ? outcome : null;
   const tone = graded ? (graded.correct ? c.successText : c.destructiveText) : c.primary;
   const toneSoft = graded ? (graded.correct ? c.reviewRightSoft : c.destructiveSoft) : c.secondary;
-  const hintPattern = exercise.hint ?? Array.from(word.term).map(char => /[a-z0-9]/i.test(char) ? '_' : char).join('');
-  const answerPlaceholder = hintPattern;
-  const answerWidth = Math.max(96, Math.min(310, Array.from(word.term).length * (exercise.kind === 'cloze' ? 16 : 19) + 28));
+  const hintPattern = exercise.hint ?? Array.from(word.term).map(char => /[\p{L}\p{N}]/u.test(char) ? '_' : char).join('');
   const sentenceAnswer = exercise.kind === 'cloze';
+  const characters = Array.from(word.term.normalize('NFKC'));
+  const hintCharacters = Array.from(hintPattern.normalize('NFKC'));
+  const typedCharacters = Array.from(typed.normalize('NFKC').trim().replace(/\s+/g, ' '));
+  const cellWidth = sentenceAnswer ? 25 : 32;
+  const cellHeight = sentenceAnswer ? 36 : 44;
+  const cellGap = sentenceAnswer ? 3 : 4;
+  const spaceGap = sentenceAnswer ? 8 : 12;
+  const letterCount = characters.filter(char => char !== ' ').length;
+  const spaceCount = characters.filter(char => char === ' ').length;
+  const answerWidth = Math.max(cellWidth + 8, Math.min(
+    310,
+    letterCount * cellWidth + Math.max(0, letterCount - 1) * cellGap + spaceCount * spaceGap + 8,
+  ));
+  const answerCells = characters.map((char, index) => {
+    if (char === ' ') return <View key={`space-${index}`} style={{ width: spaceGap, height: cellHeight }} />;
+    const typedChar = typedCharacters[index];
+    const hintChar = hintCharacters[index];
+    const visibleChar = typedChar ?? (hintChar && hintChar !== '_' ? hintChar : '');
+    return (
+      <View key={`slot-${index}`} testID={`review-letter-slot-${index}`}
+        style={[styles.letterSlot, { width: cellWidth, height: cellHeight, borderColor: answered ? tone : c.border, backgroundColor: c.input }]}>
+        <Text testID={`review-letter-value-${index}`} style={[styles.letterValue, { color: visibleChar ? c.primary : c.mutedForeground }]}>
+          {visibleChar}
+        </Text>
+      </View>
+    );
+  });
   const answerInput = (
-    <TextInput
-      testID="review-answer-input"
-      value={answered && graded ? graded.typed : typed}
-      onChangeText={setTyped}
-      editable={!answered && !blocked}
-      placeholder={answerPlaceholder}
-      placeholderTextColor={c.mutedForeground}
-      autoCorrect={false}
-      spellCheck={false}
-      autoCapitalize="none"
-      autoComplete="off"
-      maxLength={200}
-      returnKeyType="done"
-      onSubmitEditing={check}
-      blurOnSubmit
-      accessibilityLabel={exercise.hint
-        ? `Điền từ; gợi ý ${Array.from(exercise.hint).join(' ')}`
-        : 'Điền từ vào chỗ trống'}
-      style={[
-        styles.answerInput,
-        sentenceAnswer ? styles.sentenceAnswer : styles.meaningAnswer,
-        {
-          width: answerWidth,
-          backgroundColor: c.input,
-          color: c.foreground,
-          borderColor: answered ? tone : c.border,
-          borderBottomColor: answered ? tone : c.reviewHint,
-          borderRadius: sentenceAnswer ? 9 : c.radius + 2,
-        },
-      ]}
-    />
+    <View testID="review-answer-slots" style={[styles.answerSlots, { width: answerWidth, minHeight: cellHeight + 8, rowGap: cellGap, columnGap: cellGap }]}>
+      {answerCells}
+      <TextInput
+        testID="review-answer-input"
+        value={typed}
+        selection={{ start: typed.length, end: typed.length }}
+        onChangeText={setTyped}
+        editable={!answered && !blocked}
+        placeholder=""
+        autoCorrect={false}
+        spellCheck={false}
+        autoCapitalize="none"
+        autoComplete="off"
+        maxLength={Math.min(200, characters.length)}
+        returnKeyType="done"
+        onSubmitEditing={check}
+        blurOnSubmit
+        caretHidden
+        selectionColor="transparent"
+        accessibilityLabel={exercise.hint
+          ? `Điền từng chữ vào ô. Gợi ý: ${Array.from(exercise.hint).join(' ')}`
+          : 'Điền từng chữ vào các ô trống'}
+        accessibilityHint="Chữ đã gõ sẽ thay gợi ý ở đúng ô đó; các gợi ý còn lại vẫn giữ nguyên."
+        style={styles.hiddenInput}
+      />
+    </View>
   );
 
   const inlinePrompt = () => {
@@ -229,12 +249,13 @@ const styles = StyleSheet.create({
   sentenceFlow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 4, paddingHorizontal: 2 },
   sentenceToken: { fontFamily: F.m, fontSize: 18, lineHeight: 28 },
   extraBlank: { fontFamily: F.s, fontSize: 18, letterSpacing: 2, paddingHorizontal: 4 },
+  answerSlots: { position: 'relative', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', justifyContent: 'center', padding: 4 },
+  letterSlot: { borderWidth: 1.5, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
+  letterValue: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
+  hiddenInput: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 2, opacity: 0.01, color: 'transparent', backgroundColor: 'transparent', borderWidth: 0, padding: 0, margin: 0 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   meaning: { fontFamily: F.b, fontSize: 24, lineHeight: 32, textAlign: 'center' },
   small: { fontFamily: F.m, fontSize: 13, lineHeight: 19 },
-  answerInput: { borderWidth: 1.5, borderBottomWidth: 2, paddingHorizontal: 12, paddingVertical: 10, fontFamily: F.s, fontSize: 18, letterSpacing: 2, textAlign: 'center' },
-  sentenceAnswer: { minHeight: 42, paddingHorizontal: 7, paddingVertical: 6, fontSize: 17, flexShrink: 0 },
-  meaningAnswer: { minHeight: 56, paddingHorizontal: 14, paddingVertical: 12, fontSize: 20 },
   result: { padding: 16, gap: 6 },
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },

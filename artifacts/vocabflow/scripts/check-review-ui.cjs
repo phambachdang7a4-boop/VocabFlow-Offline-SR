@@ -194,14 +194,20 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   });
   assert.ok(find(card.byId('review-inline-meaning'), node => node.props?.testID === 'review-answer-input'),
     'Meaning answer must be entered in the answer blank below the meaning');
-  assert.ok(card.byId('review-answer-input').props.placeholder.includes('t'),
-    'The level hint must be shown inside the answer blank');
+  const initialSlots = Array.from({ length: 4 }, (_, index) =>
+    card.byId(`review-letter-value-${index}`).props.children.join(''));
+  assert.ok(initialSlots.some(Boolean), 'Level 1 shows revealed letters in their own slots');
   assert.equal(card.byId('flashcard'), undefined);
   assert.equal(card.byId('review-correct'), undefined);
   assert.equal(card.byId('review-answer-correct'), undefined);
   assert.equal(card.byId('review-check').props.disabled, true);
   card.byId('review-answer-input').props.onSubmitEditing();
   assert.equal(calls.length, 0, 'Empty answer must not submit');
+  card.byId('review-answer-input').props.onChangeText('X');
+  const afterOneLetter = Array.from({ length: 4 }, (_, index) =>
+    card.byId(`review-letter-value-${index}`).props.children.join(''));
+  assert.equal(afterOneLetter[0], 'X', 'Typed letter overwrites the hint in the same slot');
+  assert.deepEqual(afterOneLetter.slice(1), initialSlots.slice(1), 'Hints in untouched slots remain visible');
   card.byId('review-answer-input').props.onChangeText('  TEST ');
   const answer = card.byId('review-check').props.onPress;
   answer(); answer();
@@ -247,8 +253,10 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
     assert.equal(high.byId('review-answer-correct'), undefined);
     assert.equal(high.byId('review-answer-input').props.autoCorrect, false);
     assert.equal(high.byId('review-answer-input').props.spellCheck, false);
-    assert.ok(/^_/.test(high.byId('review-answer-input').props.placeholder),
-      'High-level reviews show only blank letter slots, not a letter hint');
+    const highLevelSlots = Array.from({ length: 4 }, (_, index) =>
+      high.byId(`review-letter-value-${index}`).props.children.join(''));
+    assert.ok(highLevelSlots.every(value => !value.trim()),
+      'High-level reviews keep all letter slots blank without revealing hints');
   }
   const cloze = mount('../components/ReviewCard.tsx', {
     ...makeProps(),
@@ -256,6 +264,11 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   });
   assert.ok(find(cloze.byId('review-inline-sentence'), node => node.props?.testID === 'review-answer-input'),
     'Cloze answer must be entered directly inside the sentence blank');
+  assert.equal(cloze.byId('review-letter-value-0').props.children.join(''), 't');
+  cloze.byId('review-answer-input').props.onChangeText('a');
+  assert.equal(cloze.byId('review-letter-value-0').props.children.join(''), 'a');
+  assert.equal(cloze.byId('review-letter-value-1').props.children.join(''), '',
+    'Typing in one slot must not remove or replace hints in other slots');
   const freezeCalls = [];
   const freezeCard = mount('../components/ReviewCard.tsx', makeProps(), {
     setWordFrozen: async (...args) => { freezeCalls.push(args); },
