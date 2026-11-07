@@ -1,6 +1,6 @@
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import type { VocabularyWord, WordInput } from './types';
-import { applyReview, initialProgress, localDay, rescheduleProgress, type SrsProgress } from '../domain/srs';
+import { applyReview, freezeProgress, initialProgress, localDay, rescheduleProgress, unfreezeProgress, type SrsProgress } from '../domain/srs';
 
 let connection: Promise<SQLiteDatabase> | undefined;
 
@@ -13,7 +13,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 3) {
+    if ((version?.user_version ?? 0) > 4) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -64,7 +64,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     if ((version?.user_version ?? 0) < 3) {
       await db.withTransactionAsync(async () => {
         const rows = await db.getAllAsync<Omit<SrsProgress, 'completed'> & { wordId: number; completed: number }>(
-          `SELECT word_id AS wordId, level, learned_on AS learnedOn, next_review_on AS nextReviewOn,
+          `SELECT word_id AS wordId, level, learned_on AS learnedOn, next_review_on AS nextReviewOn, 0 AS frozen,
              completed, review_count AS reviewCount, last_reviewed_on AS lastReviewedOn FROM word_progress`,
         );
         for (const row of rows) {
@@ -75,6 +75,14 @@ async function initialize(): Promise<SQLiteDatabase> {
           );
         }
         await db.execAsync('PRAGMA user_version = 3;');
+      });
+    }
+    if ((version?.user_version ?? 0) < 4) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          ALTER TABLE word_progress ADD COLUMN frozen INTEGER NOT NULL DEFAULT 0 CHECK (frozen IN (0, 1));
+          PRAGMA user_version = 4;
+        `);
       });
     }
     return db;
@@ -105,15 +113,15 @@ function serialize<T>(operation: () => Promise<T>): Promise<T> {
 export function listWords(): Promise<VocabularyWord[]> {
   return serialize(async () => {
     const db = await database();
-    const rows = await db.getAllAsync<Omit<VocabularyWord, 'completed'> & { completed: number }>(`
+    const rows = await db.getAllAsync<Omit<VocabularyWord, 'completed' | 'frozen'> & { completed: number; frozen: number }>(`
       SELECT w.id, w.term, w.meaning, w.ipa, w.example, w.note,
         w.created_at AS createdAt, w.updated_at AS updatedAt,
         p.review_count AS reviewCount, p.level, p.learned_on AS learnedOn,
-        p.next_review_on AS nextReviewOn, p.completed, p.last_reviewed_on AS lastReviewedOn
+        p.next_review_on AS nextReviewOn, p.completed, p.last_reviewed_on AS lastReviewedOn, p.frozen
       FROM words w JOIN word_progress p ON p.word_id = w.id
       ORDER BY w.created_at DESC, w.id DESC
     `);
-    return rows.map(row => ({ ...row, completed: row.completed === 1 }));
+    return rows.map(row => ({ ...row, completed: row.completed === 1, frozen: row.frozen === 1 }));
   });
 }
 
@@ -176,16 +184,17 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
     }
     const db = await database();
     await db.withTransactionAsync(async () => {
-      const row = await db.getFirstAsync<Omit<VocabularyWord, 'completed'> & { completed: number }>(
-        `SELECT level, learned_on AS learnedOn, next_review_on AS nextReviewOn, completed,
+      const row = await db.getFirstAsync<Omit<VocabularyWord, 'completed' | 'frozen'> & { completed: number; frozen: number }>(
+        `SELECT level, learned_on AS learnedOn, next_review_on AS nextReviewOn, completed, frozen,
            review_count AS reviewCount, last_reviewed_on AS lastReviewedOn
          FROM word_progress WHERE word_id = ?`, id,
       );
       if (!row) throw new Error('Từ này không còn tồn tại.');
+      if (row.frozen) throw new Error('Từ này đã đóng băng, không thể chấm điểm ôn tập.');
       if (row.reviewCount !== expectedReviewCount) {
         throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
       }
-      const next = applyReview({ ...row, completed: row.completed === 1 }, correct, localDay(new Date()));
+      const next = applyReview({ ...row, completed: row.completed === 1, frozen: row.frozen === 1 }, correct, localDay(new Date()));
       const result = await db.runAsync(
         `UPDATE word_progress SET learned_on = ?, level = ?, next_review_on = ?, completed = ?,
            review_count = ?, last_reviewed_on = ? WHERE word_id = ? AND review_count = ?`,
@@ -193,6 +202,30 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
         next.lastReviewedOn, id, expectedReviewCount,
       );
       if (result.changes !== 1) throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
+    });
+  });
+}
+
+export function setWordFrozen(id: number, frozen: boolean): Promise<void> {
+  return serialize(async () => {
+    if (!Number.isSafeInteger(id) || id < 1 || typeof frozen !== 'boolean') {
+      throw new Error('Trạng thái đóng băng không hợp lệ.');
+    }
+    const db = await database();
+    await db.withTransactionAsync(async () => {
+      const row = await db.getFirstAsync<Omit<SrsProgress, 'completed' | 'frozen'> & { completed: number; frozen: number }>(
+        `SELECT level, learned_on AS learnedOn, next_review_on AS nextReviewOn, completed, frozen,
+           review_count AS reviewCount, last_reviewed_on AS lastReviewedOn
+         FROM word_progress WHERE word_id = ?`, id,
+      );
+      if (!row) throw new Error('Từ này không còn tồn tại.');
+      if ((row.frozen === 1) === frozen) return;
+      const state = { ...row, completed: row.completed === 1, frozen: row.frozen === 1 };
+      const next = frozen ? freezeProgress(state) : unfreezeProgress(state, localDay(new Date()));
+      await db.runAsync(
+        'UPDATE word_progress SET frozen = ?, level = ?, next_review_on = ?, completed = ? WHERE word_id = ?',
+        frozen ? 1 : 0, next.level, next.nextReviewOn, next.completed ? 1 : 0, id,
+      );
     });
   });
 }

@@ -6,7 +6,8 @@
 
 - Bước 1: quản lý từ cá nhân, SQLite, điều hướng Danh sách từ / Thêm–Sửa từ / Ôn tập / Cài đặt.
 - Bước 2: SRS 6 cấp, chỉ ôn từ đến hạn (kể cả quá hạn), lưu tiến độ SQLite.
-- Các bước tiếp theo trong kế hoạch: đóng băng; giới hạn Free 100 từ và màn mời Premium 169.000đ/năm.
+- Bước 3: đóng băng từ khỏi ôn tập, danh sách riêng, bỏ đóng băng về cấp 6.
+- Bước tiếp theo trong kế hoạch: giới hạn Free 100 từ và màn mời Premium 169.000đ/năm.
 - Không thêm dữ liệu mẫu, từ khởi tạo, từ điển lớn hoặc thanh toán thật.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
 
@@ -17,6 +18,7 @@
 - `node artifacts/vocabflow/scripts/check-storage.cjs`
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-srs.cjs`
 - `TZ=America/New_York node artifacts/vocabflow/scripts/check-srs.cjs`
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - Các workflow API và Canvas là scaffold có sẵn; app hiện không gọi backend.
 
 ## Cấu trúc
@@ -28,6 +30,7 @@
 - `artifacts/vocabflow/constants/`: màu sắc.
 - `artifacts/vocabflow/docs/kiem-tra-buoc-1.md`: kiểm tra trên Android.
 - `artifacts/vocabflow/docs/kiem-tra-buoc-2.md`: quy tắc SRS và kiểm tra trên Android.
+- `artifacts/vocabflow/docs/kiem-tra-buoc-3.md`: đóng băng và bỏ đóng băng.
 
 ## Quy tắc SRS
 
@@ -38,6 +41,13 @@
 - Nếu trả lời đúng muộn và mốc tiếp theo đã qua, hẹn ngày mai để không ôn nhiều cấp cùng một ngày.
 - Sửa từ không đặt lại SRS. Dữ liệu Bước 1 được chuyển sang cấp 1 với ngày học lấy từ ngày tạo cũ, không xóa từ.
 - Đổi lịch chỉ tính lại hạn ôn, giữ cấp, số lần trả lời, ngày học và trạng thái hoàn tất. Nếu đã trả lời hôm nay, hạn sớm nhất là ngày mai.
+
+## Đóng băng
+
+- Từ đóng băng vẫn trong danh sách và tổng số từ; chỉ tắt ôn, không xóa hoặc chuyển sang kho lưu trữ khác. Chấm điểm cũng phải từ chối từ đóng băng.
+- Bỏ đóng băng về cấp 6, giữ ngày học và số lần trả lời. Hạn là mốc ngày học +30, hoặc hôm nay nếu đã quá hạn; nếu đã trả lời hôm nay thì sớm nhất ngày mai.
+- Lý do: cấp 6 dùng cùng mốc 30 ngày của lịch SRS đã chọn, không tính lại một chu kỳ 30 ngày từ ngày bỏ đóng băng và không tự hoàn tất từ.
+- Mở danh sách riêng từ Cài đặt; có thể đóng/bỏ đóng băng từ màn xem/sửa từ. Trong Ôn tập, nút đóng băng dùng cùng khóa bận với chấm điểm để tránh thao tác trùng.
 
 ## Lưu trữ
 

@@ -19,9 +19,9 @@ function ReviewCard({ word, disabled, onSaved }: {
   onSaved: (message: string) => void;
 }) {
   const c = useColors();
-  const { recordReview } = useVocabulary();
+  const { recordReview, setWordFrozen } = useVocabulary();
   const [revealed, setRevealed] = useState(false);
-  const [saving, setSaving] = useState<'correct' | 'wrong' | null>(null);
+  const [saving, setSaving] = useState<'correct' | 'wrong' | 'freeze' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const busy = useRef(false);
 
@@ -38,6 +38,21 @@ function ReviewCard({ word, disabled, onSaved }: {
       // Keep locked until the refreshed progress unmounts this card.
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'Không thể lưu câu trả lời. Hãy thử lại.');
+      busy.current = false;
+      setSaving(null);
+    }
+  };
+
+  const freeze = async () => {
+    if (disabled || busy.current) return;
+    busy.current = true;
+    setSaving('freeze');
+    setError(null);
+    try {
+      await setWordFrozen(word.id, true);
+      onSaved('Đã đóng băng từ. Từ vẫn trong sổ và không xuất hiện khi ôn cho đến khi bạn bỏ đóng băng.');
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Không thể đóng băng từ. Hãy thử lại.');
       busy.current = false;
       setSaving(null);
     }
@@ -99,6 +114,9 @@ function ReviewCard({ word, disabled, onSaved }: {
       ) : (
         <Button testID="reveal-answer" label="Xem nghĩa" icon="rotate-cw" onPress={() => setRevealed(true)} disabled={disabled} />
       )}
+      <Button testID="review-freeze" label="Đóng băng" icon="pause-circle" variant="ghost"
+        onPress={() => { void freeze(); }} loading={saving === 'freeze'} disabled={!!saving || disabled} />
+      <Text style={[styles.explain, { color: c.mutedForeground }]}>Dừng ôn từ này, vẫn giữ trong sổ và tính vào tổng số từ. Có thể bỏ đóng băng trong Cài đặt.</Text>
     </View>
   );
 }
@@ -109,7 +127,7 @@ export default function ReviewScreen() {
   const bottom = useBottomPad();
   const [feedback, setFeedback] = useState<string | null>(null);
   const card = dueWords[0];
-  const upcoming = words.filter(word => !word.completed && word.nextReviewOn && word.nextReviewOn > today)
+  const upcoming = words.filter(word => !word.frozen && !word.completed && word.nextReviewOn && word.nextReviewOn > today)
     .map(word => word.nextReviewOn!).sort()[0];
   const completed = words.filter(word => word.completed).length;
 
@@ -141,7 +159,9 @@ export default function ReviewScreen() {
             body={words.length
               ? upcoming
                 ? `Lần ôn tiếp theo từ ${calendarLabel(upcoming)}. ${completed ? `${completed} từ đã hoàn tất 6 cấp.` : 'Bạn có thể nghỉ hoặc thêm từ mới.'}`
-                : 'Bạn đã hoàn tất 6 cấp cho tất cả từ hiện có. Từ vẫn được giữ trong sổ.'
+                : words.some(word => word.frozen)
+                  ? 'Các từ còn lại đã hoàn tất hoặc đang đóng băng. Xem từ đóng băng trong Cài đặt.'
+                  : 'Bạn đã hoàn tất 6 cấp cho tất cả từ hiện có. Từ vẫn được giữ trong sổ.'
               : 'Thêm từ vào sổ và bắt đầu học ngay ở cấp 1.'}>
             <Button testID="review-add-word" label="Thêm từ" icon="plus" variant="accent" onPress={() => router.push('/word')} />
           </EmptyState>

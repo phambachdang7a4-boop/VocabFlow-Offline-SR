@@ -48,7 +48,7 @@ function Field({ label, required, error, hint, ...props }: TextInputProps & { re
 function WordForm({ existing }: { existing?: VocabularyWord }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const { saveWord, deleteWord } = useVocabulary();
+  const { saveWord, deleteWord, setWordFrozen } = useVocabulary();
   const [form, setForm] = useState<WordInput>({
     term: existing?.term ?? '',
     meaning: existing?.meaning ?? '',
@@ -59,6 +59,7 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [changingFreeze, setChangingFreeze] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const busyRef = useRef(false);
@@ -104,6 +105,20 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
   };
 
   const bottomPad = (Platform.OS === 'web' ? 34 : insets.bottom) + 24;
+  const toggleFreeze = async () => {
+    if (!existing || busyRef.current) return;
+    busyRef.current = true;
+    setChangingFreeze(true);
+    setSubmitError(null);
+    try {
+      await setWordFrozen(existing.id, !existing.frozen);
+    } catch (failure) {
+      setSubmitError(failure instanceof Error ? failure.message : 'Không thể đổi trạng thái đóng băng.');
+    } finally {
+      busyRef.current = false;
+      setChangingFreeze(false);
+    }
+  };
 
   return (
     <>
@@ -122,10 +137,10 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
         {existing ? (
           <View testID="word-srs-progress" style={{ backgroundColor: c.secondary, borderRadius: c.radius, padding: 14, gap: 6 }}>
             <Text style={[styles.label, { color: c.primary }]}>
-              {existing.completed ? 'Đã hoàn tất 6 cấp ôn' : `Cấp ôn hiện tại: ${existing.level} / 6`}
+              {existing.frozen ? 'Đã đóng băng — dừng ôn tập' : existing.completed ? 'Đã hoàn tất 6 cấp ôn' : `Cấp ôn hiện tại: ${existing.level} / 6`}
             </Text>
             <Text style={[styles.sub, { color: c.mutedForeground }]}>
-              {existing.nextReviewOn
+              {existing.frozen ? 'Vẫn tra cứu được và vẫn tính vào tổng số từ đã lưu.' : existing.nextReviewOn
                 ? `Hạn ôn: ${existing.nextReviewOn.split('-').reverse().join('/')}`
                 : 'Không còn lịch ôn trong chu kỳ này.'}
             </Text>
@@ -137,15 +152,25 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
           <Text style={[styles.sub, { color: c.mutedForeground }]}>Từ mới có thể học ngay sau khi lưu.</Text>
         )}
         {submitError ? <ErrorBanner message={submitError} /> : null}
+        {existing && (existing.frozen || !existing.completed) ? (
+          <View style={{ gap: 8 }}>
+            <Button testID="word-toggle-freeze" label={existing.frozen ? 'Bỏ đóng băng' : 'Đóng băng'}
+              icon={existing.frozen ? 'play-circle' : 'pause-circle'} variant="ghost"
+              onPress={() => { void toggleFreeze(); }} loading={changingFreeze} disabled={saving || deleting} />
+            <Text style={[styles.sub, { color: c.mutedForeground }]}>
+              {existing.frozen ? 'Bỏ đóng băng: trở về cấp 6, giữ ngày học và số lần trả lời.' : 'Dừng ôn cho đến khi bạn bỏ đóng băng. Không xóa từ.'}
+            </Text>
+          </View>
+        ) : null}
         <Field testID="field-term" label="Từ tiếng Anh" required error={termErr} value={form.term} onChangeText={set('term')}
           autoCapitalize="none" autoCorrect={false} returnKeyType="next" onSubmitEditing={() => meaningRef.current?.focus()} editable={!saving} />
         <Field testID="field-meaning" ref={meaningRef} label="Nghĩa tiếng Việt" required error={meaningErr} value={form.meaning} onChangeText={set('meaning')} multiline editable={!saving} />
         <Field testID="field-ipa" label="Phiên âm IPA" value={form.ipa} onChangeText={set('ipa')} autoCapitalize="none" autoCorrect={false} editable={!saving} />
         <Field testID="field-example" label="Câu ví dụ" value={form.example} onChangeText={set('example')} multiline editable={!saving} />
         <Field testID="field-note" label="Ghi chú riêng" value={form.note} onChangeText={set('note')} multiline editable={!saving} />
-        <Button testID="save" label={existing ? 'Lưu thay đổi' : 'Lưu vào sổ'} icon="check" onPress={submit} loading={saving} disabled={deleting} />
+        <Button testID="save" label={existing ? 'Lưu thay đổi' : 'Lưu vào sổ'} icon="check" onPress={submit} loading={saving} disabled={deleting || changingFreeze} />
         {existing ? (
-          <Button testID="delete" label="Xoá từ này" icon="trash-2" variant="ghost" onPress={() => setConfirm(true)} disabled={saving || deleting}
+          <Button testID="delete" label="Xoá từ này" icon="trash-2" variant="ghost" onPress={() => setConfirm(true)} disabled={saving || deleting || changingFreeze}
             style={{ borderColor: c.destructiveSoft }} />
         ) : null}
       </KeyboardAwareScrollViewCompat>

@@ -8,6 +8,7 @@ export const WRONG_ANSWER_LEVEL_PENALTY = 1;
 export type SrsLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface SrsProgress {
+  frozen: boolean;
   level: SrsLevel;
   learnedOn: string;
   nextReviewOn: string | null;
@@ -43,6 +44,7 @@ export function addDays(day: string, amount: number): string {
 
 export function initialProgress(learnedOn: string): SrsProgress {
   return {
+    frozen: false,
     level: 1,
     learnedOn,
     nextReviewOn: addDays(learnedOn, REVIEW_DAY_OFFSETS[0]),
@@ -54,20 +56,32 @@ export function initialProgress(learnedOn: string): SrsProgress {
 
 export function isDue(progress: SrsProgress, today: string): boolean {
   calendarDate(today);
-  if (progress.completed || progress.nextReviewOn === null) return false;
+  if (progress.frozen || progress.completed || progress.nextReviewOn === null) return false;
   calendarDate(progress.nextReviewOn);
   return progress.nextReviewOn <= today;
 }
 
 /** Recalculate an existing schedule without resetting its level or history. */
 export function rescheduleProgress(progress: SrsProgress): SrsProgress {
-  if (progress.completed) return { ...progress, nextReviewOn: null };
+  if (progress.frozen || progress.completed) return { ...progress, nextReviewOn: null };
   if (!Number.isInteger(progress.level) || progress.level < 1 || progress.level > 6) {
     throw new Error('Cấp ôn không hợp lệ.');
   }
   const checkpoint = addDays(progress.learnedOn, REVIEW_DAY_OFFSETS[progress.level - 1]);
   const earliest = progress.lastReviewedOn ? addDays(progress.lastReviewedOn, 1) : checkpoint;
   return { ...progress, nextReviewOn: checkpoint > earliest ? checkpoint : earliest };
+}
+
+export function freezeProgress(progress: SrsProgress): SrsProgress {
+  return { ...progress, frozen: true, nextReviewOn: null };
+}
+
+export function unfreezeProgress(progress: SrsProgress, today: string): SrsProgress {
+  calendarDate(today);
+  const checkpoint = addDays(progress.learnedOn, REVIEW_DAY_OFFSETS[5]);
+  const earliest = progress.lastReviewedOn ? addDays(progress.lastReviewedOn, 1) : today;
+  const nextReviewOn = [checkpoint, earliest, today].sort().at(-1)!;
+  return { ...progress, frozen: false, completed: false, level: 6, nextReviewOn };
 }
 
 export function applyReview(progress: SrsProgress, correct: boolean, today: string): SrsProgress {

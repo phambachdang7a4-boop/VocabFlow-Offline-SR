@@ -1,14 +1,15 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
-import { ErrorBanner, F } from '@/components/ui';
+import { Button, ErrorBanner, F } from '@/components/ui';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 
 export default function SettingsScreen() {
   const c = useColors();
-  const { words, loading, error, reload } = useVocabulary();
+  const { words, frozenWords, loading, error, reload } = useVocabulary();
   const bottom = useBottomPad();
 
   const facts: { icon: keyof typeof Feather.glyphMap; title: string; body: string }[] = [
@@ -27,6 +28,8 @@ export default function SettingsScreen() {
           <Text style={[styles.statNum, { color: c.primaryForeground }]}>{loading && words.length === 0 ? '—' : words.length}</Text>
           <Text style={[styles.statSub, { color: c.primaryForeground }]}>từ trong sổ của bạn</Text>
         </View>
+        <Button testID="open-frozen-words" label={`Từ đã đóng băng (${frozenWords.length})`} icon="pause-circle"
+          variant="ghost" onPress={() => router.push('/frozen')} />
         <Text style={[styles.section, { color: c.mutedForeground }]}>DỮ LIỆU CỦA BẠN</Text>
         <View style={[styles.group, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }]}>
           {facts.map((f, i) => (

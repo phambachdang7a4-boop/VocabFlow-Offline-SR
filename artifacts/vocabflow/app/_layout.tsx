@@ -35,6 +35,7 @@ function RootLayoutNav() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="word" options={{ title: 'Từ vựng' }} />
+      <Stack.Screen name="frozen" options={{ title: 'Từ đã đóng băng' }} />
     </Stack>
   );
 }

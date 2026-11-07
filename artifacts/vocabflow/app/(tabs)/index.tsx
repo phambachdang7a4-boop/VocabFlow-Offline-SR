@@ -51,6 +51,7 @@ export default function VocabularyScreen() {
           {item.ipa ? <Text style={[styles.ipa, { color: c.accent }]} numberOfLines={1}>{item.ipa}</Text> : null}
         </View>
         <Text style={[styles.meaning, { color: c.mutedForeground }]} numberOfLines={2}>{item.meaning}</Text>
+        {item.frozen ? <Text style={[styles.ipa, { color: c.primary }]}>Đã đóng băng</Text> : null}
       </View>
       <Feather name="chevron-right" size={18} color={c.mutedForeground} />
     </Pressable>

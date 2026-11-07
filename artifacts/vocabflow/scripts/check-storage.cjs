@@ -120,7 +120,7 @@ let upgradedHarness;
   assert.equal(migrated.updatedAt, '2025-12-02T12:00:00Z');
   assert.equal(migrated.learnedOn, '2025-12-01');
   assert.equal(migrated.nextReviewOn, '2025-12-01');
-  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 3);
+  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 4);
   assert.equal((await legacyHarness.repo.listWords()).length, 1);
   // Restore a previous-schedule (v2) fixture with real history, then reopen.
   await legacyHarness.repo.saveWord({ ...input, term: 'finished' });
@@ -133,7 +133,7 @@ let upgradedHarness;
     `UPDATE word_progress SET level = 6, review_count = 6, completed = 1,
        last_reviewed_on = '2026-02-01', next_review_on = NULL WHERE word_id = ?`,
   ).run(finishedLegacy.id);
-  legacyHarness.db.exec('PRAGMA user_version = 2;');
+  legacyHarness.db.exec('ALTER TABLE word_progress DROP COLUMN frozen; PRAGMA user_version = 2;');
   legacyHarness.db.close();
   upgradedHarness = createRepository(legacyRoot);
   const upgraded = await upgradedHarness.repo.listWords();
@@ -148,7 +148,7 @@ let upgradedHarness;
   assert.equal(stillFinished.completed, true);
   assert.equal(stillFinished.nextReviewOn, null);
   assert.equal(stillFinished.reviewCount, 6);
-  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 3);
+  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 4);
   console.log('PASS: CRUD, immediate new learning, persistent SRS, atomic grading, unchanged edit progress, completion, non-destructive old database and schedule migrations.');
 })().catch(error => {
   console.error(error);

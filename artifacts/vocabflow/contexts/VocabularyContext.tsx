@@ -14,6 +14,8 @@ interface VocabularyContextValue {
   recordReview: (id: number, correct: boolean, expectedReviewCount: number) => Promise<void>;
   today: string;
   dueWords: VocabularyWord[];
+  frozenWords: VocabularyWord[];
+  setWordFrozen: (id: number, frozen: boolean) => Promise<void>;
 }
 
 const VocabularyContext = createContext<VocabularyContextValue | null>(null);
@@ -83,14 +85,25 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
     await reload();
   }, [reload]);
 
+  const setWordFrozen = useCallback(async (id: number, frozen: boolean) => {
+    try {
+      await storage.setWordFrozen(id, frozen);
+    } catch (failure) {
+      const message = failure instanceof Error ? failure.message : '';
+      throw new Error(message.startsWith('Từ này') || message.startsWith('Trạng thái') ? message : writeError);
+    }
+    await reload();
+  }, [reload]);
+
+  const frozenWords = useMemo(() => words.filter(word => word.frozen), [words]);
   const dueWords = useMemo(
     () => words.filter(word => isDue(word, today)).sort((a, b) =>
       a.nextReviewOn!.localeCompare(b.nextReviewOn!) || a.id - b.id),
     [words, today],
   );
   const value = useMemo(
-    () => ({ words, loading, error, reload, saveWord, deleteWord, recordReview, today, dueWords }),
-    [words, loading, error, reload, saveWord, deleteWord, recordReview, today, dueWords],
+    () => ({ words, loading, error, reload, saveWord, deleteWord, recordReview, today, dueWords, frozenWords, setWordFrozen }),
+    [words, loading, error, reload, saveWord, deleteWord, recordReview, today, dueWords, frozenWords, setWordFrozen],
   );
   return <VocabularyContext.Provider value={value}>{children}</VocabularyContext.Provider>;
 }
