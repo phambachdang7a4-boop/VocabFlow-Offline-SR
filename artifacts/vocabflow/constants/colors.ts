@@ -77,7 +77,7 @@ const light = {
   chartBase: '#CFC4AC',
   reviewTrack: '#E6E3DA',
   // Typing review
-  reviewRight: '#2E6B44',
+  reviewRight: '#3E8E5A',
   reviewRightSoft: '#DCEDE1',
   reviewHint: NAVY,
   reviewPaper: '#FDFAF3',
@@ -149,7 +149,7 @@ const dark: typeof light = {
   chartBarStrong: '#C9D8F2',
   chartBase: '#4A5274',
   reviewTrack: '#2A2E42',
-  reviewRight: '#9FDBB2',
+  reviewRight: '#3E8E5A',
   reviewRightSoft: '#22402F',
   reviewHint: '#C9D8F2',
   reviewPaper: '#262A3C',

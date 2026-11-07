@@ -3,8 +3,6 @@ import colors from '@/constants/colors';
 
 export function useColors() {
   const { mode } = useAppearance();
-  const palette = mode === 'dark' && 'dark' in colors
-    ? (colors as Record<string, typeof colors.light>).dark
-    : colors.light;
+  const palette = mode === 'dark' ? colors.dark : colors.light;
   return { ...palette, radius: colors.radius };
 }

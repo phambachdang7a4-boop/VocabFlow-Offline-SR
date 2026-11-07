@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { readAppearance, writeAppearance, type AppearanceMode } from '@/data/appearance';
+import { readAppearance, writeAppearance } from '@/data/appearance';
+import type { AppearanceMode } from '@/data/appearance';
+export type { AppearanceMode } from '@/data/appearance';
 
 interface AppearanceValue {
   mode: AppearanceMode;

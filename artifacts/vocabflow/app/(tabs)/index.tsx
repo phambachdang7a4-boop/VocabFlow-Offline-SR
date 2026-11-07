@@ -102,7 +102,7 @@ export default function VocabularyScreen() {
                 title="Trang đầu tiên đang chờ"
                 body="Mỗi từ bạn ghi lại là một từ bạn đã chọn để nhớ. Bắt đầu với từ bạn gặp hôm nay."
               >
-                <Button label="Ghi từ đầu tiên" icon="plus" variant="accent" onPress={() => router.push('/word')} testID="add-first" />
+                <Button label="Ghi từ đầu tiên" icon="plus" onPress={() => router.push('/word')} testID="add-first" />
               </EmptyState>
             ) : (
               <EmptyState icon="search" title="Không tìm thấy" body={`Không có từ nào khớp với “${q.trim()}”. Thử bỏ dấu hoặc viết ngắn hơn.`} />

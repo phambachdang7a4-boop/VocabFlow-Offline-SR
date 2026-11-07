@@ -13,6 +13,14 @@
 - Nút **Lưu từ** ở Tra Từ ghi ngay nghĩa được chọn vào SQLite và giữ màn tra cứu; không chuyển sang Từ mới để xác nhận. Giữ IPA, ví dụ, nguồn; chống nhấn trùng và không ghi đè nghĩa/tiến độ đã có.
 - Đơn vị học/đếm là **một nghĩa**, không phải một từ tiếng Anh. Cùng một từ có nhiều nghĩa đã lưu thì có nhiều mục, mỗi mục có ID, SRS, hạn ôn, đóng băng và xóa độc lập. Chỉ lưu/ôn nghĩa đã bấm Lưu; không đánh dấu mọi nghĩa là đã lưu chỉ vì trùng từ tiếng Anh.
 - Nghĩa tra cứu nhận diện bằng cặp ID mục từ/nghĩa trong kho đã ghim. Không đổi nguồn/commit kho khi chưa kiểm tra tính ổn định của cặp ID. Mục cũ/thủ công đối chiếu cả từ lẫn nghĩa, không đoán thêm nghĩa hoặc tự tách dữ liệu cũ; giữ nguyên ID, nội dung và tiến độ khi chuyển lưu trữ.
+
+## Giao diện
+
+- Bản sáng mặc định: nền kem giấy `#F7F1E3`, navy `#2F4F86` cho tiêu đề/thẻ từ/thanh điều hướng, nút chính vàng kính `#E9B949` với chữ tối.
+- Bản tối người dùng chọn trong Cài đặt: nền xanh đen `#1E2130`, thẻ và thanh điều hướng navy `#2F4F86`, nút chính vàng `#E9B949`.
+- Lưu lựa chọn sáng/tối riêng trên thiết bị; khởi động mới không được phụ thuộc vào giao diện hệ thống. Không lưu tùy chọn này thay cho SQLite từ vựng/tiến độ.
+- Chữ thường phải đủ tương phản. Không dùng chữ vàng trên nền kem. Đỏ `#C0392B` dành cho sai/cảnh báo; xanh lá `#3E8E5A` cho đúng; xanh băng `#BFE3F2` cho trạng thái đóng băng.
+- Giữ hai bảng màu đồng bộ ở mọi màn hình, nút, trạng thái và thanh điều hướng; cập nhật `constants/colors.ts` cùng kiểm tra `scripts/check-appearance.cjs` khi đổi màu giao diện.
 - Người dùng yêu cầu Tra Từ theo bố cục ảnh Mochi: phần tìm kiếm xanh, nội dung nghĩa/ví dụ rõ ràng trên nền sáng và nút thêm cạnh nghĩa; tab Tra Từ nằm ngoài cùng bên trái. Giữ tên VocabFlow, không tự thêm đồng nghĩa, IELTS, cấp CEFR hay âm thanh không có dữ liệu/chức năng thật.
 - Tra Từ có gợi ý sai chính tả offline khi không khớp tiền tố: câu “Có phải bạn đang tìm từ này?” và các từ gần đúng có thể chạm để xem nghĩa. Chỉ lấy mục từ thật trong SQLite, không API/AI hoặc tự lưu; giữ lựa chọn tự ghi từ mới.
 - Người dùng yêu cầu gạch chân từ đang tra trong câu ví dụ ở Tra Từ.

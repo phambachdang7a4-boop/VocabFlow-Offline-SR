@@ -85,7 +85,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const answered = outcome !== null;
   const graded = outcome?.action === 'grade' ? outcome : null;
   const label = exercise.kind === 'cloze' ? 'ĐIỀN TỪ VÀO CÂU' : 'ĐIỀN TỪ THEO NGHĨA';
-  const tone = graded ? (graded.correct ? c.reviewRight : c.destructiveText) : c.primary;
+  const tone = graded ? (graded.correct ? c.successText : c.destructiveText) : c.primary;
   const toneSoft = graded ? (graded.correct ? c.reviewRightSoft : c.destructiveSoft) : c.secondary;
 
   return (

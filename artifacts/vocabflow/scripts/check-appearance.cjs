@@ -14,8 +14,9 @@ const asyncStorage = {
     storage.set(key, value);
   },
 };
+const asyncStorageModule = { ...asyncStorage, default: asyncStorage };
 const persistence = loadTs(join(__dirname, '../data/appearance.ts'), {
-  '@react-native-async-storage/async-storage': { default: asyncStorage },
+  '@react-native-async-storage/async-storage': asyncStorageModule,
 });
 
 function provider() {
@@ -129,6 +130,7 @@ const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math
     assert.equal(c.button.toUpperCase(), '#E9B949');
     assert.equal(c.frozen.toUpperCase(), '#BFE3F2');
     assert.equal(c.destructive.toUpperCase(), '#C0392B');
+    assert.equal(c.success.toUpperCase(), '#3E8E5A');
     assert.equal(c.reviewRight.toUpperCase(), '#3E8E5A');
     for (const [foreground, background] of [
       ['foreground', 'background'], ['mutedForeground', 'background'],
@@ -142,7 +144,7 @@ const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math
     }
     const hook = loadTs(join(__dirname, '../hooks/useColors.ts'), {
       '@/contexts/AppearanceContext': { useAppearance: () => ({ mode }) },
-      '@/constants/colors': { default: palettes },
+      '@/constants/colors': palettes,
     });
     assert.equal(hook.useColors().background, c.background);
   }

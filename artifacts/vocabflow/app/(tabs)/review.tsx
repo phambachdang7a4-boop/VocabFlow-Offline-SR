@@ -97,7 +97,7 @@ export default function ReviewScreen() {
         <ReviewStatusBar testID="review-no-schedule" icon="calendar" title="Chưa có lịch ôn"
           body={overview.total ? 'Mọi từ đã hoàn tất hoặc đang đóng băng.' : 'Sổ từ đang trống. Thêm từ để bắt đầu ở cấp 1.'} />
         <View style={styles.row}>
-          <Button testID="review-add-word" label="Thêm từ" icon="plus" variant="accent" onPress={() => router.push('/word')} style={{ flex: 1 }} />
+          <Button testID="review-add-word" label="Thêm từ" icon="plus" onPress={() => router.push('/word')} style={{ flex: 1 }} />
           {overview.frozen ? <Button testID="review-open-frozen" label="Từ đóng băng" icon="pause-circle" variant="ghost" onPress={() => router.push('/frozen')} style={{ flex: 1 }} /> : null}
         </View>
       </View>
