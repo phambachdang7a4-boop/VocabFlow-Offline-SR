@@ -2,6 +2,7 @@ import { backupDatabaseAsync, deleteDatabaseAsync, deserializeDatabaseAsync, ope
 import { sha256 } from '@noble/hashes/sha2.js';
 import { DICTIONARY, type DictionaryStage } from '../domain/dictionary';
 import { dictionaryDownloadUrl } from '../domain/dictionary-download';
+import { dictionaryImportBytes } from '../domain/dictionary-import';
 import { draftInDictionary, entryInDictionary, searchInDictionary } from './dictionary-queries';
 import { openDatabaseSafely, storageFailureMessage } from './sqlite-connection';
 
@@ -43,7 +44,8 @@ async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownl
       if (buffer.byteLength !== DICTIONARY.bytes) throw new Error('Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.');
       const hash = Array.from(sha256(buffer), value => value.toString(16).padStart(2, '0')).join('');
       if (hash !== DICTIONARY.sha256) throw new Error('Tệp từ điển không đúng phiên bản hoặc bị hỏng. Hãy tải lại.');
-      const imported = await deserializeDatabaseAsync(buffer);
+      onStage?.('importing');
+      const imported = await deserializeDatabaseAsync(dictionaryImportBytes(buffer));
       try {
         const check = await imported.getFirstAsync<{ quick_check: string }>('PRAGMA quick_check');
         if (check?.quick_check !== 'ok') throw new Error('Kho từ điển bị lỗi. Hãy tải lại.');
@@ -82,7 +84,7 @@ export function openDictionary(onStage?: (stage: DictionaryStage) => void, optio
       const detail = failure instanceof Error ? failure.message : '';
       throw new Error(storageFailureMessage(failure,
         /từ điển|kho tra cứu/i.test(detail) ? detail
-          : 'Không thể nạp kho từ điển. Lần đầu cần có mạng và đủ dung lượng trống. Hãy thử lại; sổ cá nhân không bị thay đổi.',
+          : 'Không thể nạp kho từ điển trên thiết bị. Sổ cá nhân không bị thay đổi.',
       ));
     });
   }

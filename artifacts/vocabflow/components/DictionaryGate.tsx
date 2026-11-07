@@ -11,6 +11,7 @@ const STAGE_TEXT: Record<DictionaryStage, string> = {
   'awaiting-consent': 'Tải kho từ điển về máy?',
   downloading: `Đang tải kho từ điển (${(DICTIONARY.bytes / 1048576).toFixed(1)} MiB). Chỉ tải một lần, cần có mạng.`,
   verifying: 'Đang kiểm tra tính toàn vẹn của tệp…',
+  importing: 'Đã tải xong. Đang nhập từ điển vào SQLite trên máy…',
   ready: 'Sẵn sàng tra cứu ngoại tuyến.',
 };
 

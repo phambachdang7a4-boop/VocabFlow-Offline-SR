@@ -18,6 +18,7 @@
 - Lần đầu cần có mạng và đủ dung lượng trống. Chỉ sau khi đồng ý, app mới tải 42,2 MiB và cần thêm dung lượng tạm để xác minh/nhập SQLite, không chỉ đúng 42,2 MiB. Nên có ít nhất vài trăm MB trống.
 - Sau khi nhấn **Đồng ý tải**, nút phải được thay ngay bằng trạng thái kiểm tra/tải; thao tác không cần chuyển tab rồi quay lại để bắt đầu. Nhấn liên tiếp không tạo nhiều lượt tải.
 - Chờ thông báo tải/kiểm tra biến mất. Nếu mất mạng hoặc tệp thiếu/hỏng, app hiện lỗi và hỏi lại trước lần tải tiếp theo. Chỉ nhấn **Đồng ý tải** khi sẵn sàng; app không ghi nhớ quyền dùng dữ liệu di động cho các lần tải lại. Sổ cá nhân không bị xóa khi tải lỗi.
+- Sau khi xác minh, app hiện **Đã tải xong. Đang nhập từ điển vào SQLite trên máy…**. Bản tải gốc được kiểm SHA-256 trước; bản sao để nhập được chuẩn hóa chế độ nhật ký SQLite, không sửa nội dung từ hay sổ cá nhân.
 - Nhập một từ tiếng Anh, chẳng hạn từ bạn đang cần học. Tìm theo tiền tố, bấm một kết quả, kiểm tra nghĩa/IPA/ví dụ.
 - Thử một chuỗi không có trong nguồn: app báo không có mục từ, vẫn cho tự ghi từ mới.
 
@@ -56,6 +57,7 @@ pnpm --filter @workspace/vocabflow run typecheck
 pnpm --filter @workspace/api-server run typecheck
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs
 node artifacts/vocabflow/scripts/check-dictionary-button.cjs
+node artifacts/vocabflow/scripts/check-dictionary-wasm.cjs
 node artifacts/vocabflow/scripts/check-sqlite-connection.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-storage.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs

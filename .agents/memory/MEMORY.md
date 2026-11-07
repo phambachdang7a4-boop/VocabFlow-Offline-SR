@@ -2,3 +2,4 @@
 - [Expo preview khởi động chậm](expo-preview-startup.md) — Ảnh trắng có thể do các route đang biên dịch lần đầu; kiểm tra tải xong trước khi kết luận app lỗi.
 - [SQLite trên trình duyệt](sqlite-web-startup.md) — Khởi tạo worker/VFS phải tuần tự giữa các kho; OPFS cần một tab sở hữu, không sửa lỗi bằng cách xóa dữ liệu.
 - [Tải dữ liệu công khai](public-dictionary-download.md) — Tệp từ điển không được phụ thuộc đăng nhập preview; HTTP 200 từ sandbox không chứng minh trình duyệt tải được.
+- [Nhập SQLite WAL](sqlite-wal-import.md) — Tệp đọc được trên đĩa vẫn có thể lỗi 14 khi deserialize; kiểm bằng WASM thật, xác minh hash gốc trước chuẩn hóa.

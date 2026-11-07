@@ -32,6 +32,7 @@ function adapter(filename, readOnly = false) {
 (async () => {
   const domain = loadTs(join(__dirname, '../domain/dictionary.ts'));
   const download = loadTs(join(__dirname, '../domain/dictionary-download.ts'), { './dictionary': domain });
+  const importer = loadTs(join(__dirname, '../domain/dictionary-import.ts'));
   const publicUrl = `https://raw.githubusercontent.com/skypediacode/english-vietnamese-dictionary/${domain.DICTIONARY.commit}/dictionary_en_vi.db`;
   assert.equal(download.dictionaryDownloadUrl(), publicUrl, 'Public data must not require preview login or an API domain');
   const { DICTIONARY, DICTIONARY_PAGE_SIZE } = domain;
@@ -91,6 +92,8 @@ function adapter(filename, readOnly = false) {
   const sqlite = {
     openDatabaseAsync: async filename => adapter(join(root, filename)),
     deserializeDatabaseAsync: async data => {
+      assert.equal(data[18], 1, 'Memory import must not retain a WAL write-format header');
+      assert.equal(data[19], 1, 'Memory import must not retain a WAL read-format header');
       const filename = join(root, 'import-source.db');
       writeFileSync(filename, data);
       return adapter(filename, true);
@@ -108,6 +111,7 @@ function adapter(filename, readOnly = false) {
       '@noble/hashes/sha2.js': { sha256 },
       '../domain/dictionary': domain,
       '../domain/dictionary-download': download,
+      '../domain/dictionary-import': importer,
       './dictionary-queries': queries,
       './sqlite-connection': sqliteConnection,
     }, {
@@ -133,7 +137,7 @@ function adapter(filename, readOnly = false) {
   assert.equal(downloads, 0, 'Deep links and background readers cannot bypass consent');
   assert.equal(deleted.length, 0, 'Waiting for permission does not delete any cache');
   const loaded = await repo.openDictionary(stage => stages.push(stage), { allowDownload: true });
-  assert.deepEqual(stages, ['checking', 'downloading', 'verifying', 'ready']);
+  assert.deepEqual(stages, ['checking', 'downloading', 'verifying', 'importing', 'ready']);
   assert.equal(downloads, 1);
   assert.match(loaded.handle.prepare('EXPLAIN QUERY PLAN SELECT id FROM words WHERE word LIKE ? ORDER BY word COLLATE NOCASE,id').all('a%').map(row => row.detail).join(' '), /idx_vocabflow_words_nocase/);
   await assert.rejects(loaded.runAsync("DELETE FROM words"), /readonly/);

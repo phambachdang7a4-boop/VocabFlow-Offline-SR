@@ -24,6 +24,7 @@
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
 - `node artifacts/vocabflow/scripts/check-dictionary-button.cjs`: kiểm tra nút tải bắt đầu trực tiếp, khóa nhấn trùng và xin phép lại khi lỗi.
+- `node artifacts/vocabflow/scripts/check-dictionary-wasm.cjs`: dùng đúng SQLite WASM/MemoryVFS của Expo để tái hiện lỗi WAL nguồn, rồi kiểm tra nhập, backup, tìm kiếm và mở lại bản chuẩn hóa.
 - `node artifacts/vocabflow/scripts/check-sqlite-connection.cjs`: kiểm tra mở SQLite tuần tự giữa các kho, quyền sở hữu một tab trên web và phục hồi hàng đợi khi lỗi.
 - App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không dùng cookie hay phụ thuộc đăng nhập của máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; mọi truy vấn, sổ cá nhân và tiến độ vẫn trên máy. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.
@@ -63,7 +64,7 @@ SQLite cục bộ là nguồn dữ liệu cho từ và tiến độ; không thay
 
 Kho tra cứu dùng SQLite riêng, có kiểm SHA-256 và kích thước trước khi nhập, chỉ đọc sau khi thêm chỉ mục tìm kiếm và dấu hoàn tất. Lần đầu cần mạng, sau đó mở lại kho đã nạp không cần API. Nếu nạp lỗi chỉ được xóa bộ nhớ đệm tham chiếu có tên riêng, tuyệt đối không xóa `vocabflow.db`. Bản mirror lớn lưu bền trong App Storage; bản tải để kiểm tra đặt trong `/generated-artifacts/`, bị loại khỏi Git và gói triển khai.
 
-Nguồn kho Skypedia công bố CC BY-SA 4.0, có ghi chú OVDP GPLv2; kho upstream MinhQND có LICENSE MIT nhưng README dẫn CC BY-SA. Giữ đầy đủ thông báo nguồn trong app; chưa coi quyền tái phân phối thương mại là đã được xác minh. Dữ liệu tham chiếu không chỉnh nội dung; chỉ thêm chỉ mục và dấu khởi tạo cục bộ. Tệp nguồn để phân phối vẫn giữ nguyên bytes.
+Nguồn kho Skypedia công bố CC BY-SA 4.0, có ghi chú OVDP GPLv2; kho upstream MinhQND có LICENSE MIT nhưng README dẫn CC BY-SA. Giữ đầy đủ thông báo nguồn trong app; chưa coi quyền tái phân phối thương mại là đã được xác minh. Dữ liệu tham chiếu không chỉnh nội dung; chỉ thêm chỉ mục và dấu khởi tạo cục bộ. Tệp nguồn để phân phối vẫn giữ nguyên bytes. Sau khi kiểm kích thước/SHA-256 của bản tải nguyên gốc, bản sao riêng dùng cho `deserialize` được chuẩn hóa hai byte định dạng nhật ký WAL sang rollback để không đòi tệp WAL phụ trong bộ nhớ; không sửa hàng dữ liệu hay tệp nguồn.
 
 Đóng app không xóa dữ liệu. Gỡ app/xóa dữ liệu ứng dụng (hoặc xóa dữ liệu Expo Go) có thể làm mất dữ liệu; chưa có sao lưu hoặc đồng bộ.
 
