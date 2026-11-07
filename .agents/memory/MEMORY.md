@@ -1,0 +1,1 @@
+- [Phạm vi VocabFlow](vocabflow-scope.md) — App Android tiếng Việt, SQLite offline, không dữ liệu mẫu; triển khai tuần tự và báo cách kiểm tra trên điện thoại.
