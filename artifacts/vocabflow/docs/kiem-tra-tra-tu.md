@@ -24,7 +24,8 @@
 
 ### 2. Lưu để ôn và chống trùng
 
-- Chọn một nghĩa trong mục từ, bấm **Thêm vào sổ từ**. Biểu mẫu có từ, nghĩa đã chọn, IPA, ví dụ và ghi chú nguồn.
+- Chọn kết quả để xem nghĩa ngay trong tab **Tra Từ** (tab ngoài cùng bên trái). Bấm **Lưu từ** cạnh đúng nghĩa muốn học. Biểu mẫu có từ, nghĩa đã chọn, IPA, ví dụ và ghi chú nguồn.
+- Dùng nút kính lúp hoặc phím tìm kiếm để tra ngay; nếu có từ khớp chính xác, app mở mục từ đó. **Kết quả tra cứu** quay về danh sách; sửa/xóa nội dung tìm kiếm cũng trở về kết quả, không để phản hồi cũ mở nhầm từ.
 - Chưa bấm Lưu thì từ chưa được thêm. Có thể sửa nghĩa trước khi lưu; không cắt nội dung nguồn âm thầm. Nếu vượt giới hạn độ dài của trường, rút gọn thủ công theo báo lỗi.
 - Bấm **Lưu vào sổ** → mở Sổ từ và Ôn tập để kiểm tra từ mới và hạn học ngay.
 - Tra lại cùng từ: hiện **Đã có trong sổ**, cho mở trang hiện có thay vì ghi đè.
@@ -57,6 +58,7 @@ pnpm --filter @workspace/vocabflow run typecheck
 pnpm --filter @workspace/api-server run typecheck
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs
 node artifacts/vocabflow/scripts/check-dictionary-button.cjs
+node artifacts/vocabflow/scripts/check-dictionary-ui.cjs
 node artifacts/vocabflow/scripts/check-dictionary-wasm.cjs
 node artifacts/vocabflow/scripts/check-sqlite-connection.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-storage.cjs

@@ -8,16 +8,19 @@ import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { SymbolView } from 'expo-symbols';
 
+// Keep Sổ từ (/) as the landing tab even though Tra Từ is listed first.
+export const unstable_settings = { anchor: 'index' };
+
 function NativeTabLayout() {
   return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
-        <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
+    <NativeTabs backBehavior="initialRoute">
       <NativeTabs.Trigger name="dictionary">
         <NativeTabs.Trigger.Icon sf={{ default: 'character.book.closed', selected: 'character.book.closed.fill' }} />
         <NativeTabs.Trigger.Label>Tra Từ</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
+        <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="review">
         <NativeTabs.Trigger.Icon sf={{ default: 'rectangle.on.rectangle', selected: 'rectangle.on.rectangle' }} />
@@ -54,6 +57,7 @@ function ClassicTabLayout() {
 
   return (
     <Tabs
+      backBehavior="initialRoute"
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
@@ -76,8 +80,8 @@ function ClassicTabLayout() {
           ),
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
       <Tabs.Screen name="dictionary" options={{ title: 'Tra Từ', tabBarIcon: icon('dictionary') }} />
+      <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
       <Tabs.Screen name="review" options={{ title: 'Ôn tập', tabBarIcon: icon('review') }} />
       <Tabs.Screen name="settings" options={{ title: 'Cài đặt', tabBarIcon: icon('settings') }} />
     </Tabs>

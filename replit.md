@@ -10,6 +10,7 @@
 - Theo yêu cầu hiện tại: tạo bản không giới hạn số từ, kể cả từ đóng băng. Tạm hoãn giới hạn Free 100 từ và màn mời Premium; chỉ triển khai lại khi người dùng yêu cầu.
 - Không thêm dữ liệu mẫu, từ khởi tạo hoặc thanh toán thật.
 - Người dùng đã duyệt mở rộng Tra Từ: tích hợp kho Skypedia Anh–Việt riêng để tra cứu; chỉ đưa từ vào sổ và SRS khi người dùng chọn nghĩa rồi lưu.
+- Người dùng yêu cầu Tra Từ theo bố cục ảnh Mochi: phần tìm kiếm xanh, nội dung nghĩa/ví dụ rõ ràng trên nền sáng và nút thêm cạnh nghĩa; tab Tra Từ nằm ngoài cùng bên trái. Giữ tên VocabFlow, không tự thêm đồng nghĩa, IELTS, cấp CEFR hay âm thanh không có dữ liệu/chức năng thật.
 - Người dùng yêu cầu hỏi trước khi dùng dữ liệu di động để tải từ điển. Quy tắc an toàn: không tự tải trên bất kỳ loại mạng nào; hiện dung lượng/cảnh báo cước và chờ “Đồng ý tải” cho từng lần tải/thử lại. Kho đã nạp vẫn mở offline không cần hỏi lại; “Để sau” giữ nguyên sổ và ôn tập.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
 
@@ -24,6 +25,7 @@
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
 - `node artifacts/vocabflow/scripts/check-dictionary-button.cjs`: kiểm tra nút tải bắt đầu trực tiếp, khóa nhấn trùng và xin phép lại khi lỗi.
+- `node artifacts/vocabflow/scripts/check-dictionary-ui.cjs`: kiểm tra tìm ngay, chống kết quả cũ mở nhầm từ, nghĩa chọn để lưu, từ trùng/đóng băng và thứ tự tab.
 - `node artifacts/vocabflow/scripts/check-dictionary-wasm.cjs`: dùng đúng SQLite WASM/MemoryVFS của Expo để tái hiện lỗi WAL nguồn, rồi kiểm tra nhập, backup, tìm kiếm và mở lại bản chuẩn hóa.
 - `node artifacts/vocabflow/scripts/check-sqlite-connection.cjs`: kiểm tra mở SQLite tuần tự giữa các kho, quyền sở hữu một tab trên web và phục hồi hàng đợi khi lỗi.
 - App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không dùng cookie hay phụ thuộc đăng nhập của máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; mọi truy vấn, sổ cá nhân và tiến độ vẫn trên máy. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.

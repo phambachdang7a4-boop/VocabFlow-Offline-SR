@@ -6,7 +6,7 @@ const ts = require('typescript');
 function loadTs(filePath, dependencies = {}, globals = {}) {
   const source = readFileSync(filePath, 'utf8');
   const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React },
   }).outputText;
   const module = { exports: {} };
   new Function('require', 'exports', 'module', ...Object.keys(globals), compiled)(
