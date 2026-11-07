@@ -87,13 +87,14 @@ export function ReviewCardExtracted({
     if (char === " ") return <View key={`space-${index}`} style={{ width: spaceGap, height: cellHeight }} />;
     const typedChar = typedCharacters[index];
     const hintChar = hintCharacters[index];
-    const visibleChar = typedChar ?? (hintChar && hintChar !== "_" ? hintChar : "");
+    const isTypedChar = typedChar !== undefined;
+    const visibleChar = isTypedChar ? typedChar : (hintChar && hintChar !== "_" ? hintChar : "");
     return (
       <View key={`slot-${index}`} testID={`review-letter-slot-${index}`} style={[
         styles.letterSlot,
         { width: cellWidth, height: cellHeight, borderColor: answered ? tone : c.border, backgroundColor: c.input },
       ]}>
-        <Text testID={`review-letter-value-${index}`} style={[styles.letterValue, { color: visibleChar ? c.primary : c.mutedForeground }]}>
+        <Text testID={`review-letter-value-${index}`} style={[styles.letterValue, { color: isTypedChar ? c.foreground : c.mutedForeground }]}>
           {visibleChar}
         </Text>
       </View>

@@ -197,6 +197,10 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const initialSlots = Array.from({ length: 4 }, (_, index) =>
     card.byId(`review-letter-value-${index}`).props.children.join(''));
   assert.ok(initialSlots.some(Boolean), 'Level 1 shows revealed letters in their own slots');
+  const letterColor = index => card.byId(`review-letter-value-${index}`).props.style
+    .find(style => style && typeof style === 'object' && 'color' in style).color;
+  const hintIndex = initialSlots.findIndex(Boolean);
+  const hintColor = letterColor(hintIndex);
   assert.equal(card.byId('flashcard'), undefined);
   assert.equal(card.byId('review-correct'), undefined);
   assert.equal(card.byId('review-answer-correct'), undefined);
@@ -207,6 +211,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const afterOneLetter = Array.from({ length: 4 }, (_, index) =>
     card.byId(`review-letter-value-${index}`).props.children.join(''));
   assert.equal(afterOneLetter[0], 'X', 'Typed letter overwrites the hint in the same slot');
+  assert.notEqual(letterColor(0), hintColor, 'Typed letters use a stronger color than the hints');
   assert.deepEqual(afterOneLetter.slice(1), initialSlots.slice(1), 'Hints in untouched slots remain visible');
   card.byId('review-answer-input').props.onChangeText('  TEST ');
   const answer = card.byId('review-check').props.onPress;
