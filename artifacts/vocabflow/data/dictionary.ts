@@ -6,13 +6,20 @@ import { draftInDictionary, entryInDictionary, searchInDictionary } from './dict
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
 let connection: Promise<SQLiteDatabase> | undefined;
 
+export class DictionaryDownloadConsentRequired extends Error {
+  constructor() {
+    super('Cần xác nhận trước khi tải từ điển.');
+    this.name = 'DictionaryDownloadConsentRequired';
+  }
+}
+
 function assetUrl() {
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (!domain) throw new Error('Chưa cấu hình địa chỉ tải từ điển.');
   return `https://${domain}${DICTIONARY_ASSET_PATH}`;
 }
 
-async function initialize(onStage?: (stage: DictionaryStage) => void): Promise<SQLiteDatabase> {
+async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownload = false): Promise<SQLiteDatabase> {
   onStage?.('checking');
   const db = await openDatabaseAsync(filename);
   try {
@@ -21,6 +28,10 @@ async function initialize(onStage?: (stage: DictionaryStage) => void): Promise<S
     );
     const cached = table ? await db.getFirstAsync<{ source_hash: string }>('SELECT source_hash FROM vocabflow_dictionary_meta LIMIT 1') : null;
     if (cached?.source_hash !== DICTIONARY.sha256) {
+      if (!allowDownload) {
+        onStage?.('awaiting-consent');
+        throw new DictionaryDownloadConsentRequired();
+      }
       onStage?.('downloading');
       const abort = new AbortController();
       const timeout = setTimeout(() => abort.abort(), 180_000);
@@ -62,15 +73,16 @@ async function initialize(onStage?: (stage: DictionaryStage) => void): Promise<S
     await db.closeAsync();
     // Only this disposable reference cache is removed; never vocabflow.db.
     // A failed/partial import must be recoverable with the Retry button.
-    await deleteDatabaseAsync(filename);
+    if (!(failure instanceof DictionaryDownloadConsentRequired)) await deleteDatabaseAsync(filename);
     throw failure;
   }
 }
 
-export function openDictionary(onStage?: (stage: DictionaryStage) => void): Promise<SQLiteDatabase> {
+export function openDictionary(onStage?: (stage: DictionaryStage) => void, options: { allowDownload?: boolean } = {}): Promise<SQLiteDatabase> {
   if (!connection) {
-    connection = initialize(onStage).catch(failure => {
+    connection = initialize(onStage, options.allowDownload === true).catch(failure => {
       connection = undefined;
+      if (failure instanceof DictionaryDownloadConsentRequired) throw failure;
       const detail = failure instanceof Error ? failure.message : '';
       throw new Error(
         /từ điển|kho tra cứu/i.test(detail) ? detail

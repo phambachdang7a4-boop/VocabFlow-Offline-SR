@@ -12,8 +12,9 @@
 ### 1. Nạp lần đầu và tra cứu
 
 - Mở app qua mã QR dự án như trước, chọn tab **Tra Từ** ở thanh dưới.
-- Lần đầu cần có mạng và đủ dung lượng trống. App tải 42,2 MiB và cần thêm dung lượng tạm để xác minh/nhập SQLite, không chỉ đúng 42,2 MiB. Nên có ít nhất vài trăm MB trống.
-- Chờ thông báo tải/kiểm tra biến mất. Nếu mất mạng hoặc tệp thiếu/hỏng, chọn **Thử tải lại** khi có mạng. Sổ cá nhân không bị xóa khi tải lỗi.
+- Trước khi tải, app hỏi **Tải kho từ điển về máy?**, nêu dung lượng **42,2 MiB (khoảng 44,2 MB)** và cảnh báo cước 3G/4G/5G. Chưa nhấn **Đồng ý tải** thì không gửi yêu cầu tải tệp, trên cả Wi-Fi lẫn dữ liệu di động. Chọn **Để sau** để về Sổ từ; vẫn thêm từ và ôn tập bình thường.
+- Lần đầu cần có mạng và đủ dung lượng trống. Chỉ sau khi đồng ý, app mới tải 42,2 MiB và cần thêm dung lượng tạm để xác minh/nhập SQLite, không chỉ đúng 42,2 MiB. Nên có ít nhất vài trăm MB trống.
+- Chờ thông báo tải/kiểm tra biến mất. Nếu mất mạng hoặc tệp thiếu/hỏng, app hiện lỗi và hỏi lại trước lần tải tiếp theo. Chỉ nhấn **Đồng ý tải** khi sẵn sàng; app không ghi nhớ quyền dùng dữ liệu di động cho các lần tải lại. Sổ cá nhân không bị xóa khi tải lỗi.
 - Nhập một từ tiếng Anh, chẳng hạn từ bạn đang cần học. Tìm theo tiền tố, bấm một kết quả, kiểm tra nghĩa/IPA/ví dụ.
 - Thử một chuỗi không có trong nguồn: app báo không có mục từ, vẫn cho tự ghi từ mới.
 
@@ -56,7 +57,7 @@ TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-srs.cjs
 ```
 
-Kiểm tra dùng dữ liệu tạm, không tạo từ mẫu trong app. Bao gồm SHA-256/kích thước/schema thật; truy vấn có giới hạn; thoát ký tự SQL; sao chép đúng nghĩa; không lưu trước xác nhận; bảo toàn từ trùng/đóng băng; nhập cache, mở lại cache khi không có mạng; tải lỗi rồi thử lại; không xóa sổ cá nhân; cache chỉ đọc.
+Kiểm tra dùng dữ liệu tạm, không tạo từ mẫu trong app. Bao gồm không tải trước xác nhận ở cả tra cứu/chi tiết/biểu mẫu, xin phép lại khi tải lỗi; SHA-256/kích thước/schema thật; truy vấn có giới hạn; thoát ký tự SQL; sao chép đúng nghĩa; không lưu trước xác nhận; bảo toàn từ trùng/đóng băng; nhập cache, mở lại cache khi không có mạng không cần xác nhận lại; không xóa sổ cá nhân; cache chỉ đọc.
 
 App Storage đã được nạp. Nếu cần khôi phục asset nguồn trên môi trường có App Storage đã cấp:
 

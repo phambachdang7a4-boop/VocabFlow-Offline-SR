@@ -12,6 +12,7 @@ import { normalizeTerm } from '@/data/vocabulary';
 import { getDictionaryDraft } from '@/data/dictionary';
 import { validDictionaryId } from '@/domain/dictionary';
 import { useDictionary } from '@/hooks/useDictionary';
+import { DictionaryGate } from '@/components/DictionaryGate';
 
 function goBack() {
   if (router.canGoBack()) router.back();
@@ -244,6 +245,11 @@ function DictionaryDraftScreen({ wordId, senseId }: { wordId: number; senseId: n
   }, [decided, duplicate, vocabError, formShown]);
 
   if (formShown && draft) return <WordForm key={`dict-${wordId}-${senseId}`} initial={draft} fromDictionary />;
+  if (!dict.ready) return (
+    <Centered title="Kho từ điển">
+      <DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} approveDownload={dict.approveDownload} />
+    </Centered>
+  );
   const failure = dict.error ?? error;
   if (failure) {
     return (

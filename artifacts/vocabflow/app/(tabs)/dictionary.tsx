@@ -95,7 +95,7 @@ export default function DictionaryScreen() {
   };
 
   let body: React.ReactNode;
-  if (!dict.ready) body = <DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} />;
+  if (!dict.ready) body = <DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} approveDownload={dict.approveDownload} />;
   else if (!debounced) body = (
     <EmptyState icon="search" title="Tra một từ tiếng Anh" body="Gõ vài chữ cái đầu. Chỉ những nghĩa bạn chọn mới được ghi vào sổ và trở thành thẻ ôn." />
   );

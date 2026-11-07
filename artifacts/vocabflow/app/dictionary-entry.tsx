@@ -79,7 +79,7 @@ export default function DictionaryEntryScreen() {
       </View>
     );
   }
-  if (!dict.ready) return <View style={{ flex: 1, backgroundColor: c.background }}><DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} /></View>;
+  if (!dict.ready) return <View style={{ flex: 1, backgroundColor: c.background }}><DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} approveDownload={dict.approveDownload} /></View>;
   if (error) {
     return (
       <View style={[styles.center, { backgroundColor: c.background, padding: 20, gap: 12 }]}>

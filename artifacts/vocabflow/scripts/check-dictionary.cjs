@@ -108,7 +108,16 @@ function adapter(filename, readOnly = false) {
   }
   const stages = [];
   let repo = repository(async () => { downloads++; return new Response(bytes); });
-  const loaded = await repo.openDictionary(stage => stages.push(stage));
+  const waiting = [];
+  await assert.rejects(repo.openDictionary(stage => waiting.push(stage)), /Cần xác nhận/);
+  assert.deepEqual(waiting, ['checking', 'awaiting-consent']);
+  assert.equal(downloads, 0, 'Opening a dictionary screen must not spend mobile data');
+  await assert.rejects(repo.searchDictionary('hello'), /Cần xác nhận/);
+  await assert.rejects(repo.getDictionaryEntry(hello.id), /Cần xác nhận/);
+  await assert.rejects(repo.getDictionaryDraft(hello.id, sense.id), /Cần xác nhận/);
+  assert.equal(downloads, 0, 'Deep links and background readers cannot bypass consent');
+  assert.equal(deleted.length, 0, 'Waiting for permission does not delete any cache');
+  const loaded = await repo.openDictionary(stage => stages.push(stage), { allowDownload: true });
   assert.deepEqual(stages, ['checking', 'downloading', 'verifying', 'ready']);
   assert.equal(downloads, 1);
   assert.match(loaded.handle.prepare('EXPLAIN QUERY PLAN SELECT id FROM words WHERE word LIKE ? ORDER BY word COLLATE NOCASE,id').all('a%').map(row => row.detail).join(' '), /idx_vocabflow_words_nocase/);
@@ -131,19 +140,20 @@ function adapter(filename, readOnly = false) {
     if (!online) throw new Error('No connection');
     return new Response(bytes);
   });
-  await assert.rejects(repo.openDictionary(), /Không thể nạp/);
+  await assert.rejects(repo.openDictionary(undefined, { allowDownload: true }), /Không thể nạp/);
   assert.equal(deleted.at(-1), name);
   assert.deepEqual((await personal.repo.listWords())[0], snapshot);
+  await assert.rejects(repo.openDictionary(), /Cần xác nhận/, 'A failed transfer must request fresh permission before retrying');
   online = true;
-  const recovered = await repo.openDictionary();
+  const recovered = await repo.openDictionary(undefined, { allowDownload: true });
   assert.ok((await repo.searchDictionary('hello')).items.length);
   await recovered.closeAsync();
 
   rmSync(join(root, name));
   repo = repository(async () => new Response(Buffer.alloc(DICTIONARY.bytes)));
-  await assert.rejects(repo.openDictionary(), /không đúng phiên bản/);
+  await assert.rejects(repo.openDictionary(undefined, { allowDownload: true }), /không đúng phiên bản/);
   assert.deepEqual((await personal.repo.listWords())[0], snapshot);
-  console.log('PASS: pinned real 104,829-word SQLite; bounded prefix/sense paging; literal wildcard safety; selected-sense draft; deliberate save/SRS; duplicate/freeze preservation; checksummed import; indexed read-only cache; offline reopen; failed-download retry; personal-data isolation.');
+  console.log('PASS: no transfer before explicit consent (screen, search, detail and draft); fresh permission on retry; cached offline reads need no approval; real 104,829-word SQLite; paging; draft/save/SRS; duplicate/freeze preservation; verified import and personal-data isolation.');
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;

@@ -12,7 +12,7 @@ export const DICTIONARY = {
 
 export const DICTIONARY_PAGE_SIZE = 30;
 export const DICTIONARY_ASSET_PATH = '/api/dictionary/asset';
-export type DictionaryStage = 'checking' | 'downloading' | 'verifying' | 'ready';
+export type DictionaryStage = 'checking' | 'awaiting-consent' | 'downloading' | 'verifying' | 'ready';
 export interface DictionaryMatch { id: number; term: string; meaning: string }
 export interface DictionarySense { id: number; definition: string; pos: string | null; subPos: string | null; example: string | null }
 export interface DictionaryPronunciation { ipa: string; region: string | null }

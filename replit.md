@@ -10,6 +10,7 @@
 - Theo yêu cầu hiện tại: tạo bản không giới hạn số từ, kể cả từ đóng băng. Tạm hoãn giới hạn Free 100 từ và màn mời Premium; chỉ triển khai lại khi người dùng yêu cầu.
 - Không thêm dữ liệu mẫu, từ khởi tạo hoặc thanh toán thật.
 - Người dùng đã duyệt mở rộng Tra Từ: tích hợp kho Skypedia Anh–Việt riêng để tra cứu; chỉ đưa từ vào sổ và SRS khi người dùng chọn nghĩa rồi lưu.
+- Người dùng yêu cầu hỏi trước khi dùng dữ liệu di động để tải từ điển. Quy tắc an toàn: không tự tải trên bất kỳ loại mạng nào; hiện dung lượng/cảnh báo cước và chờ “Đồng ý tải” cho từng lần tải/thử lại. Kho đã nạp vẫn mở offline không cần hỏi lại; “Để sau” giữ nguyên sổ và ôn tập.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
 
 ## Run & Operate
@@ -22,7 +23,7 @@
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
-- API chỉ phục vụ tệp tham chiếu công khai ở `/api/dictionary/asset` từ App Storage. App nạp lần đầu khi dùng Tra Từ; các truy vấn, sổ cá nhân và tiến độ không gửi lên server.
+- API chỉ phục vụ tệp tham chiếu công khai ở `/api/dictionary/asset` từ App Storage. App chỉ nạp lần đầu sau xác nhận rõ ràng ở Tra Từ; các truy vấn, sổ cá nhân và tiến độ không gửi lên server.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.
 
 ## Cấu trúc
