@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -15,6 +15,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { Appearance, Platform, Pressable } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { router, Stack } from 'expo-router';
@@ -60,16 +61,33 @@ function RootLayoutNav() {
 function AppearanceFrame() {
   const { mode, ready } = useAppearance();
   const c = useColors();
-  useEffect(() => {
-    if (ready) void SplashScreen.hideAsync();
-  }, [ready]);
+  const splashHidden = useRef(false);
   useEffect(() => {
     if (!ready) return;
-    if (Platform.OS !== 'web') Appearance.setColorScheme(mode);
-    else if (typeof document !== 'undefined') {
+    if (Platform.OS !== 'web') {
+      Appearance.setColorScheme(mode);
+      void SystemUI.setBackgroundColorAsync(c.background).then(() => {
+        if (!splashHidden.current) {
+          splashHidden.current = true;
+          void SplashScreen.hideAsync();
+        }
+      }).catch(error => {
+        console.warn('Could not set the native app background color.', error);
+        if (!splashHidden.current) {
+          splashHidden.current = true;
+          void SplashScreen.hideAsync();
+        }
+      });
+      return;
+    }
+    if (typeof document !== 'undefined') {
       document.documentElement.style.colorScheme = mode;
       document.documentElement.style.backgroundColor = c.background;
       document.body.style.backgroundColor = c.background;
+    }
+    if (!splashHidden.current) {
+      splashHidden.current = true;
+      void SplashScreen.hideAsync();
     }
   }, [mode, ready, c.background]);
   // Wait only on the first read; retries later must not unmount navigation/SRS.

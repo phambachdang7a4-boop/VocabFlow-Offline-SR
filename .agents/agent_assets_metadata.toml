@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "FIzpWoc0g5J9wegYqG_zb"
+uri = "file://artifacts/vocabflow/assets/images/icon.png"
+type = "image"
+title = "VocabFlow app icon"
+description = "Square 1024×1024 launcher icon with a book, navy badge and golden learning path."
+logical_id = "fd3390cc-8e13-4e6b-8826-dbc3a16db289"
+content_hash = "sha256:33bde5c3d14e0f362f097c851507ac2b1204573f48d4f5635d4f7a88267d3c5e"
+size = 961481
+mtime_ms = 1794039016614
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/fd3390cc-8e13-4e6b-8826-dbc3a16db289/89818664-f31d-4523-8d9a-f77ab1095f97"
+storage_version_token = "1794039232424804"
+content_type = "image/png"

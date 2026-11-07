@@ -4,8 +4,13 @@
     "slug": "vocabflow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/vocabflow-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "vocabflow",
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F1E3"
+    },
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false
@@ -14,7 +19,7 @@
       "package": "com.vocabflow.app"
     },
     "web": {
-      "favicon": "./assets/images/vocabflow-icon.png",
+      "favicon": "./assets/images/icon.png",
       "output": "static"
     },
     "plugins": [
