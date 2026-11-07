@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { DICTIONARY, type DictionaryStage } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
@@ -19,10 +19,23 @@ export function DictionaryGate({ stage, error, retry, approveDownload }: { stage
   const c = useColors();
   const bottom = useBottomPad();
   const needsConsent = stage === 'awaiting-consent';
+  const showLoadingArtwork = !error;
+  const artworkSize = needsConsent ? 150 : 240;
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottom, gap: 14 }}
       keyboardShouldPersistTaps="handled" testID="dictionary-gate">
       {error ? <ErrorBanner message={error} /> : null}
+      {showLoadingArtwork ? (
+        <View style={{ alignItems: 'center' }}>
+          <Image
+            testID="dictionary-loading-illustration"
+            accessibilityLabel="Thám tử tra cứu trong thư viện"
+            source={require('../assets/images/dictionary-loading.jpg')}
+            resizeMode="contain"
+            style={{ width: artworkSize, height: artworkSize, borderRadius: c.radius }}
+          />
+        </View>
+      ) : null}
       {needsConsent || !error ? (
         <View style={{ padding: 16, gap: 10, borderWidth: 1, backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
