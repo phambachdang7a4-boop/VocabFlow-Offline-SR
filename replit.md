@@ -23,6 +23,7 @@
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
+- `node artifacts/vocabflow/scripts/check-dictionary-button.cjs`: kiểm tra nút tải bắt đầu trực tiếp, khóa nhấn trùng và xin phép lại khi lỗi.
 - API chỉ phục vụ tệp tham chiếu công khai ở `/api/dictionary/asset` từ App Storage. App chỉ nạp lần đầu sau xác nhận rõ ràng ở Tra Từ; các truy vấn, sổ cá nhân và tiến độ không gửi lên server.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.
 
