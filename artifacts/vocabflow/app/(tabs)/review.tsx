@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { createReviewExercise, type ReviewExercise } from '@/domain/review-exercises';
 import type { VocabularyWord } from '@/data/types';
 import { Feather } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useNavigation } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
 import { useReviewClock } from '@/hooks/useReviewClock';
@@ -20,6 +21,8 @@ type Session = { token: number; queue: number[]; processed: number[]; index: num
 export default function ReviewScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const bottom = useBottomPad();
   const now = useReviewClock();
   const day = localDay(new Date(now));
@@ -33,6 +36,13 @@ export default function ReviewScreen() {
   const overview = useMemo(() => reviewOverview(words, day), [words, day]);
   const card = overview.dueWords[0];
   const inSession = !!session;
+
+  useEffect(() => {
+    const tabs = navigation.getParent();
+    if (!tabs) return;
+    tabs.setOptions({ tabBarStyle: inSession ? { display: 'none' } : undefined });
+    return () => tabs.setOptions({ tabBarStyle: undefined });
+  }, [navigation, inSession]);
 
   useFocusEffect(useCallback(() => {
     setSession(null);
@@ -106,37 +116,50 @@ export default function ReviewScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker="Học ngắt quãng" title={inSession ? 'Phiên ôn tập' : 'Ôn tập'} right={
-        <Pressable testID="review-open-settings" accessibilityRole="button" accessibilityLabel="Mở cài đặt"
-          onPress={() => router.push('/settings')}
-          style={({ pressed }) => [styles.cog, { backgroundColor: c.headerButton, borderColor: c.headerButton, opacity: pressed ? 0.6 : 1 }]}>
-          <Feather name="settings" size={20} color={c.headerForeground} />
-        </Pressable>
-      } />
-      <KeyboardAwareScrollViewCompat bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottom, flexGrow: 1, gap: 18 }}>
-        {error ? <ErrorBanner message={inSession ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.` : error} onRetry={reload} /> : null}
-        {session ? (
-          <>
-            <View style={styles.sessionTop}>
-              <Pressable testID="review-back-overview" accessibilityRole="button" accessibilityLabel="Về tổng quan"
-                onPress={() => { if (!busyRef.current) setSession(null); }} disabled={busy} hitSlop={10}
-                style={[styles.back, { backgroundColor: c.card, borderColor: c.border, opacity: busy ? 0.4 : 1 }]}>
-                <Feather name="arrow-left" size={18} color={c.foreground} />
-              </Pressable>
-              <View style={{ flex: 1, gap: 6 }}>
-                <View style={[styles.track, { backgroundColor: c.reviewTrack }]}>
-                  <View style={[styles.fill, { backgroundColor: c.primary, width: `${(session.processed.length / session.queue.length) * 100}%` }]} />
-                </View>
-                <Text testID="due-count" style={[styles.noteText, { color: c.mutedForeground }]}>
-                  Đã xong {session.processed.length} / {session.queue.length} từ
-                </Text>
+      {session ? (
+        <View style={[styles.sessionHeader, { paddingTop: (Platform.OS === 'web' ? 67 : insets.top) + 10, backgroundColor: c.background }]}>
+          <View style={styles.sessionProgressRow}>
+            <Pressable testID="review-back-overview" accessibilityRole="button" accessibilityLabel="Thoát phiên ôn tập"
+              onPress={() => { if (!busyRef.current) setSession(null); }} disabled={busy} hitSlop={10}
+              style={({ pressed }) => [styles.sessionClose, { opacity: busy ? 0.35 : pressed ? 0.55 : 1 }]}>
+              <Feather name="x" size={24} color={c.mutedForeground} />
+            </Pressable>
+            <View style={[styles.sessionMark, { backgroundColor: c.accent }]}>
+              <Feather name="book-open" size={15} color={c.primaryForeground} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View accessibilityLabel={`Tiến độ ${session.processed.length} trên ${session.queue.length} từ`}
+                style={[styles.track, { backgroundColor: c.reviewTrack }]}>
+                <View style={[styles.fill, { backgroundColor: c.primary, width: `${(session.processed.length / session.queue.length) * 100}%` }]} />
               </View>
             </View>
-            <ReviewCard key={`${session.token}:${session.index}:${session.word.id}`} word={session.word} exercise={session.exercise}
-              blocked={!!error} isLast={!session.queue.some(q => q !== session.word.id && !session.processed.includes(q) && overview.dueWords.some(w => w.id === q))}
-              onBusyChange={value => changeBusy(session.token, session.index, value)}
-              onCommitted={id => committed(session.token, id)} onNext={() => next(session.token)} />
-          </>
+            <Text testID="review-session-count" style={[styles.sessionCount, { color: c.mutedForeground }]}>
+              {session.processed.length}/{session.queue.length}
+            </Text>
+          </View>
+          <Text style={[styles.sessionTitle, { color: c.foreground }]}>Điền từ</Text>
+        </View>
+      ) : (
+        <ScreenHeader kicker="Học ngắt quãng" title="Ôn tập" right={
+          <Pressable testID="review-open-settings" accessibilityRole="button" accessibilityLabel="Mở cài đặt"
+            onPress={() => router.push('/settings')}
+            style={({ pressed }) => [styles.cog, { backgroundColor: c.headerButton, borderColor: c.headerButton, opacity: pressed ? 0.6 : 1 }]}>
+            <Feather name="settings" size={20} color={c.headerForeground} />
+          </Pressable>
+        } />
+      )}
+      <KeyboardAwareScrollViewCompat bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{
+        paddingHorizontal: 20,
+        paddingBottom: session ? Math.max(insets.bottom, 16) + 20 : bottom,
+        flexGrow: 1,
+        gap: 18,
+      }}>
+        {error ? <ErrorBanner message={inSession ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.` : error} onRetry={reload} /> : null}
+        {session ? (
+          <ReviewCard key={`${session.token}:${session.index}:${session.word.id}`} word={session.word} exercise={session.exercise}
+            blocked={!!error} isLast={!session.queue.some(q => q !== session.word.id && !session.processed.includes(q) && overview.dueWords.some(w => w.id === q))}
+            onBusyChange={value => changeBusy(session.token, session.index, value)}
+            onCommitted={id => committed(session.token, id)} onNext={() => next(session.token)} />
         ) : loading ? (
           <>
             <Skeleton h={64} /><Skeleton h={260} /><Skeleton h={56} />
@@ -163,9 +186,13 @@ const styles = StyleSheet.create({
   due: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 10 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
-  sessionTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  sessionHeader: { paddingHorizontal: 20, paddingBottom: 18, gap: 26 },
+  sessionProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sessionClose: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
+  sessionMark: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  sessionCount: { fontFamily: F.s, fontSize: 12, minWidth: 28, textAlign: 'right' },
+  sessionTitle: { fontFamily: F.b, fontSize: 20, textAlign: 'center' },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
   cog: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  back: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
 });

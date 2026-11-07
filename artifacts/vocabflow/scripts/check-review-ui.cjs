@@ -8,6 +8,8 @@ const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
 const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput'].map(type => [type, type]));
 native.StyleSheet = { create: value => value };
+native.Platform = { OS: 'android' };
+native.Keyboard = { dismiss() {} };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function find(node, predicate) {
   if (Array.isArray(node)) return node.map(child => find(child, predicate)).find(Boolean);
@@ -18,7 +20,9 @@ function find(node, predicate) {
 // Real screen/component callbacks, controlled context/clock; not a touch E2E.
 function mount(file, properties = {}, initial = {}) {
   let now = new Date('2026-11-07T23:59:59').getTime(), dirty = true, cursor, tree, focus, focusCleanup;
-  const slots = [], effects = [], routes = [];
+  const slots = [], effects = [], routes = [], tabOptions = [];
+  const tabs = { setOptions: options => tabOptions.push(options) };
+  const navigation = { getParent: () => tabs };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const react = {
     createElement: element,
@@ -45,7 +49,8 @@ function mount(file, properties = {}, initial = {}) {
   const loaded = loadTs(join(__dirname, file), {
     react: { ...react, default: react }, 'react-native': native,
     '@expo/vector-icons': { Feather: 'Feather' },
-    'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; } },
+    'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; }, useNavigation: () => navigation },
+    'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
@@ -66,6 +71,7 @@ function mount(file, properties = {}, initial = {}) {
   }
   return {
     routes,
+    tabOptions,
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     update(next) { Object.assign(context, next); dirty = true; render(); },
@@ -100,9 +106,13 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(screen.byType('ReviewCard'), undefined, 'Never auto-start a review at expiry');
   screen.byId('review-start').props.onPress();
   assert.equal(screen.byType('ReviewCard').props.word.id, 1);
-  assert.ok(settingsButton(), 'Settings cog is also available during a review session');
+  assert.equal(screen.byId('review-open-settings'), undefined, 'Hide settings while a review is in progress');
+  assert.equal(screen.tabOptions.at(-1).tabBarStyle.display, 'none', 'Hide the tab bar during the full-screen review');
+  assert.equal(screen.byId('review-session-count').props.children.join(''), '0/1');
   screen.byId('review-back-overview').props.onPress();
   assert.ok(screen.byId('review-start'));
+  assert.ok(settingsButton(), 'Settings return on the overview');
+  assert.equal(screen.tabOptions.at(-1).tabBarStyle, undefined, 'Restore the tab bar after leaving the session');
   screen.byId('review-start').props.onPress();
   const question = screen.byType('ReviewCard').props;
   const reviewed = { ...tomorrowWord, ...srs.applyReview(tomorrowWord, true, '2026-11-08') };
@@ -182,6 +192,10 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const card = mount('../components/ReviewCard.tsx', { ...makeProps(), onCommitted: id => committed.push(id), onNext: () => nexts++ }, {
     recordReview: (...args) => new Promise(resolve => { calls.push(args); resolveSave = resolve; }),
   });
+  assert.ok(find(card.byId('review-inline-meaning'), node => node.props?.testID === 'review-answer-input'),
+    'Meaning answer must be entered in the answer blank below the meaning');
+  assert.ok(card.byId('review-answer-input').props.placeholder.includes('t'),
+    'The level hint must be shown inside the answer blank');
   assert.equal(card.byId('flashcard'), undefined);
   assert.equal(card.byId('review-correct'), undefined);
   assert.equal(card.byId('review-answer-correct'), undefined);
@@ -233,7 +247,15 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
     assert.equal(high.byId('review-answer-correct'), undefined);
     assert.equal(high.byId('review-answer-input').props.autoCorrect, false);
     assert.equal(high.byId('review-answer-input').props.spellCheck, false);
+    assert.ok(/^_/.test(high.byId('review-answer-input').props.placeholder),
+      'High-level reviews show only blank letter slots, not a letter hint');
   }
+  const cloze = mount('../components/ReviewCard.tsx', {
+    ...makeProps(),
+    exercise: { kind: 'cloze', prompt: 'They ________ it.', hint: 't___' },
+  });
+  assert.ok(find(cloze.byId('review-inline-sentence'), node => node.props?.testID === 'review-answer-input'),
+    'Cloze answer must be entered directly inside the sentence blank');
   const freezeCalls = [];
   const freezeCard = mount('../components/ReviewCard.tsx', makeProps(), {
     setWordFrozen: async (...args) => { freezeCalls.push(args); },

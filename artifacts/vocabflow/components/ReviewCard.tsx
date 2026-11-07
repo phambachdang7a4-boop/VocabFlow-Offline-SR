@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
@@ -77,53 +77,89 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
     void persist();
   };
 
-  const check = () => { if (typed.trim()) commit({ action: 'grade', correct: checkReviewAnswer(typed, word.term), typed }); };
-  const dontKnow = () => commit({ action: 'grade', correct: false, typed: '' });
-  const freeze = () => commit({ action: 'freeze' });
+  const check = () => {
+    if (!typed.trim()) return;
+    Keyboard.dismiss();
+    commit({ action: 'grade', correct: checkReviewAnswer(typed, word.term), typed });
+  };
+  const dontKnow = () => { Keyboard.dismiss(); commit({ action: 'grade', correct: false, typed: '' }); };
+  const freeze = () => { Keyboard.dismiss(); commit({ action: 'freeze' }); };
   const retry = () => { if (phase === 'failed' && !blocked) void persist(); };
 
   const answered = outcome !== null;
   const graded = outcome?.action === 'grade' ? outcome : null;
-  const label = exercise.kind === 'cloze' ? 'ĐIỀN TỪ VÀO CÂU' : 'ĐIỀN TỪ THEO NGHĨA';
   const tone = graded ? (graded.correct ? c.successText : c.destructiveText) : c.primary;
   const toneSoft = graded ? (graded.correct ? c.reviewRightSoft : c.destructiveSoft) : c.secondary;
+  const hintPattern = exercise.hint ?? Array.from(word.term).map(char => /[a-z0-9]/i.test(char) ? '_' : char).join('');
+  const answerPlaceholder = hintPattern;
+  const answerWidth = Math.max(96, Math.min(310, Array.from(word.term).length * (exercise.kind === 'cloze' ? 16 : 19) + 28));
+  const sentenceAnswer = exercise.kind === 'cloze';
+  const answerInput = (
+    <TextInput
+      testID="review-answer-input"
+      value={answered && graded ? graded.typed : typed}
+      onChangeText={setTyped}
+      editable={!answered && !blocked}
+      placeholder={answerPlaceholder}
+      placeholderTextColor={c.mutedForeground}
+      autoCorrect={false}
+      spellCheck={false}
+      autoCapitalize="none"
+      autoComplete="off"
+      maxLength={200}
+      returnKeyType="done"
+      onSubmitEditing={check}
+      blurOnSubmit
+      accessibilityLabel={exercise.hint
+        ? `Điền từ; gợi ý ${Array.from(exercise.hint).join(' ')}`
+        : 'Điền từ vào chỗ trống'}
+      style={[
+        styles.answerInput,
+        sentenceAnswer ? styles.sentenceAnswer : styles.meaningAnswer,
+        {
+          width: answerWidth,
+          backgroundColor: c.input,
+          color: c.foreground,
+          borderColor: answered ? tone : c.border,
+          borderBottomColor: answered ? tone : c.reviewHint,
+          borderRadius: sentenceAnswer ? 9 : c.radius + 2,
+        },
+      ]}
+    />
+  );
+
+  const inlinePrompt = () => {
+    let inputInserted = false;
+    return exercise.prompt.split(/(_{6,})/g).map((part, index) => {
+      if (/^_{6,}$/.test(part)) {
+        if (inputInserted) {
+          return <Text key={`extra-blank-${index}`} style={[styles.extraBlank, { color: c.reviewHint }]}>_____</Text>;
+        }
+        inputInserted = true;
+        return <React.Fragment key={`answer-${index}`}>{answerInput}</React.Fragment>;
+      }
+
+      return part.trim().split(/\s+/).filter(Boolean).map((token, tokenIndex) => (
+        <Text key={`${index}-${tokenIndex}`} style={[styles.sentenceToken, { color: c.foreground }]}>{token}</Text>
+      ));
+    });
+  };
 
   return (
-    <View style={{ gap: 16 }}>
-      <View style={[styles.card, { backgroundColor: c.reviewPaper, borderColor: c.border, borderRadius: c.radius + 10 }]}>
-        <View style={styles.labelRow}>
-          <View style={[styles.dot, { backgroundColor: c.accent }]} />
-          <Text style={[styles.label, { color: c.accent }]}>{label}</Text>
-          <Text style={[styles.level, { color: c.mutedForeground }]}>CẤP {word.level}/6</Text>
-        </View>
-        <Text style={[exercise.kind === 'cloze' ? styles.sentence : styles.meaning, { color: c.foreground }]}>{exercise.prompt}</Text>
-        {exercise.fallback ? <Text style={[styles.small, { color: c.mutedForeground }]}>Chưa có câu ví dụ phù hợp, ôn theo nghĩa.</Text> : null}
-        {exercise.hint && !answered ? (
-          <View testID="review-letter-hint" accessible accessibilityLabel={`Gợi ý: ${Array.from(exercise.hint).map(char => char === '_' ? 'trống' : char).join(' ')}`}>
-            <Text style={[styles.hint, { color: c.reviewHint }]}>{Array.from(exercise.hint).join(' ')}</Text>
-          </View>
+    <View style={[styles.root, styles.inlineRoot]}>
+      <View testID={sentenceAnswer ? 'review-inline-question' : 'review-inline-meaning'} style={styles.inlineQuestion}>
+        {sentenceAnswer ? (
+          <View testID="review-inline-sentence" style={styles.sentenceFlow}>{inlinePrompt()}</View>
+        ) : (
+          <>
+            <Text style={[styles.meaning, { color: c.foreground }]}>{exercise.prompt}</Text>
+            {answerInput}
+          </>
+        )}
+        {exercise.fallback ? (
+          <Text style={[styles.small, { color: c.mutedForeground }]}>Chưa có câu ví dụ phù hợp, ôn theo nghĩa.</Text>
         ) : null}
-        {!exercise.hint && !answered ? <Text style={[styles.small, { color: c.mutedForeground }]}>Cấp {word.level}: không có gợi ý chữ cái.</Text> : null}
       </View>
-
-      <TextInput
-        testID="review-answer-input"
-        value={answered && graded ? graded.typed : typed}
-        onChangeText={setTyped}
-        editable={!answered && !blocked}
-        placeholder="Gõ đầy đủ từ tiếng Anh"
-        placeholderTextColor={c.mutedForeground}
-        autoCorrect={false}
-        spellCheck={false}
-        autoCapitalize="none"
-        autoComplete="off"
-        maxLength={200}
-        returnKeyType="done"
-        onSubmitEditing={check}
-        blurOnSubmit={false}
-        accessibilityLabel="Ô nhập câu trả lời"
-        style={[styles.input, { backgroundColor: c.input, color: c.foreground, borderColor: answered ? tone : c.border, borderRadius: c.radius }]}
-      />
 
       {answered ? (
         <View testID="review-result" accessibilityLiveRegion="polite" style={[styles.result, { backgroundColor: toneSoft, borderRadius: c.radius }]}>
@@ -160,38 +196,51 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
 
       {saveError ? <ErrorBanner message={saveError} /> : null}
 
-      {!answered ? (
-        <>
-          <Button testID="review-check" label="Kiểm tra" icon="check" onPress={check} disabled={!typed.trim() || blocked} />
-          <Pressable testID="review-dont-know" accessibilityRole="button" onPress={dontKnow} disabled={blocked} hitSlop={8}>
-            <Text style={[styles.link, { color: blocked ? c.mutedForeground : c.primary }]}>Mình không thuộc từ này</Text>
-          </Pressable>
-          <Button testID="review-freeze" label="Đóng băng" icon="pause-circle" variant="ghost" onPress={freeze} disabled={blocked} />
-        </>
-      ) : phase === 'failed' ? (
-        <Button testID="review-retry-save" label="Thử lưu lại" icon="refresh-cw" onPress={retry} disabled={blocked} />
-      ) : (
-        <Button testID="review-continue" label={isLast ? 'Kết thúc' : 'Tiếp tục'} icon={isLast ? 'flag' : 'arrow-right'}
-          onPress={() => { if (phase === 'saved' && !blocked && !inFlight.current) cb.current.onNext(); }}
-          loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} />
-      )}
+      <View style={[styles.actions, styles.inlineActions]}>
+        {!answered ? (
+          <>
+            <Button testID="review-check" label="Kiểm tra" icon="check" onPress={check} disabled={!typed.trim() || blocked} />
+            <Pressable testID="review-dont-know" accessibilityRole="button" onPress={dontKnow} disabled={blocked} hitSlop={8}>
+              <Text style={[styles.link, { color: blocked ? c.mutedForeground : c.primary }]}>Mình không thuộc từ này</Text>
+            </Pressable>
+            <Pressable testID="review-freeze" accessibilityRole="button" accessibilityLabel="Đóng băng từ này"
+              onPress={freeze} disabled={blocked} hitSlop={8}
+              style={({ pressed }) => [styles.freezeAction, { opacity: blocked ? 0.4 : pressed ? 0.55 : 1 }]}>
+              <Feather name="pause-circle" size={16} color={c.mutedForeground} />
+              <Text style={[styles.freezeText, { color: c.mutedForeground }]}>Đóng băng từ này</Text>
+            </Pressable>
+          </>
+        ) : phase === 'failed' ? (
+          <Button testID="review-retry-save" label="Thử lưu lại" icon="refresh-cw" onPress={retry} disabled={blocked} />
+        ) : (
+          <Button testID="review-continue" label={isLast ? 'Kết thúc' : 'Tiếp tục'} icon={isLast ? 'flag' : 'arrow-right'}
+            onPress={() => { if (phase === 'saved' && !blocked && !inFlight.current) cb.current.onNext(); }}
+            loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { minHeight: 200, padding: 22, gap: 14, borderWidth: 1, justifyContent: 'center' },
+  root: { gap: 16 },
+  inlineRoot: { flexGrow: 1, justifyContent: 'space-between', paddingBottom: 12 },
+  inlineQuestion: { flexGrow: 1, minHeight: 250, alignItems: 'center', justifyContent: 'flex-start', gap: 28, paddingHorizontal: 4, paddingTop: 14 },
+  sentenceFlow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 4, paddingHorizontal: 2 },
+  sentenceToken: { fontFamily: F.m, fontSize: 18, lineHeight: 28 },
+  extraBlank: { fontFamily: F.s, fontSize: 18, letterSpacing: 2, paddingHorizontal: 4 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  label: { fontFamily: F.b, fontSize: 11, letterSpacing: 1.6, flex: 1 },
-  level: { fontFamily: F.s, fontSize: 11, letterSpacing: 1 },
   meaning: { fontFamily: F.b, fontSize: 24, lineHeight: 32, textAlign: 'center' },
-  sentence: { fontFamily: F.m, fontSize: 18, lineHeight: 28, textAlign: 'center' },
-  hint: { fontFamily: F.s, fontSize: 20, letterSpacing: 2, textAlign: 'center' },
   small: { fontFamily: F.m, fontSize: 13, lineHeight: 19 },
-  input: { borderWidth: 1.5, paddingHorizontal: 16, paddingVertical: 14, fontFamily: F.s, fontSize: 20, textAlign: 'center' },
+  answerInput: { borderWidth: 1.5, borderBottomWidth: 2, paddingHorizontal: 12, paddingVertical: 10, fontFamily: F.s, fontSize: 18, letterSpacing: 2, textAlign: 'center' },
+  sentenceAnswer: { minHeight: 42, paddingHorizontal: 7, paddingVertical: 6, fontSize: 17, flexShrink: 0 },
+  meaningAnswer: { minHeight: 56, paddingHorizontal: 14, paddingVertical: 12, fontSize: 20 },
   result: { padding: 16, gap: 6 },
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },
+  actions: { gap: 12 },
+  inlineActions: { marginTop: 20 },
+  freezeAction: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  freezeText: { fontFamily: F.m, fontSize: 13 },
   link: { fontFamily: F.s, fontSize: 15, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 6 },
 });

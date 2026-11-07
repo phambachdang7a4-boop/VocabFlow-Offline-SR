@@ -1,0 +1,17 @@
+.vocabflow-review-frame {
+  box-sizing: border-box;
+  min-height: 100vh;
+  width: 100%;
+  overflow: auto;
+  color: #23232d;
+  background: #f7f1e3;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.vocabflow-review-frame * {
+  box-sizing: border-box;
+}
+
+.vocabflow-review-frame input:focus {
+  outline: none;
+}
