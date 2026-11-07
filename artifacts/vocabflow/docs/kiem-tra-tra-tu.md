@@ -27,6 +27,8 @@
 ### 2. Lưu để ôn và chống trùng
 
 - Chọn kết quả để xem nghĩa ngay trong tab **Tra Từ** (tab ngoài cùng bên trái). Bấm **Lưu từ** cạnh đúng nghĩa muốn học. Biểu mẫu có từ, nghĩa đã chọn, IPA, ví dụ và ghi chú nguồn.
+- Ngay dưới thanh tìm kiếm khi mở mục từ có ô **Từ loại**: mặc định chọn loại của nghĩa đầu tiên theo thứ tự nguồn (nếu nghĩa đầu tiên là động từ thì chọn Verb), và chỉ hiện các nghĩa thuộc loại đó. Mở checklist chọn **Verb, Noun, Adjective, Adverb, Idiom, Others**; các loại có trong từ cũng theo thứ tự xuất hiện. Chọn nhiều loại để xem hợp các nghĩa; **Tất cả** bỏ bộ lọc. Loại không có trong mục từ bị vô hiệu hóa; các lựa chọn được tính trên toàn bộ nghĩa, không chỉ trang đầu.
+- Thử mục từ nhiều nghĩa như `work`, đổi giữa Noun và Verb rồi chọn cả hai, tải thêm và lưu một nghĩa. Từ/định nghĩa/IPA/ví dụ phải đúng nghĩa được chọn. Bộ lọc không sửa nội dung nguồn hay tiến độ trong sổ; đổi sang mục từ mới phải chọn loại của nghĩa đầu tiên của từ mới, không kế thừa bộ lọc trước. Dòng hướng dẫn “Bấm Lưu từ…” không còn hiển thị.
 - Dùng nút kính lúp hoặc phím tìm kiếm để tra ngay; nếu có từ khớp chính xác, app mở mục từ đó. **Kết quả tra cứu** quay về danh sách; sửa/xóa nội dung tìm kiếm cũng trở về kết quả, không để phản hồi cũ mở nhầm từ.
 - Chưa bấm Lưu thì từ chưa được thêm. Có thể sửa nghĩa trước khi lưu; không cắt nội dung nguồn âm thầm. Nếu vượt giới hạn độ dài của trường, rút gọn thủ công theo báo lỗi.
 - Bấm **Lưu vào sổ** → mở Sổ từ và Ôn tập để kiểm tra từ mới và hạn học ngay.

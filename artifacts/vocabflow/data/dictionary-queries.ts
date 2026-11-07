@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import {
-  DICTIONARY_PAGE_SIZE, dictionaryDraft, lookupPrefix, validDictionaryId,
-  type DictionaryEntry, type DictionaryMatch, type DictionaryMatches, type DictionaryPronunciation, type DictionarySense, type DictionarySuggestion,
+  DICTIONARY_PAGE_SIZE, DICTIONARY_PARTS, dictionaryDraft, lookupPrefix, validDictionaryId,
+  type DictionaryEntry, type DictionaryMatch, type DictionaryMatches, type DictionaryPronunciation, type DictionarySense, type DictionarySuggestion, type DictionaryPartOfSpeech,
 } from '../domain/dictionary';
 import { canSuggest, rankSuggestions, spellingVariants, suggestionTerm } from '../domain/dictionary-suggestions';
 
@@ -29,21 +29,39 @@ export async function searchInDictionary(db: SQLiteDatabase, query: string, offs
   return { items: rows.slice(0, DICTIONARY_PAGE_SIZE), hasMore: rows.length > DICTIONARY_PAGE_SIZE };
 }
 
-export async function entryInDictionary(db: SQLiteDatabase, id: number, offset = 0): Promise<DictionaryEntry> {
+// Codes and IDs are trusted constants, never user input. Both filtering and
+// available options share this classification; unknown/empty tags are Others.
+const PART_SQL = `CASE ${DICTIONARY_PARTS.filter(part => part.id !== 'other').map(part =>
+  `WHEN LOWER(TRIM(COALESCE(d.pos, ''))) IN (${part.codes.map(code => `'${code}'`).join(',')}) THEN '${part.id}'`,
+).join(' ')} ELSE 'other' END`;
+
+export async function entryInDictionary(db: SQLiteDatabase, id: number, offset = 0, parts: DictionaryPartOfSpeech[] | 'first' = []): Promise<DictionaryEntry> {
   checkId(id);
   checkPage(offset);
+  if (parts !== 'first' && (!Array.isArray(parts) || parts.length > DICTIONARY_PARTS.length
+    || parts.some(value => !DICTIONARY_PARTS.some(part => part.id === value)))) {
+    throw new Error('Bộ lọc từ loại không hợp lệ.');
+  }
   const word = await db.getFirstAsync<{ id: number; term: string }>('SELECT id, word AS term FROM words WHERE id = ?', id);
   if (!word) throw new Error('Không tìm thấy từ trong kho tra cứu.');
   const pronunciations = await db.getAllAsync<DictionaryPronunciation>(
     'SELECT ipa, region FROM pronunciations WHERE word_id = ? ORDER BY id', id,
   );
+  const available = await db.getAllAsync<{ part: DictionaryPartOfSpeech }>(
+    `SELECT ${PART_SQL} AS part
+     FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id WHERE wd.word_id = ?
+     GROUP BY part ORDER BY MIN(wd.id)`, id,
+  );
+  const selected = parts === 'first' ? available.slice(0, 1).map(row => row.part) : [...new Set(parts)];
   const senses = await db.getAllAsync<DictionarySense>(
     `SELECT wd.id, d.definition, d.pos, d.sub_pos AS subPos, wd.example
      FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id
-     WHERE wd.word_id = ? ORDER BY wd.id LIMIT ? OFFSET ?`,
-    id, DICTIONARY_PAGE_SIZE + 1, offset,
+     WHERE wd.word_id = ? ${selected.length ? `AND (${PART_SQL}) IN (${selected.map(() => '?').join(',')})` : ''}
+     ORDER BY wd.id LIMIT ? OFFSET ?`,
+    id, ...selected, DICTIONARY_PAGE_SIZE + 1, offset,
   );
-  return { ...word, pronunciations, senses: senses.slice(0, DICTIONARY_PAGE_SIZE), hasMore: senses.length > DICTIONARY_PAGE_SIZE };
+  return { ...word, pronunciations, senses: senses.slice(0, DICTIONARY_PAGE_SIZE), hasMore: senses.length > DICTIONARY_PAGE_SIZE,
+    partsOfSpeech: available.map(row => row.part) };
 }
 
 export async function suggestInDictionary(db: SQLiteDatabase, query: string): Promise<DictionarySuggestion[]> {

@@ -5,9 +5,10 @@ import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getDictionaryEntry } from '@/data/dictionary';
-import { exampleSegments, type DictionaryEntry, type DictionarySense } from '@/domain/dictionary';
+import { exampleSegments, type DictionaryEntry, type DictionaryPartOfSpeech, type DictionarySense } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { PartOfSpeechFilter } from '@/components/PartOfSpeechFilter';
 
 /** Shared reading view for one dictionary entry. Caller guarantees a valid id and a ready dictionary. */
 export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay lại' }: {
@@ -23,23 +24,51 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
   const [error, setError] = useState<string | null>(null);
   const [moreError, setMoreError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  // null is automatic first-in-source selection; [] is an explicit All choice.
+  const [parts, setParts] = useState<DictionaryPartOfSpeech[] | null>(null);
+  const [filterLoading, setFilterLoading] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
+  const [filterTick, setFilterTick] = useState(0);
   const reqRef = useRef(0);
+  const partsRef = useRef(parts);
+  partsRef.current = parts;
+  const hasEntryRef = useRef(false);
+  const selectedParts = useMemo(
+    () => parts ?? entry?.partsOfSpeech.slice(0, 1) ?? [],
+    [parts, entry?.partsOfSpeech],
+  );
 
   useEffect(() => {
     const rid = ++reqRef.current;
+    hasEntryRef.current = false;
     setLoading(true); setError(null); setMoreError(null); setEntry(null); setSenses([]); setHasMore(false); setLoadingMore(false);
-    getDictionaryEntry(id, 0).then(
-      (e) => { if (reqRef.current === rid) { setEntry(e); setSenses(e.senses); setHasMore(e.hasMore); } },
+    setFilterLoading(false); setFilterError(null);
+    getDictionaryEntry(id, 0, partsRef.current ?? 'first').then(
+      (e) => { if (reqRef.current === rid) { hasEntryRef.current = true; setEntry(e); setSenses(e.senses); setHasMore(e.hasMore); } },
       (e) => { if (reqRef.current === rid) setError(e instanceof Error ? e.message : 'Không thể mở mục từ.'); },
     ).finally(() => { if (reqRef.current === rid) setLoading(false); });
     return () => { reqRef.current += 1; };
   }, [id, tick]);
 
+  // Filter changes keep the entry header and reload page 0 for the new selection only.
+  const partsKey = parts?.join(',') ?? 'first';
+  const firstFilter = useRef(true);
+  useEffect(() => {
+    if (firstFilter.current) { firstFilter.current = false; return; }
+    if (!hasEntryRef.current) { setTick((n) => n + 1); return; }
+    const rid = ++reqRef.current;
+    setSenses([]); setHasMore(false); setLoadingMore(false); setMoreError(null); setFilterError(null); setFilterLoading(true);
+    getDictionaryEntry(id, 0, partsRef.current ?? 'first').then(
+      (e) => { if (reqRef.current === rid) { setEntry((prev) => prev ? { ...prev, ...e, partsOfSpeech: prev.partsOfSpeech.length ? prev.partsOfSpeech : e.partsOfSpeech } : e); setSenses(e.senses); setHasMore(e.hasMore); } },
+      (e) => { if (reqRef.current === rid) setFilterError(e instanceof Error ? e.message : 'Không thể lọc nghĩa.'); },
+    ).finally(() => { if (reqRef.current === rid) setFilterLoading(false); });
+  }, [partsKey, filterTick, id]);
+
   const loadMore = useCallback(() => {
-    if (!hasMore || loadingMore || !entry) return;
+    if (!hasMore || loadingMore || !entry || filterLoading) return;
     const rid = reqRef.current;
     setLoadingMore(true); setMoreError(null);
-    getDictionaryEntry(id, senses.length).then(
+    getDictionaryEntry(id, senses.length, selectedParts).then(
       (e) => {
         if (reqRef.current !== rid) return;
         setSenses((prev) => { const seen = new Set(prev.map((s) => s.id)); return [...prev, ...e.senses.filter((s) => !seen.has(s.id))]; });
@@ -47,7 +76,7 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
       },
       (e) => { if (reqRef.current === rid) setMoreError(e instanceof Error ? e.message : 'Không thể tải thêm nghĩa.'); },
     ).finally(() => { if (reqRef.current === rid) setLoadingMore(false); });
-  }, [hasMore, loadingMore, entry, id, senses.length]);
+  }, [hasMore, loadingMore, entry, id, senses.length, selectedParts, filterLoading]);
 
   const existing = useMemo(
     () => (entry ? words.find((w) => normalizeTerm(w.term) === normalizeTerm(entry.term)) : undefined),
@@ -93,9 +122,7 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
           <Text style={[styles.small, { color: c.dictMuted }]}>Trang hiện có được giữ nguyên, kể cả tiến độ ôn tập.</Text>
           <Button testID="entry-open-existing" label="Mở trang trong sổ" icon="book-open" variant="ghost" onPress={openExisting} />
         </View>
-      ) : (
-        <Text style={[styles.small, { color: c.dictMuted }]}>Bấm Lưu từ ở nghĩa bạn muốn học, rồi xem lại trước khi ghi vào sổ.</Text>
-      )}
+      ) : null}
       <View style={[styles.rule, { backgroundColor: c.dictLine }]} />
     </View>
   );
@@ -142,21 +169,48 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
     );
   };
 
+  const changeParts = (next: DictionaryPartOfSpeech[], force = false) => {
+    const unchanged = next.join(',') === selectedParts.join(',');
+    if (unchanged && !force && !filterError) return;
+    // Invalidate in the event itself: an earlier page can finish before React
+    // runs the selection effect. Never paint those rows under a new filter.
+    reqRef.current += 1;
+    setSenses([]); setHasMore(false); setLoadingMore(false); setMoreError(null);
+    setFilterError(null); setFilterLoading(true); setParts(next);
+    if (unchanged) setFilterTick(value => value + 1);
+  };
+  const filtered = selectedParts.length > 0;
+  const empty = filterLoading ? (
+    <View testID="entry-filter-loading"><Skeleton h={80} /><Skeleton h={80} /></View>
+  ) : filterError ? (
+    <View style={{ gap: 10 }}>
+      <ErrorBanner message={filterError} onRetry={() => changeParts(selectedParts, true)} />
+      <Button testID="entry-filter-reset" label="Xem tất cả nghĩa" variant="ghost" onPress={() => changeParts([])} />
+    </View>
+  ) : filtered ? (
+    <View testID="entry-filter-empty" style={{ gap: 10 }}>
+      <Text style={[styles.small, { color: c.dictMuted }]}>Không có nghĩa nào thuộc từ loại đã chọn.</Text>
+      <Button testID="entry-filter-reset" label="Xem tất cả nghĩa" variant="ghost" onPress={() => changeParts([])} />
+    </View>
+  ) : <Text style={[styles.small, { color: c.dictMuted }]}>Mục từ này chưa có nghĩa nào.</Text>;
+
   return (
+    <View style={{ flex: 1, backgroundColor: c.dictPage }}>
+    <PartOfSpeechFilter available={entry.partsOfSpeech} selected={selectedParts} onChange={changeParts} />
     <FlatList
       testID="entry-senses"
       style={{ backgroundColor: c.dictPage }}
       data={senses}
       keyExtractor={(s) => String(s.id)}
       renderItem={renderSense}
-      extraData={existing}
+      extraData={[existing, filterLoading, filterError]}
       ListHeaderComponent={header}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       onEndReachedThreshold={0.4}
       onEndReached={loadMore}
       contentContainerStyle={{ padding: 20, paddingBottom: bottomPad }}
-      ListEmptyComponent={<Text style={[styles.small, { color: c.dictMuted }]}>Mục từ này chưa có nghĩa nào.</Text>}
+      ListEmptyComponent={empty}
       ListFooterComponent={
         <View style={{ gap: 12, marginTop: 16 }}>
           {moreError ? <ErrorBanner message={moreError} onRetry={loadMore} /> : null}
@@ -168,6 +222,7 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
         </View>
       }
     />
+    </View>
   );
 }
 

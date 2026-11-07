@@ -17,12 +17,26 @@ export interface DictionaryMatch { id: number; term: string; meaning: string }
 export interface DictionarySuggestion { id: number; term: string }
 export interface DictionarySense { id: number; definition: string; pos: string | null; subPos: string | null; example: string | null }
 export interface DictionaryPronunciation { ipa: string; region: string | null }
+export const DICTIONARY_PARTS = [
+  { id: 'verb', label: 'Verb', codes: ['v', 'verb', 'vt', 'vi'] },
+  { id: 'noun', label: 'Noun', codes: ['n', 'noun'] },
+  { id: 'adjective', label: 'Adjective', codes: ['a', 'adj', 'adjective'] },
+  { id: 'adverb', label: 'Adverb', codes: ['d', 'adv', 'adverb'] },
+  { id: 'idiom', label: 'Idiom', codes: ['idiom', 'idioms'] },
+  { id: 'other', label: 'Others', codes: [] },
+] as const;
+export type DictionaryPartOfSpeech = typeof DICTIONARY_PARTS[number]['id'];
+export function dictionaryPartOfSpeech(pos: string | null): DictionaryPartOfSpeech {
+  const code = (pos ?? '').trim().toLowerCase();
+  return DICTIONARY_PARTS.find(part => part.codes.some(value => value === code))?.id ?? 'other';
+}
 export interface DictionaryEntry {
   id: number;
   term: string;
   pronunciations: DictionaryPronunciation[];
   senses: DictionarySense[];
   hasMore: boolean;
+  partsOfSpeech: DictionaryPartOfSpeech[];
 }
 export interface DictionaryMatches { items: DictionaryMatch[]; hasMore: boolean }
 

@@ -38,7 +38,7 @@ export default function DictionaryEntryScreen() {
   if (!dict.ready) return <View style={{ flex: 1, backgroundColor: c.background }}><DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} approveDownload={dict.approveDownload} /></View>;
   return (
     <View style={{ flex: 1, backgroundColor: c.dictPage }}>
-      <DictionaryEntryView id={id} bottomPad={bottomPad} onBack={goBack} />
+      <DictionaryEntryView key={id} id={id} bottomPad={bottomPad} onBack={goBack} />
     </View>
   );
 }

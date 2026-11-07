@@ -41,6 +41,9 @@ function adapter(filename, readOnly = false) {
   const publicUrl = `https://raw.githubusercontent.com/skypediacode/english-vietnamese-dictionary/${domain.DICTIONARY.commit}/dictionary_en_vi.db`;
   assert.equal(download.dictionaryDownloadUrl(), publicUrl, 'Public data must not require preview login or an API domain');
   const { DICTIONARY, DICTIONARY_PAGE_SIZE } = domain;
+  for (const [tag, expected] of [['N', 'noun'], ['noun', 'noun'], ['V', 'verb'], ['A', 'adjective'], ['D', 'adverb'], ['adv', 'adverb'], ['idiom', 'idiom'], [null, 'other'], ['unknown', 'other']]) {
+    assert.equal(domain.dictionaryPartOfSpeech(tag), expected);
+  }
   const bytes = readFileSync(source);
   assert.equal(bytes.length, DICTIONARY.bytes);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), DICTIONARY.sha256);
@@ -68,6 +71,44 @@ function adapter(filename, readOnly = false) {
   assert.equal(first.hasMore, true);
   assert.ok(next.items.every(row => !first.items.some(old => old.id === row.id)));
   const entry = await queries.entryInDictionary(reference, hello.id);
+  assert.ok(entry.partsOfSpeech.length > 0);
+  const multi = reference.handle.prepare(`SELECT wd.word_id AS id, COUNT(*) AS n
+    FROM word_definitions wd JOIN definitions d ON d.id=wd.definition_id
+    GROUP BY wd.word_id HAVING COUNT(*) > 30 AND COUNT(DISTINCT d.pos) > 1
+    ORDER BY n DESC LIMIT 1`).get();
+  assert.ok(multi);
+  const rawSenses = reference.handle.prepare(`SELECT wd.id,d.pos FROM word_definitions wd
+    JOIN definitions d ON d.id=wd.definition_id WHERE wd.word_id=? ORDER BY wd.id`).all(multi.id);
+  const expectedParts = [...new Set(rawSenses.map(row => domain.dictionaryPartOfSpeech(row.pos)))].sort();
+  const firstType = domain.dictionaryPartOfSpeech(rawSenses[0].pos);
+  const firstPage = await queries.entryInDictionary(reference, multi.id, 0, 'first');
+  assert.equal(firstPage.partsOfSpeech[0], firstType);
+  const firstIds = rawSenses.filter(row => domain.dictionaryPartOfSpeech(row.pos) === firstType).map(row => row.id);
+  assert.deepEqual(firstPage.senses.map(row => row.id), firstIds.slice(0, DICTIONARY_PAGE_SIZE), 'Auto default must filter before LIMIT, using the earliest source sense');
+  const since = (await queries.searchInDictionary(reference, 'since')).items.find(row => row.term === 'since');
+  assert.ok(since);
+  const sinceDefault = await queries.entryInDictionary(reference, since.id, 0, 'first');
+  assert.equal(sinceDefault.partsOfSpeech[0], 'adverb');
+  assert.ok(sinceDefault.senses.every(row => domain.dictionaryPartOfSpeech(row.pos) === 'adverb'));
+  for (const selected of [['verb'], ['noun', 'verb'], ['adverb'], ['idiom'], ['other']]) {
+    const expectedIds = rawSenses.filter(row => selected.includes(domain.dictionaryPartOfSpeech(row.pos))).map(row => row.id);
+    const received = [];
+    let page;
+    do {
+      page = await queries.entryInDictionary(reference, multi.id, received.length, selected);
+      assert.deepEqual([...page.partsOfSpeech].sort(), expectedParts, 'Choices must include types from every page, not just selected results');
+      received.push(...page.senses.map(row => row.id));
+      assert.ok(!page.hasMore || page.senses.length === DICTIONARY_PAGE_SIZE);
+    } while (page.hasMore);
+    assert.deepEqual(received, expectedIds, 'Pagination must happen after the union of selected POS filters');
+  }
+  const absentType = domain.DICTIONARY_PARTS.find(part => !entry.partsOfSpeech.includes(part.id));
+  assert.ok(absentType);
+  const emptyFiltered = await queries.entryInDictionary(reference, hello.id, 0, [absentType.id]);
+  assert.equal(emptyFiltered.senses.length, 0);
+  assert.equal(emptyFiltered.hasMore, false);
+  assert.deepEqual(emptyFiltered.partsOfSpeech, entry.partsOfSpeech);
+  await assert.rejects(queries.entryInDictionary(reference, hello.id, 0, ['invalid']), /Bộ lọc/);
   assert.ok(entry.pronunciations.length && entry.senses.length);
   const sense = entry.senses.at(-1);
   const draft = await queries.draftInDictionary(reference, hello.id, sense.id);

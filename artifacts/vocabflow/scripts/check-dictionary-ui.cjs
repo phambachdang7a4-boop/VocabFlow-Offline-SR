@@ -3,7 +3,8 @@ const { join } = require('node:path');
 const { readFileSync } = require('node:fs');
 const { loadTs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
-const { exampleSegments } = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const dictionaryDomain = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const { exampleSegments } = dictionaryDomain;
 for (const [sentence, term, expected] of [
   ['I have not seen him since.', 'since', ['since']],
   ['Since then, since yesterday.', 'since', ['Since', 'since']],
@@ -57,7 +58,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   };
   const routes = [];
   const dependencies = {
-    '@/domain/dictionary': { exampleSegments },
+    '@/domain/dictionary': dictionaryDomain,
     react: { ...react, default: react }, 'react-native': native,
     '@expo/vector-icons': { Feather: 'Feather' },
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
@@ -68,6 +69,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
     '@/components/DictionaryEntryView': { DictionaryEntryView: 'DictionaryEntryView' },
     '@/components/DictionarySuggestions': { DictionarySuggestions: 'DictionarySuggestions' },
+    '@/components/PartOfSpeechFilter': { PartOfSpeechFilter: 'PartOfSpeechFilter' },
     '@/hooks/useDictionary': { useDictionary: () => ({ ready: true }) },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/components/ui': { Button: 'Button', EmptyState: 'EmptyState', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
@@ -77,7 +79,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     setTimeout: fn => { const id = ++timerId; timers.set(id, fn); return id; },
     clearTimeout: id => timers.delete(id),
   });
-  const Component = loaded.default ?? loaded.DictionaryEntryView ?? loaded.DictionarySuggestions;
+  const Component = loaded.default ?? loaded.DictionaryEntryView ?? loaded.DictionarySuggestions ?? loaded.PartOfSpeechFilter;
   const props = { id: 42, bottomPad: 100, onBack() {}, ...properties };
   const render = () => {
     for (let limit = 0; dirty; limit++) {
@@ -88,6 +90,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   };
   const api = {
     routes,
+    update(next) { Object.assign(props, next); dirty = true; render(); },
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     timers() { for (const fn of [...timers.values()]) fn(); timers.clear(); render(); },
@@ -185,7 +188,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   suggestionList.byId('dictionary-suggestion-91').props.onPress();
   assert.deepEqual(picked, [{ id: 91, term: 'since' }]);
 
-  const entry = { id: 42, term: 'work', pronunciations: [], hasMore: false,
+  const entry = { id: 42, term: 'work', pronunciations: [], hasMore: false, partsOfSpeech: ['noun', 'verb'],
     senses: [{ id: 7, definition: 'công việc', pos: 'noun', subPos: null, example: null },
       { id: 9, definition: 'làm việc', pos: 'verb', subPos: null, example: null }] };
   for (const words of [[], [{ id: 123, term: 'WORK', frozen: true }]]) {
@@ -197,9 +200,74 @@ function mount(file, services, personalWords = [], properties = {}) {
       ? { pathname: '/word', params: { id: '123' } }
       : { pathname: '/word', params: { dictionaryWordId: '42', senseId: '9' } });
   }
+  const pending = [];
+  const filteredView = mount('../components/DictionaryEntryView.tsx', {
+    getDictionaryEntry: (id, offset, parts) => new Promise((resolve, reject) => pending.push({ id, offset, parts: Array.isArray(parts) ? [...parts] : parts, resolve, reject })),
+  });
+  await filteredView.settle();
+  assert.equal(pending.at(-1).parts, 'first', 'Initial entry query requests the first type in source order');
+  pending.at(-1).resolve({ ...entry, senses: [entry.senses[0]], hasMore: true });
+  await filteredView.settle();
+  assert.deepEqual(filteredView.byType('PartOfSpeechFilter').props.selected, ['noun'], 'Default must follow this entry, not the fixed enum order or All');
+  filteredView.byType('PartOfSpeechFilter').props.onChange([]);
+  filteredView.byId('entry-senses');
+  assert.deepEqual(pending.at(-1).parts, [], 'Explicit All must stay distinct from automatic first type');
+  pending.at(-1).resolve({ ...entry, hasMore: true });
+  await filteredView.settle();
+  filteredView.byType('PartOfSpeechFilter').props.onChange(['noun']);
+  assert.equal(filteredView.byId('entry-senses').props.data.length, 0);
+  assert.deepEqual(pending.at(-1).parts, ['noun']);
+  assert.equal(pending.at(-1).offset, 0);
+  pending.at(-1).resolve({ ...entry, senses: [entry.senses[0]], hasMore: true });
+  await filteredView.settle();
+  filteredView.byId('entry-senses').props.onEndReached();
+  assert.equal(pending.at(-1).offset, 1);
+  assert.deepEqual(pending.at(-1).parts, ['noun']);
+  const oldMore = pending.at(-1);
+  filteredView.byType('PartOfSpeechFilter').props.onChange(['verb']);
+  filteredView.byId('entry-senses');
+  oldMore.resolve({ ...entry, senses: [{ ...entry.senses[0], id: 999 }], hasMore: false });
+  pending.at(-1).resolve({ ...entry, senses: [entry.senses[1]], hasMore: false });
+  await filteredView.settle();
+  assert.deepEqual(filteredView.byId('entry-senses').props.data.map(sense => sense.id), [9], 'Old pagination must not leak nouns into verb results');
+  const filteredSense = filteredView.byId('entry-senses').props.renderItem({ item: entry.senses[1], index: 0 });
+  find(filteredSense, node => node.props?.testID === 'entry-add-9').props.onPress();
+  assert.deepEqual(filteredView.routes.at(-1), { pathname: '/word', params: { dictionaryWordId: '42', senseId: '9' } });
+  filteredView.byType('PartOfSpeechFilter').props.onChange([]);
+  filteredView.byId('entry-senses');
+  pending.at(-1).reject(Error('Cannot read filtered senses'));
+  await filteredView.settle();
+  const beforeReset = pending.length;
+  find(filteredView.byId('entry-senses').props.ListEmptyComponent, node => node.props?.testID === 'entry-filter-reset').props.onPress();
+  filteredView.byId('entry-senses');
+  assert.equal(pending.length, beforeReset + 1, 'Reset must retry even if All was already selected when it failed');
+  pending.at(-1).resolve(entry);
+  await filteredView.settle();
+  assert.deepEqual(filteredView.byId('entry-senses').props.data, entry.senses);
+  let checklist;
+  checklist = mount('../components/PartOfSpeechFilter.tsx', {}, [], {
+    available: ['noun', 'verb'], selected: [],
+    onChange: selected => checklist.update({ selected }),
+  });
+  checklist.byId('entry-pos-toggle').props.onPress();
+  assert.equal(checklist.byId('entry-pos-adverb').props.disabled, true);
+  checklist.byId('entry-pos-noun').props.onPress();
+  assert.equal(checklist.byId('entry-pos-noun').props.accessibilityState.checked, true);
+  checklist.byId('entry-pos-verb').props.onPress();
+  assert.equal(checklist.byId('entry-pos-noun').props.accessibilityState.checked, true);
+  assert.equal(checklist.byId('entry-pos-verb').props.accessibilityState.checked, true);
+  checklist.byId('entry-pos-noun').props.onPress();
+  checklist.byId('entry-pos-verb').props.onPress();
+  assert.equal(checklist.byId('entry-pos-all').props.accessibilityState.checked, true);
+  const adverbView = mount('../components/DictionaryEntryView.tsx', {
+    getDictionaryEntry: async () => ({ ...entry, partsOfSpeech: ['adverb', 'verb'], senses: [{ ...entry.senses[0], pos: 'D' }] }),
+  });
+  await adverbView.settle();
+  assert.deepEqual(adverbView.byType('PartOfSpeechFilter').props.selected, ['adverb'], 'A different entry gets its own first type');
+  assert.ok(!readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8').includes('Bấm Lưu từ ở nghĩa'));
   const tabs = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
   for (const pattern of [/NativeTabs\.Trigger name="([^"]+)"/g, /Tabs\.Screen name="([^"]+)"/g]) {
     assert.deepEqual([...tabs.matchAll(pattern)].map(match => match[1]), ['dictionary', 'index', 'review', 'settings']);
   }
-  console.log('PASS: exact/prefix search; typo suggestion loading/select/back/clear; stale lookup/suggestion rejection; visible suggestion errors; manual fallback; correct per-sense save; existing/frozen preservation; leftmost tab order.');
+  console.log('PASS: POS checkbox multi-select/reset/disabled choices; filtered paging and stale-page rejection; retry All; correct sense save; removed hint; example underlines; search/suggestions; existing/frozen preservation; tab order.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
