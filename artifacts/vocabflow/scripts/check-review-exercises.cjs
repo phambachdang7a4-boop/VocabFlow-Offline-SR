@@ -1,0 +1,88 @@
+const assert = require('node:assert/strict');
+const { mkdtempSync, rmSync } = require('node:fs');
+const { tmpdir } = require('node:os');
+const { join } = require('node:path');
+const { loadTs, srs, createRepository } = require('./test-support.cjs');
+const dictionary = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
+const word = {
+  id: 1, term: 'whimsical', meaning: 'kỳ quặc, giàu tưởng tượng', ipa: '', note: '',
+  example: 'Whimsical paintings are whimsical.',
+  ...srs.initialProgress('2026-11-07'),
+};
+assert.equal(exercises.createReviewExercise(word, 0).kind, 'meaning');
+const cloze = exercises.createReviewExercise(word, 1);
+assert.equal(cloze.kind, 'cloze');
+assert.equal(cloze.prompt, '________ paintings are ________.');
+assert.ok(!cloze.prompt.toLowerCase().includes(word.term));
+assert.equal(exercises.createReviewExercise({ ...word, reviewCount: 1 }, 0).kind, 'cloze', 'Single-word sessions also alternate across days');
+assert.equal(exercises.createReviewExercise({ ...word, reviewCount: 1 }, 1, 0).kind, 'cloze', 'A fixed session offset must alternate even when words have different review counts');
+assert.equal(exercises.clozeSentence('The theater is there.', 'he'), null);
+assert.equal(exercises.clozeSentence('C++ is not C+.', 'C++'), '________ is not C+.');
+assert.equal(exercises.clozeSentence('They take  off.', 'take off'), 'They ________.');
+assert.equal(exercises.clozeSentence('She is running.', 'run'), null, 'Never expect a different inflection silently');
+for (const example of ['', 'Nothing matches here.']) {
+  const fallback = exercises.createReviewExercise({ ...word, example }, 1);
+  assert.equal(fallback.kind, 'meaning');
+  assert.equal(fallback.fallback, true);
+  assert.equal(fallback.prompt, word.meaning);
+}
+assert.equal(exercises.createReviewExercise({ ...word, meaning: 'A whimsical style.' }, 0).prompt, 'A ________ style.');
+const hints = [1, 2, 3].map(level => exercises.letterHint({ ...word, level }));
+const counts = hints.map(hint => hint.replace(/_/g, '').length);
+assert.ok(counts[0] > counts[1] && counts[1] > counts[2]);
+assert.ok(counts[0] < word.term.length);
+assert.deepEqual([1, 2, 3].map(level => exercises.letterHint({ ...word, term: 'cat', level }).replace(/_/g, '').length), [2, 1, 0]);
+for (const level of [4, 5, 6]) assert.equal(exercises.letterHint({ ...word, level }), null);
+assert.equal(exercises.letterHint(word), exercises.letterHint(word), 'Typing/rerendering must not reshuffle hints');
+for (const term of ['a', 'go', 'résumé', 'take off', 'C++', '123']) {
+  for (const level of [1, 2, 3]) {
+    const hint = exercises.letterHint({ ...word, term, level });
+    assert.ok(hint.includes('_'), 'Never reveal the full answer, including short words');
+  }
+}
+assert.equal(exercises.letterHint({ ...word, term: '++' }), null);
+for (const [input, target] of [[' WHIMSICAL ', 'whimsical'], ['TAKE   OFF', 'take off'], ['don’t', "don't"], ['part‑time', 'part-time'], ['ＨＥＬＬＯ', 'hello']]) {
+  assert.equal(exercises.checkReviewAnswer(input, target), true);
+}
+for (const [input, target] of [['', 'go'], ['   ', 'go'], ['dessert', 'desert'], ['goes', 'go'], ['cant', "can't"], ['take-off', 'take off']]) {
+  assert.equal(exercises.checkReviewAnswer(input, target), false);
+}
+
+(async () => {
+  const root = mkdtempSync(join(tmpdir(), 'vocabflow-exercises-'));
+  const storage = createRepository(root, '2026-11-07T12:00:00');
+  try {
+    await storage.repo.saveWord({ term: word.term, meaning: word.meaning, ipa: '', note: '', example: word.example });
+    for (let level = 1; level <= 6; level++) {
+      const current = (await storage.repo.listWords())[0];
+      assert.equal(current.level, level);
+      storage.setDay(current.nextReviewOn);
+      const question = exercises.createReviewExercise(current, 0);
+      if (level >= 4) assert.equal(question.hint, null);
+      const correct = exercises.checkReviewAnswer('  WHIMSICAL ', current.term);
+      await storage.repo.recordReview(current.id, correct, current.reviewCount);
+      await assert.rejects(storage.repo.recordReview(current.id, correct, current.reviewCount), /thay đổi/, 'A duplicate submission cannot apply SRS twice');
+    }
+    const finished = (await storage.repo.listWords())[0];
+    assert.equal(finished.level, 6);
+    assert.equal(finished.completed, true);
+    assert.equal(finished.reviewCount, 6);
+    assert.equal(finished.nextReviewOn, null);
+    await storage.repo.saveWord({ term: 'go', meaning: 'đi', ipa: '', note: '', example: 'They go home.' });
+    let go = (await storage.repo.listWords()).find(row => row.term === 'go');
+    await storage.repo.recordReview(go.id, true, go.reviewCount);
+    go = (await storage.repo.listWords()).find(row => row.term === 'go');
+    storage.setDay(go.nextReviewOn);
+    const anchor = go.learnedOn;
+    await storage.repo.recordReview(go.id, exercises.checkReviewAnswer('goes', go.term), go.reviewCount);
+    go = (await storage.repo.listWords()).find(row => row.term === 'go');
+    assert.equal(go.level, 1);
+    assert.equal(go.reviewCount, 2);
+    assert.equal(go.learnedOn, anchor);
+    console.log('PASS: mixed/real-example fallback; whole-word cloze; stable decreasing hints and none at levels4–6; normalized automatic grading; actual SQLite once-only SRS, completion and one-level wrong penalty.');
+  } finally {
+    storage.db?.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+})().catch(error => { console.error(error); process.exitCode = 1; });

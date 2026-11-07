@@ -12,7 +12,7 @@
 2. Nhập một từ tiếng Anh và nghĩa tiếng Việt của bạn; có thể bổ sung IPA, ví dụ, ghi chú. Lưu và kiểm tra từ xuất hiện.
 3. Tìm bằng từ tiếng Anh hoặc nghĩa tiếng Việt. Có thể tìm không dấu. Tìm nội dung không có phải hiện thông báo không tìm thấy.
 4. Chạm từ để sửa nghĩa. Lưu và kiểm tra danh sách đã cập nhật. Tạo lại cùng từ với chữ hoa/thường khác nhau phải được báo trùng.
-5. Sang Luyện tập, lật thẻ xem nghĩa; nếu có nhiều từ, thử chuyển thẻ. Đây là luyện thủ công, chưa lên lịch SRS.
+5. Sang **Ôn tập**, bắt đầu phiên, nhập từ theo nghĩa hoặc câu điền chỗ trống, bấm **Kiểm tra** rồi **Tiếp tục**. Xem hướng dẫn hiện tại trong `kiem-tra-on-tap.md`.
 6. Sang Cài đặt: số từ phải khớp với danh sách.
 7. Đóng hoàn toàn Expo Go rồi mở lại đúng dự án: từ và nội dung đã sửa phải còn.
 8. Khi dự án đã tải xong, thử tắt mạng và thêm/sửa/tìm từ trong phiên đang mở. SQLite không cần mạng.

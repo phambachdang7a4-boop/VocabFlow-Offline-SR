@@ -2,7 +2,7 @@
 
 ## Cách hoạt động
 
-- Trong Ôn tập, mỗi thẻ có nút **Đóng băng**, dùng được cả trước và sau khi lật thẻ.
+- Trong phiên Ôn tập, mỗi từ chưa nộp câu trả lời có nút **Đóng băng**. Thao tác này không chấm điểm SRS.
 - Từ đóng băng không xuất hiện trong ôn tập nữa, trừ khi bạn chủ động bỏ đóng băng.
 - Từ vẫn ở Sổ từ, tìm kiếm được, có nhãn “Đã đóng băng”, có thể sửa nội dung hoặc xóa như bình thường. Đóng băng không giảm tổng số từ đã lưu, nên sau này vẫn tính vào giới hạn Free.
 - Vào **Cài đặt → Từ đã đóng băng** để xem danh sách riêng và bỏ đóng băng. Cũng có nút tương ứng khi mở từ trong Sổ từ.
@@ -13,7 +13,7 @@
 ## Kiểm tra trên điện thoại Android
 
 1. Mở lại VocabFlow trong Expo Go. Kiểm tra từ và tiến độ cũ vẫn còn.
-2. Nếu chưa có từ, tự thêm một từ để học ngay. Trong Ôn tập, nhấn **Đóng băng**: thẻ phải biến mất khỏi hàng đợi. Nếu đó là từ đến hạn cuối cùng thì hiện thông báo không còn từ đến hạn.
+2. Nếu chưa có từ, tự thêm một từ để học ngay. Trong Ôn tập, bắt đầu phiên rồi nhấn **Đóng băng**: hiện xác nhận đã đóng băng, bấm Tiếp tục/Kết thúc. Từ rời lượt ôn; nếu là từ cuối thì quay về tổng quan, không có lịch giả cho từ đóng băng.
 3. Sang Sổ từ và tìm từ đó bằng tiếng Anh hoặc nghĩa tiếng Việt: từ vẫn còn, có nhãn **Đã đóng băng**. Tổng số từ trong Cài đặt không giảm.
 4. Mở từ để sửa nghĩa, lưu rồi kiểm tra: từ vẫn đóng băng, không quay lại ôn tập.
 5. Đóng hẳn Expo Go rồi mở lại đúng dự án: trạng thái đóng băng vẫn còn.

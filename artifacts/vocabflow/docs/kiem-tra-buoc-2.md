@@ -4,13 +4,13 @@
 
 - Từ mới vào cấp 1, học ngay sau khi lưu (lần học mới trong ngày đầu).
 - Các mốc là ngày học gốc +0, +1, +3, +7, +14, +30 ngày theo lịch thiết bị, không cộng dồn giữa các lần ôn.
-- Ngày học gốc được chốt khi trả lời thẻ lần đầu. Nếu chỉ lưu từ rồi vài ngày sau mới học, lịch được tính từ lần học thực tế đó, không từ ngày thêm.
+- Ngày học gốc được chốt khi nộp câu ôn lần đầu. Nếu chỉ lưu từ rồi vài ngày sau mới học, lịch được tính từ lần học thực tế đó, không từ ngày thêm.
 - Ví dụ thêm ngày 01/01: hạn học/ôn là 01/01, 02/01, 04/01, 08/01, 15/01, 31/01 nếu luôn trả lời đúng đúng hạn.
 - Cấp hiển thị là cấp đang chờ kiểm tra. Đúng ở cấp 1–5 thì lên một cấp. Đúng ở cấp 6 thì hoàn tất, không còn vào hàng đợi ôn nhưng vẫn tra cứu được trong sổ.
 - Sai lùi đúng một cấp, cấp 1 giữ nguyên. Không đặt lại ngày học gốc. Từ sai được hẹn ngày mai.
 - Nếu ôn đúng nhưng đã lỡ mốc kế tiếp, hẹn ngày mai thay vì cho ôn nhiều cấp trong một ngày.
 - Hàng đợi gồm từ có hạn ôn hôm nay hoặc trước hôm nay; không lấy từ chưa đến hạn hay đã hoàn tất. Từ cũ quá hạn được ưu tiên trước.
-- Chỉ lưu khi nhấn “Trả lời đúng” hoặc “Trả lời sai”, không lưu chỉ vì lật thẻ. Chặn nhấn đúp; nếu lưu thất bại, giữ thẻ và báo lỗi.
+- Tự chấm và lưu khi nhấn **Kiểm tra** hoặc **Mình không thuộc từ này**, không lưu chỉ vì mở câu hay chuyển câu. Chặn nhấn đúp; nếu ghi thất bại, giữ kết quả đã nộp và cho thử lưu lại đúng kết quả đó.
 - Khi cập nhật lịch cũ, giữ nội dung, ngày học, cấp, số lần trả lời và trạng thái hoàn tất; chỉ tính lại hạn theo mốc mới. Từ đã trả lời hôm nay không bị đưa lại vào ôn ngay.
 
 ## Kiểm tra trên Android qua Expo Go
@@ -18,8 +18,8 @@
 1. Mở lại đúng dự án VocabFlow, không gỡ app hay xóa dữ liệu Expo Go. Từ từ Bước 1 vẫn phải còn.
 2. Thêm một từ mới của bạn. Vào Ôn tập: từ vừa thêm phải xuất hiện ngay ở cấp 1.
 3. Mở từ vừa thêm từ Sổ từ: kiểm tra cấp 1, hạn hôm nay và số lần trả lời bằng 0. Sau khi trả lời đúng lần đầu, kiểm tra cấp 2 và hạn ngày mai.
-4. Khi có từ đến hạn, vào Ôn tập, lật thẻ và chọn “Trả lời đúng”. Từ đó rời hàng đợi, lên một cấp và có hạn mới.
-5. Với một từ đến hạn ở cấp 3, chọn “Trả lời sai”: mở lại trong Sổ từ phải thấy cấp 2, không phải cấp 1; hạn ngày mai. Sai ở cấp 1 vẫn giữ cấp 1.
+4. Khi có từ đến hạn, vào Ôn tập, nhập đúng từ rồi bấm **Kiểm tra**. Từ lên một cấp và có hạn mới; phản hồi giữ đến khi Tiếp tục/Kết thúc.
+5. Với một từ đến hạn ở cấp 3, nhập sai hoặc bấm **Mình không thuộc từ này**: mở lại trong Sổ từ phải thấy cấp 2, không phải cấp 1; hạn ngày mai. Sai ở cấp 1 vẫn giữ cấp 1.
 6. Đóng hoàn toàn Expo Go, mở lại: cấp, hạn và số lần trả lời phải được giữ.
 7. Sửa nghĩa hoặc ghi chú của từ: cấp và hạn không đổi. Xóa từ phải xóa luôn thẻ khỏi hàng đợi.
 8. Khi hoàn tất cấp 6, từ vẫn trong Sổ từ với nhãn đã hoàn tất và không xuất hiện trong ôn tập.

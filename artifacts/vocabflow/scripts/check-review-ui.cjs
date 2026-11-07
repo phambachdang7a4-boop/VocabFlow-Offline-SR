@@ -3,8 +3,10 @@ const { join } = require('node:path');
 const { loadTs, srs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
+const dictionary = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
-const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView'].map(type => [type, type]));
+const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput'].map(type => [type, type]));
 native.StyleSheet = { create: value => value };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function find(node, predicate) {
@@ -15,7 +17,7 @@ function find(node, predicate) {
 
 // Real screen/component callbacks, controlled context/clock; not a touch E2E.
 function mount(file, properties = {}, initial = {}) {
-  let now = new Date('2026-11-07T23:59:59').getTime(), dirty = true, cursor, tree, focus;
+  let now = new Date('2026-11-07T23:59:59').getTime(), dirty = true, cursor, tree, focus, focusCleanup;
   const slots = [], effects = [], routes = [];
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const react = {
@@ -47,7 +49,8 @@ function mount(file, properties = {}, initial = {}) {
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
-    '@/domain/srs': srs, '@/domain/review-overview': overview,
+    '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,
+    '@/components/KeyboardAwareScrollViewCompat': { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' },
     '@/components/ui': { Button: 'Button', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },
     '@/components/ReviewCard': { ReviewCard: 'ReviewCard', calendarLabel },
@@ -66,8 +69,10 @@ function mount(file, properties = {}, initial = {}) {
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     update(next) { Object.assign(context, next); dirty = true; render(); },
+    props(next) { Object.assign(properties, next); dirty = true; render(); },
     time(value) { now = new Date(value).getTime(); dirty = true; render(); },
-    focus() { render(); focus(); render(); },
+    focus() { focusCleanup?.(); render(); focusCleanup = focus(); render(); },
+    unmount() { slots.forEach(slot => slot?.cleanup?.()); focusCleanup?.(); },
     async settle() { render(); await tick(); render(); },
   };
 }
@@ -94,10 +99,18 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   screen.byId('review-back-overview').props.onPress();
   assert.ok(screen.byId('review-start'));
   screen.byId('review-start').props.onPress();
-  const onSaved = screen.byType('ReviewCard').props.onSaved;
+  const question = screen.byType('ReviewCard').props;
   const reviewed = { ...tomorrowWord, ...srs.applyReview(tomorrowWord, true, '2026-11-08') };
   screen.update({ words: [reviewed] });
-  onSaved('Đã lưu');
+  question.onCommitted(1);
+  assert.equal(screen.byType('ReviewCard').props.word, question.word, 'Hold the exact snapshot after save, including the last word');
+  screen.update({ error: 'Refresh failed after commit' });
+  assert.ok(screen.byType('ReviewCard'), 'A context error must not unmount saved feedback');
+  assert.equal(screen.byType('ReviewCard').props.blocked, true);
+  screen.byType('ReviewCard').props.onNext();
+  assert.ok(screen.byType('ReviewCard'));
+  screen.update({ error: null });
+  screen.byType('ReviewCard').props.onNext();
   assert.ok(screen.byId('review-countdown'));
   screen.time(`${reviewed.nextReviewOn}T00:00:00`);
   assert.equal(screen.byType('ReviewCard'), undefined, 'Finishing must clear session state: a later deadline must not auto-open a card');
@@ -125,24 +138,117 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(bar(6).props.style.backgroundColor, palette.chartBarStrong);
   assert.equal(chart.byId('review-level-6').props.accessibilityLabel, 'Cấp 6: 10 từ');
 
+  const both = mount('../app/(tabs)/review.tsx', {}, { words: [word, { ...word, id: 2, reviewCount: 1, term: 'go', meaning: 'đi', example: 'They go home.' }] });
+  both.byId('review-start').props.onPress();
+  let current = both.byType('ReviewCard').props;
+  assert.equal(current.exercise.kind, 'meaning');
+  const stableExercise = current.exercise;
+  both.time('2026-11-07T23:59:59.500');
+  assert.equal(both.byType('ReviewCard').props.exercise, stableExercise, 'Clock rerenders cannot reshuffle the question or hints');
+  current.onCommitted(1);
+  both.byType('ReviewCard').props.onNext();
+  current = both.byType('ReviewCard').props;
+  assert.equal(current.word.id, 2);
+  assert.equal(current.exercise.kind, 'cloze');
+  assert.equal(current.exercise.prompt, 'They ________ home.');
+  current.onCommitted(2);
+  both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
+  both.byType('ReviewCard').props.onNext();
+  assert.equal(both.byType('ReviewCard'), undefined, 'Original queue only, and processed IDs never regrade even if cached due data is stale');
+  assert.ok(both.byId('review-start'));
+  both.byId('review-start').props.onPress();
+  const abandoned = both.byType('ReviewCard').props;
+  both.byId('review-back-overview').props.onPress();
+  both.byId('review-start').props.onPress();
+  const fresh = both.byType('ReviewCard').props;
+  fresh.onBusyChange(true);
+  abandoned.onBusyChange(false);
+  assert.equal(both.byId('review-back-overview').props.disabled, true, 'Late callbacks must not unlock another question');
+  abandoned.onCommitted(1);
+  fresh.onBusyChange(false);
+  both.byType('ReviewCard').props.onNext();
+  assert.equal(both.byType('ReviewCard').props.word.id, 1, 'Abandoned session cannot mark a new session committed');
+
+  const makeProps = (item = word) => ({ word: item, exercise: exercises.createReviewExercise(item, 0),
+    blocked: false, isLast: false, onCommitted() {}, onBusyChange() {}, onNext() {} });
   let resolveSave;
-  const calls = [], messages = [];
-  const card = mount('../components/ReviewCard.tsx', { word, disabled: false, onSaved: message => messages.push(message) }, {
+  const calls = [], committed = [];
+  let nexts = 0;
+  const card = mount('../components/ReviewCard.tsx', { ...makeProps(), onCommitted: id => committed.push(id), onNext: () => nexts++ }, {
     recordReview: (...args) => new Promise(resolve => { calls.push(args); resolveSave = resolve; }),
   });
-  assert.equal(card.byId('review-correct'), undefined, 'No grade before revealing meaning');
-  card.byId('reveal-answer').props.onPress();
-  const answer = card.byId('review-correct').props.onPress;
+  assert.equal(card.byId('flashcard'), undefined);
+  assert.equal(card.byId('review-correct'), undefined);
+  assert.equal(card.byId('review-answer-correct'), undefined);
+  assert.equal(card.byId('review-check').props.disabled, true);
+  card.byId('review-answer-input').props.onSubmitEditing();
+  assert.equal(calls.length, 0, 'Empty answer must not submit');
+  card.byId('review-answer-input').props.onChangeText('  TEST ');
+  const answer = card.byId('review-check').props.onPress;
   answer(); answer();
-  assert.deepEqual(calls, [[1, true, 0]], 'Keep the saving lock and expected review count');
+  assert.deepEqual(calls, [[1, true, 0]]);
+  card.byId('review-continue').props.onPress();
+  assert.equal(nexts, 0, 'Cannot continue before save completes');
   resolveSave(); await card.settle();
-  assert.equal(messages.length, 1);
+  assert.deepEqual(committed, [1]);
+  assert.ok(card.byId('review-result'));
+  assert.ok(card.byId('review-answer-correct'));
+  card.byId('review-continue').props.onPress();
+  assert.equal(nexts, 1);
+  assert.equal(calls.length, 1, 'Continue never persists another grade');
+
+  const retryCalls = [];
+  let rejectFirst, retryResolve;
+  const failureCard = mount('../components/ReviewCard.tsx', makeProps(), {
+    recordReview: (...args) => new Promise((resolve, reject) => {
+      retryCalls.push(args);
+      if (retryCalls.length === 1) rejectFirst = reject; else retryResolve = resolve;
+    }),
+  });
+  failureCard.byId('review-answer-input').props.onChangeText('wrong');
+  failureCard.byId('review-check').props.onPress();
+  rejectFirst(Error('Disk full')); await failureCard.settle();
+  assert.equal(failureCard.byId('review-answer-input').props.editable, false);
+  failureCard.byId('review-answer-input').props.onChangeText('test');
+  const retry = failureCard.byId('review-retry-save').props.onPress;
+  retry(); retry();
+  assert.deepEqual(retryCalls, [[1, false, 0], [1, false, 0]], 'Retry must retain wrong outcome and reject duplicate clicks');
+  retryResolve(); await failureCard.settle();
+  failureCard.props({ blocked: true });
+  assert.equal(failureCard.byId('review-continue').props.disabled, true);
+
+  const unknownCalls = [];
+  const unknown = mount('../components/ReviewCard.tsx', makeProps(), { recordReview: async (...args) => unknownCalls.push(args) });
+  const dontKnow = unknown.byId('review-dont-know').props.onPress;
+  dontKnow(); dontKnow(); await unknown.settle();
+  assert.deepEqual(unknownCalls, [[1, false, 0]]);
+  for (const level of [4, 5, 6]) {
+    const high = mount('../components/ReviewCard.tsx', makeProps({ ...word, level }));
+    assert.equal(high.byId('review-letter-hint'), undefined);
+    assert.equal(high.byId('review-answer-correct'), undefined);
+    assert.equal(high.byId('review-answer-input').props.autoCorrect, false);
+    assert.equal(high.byId('review-answer-input').props.spellCheck, false);
+  }
   const freezeCalls = [];
-  const freezeCard = mount('../components/ReviewCard.tsx', { word, disabled: false, onSaved() {} }, {
+  const freezeCard = mount('../components/ReviewCard.tsx', makeProps(), {
     setWordFrozen: async (...args) => { freezeCalls.push(args); },
+    recordReview: async () => { throw Error('Freeze must not grade'); },
   });
   const freeze = freezeCard.byId('review-freeze').props.onPress;
   freeze(); freeze(); await freezeCard.settle();
   assert.deepEqual(freezeCalls, [[1, true]]);
-  console.log('PASS: empty/loading/error dashboard; real countdown to start at midnight; explicit session/back/completion/focus; linear six-level chart and zero bars; preserved answer/freeze double-tap locks.');
+  let finishLate;
+  const lateCommits = [], busyChanges = [];
+  const leaving = mount('../components/ReviewCard.tsx', { ...makeProps(),
+    onCommitted: id => lateCommits.push(id), onBusyChange: busy => busyChanges.push(busy) }, {
+    recordReview: () => new Promise(resolve => { finishLate = resolve; }),
+  });
+  leaving.byId('review-answer-input').props.onChangeText('test');
+  leaving.byId('review-check').props.onPress();
+  leaving.unmount();
+  const afterUnmount = busyChanges.length;
+  finishLate(); await tick();
+  assert.equal(busyChanges.length, afterUnmount);
+  assert.deepEqual(lateCommits, []);
+  console.log('PASS: mixed queue and stable snapshots; final feedback held; auto grading/check/dont-know/freeze locks; immutable retry and double-retry guard; no hints4–6; global read error retention; stale callbacks; dashboard/countdown/chart.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

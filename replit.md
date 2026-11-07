@@ -28,6 +28,7 @@
 - `TZ=America/New_York node artifacts/vocabflow/scripts/check-srs.cjs`
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review.cjs` (cũng chạy với `TZ=America/New_York` để kiểm tra DST): tổng 6 cấp, lịch gần nhất, chuyển ngày, vòng đời đồng hồ.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-ui.cjs`: tổng quan, bắt đầu/quay lại/kết thúc phiên, hết đếm ngược, tỉ lệ cột và khóa lưu/chấm điểm/đóng băng.
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-exercises.cjs`: hai dạng câu, gợi ý 1–3/không gợi ý 4–6, so đáp án, SQLite chống chấm trùng.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
@@ -54,12 +55,21 @@
 ## Quy tắc SRS
 
 - Theo lịch mới người dùng yêu cầu: học mới ngay trong ngày đầu, sau đó +1, +3, +7, +14, +30 ngày từ ngày học gốc. Không cộng dồn các khoảng cách giữa các lần ôn.
-- Từ vừa lưu có hạn học ngay; ngày học gốc được chốt khi trả lời thẻ lần đầu, không phải ngày thêm nếu người dùng học trễ.
+- Từ vừa lưu có hạn học ngay; ngày học gốc được chốt khi nộp câu ôn lần đầu, không phải ngày thêm nếu người dùng học trễ.
 - Cấp là mốc đang chờ kiểm tra. Đúng: lên một cấp; đúng ở cấp 6: hoàn tất chu kỳ, vẫn giữ từ trong sổ.
 - Sai chỉ lùi một cấp, thấp nhất cấp 1; giữ ngày học gốc và hẹn ngày mai. Quy tắc này thay cho giả định ban đầu “sai về cấp 1”.
 - Nếu trả lời đúng muộn và mốc tiếp theo đã qua, hẹn ngày mai để không ôn nhiều cấp cùng một ngày.
 - Sửa từ không đặt lại SRS. Dữ liệu Bước 1 được chuyển sang cấp 1 với ngày học lấy từ ngày tạo cũ, không xóa từ.
 - Đổi lịch chỉ tính lại hạn ôn, giữ cấp, số lần trả lời, ngày học và trạng thái hoàn tất. Nếu đã trả lời hôm nay, hạn sớm nhất là ngày mai.
+
+## Ôn bằng nhập từ
+
+- Người dùng chọn trộn hai dạng: đọc nghĩa viết từ và điền từ vào câu; không còn lật thẻ/tự chấm đúng-sai.
+- Luân phiên dạng dựa trên một độ lệch cố định trong phiên, không dựa riêng số lần ôn của từng từ (tránh các từ khác cấp vô tình cùng một dạng). Phiên một từ đổi dạng theo lịch sử trả lời.
+- Chỉ dùng câu ví dụ đã lưu có chứa chính xác từ/cụm từ; che mọi lần xuất hiện. Không có câu phù hợp thì dùng nghĩa thật, không tự tạo câu hay tải dữ liệu.
+- Gợi ý giảm ở cấp 1–3, không lộ trọn đáp án kể cả từ ngắn; cấp 4–6 không có gợi ý chữ cái. Nhập đầy đủ từ; chấm bỏ qua hoa/thường và khoảng trắng thừa, không bỏ qua lỗi chính tả.
+- Mỗi từ chấm một lần ở Kiểm tra/chưa thuộc; Tiếp tục chỉ chuyển câu. Giữ ảnh chụp từ/câu đến khi chuyển, dù ghi SQLite làm từ rời hàng đợi.
+- Ghi và tải lại là hai bước: tải lại có thể lỗi sau khi ghi thành công. Giữ kết quả đã ghi và chỉ thử tải lại, không chấm lại. Lỗi ghi giữ nguyên đáp án đã nộp khi thử lưu lại để tránh sửa kết quả sau khi xem đáp án.
 
 ## Đóng băng
 

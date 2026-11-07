@@ -44,6 +44,11 @@ const colors = {
     chartBarStrong: '#3C7686',
     chartBase: '#CFC6B2',
     reviewTrack: '#E3ECE6',
+    // Typing review tokens.
+    reviewRight: '#2E7D5B',
+    reviewRightSoft: '#DCEFE3',
+    reviewHint: '#3C7686',
+    reviewPaper: '#FFFDF7',
   },
   radius: 14,
 };
