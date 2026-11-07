@@ -54,6 +54,7 @@ pnpm --filter @workspace/vocabflow run typecheck
 pnpm --filter @workspace/api-server run typecheck
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs
 node artifacts/vocabflow/scripts/check-dictionary-button.cjs
+node artifacts/vocabflow/scripts/check-sqlite-connection.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-storage.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs
 TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-srs.cjs

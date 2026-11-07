@@ -5,6 +5,7 @@ const { join, resolve } = require('node:path');
 const { tmpdir } = require('node:os');
 const { createHash } = require('node:crypto');
 const { createRepository, loadTs, srs } = require('./test-support.cjs');
+const sqliteConnection = loadTs(join(__dirname, '../data/sqlite-connection.ts'));
 const root = mkdtempSync(join(tmpdir(), 'vocabflow-dictionary-'));
 const source = resolve(__dirname, '../../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const handles = new Set();
@@ -104,6 +105,7 @@ function adapter(filename, readOnly = false) {
       '@noble/hashes/sha2.js': { sha256 },
       '../domain/dictionary': domain,
       './dictionary-queries': queries,
+      './sqlite-connection': sqliteConnection,
     }, { fetch, process: { env: { EXPO_PUBLIC_DOMAIN: 'unused.invalid' } } });
   }
   const stages = [];

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as storage from '@/data/vocabulary';
+import { storageFailureMessage } from '@/data/sqlite-connection';
 import type { VocabularyWord, WordInput } from '@/data/types';
 import { AppState } from 'react-native';
 import { isDue, localDay } from '@/domain/srs';
@@ -33,8 +34,8 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
       const result = await storage.listWords();
       setWords(result);
       setError(null);
-    } catch {
-      setError(readError);
+    } catch (failure) {
+      setError(storageFailureMessage(failure, readError));
     } finally {
       setLoading(false);
     }

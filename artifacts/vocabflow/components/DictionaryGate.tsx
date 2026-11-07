@@ -1,9 +1,10 @@
 import React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { DICTIONARY, type DictionaryStage } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F } from './ui';
+import { useBottomPad } from './ScreenHeader';
 
 const STAGE_TEXT: Record<DictionaryStage, string> = {
   checking: 'Đang kiểm tra kho từ điển trên máy…',
@@ -15,9 +16,11 @@ const STAGE_TEXT: Record<DictionaryStage, string> = {
 
 export function DictionaryGate({ stage, error, retry, approveDownload }: { stage: DictionaryStage; error: string | null; retry: () => void; approveDownload: () => void }) {
   const c = useColors();
+  const bottom = useBottomPad();
   const needsConsent = stage === 'awaiting-consent';
   return (
-    <View style={{ padding: 20, gap: 14 }} testID="dictionary-gate">
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottom, gap: 14 }}
+      keyboardShouldPersistTaps="handled" testID="dictionary-gate">
       {error ? <ErrorBanner message={error} /> : null}
       {needsConsent || !error ? (
         <View style={{ padding: 16, gap: 10, borderWidth: 1, backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }}>
@@ -41,6 +44,6 @@ export function DictionaryGate({ stage, error, retry, approveDownload }: { stage
         </View>
       ) : null}
       {error && !needsConsent ? <Button testID="dictionary-retry" label="Kiểm tra lại" icon="refresh-cw" onPress={retry} /> : null}
-    </View>
+    </ScrollView>
   );
 }

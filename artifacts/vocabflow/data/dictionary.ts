@@ -2,6 +2,7 @@ import { backupDatabaseAsync, deleteDatabaseAsync, deserializeDatabaseAsync, ope
 import { sha256 } from '@noble/hashes/sha2.js';
 import { DICTIONARY, DICTIONARY_ASSET_PATH, type DictionaryStage } from '../domain/dictionary';
 import { draftInDictionary, entryInDictionary, searchInDictionary } from './dictionary-queries';
+import { openDatabaseSafely, storageFailureMessage } from './sqlite-connection';
 
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
 let connection: Promise<SQLiteDatabase> | undefined;
@@ -21,7 +22,7 @@ function assetUrl() {
 
 async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownload = false): Promise<SQLiteDatabase> {
   onStage?.('checking');
-  const db = await openDatabaseAsync(filename);
+  const db = await openDatabaseSafely(() => openDatabaseAsync(filename));
   try {
     const table = await db.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'vocabflow_dictionary_meta'",
@@ -84,10 +85,10 @@ export function openDictionary(onStage?: (stage: DictionaryStage) => void, optio
       connection = undefined;
       if (failure instanceof DictionaryDownloadConsentRequired) throw failure;
       const detail = failure instanceof Error ? failure.message : '';
-      throw new Error(
+      throw new Error(storageFailureMessage(failure,
         /từ điển|kho tra cứu/i.test(detail) ? detail
           : 'Không thể nạp kho từ điển. Lần đầu cần có mạng và đủ dung lượng trống. Hãy thử lại; sổ cá nhân không bị thay đổi.',
-      );
+      ));
     });
   }
   return connection;

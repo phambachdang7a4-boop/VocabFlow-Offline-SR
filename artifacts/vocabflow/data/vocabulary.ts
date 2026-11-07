@@ -1,5 +1,6 @@
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import type { VocabularyWord, WordInput } from './types';
+import { openDatabaseSafely } from './sqlite-connection';
 import { applyReview, freezeProgress, initialProgress, localDay, rescheduleProgress, unfreezeProgress, type SrsProgress } from '../domain/srs';
 
 let connection: Promise<SQLiteDatabase> | undefined;
@@ -9,7 +10,7 @@ export function normalizeTerm(value: string): string {
 }
 
 async function initialize(): Promise<SQLiteDatabase> {
-  const db = await openDatabaseAsync('vocabflow.db');
+  const db = await openDatabaseSafely(() => openDatabaseAsync('vocabflow.db'));
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
