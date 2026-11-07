@@ -2,8 +2,23 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import type { VocabularyWord, WordInput } from './types';
 import { openDatabaseSafely } from './sqlite-connection';
 import { applyReview, freezeProgress, initialProgress, localDay, rescheduleProgress, unfreezeProgress, type SrsProgress } from '../domain/srs';
+import { BASIC_COURSE_LESSONS } from './basic-course';
 
 let connection: Promise<SQLiteDatabase> | undefined;
+
+export type CourseLessonStage = 'flashcard' | 'answer' | 'selection' | 'completed';
+
+export interface CourseLessonProgress {
+  lessonId: string;
+  currentIndex: number;
+  stage: CourseLessonStage;
+  completedAt: string | null;
+  updatedAt: string;
+}
+
+function courseLesson(lessonId: string) {
+  return BASIC_COURSE_LESSONS.find(lesson => lesson.id === lessonId);
+}
 
 export function normalizeTerm(value: string): string {
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
@@ -72,7 +87,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 5) {
+    if ((version?.user_version ?? 0) > 6) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -145,6 +160,29 @@ async function initialize(): Promise<SQLiteDatabase> {
       });
     }
     if ((version?.user_version ?? 0) < 5) await migrateIndependentSenses(db);
+    if ((version?.user_version ?? 0) < 6) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS course_lesson_progress (
+            lesson_id TEXT PRIMARY KEY,
+            current_index INTEGER NOT NULL DEFAULT 0 CHECK (current_index >= 0),
+            stage TEXT NOT NULL DEFAULT 'flashcard'
+              CHECK (stage IN ('flashcard', 'answer', 'selection', 'completed')),
+            completed_at TEXT,
+            updated_at TEXT NOT NULL
+          );
+          CREATE TABLE IF NOT EXISTS course_word_selection (
+            lesson_id TEXT NOT NULL,
+            word_id TEXT NOT NULL,
+            selected INTEGER NOT NULL DEFAULT 0 CHECK (selected IN (0, 1)),
+            PRIMARY KEY (lesson_id, word_id)
+          );
+          CREATE INDEX IF NOT EXISTS idx_course_progress_completed
+            ON course_lesson_progress(stage, completed_at);
+          PRAGMA user_version = 6;
+        `);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -183,6 +221,156 @@ export function listWords(): Promise<VocabularyWord[]> {
       ORDER BY w.created_at DESC, w.id DESC
     `);
     return rows.map(row => ({ ...row, completed: row.completed === 1, frozen: row.frozen === 1 }));
+  });
+}
+
+export function listCourseProgress(): Promise<CourseLessonProgress[]> {
+  return serialize(async () => {
+    const db = await database();
+    return db.getAllAsync<CourseLessonProgress>(`
+      SELECT lesson_id AS lessonId, current_index AS currentIndex, stage,
+        completed_at AS completedAt, updated_at AS updatedAt
+      FROM course_lesson_progress
+    `);
+  });
+}
+
+export function getCourseProgress(lessonId: string): Promise<CourseLessonProgress> {
+  return serialize(async () => {
+    const lesson = courseLesson(lessonId);
+    if (!lesson) throw new Error('Không tìm thấy bài học.');
+    const db = await database();
+    const saved = await db.getFirstAsync<CourseLessonProgress>(`
+      SELECT lesson_id AS lessonId, current_index AS currentIndex, stage,
+        completed_at AS completedAt, updated_at AS updatedAt
+      FROM course_lesson_progress WHERE lesson_id = ?
+    `, lessonId);
+    return saved ?? {
+      lessonId,
+      currentIndex: 0,
+      stage: 'flashcard',
+      completedAt: null,
+      updatedAt: '',
+    };
+  });
+}
+
+export function getCourseSelections(lessonId: string): Promise<string[]> {
+  return serialize(async () => {
+    const lesson = courseLesson(lessonId);
+    if (!lesson) throw new Error('Không tìm thấy bài học.');
+    const db = await database();
+    const rows = await db.getAllAsync<{ wordId: string }>(
+      'SELECT word_id AS wordId FROM course_word_selection WHERE lesson_id = ? AND selected = 1',
+      lessonId,
+    );
+    const availableIds = new Set(lesson.words.map(word => word.id));
+    return rows.map(row => row.wordId).filter(id => availableIds.has(id));
+  });
+}
+
+export function saveCourseProgress(
+  lessonId: string,
+  currentIndex: number,
+  stage: Exclude<CourseLessonStage, 'completed'>,
+): Promise<void> {
+  return serialize(async () => {
+    const lesson = courseLesson(lessonId);
+    if (!lesson) throw new Error('Không tìm thấy bài học.');
+    if (!Number.isSafeInteger(currentIndex) || currentIndex < 0 || currentIndex >= lesson.words.length) {
+      throw new Error('Vị trí trong bài học không hợp lệ.');
+    }
+    const db = await database();
+    const now = new Date().toISOString();
+    await db.withTransactionAsync(async () => {
+      const existing = await db.getFirstAsync<{ completedAt: string | null }>(
+        'SELECT completed_at AS completedAt FROM course_lesson_progress WHERE lesson_id = ?',
+        lessonId,
+      );
+      if (existing?.completedAt) throw new Error('Bài học này đã hoàn thành.');
+      await db.runAsync(`
+        INSERT INTO course_lesson_progress (lesson_id, current_index, stage, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(lesson_id) DO UPDATE SET
+          current_index = excluded.current_index, stage = excluded.stage, updated_at = excluded.updated_at
+      `, lessonId, currentIndex, stage, now);
+    });
+  });
+}
+
+export function saveCourseSelection(lessonId: string, wordId: string, selected: boolean): Promise<void> {
+  return serialize(async () => {
+    const lesson = courseLesson(lessonId);
+    if (!lesson || !lesson.words.some(word => word.id === wordId) || typeof selected !== 'boolean') {
+      throw new Error('Lựa chọn từ trong bài học không hợp lệ.');
+    }
+    const db = await database();
+    const progress = await db.getFirstAsync<{ completedAt: string | null }>(
+      'SELECT completed_at AS completedAt FROM course_lesson_progress WHERE lesson_id = ?',
+      lessonId,
+    );
+    if (progress?.completedAt) throw new Error('Bài học này đã hoàn thành.');
+    await db.runAsync(`
+      INSERT INTO course_word_selection (lesson_id, word_id, selected) VALUES (?, ?, ?)
+      ON CONFLICT(lesson_id, word_id) DO UPDATE SET selected = excluded.selected
+    `, lessonId, wordId, selected ? 1 : 0);
+  });
+}
+
+export function finishCourseLesson(lessonId: string, selectedWordIds: string[]): Promise<number> {
+  return serialize(async () => {
+    const lesson = courseLesson(lessonId);
+    if (!lesson) throw new Error('Không tìm thấy bài học.');
+    if (!Array.isArray(selectedWordIds) || selectedWordIds.some(id => typeof id !== 'string')) {
+      throw new Error('Danh sách từ muốn lưu không hợp lệ.');
+    }
+    const selected = new Set(selectedWordIds);
+    const wordsById = new Map(lesson.words.map(word => [word.id, word]));
+    if (selected.size !== selectedWordIds.length || [...selected].some(id => !wordsById.has(id))) {
+      throw new Error('Danh sách từ muốn lưu không hợp lệ.');
+    }
+
+    const db = await database();
+    const now = new Date().toISOString();
+    const learned = initialProgress(localDay(new Date(now)));
+    let added = 0;
+    await db.withTransactionAsync(async () => {
+      for (const word of lesson.words) {
+        const isSelected = selected.has(word.id);
+        await db.runAsync(`
+          INSERT INTO course_word_selection (lesson_id, word_id, selected) VALUES (?, ?, ?)
+          ON CONFLICT(lesson_id, word_id) DO UPDATE SET selected = excluded.selected
+        `, lessonId, word.id, isSelected ? 1 : 0);
+        if (!isSelected) continue;
+
+        const result = await db.runAsync(`
+          INSERT OR IGNORE INTO words
+            (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
+              dictionary_entry_id, dictionary_sense_id)
+          VALUES (?, ?, ?, ?, '', '', ?, ?, ?, NULL, NULL)
+        `,
+          word.term, normalizeTerm(word.term), word.meaning, normalizeTerm(word.meaning),
+          `Khóa học: ${lesson.title}`, now, now,
+        );
+        if (result.changes === 1) {
+          await db.runAsync(
+            'INSERT INTO word_progress (word_id, learned_on, next_review_on) VALUES (?, ?, ?)',
+            result.lastInsertRowId, learned.learnedOn, learned.nextReviewOn,
+          );
+          added += 1;
+        }
+      }
+
+      await db.runAsync(`
+        INSERT INTO course_lesson_progress
+          (lesson_id, current_index, stage, completed_at, updated_at)
+        VALUES (?, ?, 'completed', ?, ?)
+        ON CONFLICT(lesson_id) DO UPDATE SET
+          current_index = excluded.current_index, stage = 'completed',
+          completed_at = excluded.completed_at, updated_at = excluded.updated_at
+      `, lessonId, lesson.words.length - 1, now, now);
+    });
+    return added;
   });
 }
 

@@ -27,7 +27,10 @@
 - Người dùng yêu cầu bỏ câu hướng dẫn “Bấm Lưu từ…” và thêm checklist từ loại dưới thanh tìm kiếm: Verb, Noun, Adjective, Adverb, Idiom, Others. Lọc nghĩa của từ đang xem, chọn nhiều loại. Mặc định chọn từ loại của nghĩa xuất hiện đầu tiên theo thứ tự nguồn; không mặc định Tất cả. Danh sách loại có trong từ cũng theo thứ tự xuất hiện.
 - Người dùng yêu cầu hỏi trước khi dùng dữ liệu di động để tải từ điển. Quy tắc an toàn: không tự tải trên bất kỳ loại mạng nào; hiện dung lượng/cảnh báo cước và chờ “Đồng ý tải” cho từng lần tải/thử lại. Kho đã nạp vẫn mở offline không cần hỏi lại; “Để sau” giữ nguyên sổ và ôn tập.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
-- Thanh tab theo thứ tự **Tra Từ / Khóa Học / Ôn tập / Sổ từ / Trống**; giữ Sổ từ làm trang mở đầu. Khóa Học chưa có khóa nào, Trống chỉ giữ chỗ. Cài đặt không còn là tab: mở bằng bánh răng góc trên phải Ôn tập, quay lại được màn trước.
+- Thanh tab theo thứ tự **Tra Từ / Khóa Học / Ôn tập / Sổ từ / Trống**; giữ Sổ từ làm trang mở đầu. Khóa Học có bộ “1000 từ cơ bản”, Trống chỉ giữ chỗ. Cài đặt không còn là tab: mở bằng bánh răng góc trên phải Ôn tập, quay lại được màn trước.
+- Người dùng duyệt khóa học offline “1000 từ cơ bản”: 25 bài chủ đề đời sống, tổng đúng 1.000 mục từ-nghĩa, số lượng mỗi bài có thể khác nhau. Không tải từ điển hay gọi API trả phí để cung cấp dữ liệu khóa học.
+- Mỗi bài gồm xem flashcard, gõ lại từ theo nghĩa tiếng Việt, rồi checklist toàn bộ mục để chọn mục muốn lưu. Chỉ mục đã chọn vào sổ; mục mới bắt đầu SRS cấp 1, mục trùng từ-nghĩa không tạo bản sao. Tiến độ học, lựa chọn checklist, và hoàn thành bài lưu SQLite.
+- Bài hoàn thành đổi màu; thẻ khóa học đổi màu khi hoàn thành đủ 25 bài. Người học có thể mở bài bất kỳ; bài dở tiếp tục từ bước đã lưu.
 - Ôn tập mở bằng tổng quan theo ảnh tham khảo: biểu đồ 6 cột theo cấp, tổng từ trong sổ và nút bắt đầu phiên ôn. Chưa đến hạn thì thay nút bằng thanh đếm ngược tới lịch gần nhất theo ngày địa phương; không có lịch tương lai thì báo rõ, không tạo đồng hồ giả.
 - Biểu đồ đếm cả từ hoàn tất/đóng băng ở cấp đang lưu để tổng cột khớp tổng sổ cá nhân. Hàng đợi ôn và đếm ngược vẫn loại từ hoàn tất/đóng băng; không thay lịch SRS hoặc tự bắt đầu phiên khi đồng hồ hết.
 
@@ -48,6 +51,8 @@
 - `node artifacts/vocabflow/scripts/check-dictionary-button.cjs`: kiểm tra nút tải bắt đầu trực tiếp, khóa nhấn trùng và xin phép lại khi lỗi.
 - `node artifacts/vocabflow/scripts/check-dictionary-ui.cjs`: kiểm tra tìm ngay, chống kết quả cũ mở nhầm từ, nghĩa chọn để lưu, từ trùng/đóng băng và thứ tự tab.
 - `node artifacts/vocabflow/scripts/check-dictionary-wasm.cjs`: dùng đúng SQLite WASM/MemoryVFS của Expo để tái hiện lỗi WAL nguồn, rồi kiểm tra nhập, backup, tìm kiếm và mở lại bản chuẩn hóa.
+- `pnpm --filter @workspace/vocabflow run check:course`: kiểm tra khóa học có 25 bài, đúng 1.000 mục, đủ nghĩa và không trùng cặp từ-nghĩa.
+- `pnpm --filter @workspace/vocabflow run check:course-storage`: kiểm tra lưu/khôi phục tiến độ, checklist và thêm đúng mục đã chọn vào SQLite.
 - `node artifacts/vocabflow/scripts/check-sqlite-connection.cjs`: kiểm tra mở SQLite tuần tự giữa các kho, quyền sở hữu một tab trên web và phục hồi hàng đợi khi lỗi.
 - App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không dùng cookie hay phụ thuộc đăng nhập của máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; mọi truy vấn, sổ cá nhân và tiến độ vẫn trên máy. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.

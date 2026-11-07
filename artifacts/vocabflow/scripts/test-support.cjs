@@ -21,6 +21,7 @@ function loadTs(filePath, dependencies = {}, globals = {}) {
 
 const srs = loadTs(join(__dirname, '../domain/srs.ts'));
 const sqliteConnection = loadTs(join(__dirname, '../data/sqlite-connection.ts'));
+const basicCourse = loadTs(join(__dirname, '../data/basic-course.ts'));
 
 function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   let clock = today;
@@ -31,6 +32,7 @@ function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   const repo = loadTs(join(__dirname, '../data/vocabulary.ts'), {
     '../domain/srs': srs,
     './sqlite-connection': sqliteConnection,
+    './basic-course': basicCourse,
     'expo-sqlite': {
       openDatabaseAsync: async filename => {
         handle = new DatabaseSync(join(root, filename));
