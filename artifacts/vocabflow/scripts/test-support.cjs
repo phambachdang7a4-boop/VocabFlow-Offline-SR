@@ -54,4 +54,4 @@ function createRepository(root, today = '2026-01-01T12:00:00') {
   return { repo, get db() { return handle; }, setDay: day => { clock = `${day}T12:00:00`; } };
 }
 
-module.exports = { srs, createRepository };
+module.exports = { srs, createRepository, loadTs };

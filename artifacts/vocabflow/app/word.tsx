@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,10 @@ import { useColors } from '@/hooks/useColors';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { Button, ConfirmDialog, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
 import { formatDate } from '@/utils/text';
+import { normalizeTerm } from '@/data/vocabulary';
+import { getDictionaryDraft } from '@/data/dictionary';
+import { validDictionaryId } from '@/domain/dictionary';
+import { useDictionary } from '@/hooks/useDictionary';
 
 function goBack() {
   if (router.canGoBack()) router.back();
@@ -45,16 +49,16 @@ function Field({ label, required, error, hint, ...props }: TextInputProps & { re
   );
 }
 
-function WordForm({ existing }: { existing?: VocabularyWord }) {
+function WordForm({ existing, initial, fromDictionary }: { existing?: VocabularyWord; initial?: WordInput; fromDictionary?: boolean }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
-  const { saveWord, deleteWord, setWordFrozen } = useVocabulary();
+  const { words, saveWord, deleteWord, setWordFrozen } = useVocabulary();
   const [form, setForm] = useState<WordInput>({
-    term: existing?.term ?? '',
-    meaning: existing?.meaning ?? '',
-    ipa: existing?.ipa ?? '',
-    example: existing?.example ?? '',
-    note: existing?.note ?? '',
+    term: existing?.term ?? initial?.term ?? '',
+    meaning: existing?.meaning ?? initial?.meaning ?? '',
+    ipa: existing?.ipa ?? initial?.ipa ?? '',
+    example: existing?.example ?? initial?.example ?? '',
+    note: existing?.note ?? initial?.note ?? '',
   });
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -63,6 +67,9 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
   const [confirm, setConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const busyRef = useRef(false);
+  const conflict = !existing && submitError
+    ? words.find((w) => normalizeTerm(w.term) === normalizeTerm(form.term))
+    : undefined;
   const meaningRef = useRef<any>(null);
 
   const set = (k: keyof WordInput) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -129,9 +136,9 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
         bottomOffset={24}
       >
         <View style={{ gap: 4 }}>
-          <Text style={[styles.title, { color: c.foreground }]}>{existing ? 'Chỉnh lại trang này' : 'Ghi một từ vào sổ'}</Text>
+          <Text style={[styles.title, { color: c.foreground }]}>{existing ? 'Chỉnh lại trang này' : fromDictionary ? 'Xem lại trước khi lưu' : 'Ghi một từ vào sổ'}</Text>
           <Text style={[styles.sub, { color: c.mutedForeground }]}>
-            {existing ? `Ghi lần đầu ngày ${formatDate(existing.createdAt)}` : 'Chỉ từ và nghĩa là bắt buộc.'}
+            {existing ? `Ghi lần đầu ngày ${formatDate(existing.createdAt)}` : fromDictionary ? 'Đã điền sẵn từ từ điển. Bạn có thể sửa mọi ô; chưa có gì được lưu.' : 'Chỉ từ và nghĩa là bắt buộc.'}
           </Text>
         </View>
         {existing ? (
@@ -152,6 +159,10 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
           <Text style={[styles.sub, { color: c.mutedForeground }]}>Từ mới có thể học ngay sau khi lưu.</Text>
         )}
         {submitError ? <ErrorBanner message={submitError} /> : null}
+        {conflict ? (
+          <Button testID="word-open-conflict" label={`Mở “${conflict.term}” đã có trong sổ`} icon="book-open" variant="ghost"
+            onPress={() => router.replace({ pathname: '/word', params: { id: String(conflict.id) } })} />
+        ) : null}
         {existing && (existing.frozen || !existing.completed) ? (
           <View style={{ gap: 8 }}>
             <Button testID="word-toggle-freeze" label={existing.frozen ? 'Bỏ đóng băng' : 'Đóng băng'}
@@ -189,11 +200,102 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
   );
 }
 
+function parseDictId(v: unknown): number | null {
+  if (typeof v !== 'string' || !/^\d+$/.test(v)) return null;
+  const n = Number(v);
+  return validDictionaryId(n) ? n : null;
+}
+
+function Centered({ title, children }: { title: string; children: React.ReactNode }) {
+  const c = useColors();
+  return (
+    <View style={{ flex: 1, backgroundColor: c.background, justifyContent: 'center', padding: 20, gap: 12 }}>
+      <Stack.Screen options={{ title }} />
+      {children}
+    </View>
+  );
+}
+
+function DictionaryDraftScreen({ wordId, senseId }: { wordId: number; senseId: number }) {
+  const c = useColors();
+  const dict = useDictionary();
+  const { words, loading: vocabLoading, error: vocabError, reload } = useVocabulary();
+  const [draft, setDraft] = useState<WordInput | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+  // Once the form is shown, keep it (even if a save adds this term to the list).
+  const [formShown, setFormShown] = useState(false);
+
+  useEffect(() => {
+    if (!dict.ready) return;
+    let active = true;
+    setError(null);
+    getDictionaryDraft(wordId, senseId).then(
+      (d) => { if (active) setDraft(d); },
+      (e) => { if (active) setError(e instanceof Error ? e.message : 'Không thể lấy nghĩa từ từ điển.'); },
+    );
+    return () => { active = false; };
+  }, [wordId, senseId, dict.ready, tick]);
+
+  const duplicate = draft && !formShown ? words.find((w) => normalizeTerm(w.term) === normalizeTerm(draft.term)) : undefined;
+  const decided = !!draft && !vocabLoading;
+  useEffect(() => {
+    if (decided && !duplicate && !vocabError && !formShown) setFormShown(true);
+  }, [decided, duplicate, vocabError, formShown]);
+
+  if (formShown && draft) return <WordForm key={`dict-${wordId}-${senseId}`} initial={draft} fromDictionary />;
+  const failure = dict.error ?? error;
+  if (failure) {
+    return (
+      <Centered title="Lỗi từ điển">
+        <ErrorBanner message={failure} onRetry={() => { if (dict.error) dict.retry(); else setTick((n) => n + 1); }} />
+        <Button testID="draft-back" label="Quay lại" icon="arrow-left" variant="ghost" onPress={goBack} />
+      </Centered>
+    );
+  }
+  if (vocabError && draft) {
+    return (
+      <Centered title="Lỗi sổ từ">
+        <ErrorBanner message={vocabError} onRetry={reload} />
+        <Button testID="draft-back" label="Quay lại" icon="arrow-left" variant="ghost" onPress={goBack} />
+      </Centered>
+    );
+  }
+  if (duplicate) {
+    return (
+      <Centered title="Đã có trong sổ">
+        <EmptyState icon="book-open" title="Đã có trong sổ"
+          body={`“${duplicate.term}” đã có trong sổ${duplicate.frozen ? ' (đang đóng băng)' : ''}. Trang cũ và tiến độ ôn được giữ nguyên.`}>
+          <Button testID="draft-open-existing" label="Mở trang trong sổ" icon="book-open"
+            onPress={() => router.replace({ pathname: '/word', params: { id: String(duplicate.id) } })} />
+          <Button testID="draft-back" label="Quay lại" icon="arrow-left" variant="ghost" onPress={goBack} />
+        </EmptyState>
+      </Centered>
+    );
+  }
+  return <View style={{ flex: 1, padding: 20, backgroundColor: c.background }}><Stack.Screen options={{ title: 'Từ mới' }} /><Skeleton h={56} /><Skeleton h={90} /><Skeleton h={56} /></View>;
+}
+
 export default function WordScreen() {
   const c = useColors();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; dictionaryWordId?: string; senseId?: string }>();
   const { words, loading, error, reload } = useVocabulary();
   const rawId = typeof params.id === 'string' ? params.id : undefined;
+
+  if ((rawId === undefined || rawId === '') && (params.dictionaryWordId !== undefined || params.senseId !== undefined)) {
+    const wordId = parseDictId(params.dictionaryWordId);
+    const senseId = parseDictId(params.senseId);
+    if (wordId === null || senseId === null) {
+      return (
+        <Centered title="Không hợp lệ">
+          <EmptyState icon="alert-triangle" title="Liên kết từ điển không hợp lệ" body="Không xác định được mục từ hoặc nghĩa cần thêm. Hãy quay lại và chọn lại nghĩa.">
+            <Button testID="draft-invalid-back" label="Quay lại" icon="arrow-left" onPress={goBack} />
+          </EmptyState>
+        </Centered>
+      );
+    }
+    return <DictionaryDraftScreen key={`${wordId}-${senseId}`} wordId={wordId} senseId={senseId} />;
+  }
 
   if (rawId === undefined || rawId === '') return <WordForm />;
 

@@ -7,5 +7,5 @@ VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, off
 
 **Why:** Người dùng yêu cầu rõ phạm vi này.
 
-**How to apply:** Trước khi viết code phải tóm tắt kế hoạch tối đa 10 dòng và chờ đồng ý. Sau đó làm từng bước nhỏ chạy được; sau mỗi bước báo cách kiểm tra trên điện thoại. Không triển khai rương/mảnh ghép, tranh, truyện, linh vật, từ điển 105.000 từ, đồng nghĩa/trái nghĩa hoặc khóa 1.000 từ trong giai đoạn này. Phạm vi Free/Premium hiện tại được ghi trong `replit.md`; không tự tiếp tục kế hoạch thu phí cũ.
+**How to apply:** Trước khi viết code phải tóm tắt kế hoạch tối đa 10 dòng và chờ đồng ý. Sau đó làm từng bước nhỏ chạy được; sau mỗi bước báo cách kiểm tra trên điện thoại. Không triển khai rương/mảnh ghép, tranh, truyện, linh vật, đồng nghĩa/trái nghĩa hoặc khóa 1.000 từ trong giai đoạn này. Từ điển tra cứu đã được người dùng yêu cầu mở rộng khỏi phạm vi ban đầu. Phạm vi Tra Từ và Free/Premium hiện tại được ghi trong `replit.md`; không tự tiếp tục kế hoạch thu phí cũ.
 

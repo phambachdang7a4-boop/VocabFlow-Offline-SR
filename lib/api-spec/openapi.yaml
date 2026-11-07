@@ -11,6 +11,25 @@ tags:
   - name: health
     description: Health operations
 paths:
+  /dictionary/asset:
+    get:
+      operationId: downloadDictionaryAsset
+      tags: [dictionary]
+      summary: Download the pinned public reference dictionary once for local offline use
+      responses:
+        "200":
+          description: Unmodified upstream SQLite file with pinned SHA-256
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "503":
+          description: Dictionary asset storage temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DictionaryAssetError"
   /healthz:
     get:
       operationId: healthCheck
@@ -26,6 +45,12 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 components:
   schemas:
+    DictionaryAssetError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
     HealthStatus:
       type: object
       properties:

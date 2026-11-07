@@ -15,6 +15,10 @@ function NativeTabLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
         <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="dictionary">
+        <NativeTabs.Trigger.Icon sf={{ default: 'character.book.closed', selected: 'character.book.closed.fill' }} />
+        <NativeTabs.Trigger.Label>Tra Từ</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="review">
         <NativeTabs.Trigger.Icon sf={{ default: 'rectangle.on.rectangle', selected: 'rectangle.on.rectangle' }} />
         <NativeTabs.Trigger.Label>Ôn tập</NativeTabs.Trigger.Label>
@@ -29,6 +33,7 @@ function NativeTabLayout() {
 
 const ICONS = {
   index: { sf: 'book', fe: 'book-open' },
+  dictionary: { sf: 'character.book.closed', fe: 'search' },
   review: { sf: 'rectangle.on.rectangle', fe: 'layers' },
   settings: { sf: 'gearshape', fe: 'settings' },
 } as const;
@@ -72,6 +77,7 @@ function ClassicTabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
+      <Tabs.Screen name="dictionary" options={{ title: 'Tra Từ', tabBarIcon: icon('dictionary') }} />
       <Tabs.Screen name="review" options={{ title: 'Ôn tập', tabBarIcon: icon('review') }} />
       <Tabs.Screen name="settings" options={{ title: 'Cài đặt', tabBarIcon: icon('settings') }} />
     </Tabs>

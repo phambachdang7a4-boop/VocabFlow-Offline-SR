@@ -1,0 +1,32 @@
+import { Storage } from '@google-cloud/storage';
+
+// Replit's canonical sidecar-authenticated App Storage client.
+const REPLIT_SIDECAR_ENDPOINT = 'http://127.0.0.1:1106';
+export const objectStorageClient = new Storage({
+  credentials: {
+    audience: 'replit',
+    subject_token_type: 'access_token',
+    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+    type: 'external_account',
+    credential_source: {
+      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+      format: { type: 'json', subject_token_field_name: 'access_token' },
+    },
+    universe_domain: 'googleapis.com',
+  },
+  projectId: '',
+});
+
+export const DICTIONARY_OBJECT_KEY = 'vocabflow/dictionary-2b65bea9577c2a41.db';
+
+export async function findDictionaryAsset() {
+  const paths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS ?? '').split(',').map(path => path.trim()).filter(Boolean);
+  if (!paths.length) throw new Error('Public App Storage is not configured');
+  for (const path of paths) {
+    const [bucket, ...prefix] = path.replace(/^\/+/, '').split('/');
+    const file = objectStorageClient.bucket(bucket).file([...prefix, DICTIONARY_OBJECT_KEY].join('/'));
+    const [exists] = await file.exists();
+    if (exists) return file;
+  }
+  throw new Error('Pinned dictionary asset is not in App Storage');
+}
