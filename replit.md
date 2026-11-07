@@ -16,6 +16,8 @@
 - Người dùng yêu cầu bỏ câu hướng dẫn “Bấm Lưu từ…” và thêm checklist từ loại dưới thanh tìm kiếm: Verb, Noun, Adjective, Adverb, Idiom, Others. Lọc nghĩa của từ đang xem, chọn nhiều loại. Mặc định chọn từ loại của nghĩa xuất hiện đầu tiên theo thứ tự nguồn; không mặc định Tất cả. Danh sách loại có trong từ cũng theo thứ tự xuất hiện.
 - Người dùng yêu cầu hỏi trước khi dùng dữ liệu di động để tải từ điển. Quy tắc an toàn: không tự tải trên bất kỳ loại mạng nào; hiện dung lượng/cảnh báo cước và chờ “Đồng ý tải” cho từng lần tải/thử lại. Kho đã nạp vẫn mở offline không cần hỏi lại; “Để sau” giữ nguyên sổ và ôn tập.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
+- Ôn tập mở bằng tổng quan theo ảnh tham khảo: biểu đồ 6 cột theo cấp, tổng từ trong sổ và nút bắt đầu phiên ôn. Chưa đến hạn thì thay nút bằng thanh đếm ngược tới lịch gần nhất theo ngày địa phương; không có lịch tương lai thì báo rõ, không tạo đồng hồ giả.
+- Biểu đồ đếm cả từ hoàn tất/đóng băng ở cấp đang lưu để tổng cột khớp tổng sổ cá nhân. Hàng đợi ôn và đếm ngược vẫn loại từ hoàn tất/đóng băng; không thay lịch SRS hoặc tự bắt đầu phiên khi đồng hồ hết.
 
 ## Run & Operate
 
@@ -24,6 +26,8 @@
 - `node artifacts/vocabflow/scripts/check-storage.cjs`
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-srs.cjs`
 - `TZ=America/New_York node artifacts/vocabflow/scripts/check-srs.cjs`
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review.cjs` (cũng chạy với `TZ=America/New_York` để kiểm tra DST): tổng 6 cấp, lịch gần nhất, chuyển ngày, vòng đời đồng hồ.
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-ui.cjs`: tổng quan, bắt đầu/quay lại/kết thúc phiên, hết đếm ngược, tỉ lệ cột và khóa lưu/chấm điểm/đóng băng.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
@@ -43,6 +47,7 @@
 - `artifacts/vocabflow/constants/`: màu sắc.
 - `artifacts/vocabflow/docs/kiem-tra-buoc-1.md`: kiểm tra trên Android.
 - `artifacts/vocabflow/docs/kiem-tra-buoc-2.md`: quy tắc SRS và kiểm tra trên Android.
+- `artifacts/vocabflow/docs/kiem-tra-on-tap.md`: tổng quan 6 cấp, phiên ôn và thanh đếm ngược.
 - `artifacts/vocabflow/docs/kiem-tra-buoc-3.md`: đóng băng và bỏ đóng băng.
 - `artifacts/vocabflow/docs/kiem-tra-tra-tu.md`: kiểm tra kho từ điển, thêm vào sổ và offline.
 

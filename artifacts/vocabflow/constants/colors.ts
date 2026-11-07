@@ -39,6 +39,11 @@ const colors = {
     dictAddInk: '#F4FFF6',
     dictAddPressed: '#24803A',
     dictSuggest: '#9C6A15',
+    // Review overview chart tokens (Atta cyan family).
+    chartBar: '#61A9BD',
+    chartBarStrong: '#3C7686',
+    chartBase: '#CFC6B2',
+    reviewTrack: '#E3ECE6',
   },
   radius: 14,
 };
