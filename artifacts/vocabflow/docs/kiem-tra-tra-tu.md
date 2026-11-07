@@ -7,11 +7,13 @@
 3. **Đưa vào sổ:** chọn nghĩa → Thêm vào sổ từ → sửa thông tin nếu muốn → Lưu vào sổ. Sau khi lưu, từ mới có thể học ngay. Từ đã có được mở lại, không ghi đè, tạo bản sao hay đặt lại tiến độ/đóng băng.
 4. **Nguồn:** nút thông tin mở phần ghi công và văn bản giấy phép đầy đủ, có sẵn trong app, không cần tải trang web.
 
-## Kiểm tra trên Android bằng Expo Go
+## Kiểm tra trên Android bằng Expo Go hoặc Chrome
 
 ### 1. Nạp lần đầu và tra cứu
 
 - Mở app qua mã QR dự án như trước, chọn tab **Tra Từ** ở thanh dưới.
+- Nếu đang dùng Chrome Android, tải lại trang để nhận bản mới, sau đó chọn **Tra Từ**; không cần chuyển sang Expo Go hoặc xóa dữ liệu trình duyệt.
+- Tệp tải trực tiếp từ nguồn GitHub công khai, ghim commit và kiểm SHA-256. Không cần đăng nhập cho tệp từ điển; không tải qua API preview riêng tư. Bản mirror App Storage vẫn được giữ cho người phát triển.
 - Trước khi tải, app hỏi **Tải kho từ điển về máy?**, nêu dung lượng **42,2 MiB (khoảng 44,2 MB)** và cảnh báo cước 3G/4G/5G. Chưa nhấn **Đồng ý tải** thì không gửi yêu cầu tải tệp, trên cả Wi-Fi lẫn dữ liệu di động. Chọn **Để sau** để về Sổ từ; vẫn thêm từ và ôn tập bình thường.
 - Lần đầu cần có mạng và đủ dung lượng trống. Chỉ sau khi đồng ý, app mới tải 42,2 MiB và cần thêm dung lượng tạm để xác minh/nhập SQLite, không chỉ đúng 42,2 MiB. Nên có ít nhất vài trăm MB trống.
 - Sau khi nhấn **Đồng ý tải**, nút phải được thay ngay bằng trạng thái kiểm tra/tải; thao tác không cần chuyển tab rồi quay lại để bắt đầu. Nhấn liên tiếp không tạo nhiều lượt tải.
@@ -62,7 +64,7 @@ TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-srs.cjs
 
 Kiểm tra dùng dữ liệu tạm, không tạo từ mẫu trong app. Bao gồm không tải trước xác nhận ở cả tra cứu/chi tiết/biểu mẫu, xin phép lại khi tải lỗi; SHA-256/kích thước/schema thật; truy vấn có giới hạn; thoát ký tự SQL; sao chép đúng nghĩa; không lưu trước xác nhận; bảo toàn từ trùng/đóng băng; nhập cache, mở lại cache khi không có mạng không cần xác nhận lại; không xóa sổ cá nhân; cache chỉ đọc.
 
-App Storage đã được nạp. Nếu cần khôi phục asset nguồn trên môi trường có App Storage đã cấp:
+App Storage đã có bản mirror (không phải đường tải mặc định của app). Nếu cần khôi phục mirror trên môi trường có App Storage đã cấp:
 
 ```sh
 node artifacts/vocabflow/scripts/prepare-dictionary.cjs --upload

@@ -1,6 +1,7 @@
 import { backupDatabaseAsync, deleteDatabaseAsync, deserializeDatabaseAsync, openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { DICTIONARY, DICTIONARY_ASSET_PATH, type DictionaryStage } from '../domain/dictionary';
+import { DICTIONARY, type DictionaryStage } from '../domain/dictionary';
+import { dictionaryDownloadUrl } from '../domain/dictionary-download';
 import { draftInDictionary, entryInDictionary, searchInDictionary } from './dictionary-queries';
 import { openDatabaseSafely, storageFailureMessage } from './sqlite-connection';
 
@@ -12,12 +13,6 @@ export class DictionaryDownloadConsentRequired extends Error {
     super('Cần xác nhận trước khi tải từ điển.');
     this.name = 'DictionaryDownloadConsentRequired';
   }
-}
-
-function assetUrl() {
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-  if (!domain) throw new Error('Chưa cấu hình địa chỉ tải từ điển.');
-  return `https://${domain}${DICTIONARY_ASSET_PATH}`;
 }
 
 async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownload = false): Promise<SQLiteDatabase> {
@@ -38,7 +33,7 @@ async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownl
       const timeout = setTimeout(() => abort.abort(), 180_000);
       let buffer: Uint8Array;
       try {
-        const response = await fetch(assetUrl(), { signal: abort.signal });
+        const response = await fetch(dictionaryDownloadUrl(), { signal: abort.signal, credentials: 'omit' });
         if (!response.ok) throw new Error(`Tải từ điển thất bại (HTTP ${response.status}).`);
         buffer = new Uint8Array(await response.arrayBuffer());
       } finally {

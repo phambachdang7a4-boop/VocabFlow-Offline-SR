@@ -25,7 +25,7 @@
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`
 - `node artifacts/vocabflow/scripts/check-dictionary-button.cjs`: kiểm tra nút tải bắt đầu trực tiếp, khóa nhấn trùng và xin phép lại khi lỗi.
 - `node artifacts/vocabflow/scripts/check-sqlite-connection.cjs`: kiểm tra mở SQLite tuần tự giữa các kho, quyền sở hữu một tab trên web và phục hồi hàng đợi khi lỗi.
-- API chỉ phục vụ tệp tham chiếu công khai ở `/api/dictionary/asset` từ App Storage. App chỉ nạp lần đầu sau xác nhận rõ ràng ở Tra Từ; các truy vấn, sổ cá nhân và tiến độ không gửi lên server.
+- App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không dùng cookie hay phụ thuộc đăng nhập của máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; mọi truy vấn, sổ cá nhân và tiến độ vẫn trên máy. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.
 
 ## Cấu trúc
@@ -61,7 +61,7 @@
 
 SQLite cục bộ là nguồn dữ liệu cho từ và tiến độ; không thay bằng AsyncStorage hay cơ sở dữ liệu máy chủ. Migration có phiên bản, không xóa hoặc seed dữ liệu. Các thao tác được tuần tự hóa và dùng tham số SQL. Sửa từ không thay ngày tạo.
 
-Kho tra cứu dùng SQLite riêng, có kiểm SHA-256 và kích thước trước khi nhập, chỉ đọc sau khi thêm chỉ mục tìm kiếm và dấu hoàn tất. Lần đầu cần mạng, sau đó mở lại kho đã nạp không cần API. Nếu nạp lỗi chỉ được xóa bộ nhớ đệm tham chiếu có tên riêng, tuyệt đối không xóa `vocabflow.db`. Asset lớn lưu bền trong App Storage; bản tải để kiểm tra đặt trong `/generated-artifacts/`, bị loại khỏi Git và gói triển khai.
+Kho tra cứu dùng SQLite riêng, có kiểm SHA-256 và kích thước trước khi nhập, chỉ đọc sau khi thêm chỉ mục tìm kiếm và dấu hoàn tất. Lần đầu cần mạng, sau đó mở lại kho đã nạp không cần API. Nếu nạp lỗi chỉ được xóa bộ nhớ đệm tham chiếu có tên riêng, tuyệt đối không xóa `vocabflow.db`. Bản mirror lớn lưu bền trong App Storage; bản tải để kiểm tra đặt trong `/generated-artifacts/`, bị loại khỏi Git và gói triển khai.
 
 Nguồn kho Skypedia công bố CC BY-SA 4.0, có ghi chú OVDP GPLv2; kho upstream MinhQND có LICENSE MIT nhưng README dẫn CC BY-SA. Giữ đầy đủ thông báo nguồn trong app; chưa coi quyền tái phân phối thương mại là đã được xác minh. Dữ liệu tham chiếu không chỉnh nội dung; chỉ thêm chỉ mục và dấu khởi tạo cục bộ. Tệp nguồn để phân phối vẫn giữ nguyên bytes.
 

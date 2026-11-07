@@ -31,6 +31,9 @@ function adapter(filename, readOnly = false) {
 
 (async () => {
   const domain = loadTs(join(__dirname, '../domain/dictionary.ts'));
+  const download = loadTs(join(__dirname, '../domain/dictionary-download.ts'), { './dictionary': domain });
+  const publicUrl = `https://raw.githubusercontent.com/skypediacode/english-vietnamese-dictionary/${domain.DICTIONARY.commit}/dictionary_en_vi.db`;
+  assert.equal(download.dictionaryDownloadUrl(), publicUrl, 'Public data must not require preview login or an API domain');
   const { DICTIONARY, DICTIONARY_PAGE_SIZE } = domain;
   const bytes = readFileSync(source);
   assert.equal(bytes.length, DICTIONARY.bytes);
@@ -99,17 +102,27 @@ function adapter(filename, readOnly = false) {
       rmSync(join(root, filename), { force: true });
     },
   };
-  function repository(fetch) {
+  function repository(fetch, pageOrigin) {
     return loadTs(join(__dirname, '../data/dictionary.ts'), {
       'expo-sqlite': sqlite,
       '@noble/hashes/sha2.js': { sha256 },
       '../domain/dictionary': domain,
+      '../domain/dictionary-download': download,
       './dictionary-queries': queries,
       './sqlite-connection': sqliteConnection,
-    }, { fetch, process: { env: { EXPO_PUBLIC_DOMAIN: 'unused.invalid' } } });
+    }, {
+      fetch, process: { env: { EXPO_PUBLIC_DOMAIN: 'unused.invalid' } },
+      document: pageOrigin ? {} : undefined,
+      globalThis: pageOrigin ? { location: { origin: pageOrigin } } : globalThis,
+    });
   }
   const stages = [];
-  let repo = repository(async () => { downloads++; return new Response(bytes); });
+  let repo = repository(async (url, options) => {
+    assert.equal(url, publicUrl, 'Browser must bypass private development-host authentication for public data');
+    assert.equal(options.credentials, 'omit', 'Public download must not send cookies or need a login');
+    downloads++;
+    return new Response(bytes);
+  }, 'https://phone.expo.example');
   const waiting = [];
   await assert.rejects(repo.openDictionary(stage => waiting.push(stage)), /Cần xác nhận/);
   assert.deepEqual(waiting, ['checking', 'awaiting-consent']);
@@ -155,7 +168,7 @@ function adapter(filename, readOnly = false) {
   repo = repository(async () => new Response(Buffer.alloc(DICTIONARY.bytes)));
   await assert.rejects(repo.openDictionary(undefined, { allowDownload: true }), /không đúng phiên bản/);
   assert.deepEqual((await personal.repo.listWords())[0], snapshot);
-  console.log('PASS: no transfer before explicit consent (screen, search, detail and draft); fresh permission on retry; cached offline reads need no approval; real 104,829-word SQLite; paging; draft/save/SRS; duplicate/freeze preservation; verified import and personal-data isolation.');
+  console.log('PASS: pinned public no-login download URL; no cookies; no transfer before consent; fresh permission on retry; offline cache; real 104,829-word SQLite; paging; draft/save/SRS; duplicate/freeze preservation; verified import and personal-data isolation.');
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
