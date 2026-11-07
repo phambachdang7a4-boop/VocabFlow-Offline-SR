@@ -3,6 +3,20 @@ const { join } = require('node:path');
 const { readFileSync } = require('node:fs');
 const { loadTs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
+const { exampleSegments } = loadTs(join(__dirname, '../domain/dictionary.ts'));
+for (const [sentence, term, expected] of [
+  ['I have not seen him since.', 'since', ['since']],
+  ['Since then, since yesterday.', 'since', ['Since', 'since']],
+  ['Sincerity is not since.', 'since', ['since']],
+  ['Take  off, then take off.', 'take off', ['Take  off', 'take off']],
+  ['C++ and C+ are different.', 'C++', ['C++']],
+  ['Nothing to underline.', 'since', []],
+  ['Nothing to underline.', '', []],
+]) {
+  const segments = exampleSegments(sentence, term);
+  assert.equal(segments.map(part => part.text).join(''), sentence);
+  assert.deepEqual(segments.filter(part => part.underline).map(part => part.text), expected);
+}
 const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator'].map(key => [key, key]));
 Object.assign(native, { Platform: { OS: 'web' }, StyleSheet: { create: value => value }, Keyboard: { dismiss() {} } });
 const normalizeTerm = value => value.trim().toLowerCase();
@@ -43,6 +57,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   };
   const routes = [];
   const dependencies = {
+    '@/domain/dictionary': { exampleSegments },
     react: { ...react, default: react }, 'react-native': native,
     '@expo/vector-icons': { Feather: 'Feather' },
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },

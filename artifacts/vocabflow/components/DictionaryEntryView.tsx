@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getDictionaryEntry } from '@/data/dictionary';
-import { type DictionaryEntry, type DictionarySense } from '@/domain/dictionary';
+import { exampleSegments, type DictionaryEntry, type DictionarySense } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
 
@@ -131,7 +131,11 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
         {item.example ? (
           <View style={styles.exRow}>
             <View style={[styles.bullet, { backgroundColor: c.dictInk }]} />
-            <Text style={[styles.example, { color: c.dictInk }]} selectable>{item.example}</Text>
+            <Text style={[styles.example, { color: c.dictInk }]} selectable>
+              {exampleSegments(item.example, entry.term).map((part, index) => (
+                <Text key={index} style={part.underline ? styles.exampleHeadword : undefined}>{part.text}</Text>
+              ))}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -189,5 +193,6 @@ const styles = StyleSheet.create({
   exRow: { flexDirection: 'row', gap: 10, paddingLeft: 26, alignItems: 'flex-start' },
   bullet: { width: 5, height: 5, borderRadius: 3, marginTop: 9 },
   example: { flex: 1, fontFamily: F.r, fontSize: 15, lineHeight: 22 },
+  exampleHeadword: { textDecorationLine: 'underline' },
   link: { fontFamily: F.s, fontSize: 14 },
 });

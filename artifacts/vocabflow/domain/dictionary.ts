@@ -35,6 +35,27 @@ export function validDictionaryId(id: number): boolean {
   return Number.isSafeInteger(id) && id > 0;
 }
 
+/** Preserve the source sentence verbatim; match whole headwords, not substrings. */
+export function exampleSegments(example: string, term: string): { text: string; underline: boolean }[] {
+  const headword = term.trim();
+  if (!headword) return [{ text: example, underline: false }];
+  const pattern = headword.split(/\s+/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
+  const matches = new RegExp(pattern, 'giu');
+  const segments: { text: string; underline: boolean }[] = [];
+  let cursor = 0;
+  for (const match of example.matchAll(matches)) {
+    const start = match.index!;
+    const end = start + match[0].length;
+    if (/[\p{L}\p{N}\p{M}_]$/u.test(example.slice(0, start))
+      || /^[\p{L}\p{N}\p{M}_]/u.test(example.slice(end))) continue;
+    if (start > cursor) segments.push({ text: example.slice(cursor, start), underline: false });
+    segments.push({ text: match[0], underline: true });
+    cursor = end;
+  }
+  if (cursor < example.length) segments.push({ text: example.slice(cursor), underline: false });
+  return segments.length ? segments : [{ text: example, underline: false }];
+}
+
 export function dictionaryDraft(entry: Pick<DictionaryEntry, 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
   const kind = [sense.pos, sense.subPos].filter(Boolean).join(' · ');
   return {
