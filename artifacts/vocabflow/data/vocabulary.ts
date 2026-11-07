@@ -9,12 +9,70 @@ export function normalizeTerm(value: string): string {
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
 }
 
+/** Rebuild both sides of the FK in one transaction to remove the old UNIQUE
+ * headword constraint without cascading away anyone's progress. */
+async function migrateIndependentSenses(db: SQLiteDatabase): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    const sequence = await db.getFirstAsync<{ seq: number }>("SELECT seq FROM sqlite_sequence WHERE name = 'words'");
+    const meanings = await db.getAllAsync<{ id: number; meaning: string }>('SELECT id, meaning FROM words');
+    await db.execAsync(`
+      CREATE TABLE words_next (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        term TEXT NOT NULL, normalized_term TEXT NOT NULL,
+        meaning TEXT NOT NULL, normalized_meaning TEXT NOT NULL,
+        ipa TEXT NOT NULL DEFAULT '', example TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+        dictionary_entry_id INTEGER, dictionary_sense_id INTEGER,
+        CHECK ((dictionary_entry_id IS NULL AND dictionary_sense_id IS NULL) OR
+          (dictionary_entry_id IS NOT NULL AND dictionary_sense_id IS NOT NULL AND
+           dictionary_entry_id > 0 AND dictionary_sense_id > 0))
+      );
+      INSERT INTO words_next (id, term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at)
+        SELECT id, term, normalized_term, meaning, meaning, ipa, example, note, created_at, updated_at FROM words;
+      CREATE TABLE word_progress_next (
+        word_id INTEGER PRIMARY KEY REFERENCES words_next(id) ON DELETE CASCADE,
+        review_count INTEGER NOT NULL DEFAULT 0 CHECK (review_count >= 0),
+        level INTEGER NOT NULL DEFAULT 1 CHECK (level BETWEEN 1 AND 6),
+        learned_on TEXT NOT NULL DEFAULT '', next_review_on TEXT,
+        completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1)),
+        last_reviewed_on TEXT,
+        frozen INTEGER NOT NULL DEFAULT 0 CHECK (frozen IN (0, 1))
+      );
+      INSERT INTO word_progress_next
+        (word_id, review_count, level, learned_on, next_review_on, completed, last_reviewed_on, frozen)
+        SELECT word_id, review_count, level, learned_on, next_review_on, completed, last_reviewed_on, frozen FROM word_progress;
+      DROP TABLE word_progress;
+      DROP TABLE words;
+      ALTER TABLE words_next RENAME TO words;
+      ALTER TABLE word_progress_next RENAME TO word_progress;
+    `);
+    for (const word of meanings) {
+      await db.runAsync('UPDATE words SET normalized_meaning = ? WHERE id = ?', normalizeTerm(word.meaning), word.id);
+    }
+    if (sequence) {
+      await db.runAsync("INSERT INTO sqlite_sequence(name, seq) SELECT 'words', ? WHERE NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'words')", sequence.seq);
+      await db.runAsync("UPDATE sqlite_sequence SET seq = MAX(seq, ?) WHERE name = 'words'", sequence.seq);
+    }
+    await db.execAsync(`
+      CREATE UNIQUE INDEX idx_words_manual_sense ON words(normalized_term, normalized_meaning)
+        WHERE dictionary_entry_id IS NULL;
+      CREATE UNIQUE INDEX idx_words_dictionary_sense ON words(dictionary_entry_id, dictionary_sense_id)
+        WHERE dictionary_entry_id IS NOT NULL;
+      CREATE INDEX idx_words_term ON words(normalized_term);
+      CREATE INDEX idx_progress_due ON word_progress(completed, next_review_on);
+      PRAGMA user_version = 5;
+    `);
+    const invalid = await db.getFirstAsync('PRAGMA foreign_key_check');
+    if (invalid) throw new Error('Không thể chuyển dữ liệu an toàn. Dữ liệu cũ được giữ nguyên.');
+  });
+}
+
 async function initialize(): Promise<SQLiteDatabase> {
   const db = await openDatabaseSafely(() => openDatabaseAsync('vocabflow.db'));
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 4) {
+    if ((version?.user_version ?? 0) > 5) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -86,6 +144,7 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 5) await migrateIndependentSenses(db);
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -116,6 +175,7 @@ export function listWords(): Promise<VocabularyWord[]> {
     const db = await database();
     const rows = await db.getAllAsync<Omit<VocabularyWord, 'completed' | 'frozen'> & { completed: number; frozen: number }>(`
       SELECT w.id, w.term, w.meaning, w.ipa, w.example, w.note,
+        w.dictionary_entry_id AS dictionaryEntryId, w.dictionary_sense_id AS dictionarySenseId,
         w.created_at AS createdAt, w.updated_at AS updatedAt,
         p.review_count AS reviewCount, p.level, p.learned_on AS learnedOn,
         p.next_review_on AS nextReviewOn, p.completed, p.last_reviewed_on AS lastReviewedOn, p.frozen
@@ -147,24 +207,40 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
     }
     const db = await database();
     const key = normalizeTerm(clean.term);
+    const meaningKey = normalizeTerm(clean.meaning);
+    const previous = id === undefined ? undefined : await db.getFirstAsync<{
+      dictionaryEntryId: number | null; dictionarySenseId: number | null;
+    }>('SELECT dictionary_entry_id AS dictionaryEntryId, dictionary_sense_id AS dictionarySenseId FROM words WHERE id = ?', id);
+    if (id !== undefined && !previous) throw new Error('Từ này không còn tồn tại.');
+    // Edits retain the original sense association, even if the form omits metadata.
+    const entryId = previous?.dictionaryEntryId ?? (id === undefined ? input.dictionaryEntryId ?? null : null);
+    const senseId = previous?.dictionarySenseId ?? (id === undefined ? input.dictionarySenseId ?? null : null);
+    if ((entryId === null) !== (senseId === null) ||
+        (entryId !== null && (!Number.isSafeInteger(entryId) || entryId < 1 || !Number.isSafeInteger(senseId) || senseId! < 1))) {
+      throw new Error('Vui lòng chọn một nghĩa từ điển hợp lệ.');
+    }
     const duplicate = await db.getFirstAsync<{ id: number }>(
-      'SELECT id FROM words WHERE normalized_term = ? AND id != ?', key, id ?? -1,
+      entryId === null
+        ? 'SELECT id FROM words WHERE normalized_term = ? AND normalized_meaning = ? AND id != ?'
+        : `SELECT id FROM words WHERE ((dictionary_entry_id = ? AND dictionary_sense_id = ?) OR
+            (dictionary_entry_id IS NULL AND normalized_term = ? AND normalized_meaning = ?)) AND id != ?`,
+      ...(entryId === null ? [key, meaningKey, id ?? -1] : [entryId, senseId, key, meaningKey, id ?? -1]),
     );
-    if (duplicate) throw new Error('Từ này đã có trong danh sách. Hãy sửa từ đã lưu.');
+    if (duplicate) throw new Error('Từ này với nghĩa đã chọn đã có trong danh sách. Hãy sửa mục đã lưu.');
     const now = new Date().toISOString();
     await db.withTransactionAsync(async () => {
       if (id !== undefined) {
         const result = await db.runAsync(
-          `UPDATE words SET term = ?, normalized_term = ?, meaning = ?, ipa = ?,
+          `UPDATE words SET term = ?, normalized_term = ?, meaning = ?, normalized_meaning = ?, ipa = ?,
             example = ?, note = ?, updated_at = ? WHERE id = ?`,
-          clean.term, key, clean.meaning, clean.ipa, clean.example, clean.note, now, id,
+          clean.term, key, clean.meaning, meaningKey, clean.ipa, clean.example, clean.note, now, id,
         );
         if (result.changes === 0) throw new Error('Từ này không còn tồn tại.');
       } else {
         const result = await db.runAsync(
-          `INSERT INTO words (term, normalized_term, meaning, ipa, example, note, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          clean.term, key, clean.meaning, clean.ipa, clean.example, clean.note, now, now,
+          `INSERT INTO words (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
+            dictionary_entry_id, dictionary_sense_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          clean.term, key, clean.meaning, meaningKey, clean.ipa, clean.example, clean.note, now, now, entryId, senseId,
         );
         const progress = initialProgress(localDay(new Date(now)));
         await db.runAsync(

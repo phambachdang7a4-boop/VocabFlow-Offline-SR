@@ -106,7 +106,13 @@ export default function ReviewScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker="Học ngắt quãng" title={inSession ? 'Phiên ôn tập' : 'Ôn tập'} />
+      <ScreenHeader kicker="Học ngắt quãng" title={inSession ? 'Phiên ôn tập' : 'Ôn tập'} right={
+        <Pressable testID="review-open-settings" accessibilityRole="button" accessibilityLabel="Mở cài đặt"
+          onPress={() => router.push('/settings')}
+          style={({ pressed }) => [styles.cog, { backgroundColor: c.headerButton, borderColor: c.headerButton, opacity: pressed ? 0.6 : 1 }]}>
+          <Feather name="settings" size={20} color={c.headerForeground} />
+        </Pressable>
+      } />
       <KeyboardAwareScrollViewCompat bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottom, flexGrow: 1, gap: 18 }}>
         {error ? <ErrorBanner message={inSession ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.` : error} onRetry={reload} /> : null}
         {session ? (
@@ -160,5 +166,6 @@ const styles = StyleSheet.create({
   sessionTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
+  cog: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   back: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
 });

@@ -4,7 +4,7 @@
 
 1. **Kho tham chiếu riêng:** tệp SQLite nguồn đã xác minh có 104.829 mục từ, 158.307 định nghĩa, 175.735 liên kết nghĩa/ví dụ. Dung lượng tải chính xác 44.212.224 byte, khoảng 42,2 MiB. Không tự thêm vào sổ cá nhân.
 2. **Tab Tra Từ:** tìm tiếng Anh theo các chữ cái đầu, không phân biệt chữ hoa/thường; xem IPA, loại từ, nghĩa và ví dụ. Kết quả và các nghĩa chia trang, mỗi trang 30. Ký tự `%`, `_` được coi là ký tự người dùng nhập, không là ký tự đại diện SQL.
-3. **Đưa vào sổ:** chọn nghĩa → Thêm vào sổ từ → sửa thông tin nếu muốn → Lưu vào sổ. Sau khi lưu, từ mới có thể học ngay. Từ đã có được mở lại, không ghi đè, tạo bản sao hay đặt lại tiến độ/đóng băng.
+3. **Đưa vào sổ:** bấm **Lưu từ** cạnh nghĩa muốn học để lưu ngay, không qua biểu mẫu xác nhận. Mỗi nghĩa là một mục SRS riêng, học được ngay. Nghĩa đã có mở đúng mục hiện có, không ghi đè hoặc đặt lại tiến độ/đóng băng; các nghĩa khác cùng từ vẫn lưu được.
 4. **Nguồn:** nút thông tin mở phần ghi công và văn bản giấy phép đầy đủ, có sẵn trong app, không cần tải trang web.
 
 ## Kiểm tra trên Android bằng Expo Go hoặc Chrome
@@ -32,7 +32,9 @@
 - Dùng nút kính lúp hoặc phím tìm kiếm để tra ngay; nếu có từ khớp chính xác, app mở mục từ đó. **Kết quả tra cứu** quay về danh sách; sửa/xóa nội dung tìm kiếm cũng trở về kết quả, không để phản hồi cũ mở nhầm từ.
 - Chưa bấm Lưu thì từ chưa được thêm. Nhấn trùng hoặc bấm hai nghĩa khi đang lưu chỉ tạo một lượt ghi. Lỗi ghi phải hiện lỗi, giữ màn tra cứu và cho bấm lưu lại; không báo thành công giả, không cắt nguồn âm thầm. Sau khi đã ghi mà tải lại sổ lỗi, chỉ thử tải lại sổ, không lưu trùng.
 - Sang **Sổ từ** và **Ôn tập** để kiểm tra từ mới và hạn học ngay. Có thể sửa nội dung sau trong Sổ từ.
-- Tra lại cùng từ: hiện **Đã có trong sổ**, cho mở trang hiện có thay vì ghi đè.
+- Tra lại cùng từ: chỉ nghĩa đã lưu hiện **Trong sổ** hoặc **Đóng băng**, mở đúng mục của nghĩa đó. Các nghĩa chưa lưu vẫn có nút **Lưu từ**; lưu thêm nghĩa khác tạo mục mới với cấp 1 riêng.
+- Ví dụ lưu hai nghĩa của `take`: Sổ từ phải có hai mục với nghĩa/ví dụ riêng; tổng số từ tăng 2. Ôn đúng một mục làm mục đó lên cấp 2, mục còn lại vẫn cấp 1/đến hạn. Không gom hoặc chấm cả hai chỉ vì đáp án tiếng Anh giống nhau.
+- Khi cập nhật, dữ liệu cũ giữ nguyên nội dung, ID, cấp, lịch ôn và trạng thái đóng băng/hoàn tất. Không tự tách mục cũ hoặc thêm những nghĩa chưa chọn.
 - Đóng băng từ đã lưu, tra lại rồi mở trang trong sổ: trạng thái đóng băng và tiến độ vẫn giữ nguyên.
 
 ### 3. Tra khi không có mạng và lưu bền vững

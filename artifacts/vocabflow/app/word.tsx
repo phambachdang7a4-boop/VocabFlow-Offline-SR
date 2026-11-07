@@ -8,9 +8,8 @@ import { useColors } from '@/hooks/useColors';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { Button, ConfirmDialog, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
 import { formatDate } from '@/utils/text';
-import { normalizeTerm } from '@/data/vocabulary';
 import { getDictionaryDraft } from '@/data/dictionary';
-import { validDictionaryId } from '@/domain/dictionary';
+import { sameWordSense, validDictionaryId } from '@/domain/dictionary';
 import { useDictionary } from '@/hooks/useDictionary';
 import { DictionaryGate } from '@/components/DictionaryGate';
 
@@ -45,7 +44,7 @@ function Field({ label, required, error, hint, ...props }: TextInputProps & { re
           },
         ]}
       />
-      {error ? <Text style={[styles.err, { color: c.destructive }]}>{error}</Text> : hint ? <Text style={[styles.hint, { color: c.mutedForeground }]}>{hint}</Text> : null}
+      {error ? <Text style={[styles.err, { color: c.destructiveText }]}>{error}</Text> : hint ? <Text style={[styles.hint, { color: c.mutedForeground }]}>{hint}</Text> : null}
     </View>
   );
 }
@@ -60,6 +59,9 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
     ipa: existing?.ipa ?? initial?.ipa ?? '',
     example: existing?.example ?? initial?.example ?? '',
     note: existing?.note ?? initial?.note ?? '',
+    // Source IDs are metadata, not editable fields; they survive edits.
+    dictionaryEntryId: existing?.dictionaryEntryId ?? initial?.dictionaryEntryId ?? null,
+    dictionarySenseId: existing?.dictionarySenseId ?? initial?.dictionarySenseId ?? null,
   });
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -69,7 +71,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
   const [submitError, setSubmitError] = useState<string | null>(null);
   const busyRef = useRef(false);
   const conflict = !existing && submitError
-    ? words.find((w) => normalizeTerm(w.term) === normalizeTerm(form.term))
+    ? words.find((w) => sameWordSense(w, form))
     : undefined;
   const meaningRef = useRef<any>(null);
 
@@ -238,7 +240,7 @@ function DictionaryDraftScreen({ wordId, senseId }: { wordId: number; senseId: n
     return () => { active = false; };
   }, [wordId, senseId, dict.ready, tick]);
 
-  const duplicate = draft && !formShown ? words.find((w) => normalizeTerm(w.term) === normalizeTerm(draft.term)) : undefined;
+  const duplicate = draft && !formShown ? words.find((w) => sameWordSense(w, draft)) : undefined;
   const decided = !!draft && !vocabLoading;
   useEffect(() => {
     if (decided && !duplicate && !vocabError && !formShown) setFormShown(true);
@@ -269,9 +271,9 @@ function DictionaryDraftScreen({ wordId, senseId }: { wordId: number; senseId: n
   }
   if (duplicate) {
     return (
-      <Centered title="Đã có trong sổ">
-        <EmptyState icon="book-open" title="Đã có trong sổ"
-          body={`“${duplicate.term}” đã có trong sổ${duplicate.frozen ? ' (đang đóng băng)' : ''}. Trang cũ và tiến độ ôn được giữ nguyên.`}>
+      <Centered title="Nghĩa đã có trong sổ">
+        <EmptyState icon="book-open" title="Nghĩa này đã có trong sổ"
+          body={`Nghĩa này của “${duplicate.term}” đã có trong sổ${duplicate.frozen ? ' (đang đóng băng)' : ''}. Trang cũ và tiến độ ôn được giữ nguyên.`}>
           <Button testID="draft-open-existing" label="Mở trang trong sổ" icon="book-open"
             onPress={() => router.replace({ pathname: '/word', params: { id: String(duplicate.id) } })} />
           <Button testID="draft-back" label="Quay lại" icon="arrow-left" variant="ghost" onPress={goBack} />

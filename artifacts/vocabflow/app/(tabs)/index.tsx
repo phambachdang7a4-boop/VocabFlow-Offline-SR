@@ -29,9 +29,9 @@ export default function VocabularyScreen() {
       testID="add-word"
       accessibilityLabel="Thêm từ mới"
       onPress={() => router.push('/word')}
-      style={({ pressed }) => [styles.fab, { backgroundColor: c.accent, transform: [{ scale: pressed ? 0.92 : 1 }] }]}
+      style={({ pressed }) => [styles.fab, { backgroundColor: c.button, transform: [{ scale: pressed ? 0.92 : 1 }] }]}
     >
-      <Feather name="plus" size={24} color={c.accentForeground} />
+      <Feather name="plus" size={24} color={c.buttonForeground} />
     </Pressable>
   );
 
@@ -41,19 +41,19 @@ export default function VocabularyScreen() {
       onPress={() => router.push({ pathname: '/word', params: { id: String(item.id) } })}
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: pressed ? c.secondary : c.card, borderColor: c.border, borderRadius: c.radius },
+        { backgroundColor: pressed ? c.vocabCardPressed : c.vocabCard, borderColor: c.navigationBorder, borderRadius: c.radius },
       ]}
     >
-      <View style={[styles.spine, { backgroundColor: c.primary }]} />
+      <View style={[styles.spine, { backgroundColor: c.vocabCardAccent }]} />
       <View style={{ flex: 1, gap: 3 }}>
         <View style={styles.termRow}>
-          <Text style={[styles.term, { color: c.foreground }]} numberOfLines={1}>{item.term}</Text>
-          {item.ipa ? <Text style={[styles.ipa, { color: c.accent }]} numberOfLines={1}>{item.ipa}</Text> : null}
+          <Text style={[styles.term, { color: c.vocabCardForeground }]} numberOfLines={1}>{item.term}</Text>
+          {item.ipa ? <Text style={[styles.ipa, { color: c.vocabCardAccent }]} numberOfLines={1}>{item.ipa}</Text> : null}
         </View>
-        <Text style={[styles.meaning, { color: c.mutedForeground }]} numberOfLines={2}>{item.meaning}</Text>
-        {item.frozen ? <Text style={[styles.ipa, { color: c.primary }]}>Đã đóng băng</Text> : null}
+        <Text style={[styles.meaning, { color: c.vocabCardMuted }]} numberOfLines={2}>{item.meaning}</Text>
+        {item.frozen ? <Text style={[styles.ipa, styles.frozenTag, { color: c.frozenForeground, backgroundColor: c.frozen }]}>Đã đóng băng</Text> : null}
       </View>
-      <Feather name="chevron-right" size={18} color={c.mutedForeground} />
+      <Feather name="chevron-right" size={18} color={c.vocabCardMuted} />
     </Pressable>
   );
 
@@ -115,6 +115,7 @@ export default function VocabularyScreen() {
 }
 
 const styles = StyleSheet.create({
+  frozenTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
   flex: { flex: 1 },
   pad: { paddingHorizontal: 20, paddingTop: 8 },
   fab: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },

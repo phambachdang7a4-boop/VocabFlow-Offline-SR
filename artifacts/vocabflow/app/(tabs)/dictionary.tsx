@@ -38,7 +38,12 @@ export default function DictionaryScreen() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<React.ElementRef<typeof TextInput>>(null);
 
-  const saved = useMemo(() => new Set(words.map((w) => normalizeTerm(w.term))), [words]);
+  // Badge counts saved meanings per headword; it never blocks opening an entry.
+  const saved = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const w of words) { const k = normalizeTerm(w.term); counts.set(k, (counts.get(k) ?? 0) + 1); }
+    return counts;
+  }, [words]);
 
   useEffect(() => () => {
     if (debounceRef.current !== null) clearTimeout(debounceRef.current);
@@ -136,7 +141,7 @@ export default function DictionaryScreen() {
   };
 
   const renderItem = ({ item }: { item: DictionaryMatch }) => {
-    const inBook = saved.has(normalizeTerm(item.term));
+    const savedMeanings = saved.get(normalizeTerm(item.term)) ?? 0;
     return (
       <Pressable testID={`dictionary-result-${item.id}`} accessibilityRole="button"
         onPress={() => {
@@ -147,9 +152,9 @@ export default function DictionaryScreen() {
         <View style={{ flex: 1, gap: 3 }}>
           <View style={styles.rowTop}>
             <Text style={[styles.term, { color: c.dictHead }]} numberOfLines={1}>{item.term}</Text>
-            {inBook ? (
+            {savedMeanings > 0 ? (
               <View style={[styles.pill, { backgroundColor: c.dictChip }]}>
-                <Text style={[styles.pillText, { color: c.dictHead }]}>Đã có trong sổ</Text>
+                <Text style={[styles.pillText, { color: c.dictHead }]}>Đã lưu {savedMeanings} nghĩa</Text>
               </View>
             ) : null}
           </View>
@@ -232,7 +237,7 @@ export default function DictionaryScreen() {
             editable={dict.ready}
             placeholder="Nhập từ tiếng Anh"
             placeholderTextColor={c.dictMuted}
-            style={[styles.searchInput, { color: c.dictInk }]}
+            style={[styles.searchInput, { color: c.dictFieldInk }]}
             autoCorrect={false}
             autoCapitalize="none"
             maxLength={200}

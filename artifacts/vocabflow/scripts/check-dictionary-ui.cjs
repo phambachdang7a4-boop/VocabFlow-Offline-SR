@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { join } = require('node:path');
-const { readFileSync } = require('node:fs');
+const { readFileSync, existsSync } = require('node:fs');
 const { loadTs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const dictionaryDomain = loadTs(join(__dirname, '../domain/dictionary.ts'));
@@ -194,23 +194,37 @@ function mount(file, services, personalWords = [], properties = {}) {
   const entry = { id: 42, term: 'work', pronunciations: [], hasMore: false, partsOfSpeech: ['noun', 'verb'],
     senses: [{ id: 7, definition: 'công việc', pos: 'noun', subPos: null, example: null },
       { id: 9, definition: 'làm việc', pos: 'verb', subPos: null, example: null }] };
-  for (const words of [[], [{ id: 123, term: 'WORK', frozen: true }]]) {
+  const btn = (view, sense, index = 0) => find(view.byId('entry-senses').props.renderItem({ item: sense, index }), node => node.props?.accessibilityRole === 'button');
+  const header = view => view.byId('entry-senses').props.ListHeaderComponent;
+  // Saved/frozen matching sense opens its own row; the other sense stays saveable.
+  {
+    const savedInputs = [];
+    const frozen = { id: 123, ...dictionaryDomain.dictionaryDraft(entry, entry.senses[0]), frozen: true };
+    const view = mount('../components/DictionaryEntryView.tsx', {
+      getDictionaryEntry: async () => entry, saveWord: async input => savedInputs.push(input),
+    }, [frozen]);
+    await view.settle();
+    btn(view, entry.senses[0]).props.onPress(); await view.settle();
+    assert.deepEqual(view.routes[0], { pathname: '/word', params: { id: '123' } });
+    assert.deepEqual(savedInputs, [], 'Saved/frozen sense must never be overwritten');
+    assert.ok(!find(header(view), node => node.props?.testID === 'entry-existing'), 'No blanket headword banner');
+    const other = btn(view, entry.senses[1], 1);
+    assert.equal(other.props.testID, 'entry-add-9');
+    assert.notEqual(other.props.disabled, true);
+    other.props.onPress(); await view.settle();
+    assert.deepEqual(savedInputs, [dictionaryDomain.dictionaryDraft(entry, entry.senses[1])]);
+  }
+  // Legacy same-English row with an unmatched meaning must not block.
+  {
     const savedInputs = [];
     const view = mount('../components/DictionaryEntryView.tsx', {
       getDictionaryEntry: async () => entry, saveWord: async input => savedInputs.push(input),
-    }, words);
+    }, [{ id: 5, term: 'WORK', meaning: 'tác phẩm', ipa: '', example: '', note: '', frozen: false }]);
     await view.settle();
-    const sense = view.byId('entry-senses').props.renderItem({ item: entry.senses[1], index: 1 });
-    find(sense, node => node.props?.accessibilityRole === 'button').props.onPress();
-    await view.settle();
-    if (words.length) {
-      assert.deepEqual(view.routes[0], { pathname: '/word', params: { id: '123' } });
-      assert.deepEqual(savedInputs, [], 'Existing/frozen words must never be overwritten');
-    } else {
-      assert.deepEqual(view.routes, [], 'Save directly without opening a confirmation form');
-      assert.deepEqual(savedInputs, [dictionaryDomain.dictionaryDraft(entry, entry.senses[1])]);
-      assert.ok(find(view.byId('entry-senses').props.ListHeaderComponent, node => node.props?.testID === 'entry-save-success'));
-    }
+    btn(view, entry.senses[0]).props.onPress(); await view.settle();
+    assert.deepEqual(view.routes, [], 'Save directly without opening a confirmation form');
+    assert.equal(savedInputs.length, 1);
+    assert.ok(find(header(view), node => node.props?.testID === 'entry-save-success'));
   }
   const writes = [];
   let completeWrite;
@@ -219,13 +233,19 @@ function mount(file, services, personalWords = [], properties = {}) {
     saveWord: input => new Promise(resolve => { writes.push(input); completeWrite = resolve; }),
   });
   await direct.settle();
-  const add = sense => find(direct.byId('entry-senses').props.renderItem({ item: sense, index: 0 }), node => node.props?.accessibilityRole === 'button').props.onPress;
-  const firstPress = add(entry.senses[0]);
-  firstPress(); firstPress(); add(entry.senses[1])();
-  assert.equal(writes.length, 1, 'Double taps and competing senses cannot create two writes');
+  const press9 = btn(direct, entry.senses[1], 1).props.onPress;
+  press9(); press9(); btn(direct, entry.senses[0]).props.onPress();
+  assert.equal(writes.length, 1, 'Pending write lock prevents duplicate taps');
   completeWrite(); await direct.settle();
-  firstPress();
-  assert.equal(writes.length, 1, 'Committed local marker prevents duplicate writes before context refresh');
+  press9();
+  assert.equal(writes.length, 1, 'Committed sense marker prevents re-save before context refresh');
+  assert.equal(btn(direct, entry.senses[1], 1).props.disabled, true);
+  const seven = btn(direct, entry.senses[0]);
+  assert.equal(seven.props.testID, 'entry-add-7', 'Saving sense 9 leaves sense 7 available');
+  assert.notEqual(seven.props.disabled, true);
+  seven.props.onPress(); completeWrite(); await direct.settle();
+  assert.equal(writes.length, 2);
+  assert.deepEqual(writes.map(w => [w.dictionaryEntryId, w.dictionarySenseId]), [[42, 9], [42, 7]]);
   assert.deepEqual(direct.routes, []);
   let failures = 0;
   const retrySave = mount('../components/DictionaryEntryView.tsx', {
@@ -233,12 +253,13 @@ function mount(file, services, personalWords = [], properties = {}) {
     saveWord: async () => { if (++failures === 1) throw Error('Không thể lưu từ.'); },
   });
   await retrySave.settle();
-  const retryPress = () => find(retrySave.byId('entry-senses').props.renderItem({ item: entry.senses[0], index: 0 }), node => node.props?.accessibilityRole === 'button').props.onPress();
+  const retryPress = () => btn(retrySave, entry.senses[0]).props.onPress();
   retryPress(); await retrySave.settle();
-  assert.ok(find(retrySave.byId('entry-senses').props.ListHeaderComponent, node => node.type === 'ErrorBanner'));
+  assert.ok(find(header(retrySave), node => node.type === 'ErrorBanner'));
+  assert.equal(btn(retrySave, entry.senses[0]).props.testID, 'entry-add-7', 'Failure does not mark saved');
   retryPress(); await retrySave.settle();
   assert.equal(failures, 2);
-  assert.ok(find(retrySave.byId('entry-senses').props.ListHeaderComponent, node => node.props?.testID === 'entry-save-success'));
+  assert.ok(find(header(retrySave), node => node.props?.testID === 'entry-save-success'));
   for (const state of [{ bookLoading: true }, { bookError: 'Không đọc được sổ từ' }]) {
     const blocked = mount('../components/DictionaryEntryView.tsx', {
       ...state, getDictionaryEntry: async () => entry, saveWord: async () => { throw Error('Must not save while blocked'); },
@@ -319,7 +340,11 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(!readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8').includes('Bấm Lưu từ ở nghĩa'));
   const tabs = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
   for (const pattern of [/NativeTabs\.Trigger name="([^"]+)"/g, /Tabs\.Screen name="([^"]+)"/g]) {
-    assert.deepEqual([...tabs.matchAll(pattern)].map(match => match[1]), ['dictionary', 'index', 'review', 'settings']);
+    assert.deepEqual([...tabs.matchAll(pattern)].map(match => match[1]), ['dictionary', 'courses', 'review', 'index', 'blank']);
   }
-  console.log('PASS: POS checkbox multi-select/reset/disabled choices; filtered paging and stale-page rejection; retry All; correct sense save; removed hint; example underlines; search/suggestions; existing/frozen preservation; tab order.');
+  assert.equal(existsSync(join(__dirname, '../app/(tabs)/settings.tsx')), false, 'Settings must not be auto-discovered as a sixth tab');
+  assert.ok(existsSync(join(__dirname, '../app/settings.tsx')));
+  assert.match(readFileSync(join(__dirname, '../app/_layout.tsx'), 'utf8'), /<Stack\.Screen\s+name="settings"/);
+  for (const route of ['courses', 'blank']) assert.ok(existsSync(join(__dirname, `../app/(tabs)/${route}.tsx`)));
+  console.log('PASS: POS checkbox multi-select/reset/disabled choices; filtered paging and stale-page rejection; retry All; correct sense save; removed hint; example underlines; search/suggestions; per-sense save/open/frozen preservation; legacy same-English not blocking; tab order.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

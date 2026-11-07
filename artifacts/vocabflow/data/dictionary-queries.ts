@@ -95,7 +95,7 @@ export async function suggestInDictionary(db: SQLiteDatabase, query: string): Pr
 export async function draftInDictionary(db: SQLiteDatabase, id: number, senseId: number) {
   checkId(id);
   checkId(senseId);
-  const word = await db.getFirstAsync<{ term: string }>('SELECT word AS term FROM words WHERE id = ?', id);
+  const word = await db.getFirstAsync<{ id: number; term: string }>('SELECT id, word AS term FROM words WHERE id = ?', id);
   const sense = await db.getFirstAsync<DictionarySense>(
     `SELECT wd.id, d.definition, d.pos, d.sub_pos AS subPos, wd.example
      FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id

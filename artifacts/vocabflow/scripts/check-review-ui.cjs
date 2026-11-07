@@ -81,6 +81,10 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
 
 (async () => {
   const screen = mount('../app/(tabs)/review.tsx');
+  const settingsButton = () => find(screen.byType('ScreenHeader').props.right, node => node.props?.testID === 'review-open-settings');
+  assert.equal(settingsButton().props.accessibilityLabel, 'Mở cài đặt');
+  settingsButton().props.onPress();
+  assert.equal(screen.routes.at(-1), '/settings');
   assert.equal(screen.byType('SavedTotal').props.total, 0);
   assert.deepEqual(screen.byType('LevelDistributionChart').props.levels.map(row => row.count), [0, 0, 0, 0, 0, 0]);
   assert.ok(screen.byId('review-no-schedule'));
@@ -96,6 +100,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(screen.byType('ReviewCard'), undefined, 'Never auto-start a review at expiry');
   screen.byId('review-start').props.onPress();
   assert.equal(screen.byType('ReviewCard').props.word.id, 1);
+  assert.ok(settingsButton(), 'Settings cog is also available during a review session');
   screen.byId('review-back-overview').props.onPress();
   assert.ok(screen.byId('review-start'));
   screen.byId('review-start').props.onPress();
@@ -138,7 +143,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(bar(6).props.style.backgroundColor, palette.chartBarStrong);
   assert.equal(chart.byId('review-level-6').props.accessibilityLabel, 'Cấp 6: 10 từ');
 
-  const both = mount('../app/(tabs)/review.tsx', {}, { words: [word, { ...word, id: 2, reviewCount: 1, term: 'go', meaning: 'đi', example: 'They go home.' }] });
+  const both = mount('../app/(tabs)/review.tsx', {}, { words: [word, { ...word, id: 2, reviewCount: 1, term: 'test', meaning: 'kiểm thử', example: 'They test it.' }] });
   both.byId('review-start').props.onPress();
   let current = both.byType('ReviewCard').props;
   assert.equal(current.exercise.kind, 'meaning');
@@ -150,7 +155,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   current = both.byType('ReviewCard').props;
   assert.equal(current.word.id, 2);
   assert.equal(current.exercise.kind, 'cloze');
-  assert.equal(current.exercise.prompt, 'They ________ home.');
+  assert.equal(current.exercise.prompt, 'They ________ it.', 'Same English word with a different meaning remains a separate question');
   current.onCommitted(2);
   both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
   both.byType('ReviewCard').props.onNext();

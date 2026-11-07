@@ -1,16 +1,17 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F } from '@/components/ui';
-import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
   const c = useColors();
   const { words, frozenWords, loading, error, reload } = useVocabulary();
-  const bottom = useBottomPad();
+  const insets = useSafeAreaInsets();
+  const bottom = (Platform.OS === 'web' ? 34 : insets.bottom) + 24;
 
   const facts: { icon: keyof typeof Feather.glyphMap; title: string; body: string }[] = [
     { icon: 'smartphone', title: 'Lưu trên thiết bị này', body: 'Sổ từ được lưu trong bộ nhớ cục bộ của ứng dụng trên máy bạn.' },
@@ -20,8 +21,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker="VocabFlow" title="Cài đặt" />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: bottom, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: bottom, gap: 16 }}>
         {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
         <View style={[styles.stat, { backgroundColor: c.primary, borderRadius: c.radius + 6 }]}>
           <Text style={[styles.statLabel, { color: c.accentSoft }]}>SỐ TỪ ĐÃ LƯU</Text>

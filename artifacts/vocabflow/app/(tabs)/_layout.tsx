@@ -8,7 +8,7 @@ import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { SymbolView } from 'expo-symbols';
 
-// Keep Sổ từ (/) as the landing tab even though Tra Từ is listed first.
+// Keep Sổ từ (/) as the landing tab even though Tra Từ and Khóa Học are listed first.
 export const unstable_settings = { anchor: 'index' };
 
 function NativeTabLayout() {
@@ -18,17 +18,21 @@ function NativeTabLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'character.book.closed', selected: 'character.book.closed.fill' }} />
         <NativeTabs.Trigger.Label>Tra Từ</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
-        <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="courses">
+        <NativeTabs.Trigger.Icon sf={{ default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' }} />
+        <NativeTabs.Trigger.Label>Khóa Học</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="review">
         <NativeTabs.Trigger.Icon sf={{ default: 'rectangle.on.rectangle', selected: 'rectangle.on.rectangle' }} />
         <NativeTabs.Trigger.Label>Ôn tập</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
-        <NativeTabs.Trigger.Label>Cài đặt</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' }} />
+        <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="blank">
+        <NativeTabs.Trigger.Icon sf={{ default: 'square', selected: 'square.fill' }} />
+        <NativeTabs.Trigger.Label>Trống</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -38,7 +42,8 @@ const ICONS = {
   index: { sf: 'book', fe: 'book-open' },
   dictionary: { sf: 'character.book.closed', fe: 'search' },
   review: { sf: 'rectangle.on.rectangle', fe: 'layers' },
-  settings: { sf: 'gearshape', fe: 'settings' },
+  courses: { sf: 'square.grid.2x2', fe: 'grid' },
+  blank: { sf: 'square', fe: 'square' },
 } as const;
 
 function ClassicTabLayout() {
@@ -61,7 +66,8 @@ function ClassicTabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarLabelStyle: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
+        tabBarItemStyle: { paddingHorizontal: 0 },
         headerShown: false,
         sceneStyle: { backgroundColor: colors.background },
         tabBarStyle: {
@@ -81,9 +87,10 @@ function ClassicTabLayout() {
       }}
     >
       <Tabs.Screen name="dictionary" options={{ title: 'Tra Từ', tabBarIcon: icon('dictionary') }} />
-      <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
+      <Tabs.Screen name="courses" options={{ title: 'Khóa Học', tabBarIcon: icon('courses') }} />
       <Tabs.Screen name="review" options={{ title: 'Ôn tập', tabBarIcon: icon('review') }} />
-      <Tabs.Screen name="settings" options={{ title: 'Cài đặt', tabBarIcon: icon('settings') }} />
+      <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
+      <Tabs.Screen name="blank" options={{ title: 'Trống', tabBarIcon: icon('blank') }} />
     </Tabs>
   );
 }

@@ -5,6 +5,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { VocabularyProvider } from '@/contexts/VocabularyContext';
+import { AppearanceProvider, useAppearance } from '@/contexts/AppearanceContext';
 import { useColors } from '@/hooks/useColors';
 import {
   Inter_400Regular,
@@ -13,7 +14,10 @@ import {
   Inter_700Bold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { Stack } from 'expo-router';
+import { Appearance, Platform, Pressable } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Feather } from '@expo/vector-icons';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
@@ -26,9 +30,9 @@ function RootLayoutNav() {
     <Stack
       screenOptions={{
         headerBackTitle: 'Quay lại',
-        headerStyle: { backgroundColor: c.background },
-        headerTintColor: c.primary,
-        headerTitleStyle: { fontFamily: 'Inter_600SemiBold', color: c.foreground },
+        headerStyle: { backgroundColor: c.header },
+        headerTintColor: c.headerForeground,
+        headerTitleStyle: { fontFamily: 'Inter_600SemiBold', color: c.headerForeground },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: c.background },
       }}
@@ -38,7 +42,43 @@ function RootLayoutNav() {
       <Stack.Screen name="dictionary-entry" options={{ title: 'Mục từ' }} />
       <Stack.Screen name="dictionary-sources" options={{ title: 'Nguồn từ điển' }} />
       <Stack.Screen name="frozen" options={{ title: 'Từ đã đóng băng' }} />
+      <Stack.Screen name="settings" options={({ navigation }) => ({
+        title: 'Cài đặt',
+        // Direct loads (e.g. web /settings) have no history: fall back to the Review tab.
+        headerLeft: navigation.canGoBack() ? undefined : () => (
+          <Pressable testID="settings-back-review" accessibilityRole="button" accessibilityLabel="Về Ôn tập"
+            onPress={() => router.replace('/review')} hitSlop={10}
+            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+            <Feather name="arrow-left" size={22} color={c.headerForeground} />
+          </Pressable>
+        ),
+      })} />
     </Stack>
+  );
+}
+
+function AppearanceFrame() {
+  const { mode, ready } = useAppearance();
+  const c = useColors();
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
+  useEffect(() => {
+    if (!ready) return;
+    if (Platform.OS !== 'web') Appearance.setColorScheme(mode);
+    else if (typeof document !== 'undefined') {
+      document.documentElement.style.colorScheme = mode;
+      document.documentElement.style.backgroundColor = c.background;
+      document.body.style.backgroundColor = c.background;
+    }
+  }, [mode, ready, c.background]);
+  // Wait only on the first read; retries later must not unmount navigation/SRS.
+  if (!ready) return null;
+  return (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.background }}>
+      <StatusBar style="light" />
+      <KeyboardProvider><RootLayoutNav /></KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -50,27 +90,17 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
   if (!fontsLoaded && !fontError) return null;
 
   return (
     <SafeAreaProvider>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <VocabularyProvider>
-            <GestureHandlerRootView>
-              <KeyboardProvider>
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </VocabularyProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppearanceProvider>
+          <ErrorBoundary>
+            <VocabularyProvider><AppearanceFrame /></VocabularyProvider>
+          </ErrorBoundary>
+        </AppearanceProvider>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }

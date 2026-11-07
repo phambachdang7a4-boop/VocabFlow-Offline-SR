@@ -10,13 +10,16 @@
 - Theo yêu cầu hiện tại: tạo bản không giới hạn số từ, kể cả từ đóng băng. Tạm hoãn giới hạn Free 100 từ và màn mời Premium; chỉ triển khai lại khi người dùng yêu cầu.
 - Không thêm dữ liệu mẫu, từ khởi tạo hoặc thanh toán thật.
 - Người dùng đã duyệt mở rộng Tra Từ: tích hợp kho Skypedia Anh–Việt riêng để tra cứu; chỉ đưa từ vào sổ và SRS khi người dùng chọn nghĩa rồi lưu.
-- Nút **Lưu từ** ở Tra Từ ghi ngay nghĩa được chọn vào SQLite và giữ màn tra cứu; không chuyển sang Từ mới để xác nhận. Giữ IPA, ví dụ, nguồn; chống nhấn trùng và không ghi đè từ/tiến độ đã có.
+- Nút **Lưu từ** ở Tra Từ ghi ngay nghĩa được chọn vào SQLite và giữ màn tra cứu; không chuyển sang Từ mới để xác nhận. Giữ IPA, ví dụ, nguồn; chống nhấn trùng và không ghi đè nghĩa/tiến độ đã có.
+- Đơn vị học/đếm là **một nghĩa**, không phải một từ tiếng Anh. Cùng một từ có nhiều nghĩa đã lưu thì có nhiều mục, mỗi mục có ID, SRS, hạn ôn, đóng băng và xóa độc lập. Chỉ lưu/ôn nghĩa đã bấm Lưu; không đánh dấu mọi nghĩa là đã lưu chỉ vì trùng từ tiếng Anh.
+- Nghĩa tra cứu nhận diện bằng cặp ID mục từ/nghĩa trong kho đã ghim. Không đổi nguồn/commit kho khi chưa kiểm tra tính ổn định của cặp ID. Mục cũ/thủ công đối chiếu cả từ lẫn nghĩa, không đoán thêm nghĩa hoặc tự tách dữ liệu cũ; giữ nguyên ID, nội dung và tiến độ khi chuyển lưu trữ.
 - Người dùng yêu cầu Tra Từ theo bố cục ảnh Mochi: phần tìm kiếm xanh, nội dung nghĩa/ví dụ rõ ràng trên nền sáng và nút thêm cạnh nghĩa; tab Tra Từ nằm ngoài cùng bên trái. Giữ tên VocabFlow, không tự thêm đồng nghĩa, IELTS, cấp CEFR hay âm thanh không có dữ liệu/chức năng thật.
 - Tra Từ có gợi ý sai chính tả offline khi không khớp tiền tố: câu “Có phải bạn đang tìm từ này?” và các từ gần đúng có thể chạm để xem nghĩa. Chỉ lấy mục từ thật trong SQLite, không API/AI hoặc tự lưu; giữ lựa chọn tự ghi từ mới.
 - Người dùng yêu cầu gạch chân từ đang tra trong câu ví dụ ở Tra Từ.
 - Người dùng yêu cầu bỏ câu hướng dẫn “Bấm Lưu từ…” và thêm checklist từ loại dưới thanh tìm kiếm: Verb, Noun, Adjective, Adverb, Idiom, Others. Lọc nghĩa của từ đang xem, chọn nhiều loại. Mặc định chọn từ loại của nghĩa xuất hiện đầu tiên theo thứ tự nguồn; không mặc định Tất cả. Danh sách loại có trong từ cũng theo thứ tự xuất hiện.
 - Người dùng yêu cầu hỏi trước khi dùng dữ liệu di động để tải từ điển. Quy tắc an toàn: không tự tải trên bất kỳ loại mạng nào; hiện dung lượng/cảnh báo cước và chờ “Đồng ý tải” cho từng lần tải/thử lại. Kho đã nạp vẫn mở offline không cần hỏi lại; “Để sau” giữ nguyên sổ và ôn tập.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
+- Thanh tab theo thứ tự **Tra Từ / Khóa Học / Ôn tập / Sổ từ / Trống**; giữ Sổ từ làm trang mở đầu. Khóa Học chưa có khóa nào, Trống chỉ giữ chỗ. Cài đặt không còn là tab: mở bằng bánh răng góc trên phải Ôn tập, quay lại được màn trước.
 - Ôn tập mở bằng tổng quan theo ảnh tham khảo: biểu đồ 6 cột theo cấp, tổng từ trong sổ và nút bắt đầu phiên ôn. Chưa đến hạn thì thay nút bằng thanh đếm ngược tới lịch gần nhất theo ngày địa phương; không có lịch tương lai thì báo rõ, không tạo đồng hồ giả.
 - Biểu đồ đếm cả từ hoàn tất/đóng băng ở cấp đang lưu để tổng cột khớp tổng sổ cá nhân. Hàng đợi ôn và đếm ngược vẫn loại từ hoàn tất/đóng băng; không thay lịch SRS hoặc tự bắt đầu phiên khi đồng hồ hết.
 
@@ -30,6 +33,7 @@
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review.cjs` (cũng chạy với `TZ=America/New_York` để kiểm tra DST): tổng 6 cấp, lịch gần nhất, chuyển ngày, vòng đời đồng hồ.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-ui.cjs`: tổng quan, bắt đầu/quay lại/kết thúc phiên, hết đếm ngược, tỉ lệ cột và khóa lưu/chấm điểm/đóng băng.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-exercises.cjs`: hai dạng câu, gợi ý 1–3/không gợi ý 4–6, so đáp án, SQLite chống chấm trùng.
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-independent-senses.cjs`: nhiều nghĩa cùng từ, SRS/đóng băng/xóa riêng, chuyển dữ liệu cũ không mất tiến độ, rollback khi lỗi và giữ ID.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-dictionary.cjs`

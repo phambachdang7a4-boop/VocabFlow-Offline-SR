@@ -6,6 +6,8 @@ export interface WordInput {
   ipa: string;
   example: string;
   note: string;
+  dictionaryEntryId?: number | null;
+  dictionarySenseId?: number | null;
 }
 
 export interface VocabularyWord extends WordInput, SrsProgress {

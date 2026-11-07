@@ -22,7 +22,7 @@ function loadTs(filePath, dependencies = {}, globals = {}) {
 const srs = loadTs(join(__dirname, '../domain/srs.ts'));
 const sqliteConnection = loadTs(join(__dirname, '../data/sqlite-connection.ts'));
 
-function createRepository(root, today = '2026-01-01T12:00:00') {
+function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   let clock = today;
   let handle;
   class Clock extends Date {
@@ -36,7 +36,7 @@ function createRepository(root, today = '2026-01-01T12:00:00') {
         handle = new DatabaseSync(join(root, filename));
         const db = handle;
         return {
-          execAsync: async sql => db.exec(sql),
+          execAsync: async sql => { db.exec(sql); options.afterExec?.(sql); },
           getFirstAsync: async (sql, ...params) => db.prepare(sql).get(...params),
           getAllAsync: async (sql, ...params) => db.prepare(sql).all(...params),
           runAsync: async (sql, ...params) => {

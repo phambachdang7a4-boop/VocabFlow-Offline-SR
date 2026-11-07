@@ -23,8 +23,8 @@ type BtnProps = {
 
 export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, style, testID }: BtnProps) {
   const c = useColors();
-  const bg = { primary: c.primary, accent: c.accent, danger: c.destructive, ghost: 'transparent' }[variant];
-  const fg = { primary: c.primaryForeground, accent: c.accentForeground, danger: c.destructiveForeground, ghost: c.primary }[variant];
+  const bg = { primary: c.button, accent: c.accent, danger: c.destructive, ghost: 'transparent' }[variant];
+  const fg = { primary: c.buttonForeground, accent: c.accentForeground, danger: c.destructiveForeground, ghost: c.primary }[variant];
   const off = disabled || loading;
   return (
     <Pressable
@@ -89,10 +89,10 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
   return (
     <View style={[styles.banner, { backgroundColor: c.destructiveSoft, borderRadius: c.radius }]}>
       <Feather name="alert-circle" size={18} color={c.destructive} />
-      <Text style={[styles.bannerText, { color: c.destructive }]}>{message}</Text>
+      <Text style={[styles.bannerText, { color: c.destructiveText }]}>{message}</Text>
       {onRetry ? (
         <Pressable onPress={onRetry} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-          <Text style={[styles.bannerAction, { color: c.destructive }]}>Thử lại</Text>
+          <Text style={[styles.bannerAction, { color: c.destructiveText }]}>Thử lại</Text>
         </Pressable>
       ) : null}
     </View>

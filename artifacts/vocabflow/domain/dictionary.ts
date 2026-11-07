@@ -70,13 +70,26 @@ export function exampleSegments(example: string, term: string): { text: string; 
   return segments.length ? segments : [{ text: example, underline: false }];
 }
 
-export function dictionaryDraft(entry: Pick<DictionaryEntry, 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
+export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
   const kind = [sense.pos, sense.subPos].filter(Boolean).join(' · ');
   return {
     term: entry.term,
+    dictionaryEntryId: entry.id,
+    dictionarySenseId: sense.id,
     meaning: `${kind ? `(${kind}) ` : ''}${sense.definition}`,
     ipa: entry.pronunciations[0]?.ipa ?? '',
     example: sense.example ?? '',
     note: `Nguồn: Skypedia / MinhQND, CC BY-SA 4.0. ${DICTIONARY.repository}`,
   };
+}
+
+/** Source IDs survive edits. Legacy/manual items can only be matched by their
+ * actual saved meaning, never by the English headword alone. */
+export function sameWordSense(left: WordInput, right: WordInput): boolean {
+  if (left.dictionaryEntryId != null && left.dictionarySenseId != null &&
+      right.dictionaryEntryId != null && right.dictionarySenseId != null) {
+    return left.dictionaryEntryId === right.dictionaryEntryId && left.dictionarySenseId === right.dictionarySenseId;
+  }
+  const normalized = (text: string) => text.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
+  return normalized(left.term) === normalized(right.term) && normalized(left.meaning) === normalized(right.meaning);
 }
