@@ -38,10 +38,8 @@ export default function ReviewScreen() {
   const inSession = !!session;
 
   useEffect(() => {
-    const tabs = navigation.getParent();
-    if (!tabs) return;
-    tabs.setOptions({ tabBarStyle: inSession ? { display: 'none' } : undefined });
-    return () => tabs.setOptions({ tabBarStyle: undefined });
+    navigation.setOptions({ tabBarStyle: inSession ? { display: 'none' } : undefined });
+    return () => navigation.setOptions({ tabBarStyle: undefined });
   }, [navigation, inSession]);
 
   useFocusEffect(useCallback(() => {
@@ -150,9 +148,9 @@ export default function ReviewScreen() {
       )}
       <KeyboardAwareScrollViewCompat bottomOffset={24} keyboardShouldPersistTaps="handled" contentContainerStyle={{
         paddingHorizontal: 20,
-        paddingBottom: session ? Math.max(insets.bottom, 16) + 20 : bottom,
+        paddingBottom: session ? Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 16) + 8 : bottom,
         flexGrow: 1,
-        gap: 18,
+        gap: session ? 10 : 18,
       }}>
         {error ? <ErrorBanner message={inSession ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.` : error} onRetry={reload} /> : null}
         {session ? (
@@ -186,7 +184,7 @@ const styles = StyleSheet.create({
   due: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 10 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
-  sessionHeader: { paddingHorizontal: 20, paddingBottom: 18, gap: 26 },
+  sessionHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 16 },
   sessionProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sessionClose: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
   sessionMark: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

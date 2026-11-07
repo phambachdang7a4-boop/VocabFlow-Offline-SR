@@ -125,6 +125,7 @@ export function Button({
   disabled,
   loading,
   testID,
+  style,
 }: {
   label: string;
   onPress: () => void;
@@ -133,6 +134,7 @@ export function Button({
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
+  style?: { minHeight?: number; paddingVertical?: number; paddingHorizontal?: number };
 }) {
   const primary = variant === "primary";
   const danger = variant === "danger";
@@ -158,6 +160,7 @@ export function Button({
         alignItems: "center",
         justifyContent: "center",
         gap: 9,
+        ...style,
       }}
     >
       {icon ? <Icon name={icon} color={disabled ? colors.mutedForeground : foregroundColor} /> : null}

@@ -21,8 +21,7 @@ function find(node, predicate) {
 function mount(file, properties = {}, initial = {}) {
   let now = new Date('2026-11-07T23:59:59').getTime(), dirty = true, cursor, tree, focus, focusCleanup;
   const slots = [], effects = [], routes = [], tabOptions = [];
-  const tabs = { setOptions: options => tabOptions.push(options) };
-  const navigation = { getParent: () => tabs };
+  const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const react = {
     createElement: element,
@@ -227,6 +226,8 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.deepEqual(committed, [1]);
   assert.ok(card.byId('review-result'));
   assert.ok(card.byId('review-answer-correct'));
+  assert.equal(card.byId('review-continue').props.style.minHeight, 68,
+    'Continue button is larger for the full-screen review session');
   card.byId('review-continue').props.onPress();
   assert.equal(nexts, 1);
   assert.equal(calls.length, 1, 'Continue never persists another grade');

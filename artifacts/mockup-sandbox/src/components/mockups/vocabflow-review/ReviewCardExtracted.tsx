@@ -263,7 +263,7 @@ export function ReviewCardExtracted({
         ) : phase === "failed" ? (
           <Button testID="review-retry-save" label="Thử lưu lại" icon="refresh-cw" onPress={retry} />
         ) : (
-          <Button testID="review-continue" label="Tiếp tục" icon="arrow-right" onPress={() => {}} loading={phase === "saving"} disabled={phase !== "saved"} />
+          <Button testID="review-continue" label="Tiếp tục" icon="arrow-right" onPress={() => {}} loading={phase === "saving"} disabled={phase !== "saved"} style={layout === "inline" ? styles.continueButton : undefined} />
         )}
       </View>
     </View>
@@ -271,9 +271,9 @@ export function ReviewCardExtracted({
 }
 
 const styles = StyleSheet.create({
-  root: { gap: 16 },
-  inlineRoot: { flexGrow: 1, justifyContent: "space-between", paddingBottom: 12 },
-  inlineQuestion: { flexGrow: 1, minHeight: 260, alignItems: "center", justifyContent: "flex-start", gap: 28, paddingHorizontal: 6, paddingTop: 14 },
+  root: { gap: 12 },
+  inlineRoot: { flexGrow: 1, justifyContent: "space-between", paddingBottom: 8 },
+  inlineQuestion: { flexGrow: 1, minHeight: 180, alignItems: "center", justifyContent: "flex-start", gap: 20, paddingHorizontal: 6, paddingTop: 8 },
   sentenceFlow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 4, paddingHorizontal: 4 },
   sentenceToken: { fontFamily: F.m, fontSize: 19, lineHeight: 30 },
   extraBlank: { fontFamily: F.s, fontSize: 19, letterSpacing: 2, paddingHorizontal: 4 },
@@ -295,7 +295,8 @@ const styles = StyleSheet.create({
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },
   actions: { gap: 12 },
-  inlineActions: { marginTop: 20 },
+  inlineActions: { marginTop: 8 },
+  continueButton: { minHeight: 68, paddingVertical: 16, paddingHorizontal: 24 },
   freezeAction: { minHeight: 36, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
   freezeText: { fontFamily: F.m, fontSize: 13 },
   linkHit: { alignSelf: "center", paddingVertical: 6 },

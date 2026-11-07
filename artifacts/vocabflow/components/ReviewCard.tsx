@@ -239,7 +239,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
         ) : (
           <Button testID="review-continue" label={isLast ? 'Kết thúc' : 'Tiếp tục'} icon={isLast ? 'flag' : 'arrow-right'}
             onPress={() => { if (phase === 'saved' && !blocked && !inFlight.current) cb.current.onNext(); }}
-            loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} />
+            loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} style={styles.continueButton} />
         )}
       </View>
     </View>
@@ -247,9 +247,9 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
 }
 
 const styles = StyleSheet.create({
-  root: { gap: 16 },
-  inlineRoot: { flexGrow: 1, justifyContent: 'space-between', paddingBottom: 12 },
-  inlineQuestion: { flexGrow: 1, minHeight: 250, alignItems: 'center', justifyContent: 'flex-start', gap: 28, paddingHorizontal: 4, paddingTop: 14 },
+  root: { gap: 12 },
+  inlineRoot: { flexGrow: 1, justifyContent: 'space-between', paddingBottom: 8 },
+  inlineQuestion: { flexGrow: 1, minHeight: 180, alignItems: 'center', justifyContent: 'flex-start', gap: 20, paddingHorizontal: 4, paddingTop: 8 },
   sentenceFlow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 4, paddingHorizontal: 2 },
   sentenceToken: { fontFamily: F.m, fontSize: 18, lineHeight: 28 },
   extraBlank: { fontFamily: F.s, fontSize: 18, letterSpacing: 2, paddingHorizontal: 4 },
@@ -264,7 +264,8 @@ const styles = StyleSheet.create({
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },
   actions: { gap: 12 },
-  inlineActions: { marginTop: 20 },
+  inlineActions: { marginTop: 8 },
+  continueButton: { minHeight: 68, paddingVertical: 16, paddingHorizontal: 24 },
   freezeAction: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   freezeText: { fontFamily: F.m, fontSize: 13 },
   link: { fontFamily: F.s, fontSize: 15, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 6 },
