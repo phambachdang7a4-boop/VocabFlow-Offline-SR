@@ -1,0 +1,30 @@
+// VocabFlow palette: "Sổ mực" — deep lagoon ink on rice paper, persimmon seal accent.
+const colors = {
+  light: {
+    text: '#1C2B2A',
+    tint: '#1F5C57',
+    background: '#F4EFE4',
+    foreground: '#1C2B2A',
+    card: '#FBF8F1',
+    cardForeground: '#1C2B2A',
+    primary: '#1F5C57',
+    primaryForeground: '#F7F2E6',
+    secondary: '#E3ECE6',
+    secondaryForeground: '#1F4A46',
+    muted: '#EAE3D4',
+    mutedForeground: '#6E6A5E',
+    accent: '#D9643A',
+    accentForeground: '#FFF6EC',
+    accentSoft: '#F6DCCB',
+    destructive: '#B23A2E',
+    destructiveForeground: '#FFF4EF',
+    destructiveSoft: '#F5DAD5',
+    border: '#DDD4C2',
+    input: '#FDFBF6',
+    overlay: 'rgba(20,32,31,0.45)',
+    flashFront: '#1F5C57',
+    flashBack: '#FBF8F1',
+  },
+  radius: 14,
+};
+export default colors;

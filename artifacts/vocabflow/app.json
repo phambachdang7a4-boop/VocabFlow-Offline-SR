@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "VocabFlow",
+    "slug": "vocabflow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/vocabflow-icon.png",
+    "scheme": "vocabflow",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {},
+    "web": {
+      "favicon": "./assets/images/vocabflow-icon.png",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
