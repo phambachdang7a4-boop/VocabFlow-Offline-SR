@@ -17,7 +17,7 @@ function NativeTabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="review">
         <NativeTabs.Trigger.Icon sf={{ default: 'rectangle.on.rectangle', selected: 'rectangle.on.rectangle' }} />
-        <NativeTabs.Trigger.Label>Luyện tập</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Ôn tập</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
@@ -72,7 +72,7 @@ function ClassicTabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
-      <Tabs.Screen name="review" options={{ title: 'Luyện tập', tabBarIcon: icon('review') }} />
+      <Tabs.Screen name="review" options={{ title: 'Ôn tập', tabBarIcon: icon('review') }} />
       <Tabs.Screen name="settings" options={{ title: 'Cài đặt', tabBarIcon: icon('settings') }} />
     </Tabs>
   );

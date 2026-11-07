@@ -1,5 +1,6 @@
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import type { VocabularyWord, WordInput } from './types';
+import { applyReview, initialProgress, localDay, rescheduleProgress, type SrsProgress } from '../domain/srs';
 
 let connection: Promise<SQLiteDatabase> | undefined;
 
@@ -12,7 +13,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 1) {
+    if ((version?.user_version ?? 0) > 3) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -35,6 +36,45 @@ async function initialize(): Promise<SQLiteDatabase> {
           );
           PRAGMA user_version = 1;
         `);
+      });
+    }
+    if ((version?.user_version ?? 0) < 2) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          ALTER TABLE word_progress ADD COLUMN level INTEGER NOT NULL DEFAULT 1 CHECK (level BETWEEN 1 AND 6);
+          ALTER TABLE word_progress ADD COLUMN learned_on TEXT NOT NULL DEFAULT '';
+          ALTER TABLE word_progress ADD COLUMN next_review_on TEXT;
+          ALTER TABLE word_progress ADD COLUMN completed INTEGER NOT NULL DEFAULT 0 CHECK (completed IN (0, 1));
+          ALTER TABLE word_progress ADD COLUMN last_reviewed_on TEXT;
+          INSERT OR IGNORE INTO word_progress (word_id) SELECT id FROM words;
+        `);
+        const existing = await db.getAllAsync<{ id: number; createdAt: string }>(
+          'SELECT id, created_at AS createdAt FROM words',
+        );
+        for (const word of existing) {
+          const progress = initialProgress(localDay(new Date(word.createdAt)));
+          await db.runAsync(
+            'UPDATE word_progress SET learned_on = ?, next_review_on = ? WHERE word_id = ?',
+            progress.learnedOn, progress.nextReviewOn, word.id,
+          );
+        }
+        await db.execAsync('CREATE INDEX idx_progress_due ON word_progress(completed, next_review_on); PRAGMA user_version = 2;');
+      });
+    }
+    if ((version?.user_version ?? 0) < 3) {
+      await db.withTransactionAsync(async () => {
+        const rows = await db.getAllAsync<Omit<SrsProgress, 'completed'> & { wordId: number; completed: number }>(
+          `SELECT word_id AS wordId, level, learned_on AS learnedOn, next_review_on AS nextReviewOn,
+             completed, review_count AS reviewCount, last_reviewed_on AS lastReviewedOn FROM word_progress`,
+        );
+        for (const row of rows) {
+          const progress = rescheduleProgress({ ...row, completed: row.completed === 1 });
+          await db.runAsync(
+            'UPDATE word_progress SET next_review_on = ? WHERE word_id = ?',
+            progress.nextReviewOn, row.wordId,
+          );
+        }
+        await db.execAsync('PRAGMA user_version = 3;');
       });
     }
     return db;
@@ -65,13 +105,15 @@ function serialize<T>(operation: () => Promise<T>): Promise<T> {
 export function listWords(): Promise<VocabularyWord[]> {
   return serialize(async () => {
     const db = await database();
-    return db.getAllAsync<VocabularyWord>(`
+    const rows = await db.getAllAsync<Omit<VocabularyWord, 'completed'> & { completed: number }>(`
       SELECT w.id, w.term, w.meaning, w.ipa, w.example, w.note,
         w.created_at AS createdAt, w.updated_at AS updatedAt,
-        COALESCE(p.review_count, 0) AS reviewCount
-      FROM words w LEFT JOIN word_progress p ON p.word_id = w.id
+        p.review_count AS reviewCount, p.level, p.learned_on AS learnedOn,
+        p.next_review_on AS nextReviewOn, p.completed, p.last_reviewed_on AS lastReviewedOn
+      FROM words w JOIN word_progress p ON p.word_id = w.id
       ORDER BY w.created_at DESC, w.id DESC
     `);
+    return rows.map(row => ({ ...row, completed: row.completed === 1 }));
   });
 }
 
@@ -115,8 +157,42 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           clean.term, key, clean.meaning, clean.ipa, clean.example, clean.note, now, now,
         );
-        await db.runAsync('INSERT INTO word_progress (word_id) VALUES (?)', result.lastInsertRowId);
+        const progress = initialProgress(localDay(new Date(now)));
+        await db.runAsync(
+          'INSERT INTO word_progress (word_id, learned_on, next_review_on) VALUES (?, ?, ?)',
+          result.lastInsertRowId, progress.learnedOn, progress.nextReviewOn,
+        );
       }
+    });
+  });
+}
+
+/** Atomically validate the displayed revision and persist a single answer. */
+export function recordReview(id: number, correct: boolean, expectedReviewCount: number): Promise<void> {
+  return serialize(async () => {
+    if (!Number.isSafeInteger(id) || id < 1 || typeof correct !== 'boolean' ||
+        !Number.isSafeInteger(expectedReviewCount) || expectedReviewCount < 0) {
+      throw new Error('Câu trả lời không hợp lệ.');
+    }
+    const db = await database();
+    await db.withTransactionAsync(async () => {
+      const row = await db.getFirstAsync<Omit<VocabularyWord, 'completed'> & { completed: number }>(
+        `SELECT level, learned_on AS learnedOn, next_review_on AS nextReviewOn, completed,
+           review_count AS reviewCount, last_reviewed_on AS lastReviewedOn
+         FROM word_progress WHERE word_id = ?`, id,
+      );
+      if (!row) throw new Error('Từ này không còn tồn tại.');
+      if (row.reviewCount !== expectedReviewCount) {
+        throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
+      }
+      const next = applyReview({ ...row, completed: row.completed === 1 }, correct, localDay(new Date()));
+      const result = await db.runAsync(
+        `UPDATE word_progress SET learned_on = ?, level = ?, next_review_on = ?, completed = ?,
+           review_count = ?, last_reviewed_on = ? WHERE word_id = ? AND review_count = ?`,
+        next.learnedOn, next.level, next.nextReviewOn, next.completed ? 1 : 0, next.reviewCount,
+        next.lastReviewedOn, id, expectedReviewCount,
+      );
+      if (result.changes !== 1) throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
     });
   });
 }

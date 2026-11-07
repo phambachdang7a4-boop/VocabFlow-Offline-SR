@@ -1,1 +1,2 @@
 - [Phạm vi VocabFlow](vocabflow-scope.md) — App Android tiếng Việt, SQLite offline, không dữ liệu mẫu; triển khai tuần tự và báo cách kiểm tra trên điện thoại.
+- [Expo preview khởi động chậm](expo-preview-startup.md) — Ảnh trắng có thể do các route đang biên dịch lần đầu; kiểm tra tải xong trước khi kết luận app lỗi.

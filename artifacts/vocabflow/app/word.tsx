@@ -119,6 +119,23 @@ function WordForm({ existing }: { existing?: VocabularyWord }) {
             {existing ? `Ghi lần đầu ngày ${formatDate(existing.createdAt)}` : 'Chỉ từ và nghĩa là bắt buộc.'}
           </Text>
         </View>
+        {existing ? (
+          <View testID="word-srs-progress" style={{ backgroundColor: c.secondary, borderRadius: c.radius, padding: 14, gap: 6 }}>
+            <Text style={[styles.label, { color: c.primary }]}>
+              {existing.completed ? 'Đã hoàn tất 6 cấp ôn' : `Cấp ôn hiện tại: ${existing.level} / 6`}
+            </Text>
+            <Text style={[styles.sub, { color: c.mutedForeground }]}>
+              {existing.nextReviewOn
+                ? `Hạn ôn: ${existing.nextReviewOn.split('-').reverse().join('/')}`
+                : 'Không còn lịch ôn trong chu kỳ này.'}
+            </Text>
+            <Text style={[styles.sub, { color: c.mutedForeground }]}>
+              Đã trả lời {existing.reviewCount} lần. Sửa nội dung không đặt lại tiến độ.
+            </Text>
+          </View>
+        ) : (
+          <Text style={[styles.sub, { color: c.mutedForeground }]}>Từ mới có thể học ngay sau khi lưu.</Text>
+        )}
         {submitError ? <ErrorBanner message={submitError} /> : null}
         <Field testID="field-term" label="Từ tiếng Anh" required error={termErr} value={form.term} onChangeText={set('term')}
           autoCapitalize="none" autoCorrect={false} returnKeyType="next" onSubmitEditing={() => meaningRef.current?.focus()} editable={!saving} />

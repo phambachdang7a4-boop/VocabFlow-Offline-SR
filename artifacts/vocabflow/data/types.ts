@@ -1,3 +1,5 @@
+import type { SrsProgress } from '../domain/srs';
+
 export interface WordInput {
   term: string;
   meaning: string;
@@ -6,9 +8,8 @@ export interface WordInput {
   note: string;
 }
 
-export interface VocabularyWord extends WordInput {
+export interface VocabularyWord extends WordInput, SrsProgress {
   id: number;
   createdAt: string;
   updatedAt: string;
-  reviewCount: number;
 }
