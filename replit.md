@@ -7,7 +7,7 @@
 - Bước 1: quản lý từ cá nhân, SQLite, điều hướng Danh sách từ / Thêm–Sửa từ / Ôn tập / Cài đặt.
 - Bước 2: SRS 6 cấp, chỉ ôn từ đến hạn (kể cả quá hạn), lưu tiến độ SQLite.
 - Bước 3: đóng băng từ khỏi ôn tập, danh sách riêng, bỏ đóng băng về cấp 6.
-- Bước tiếp theo trong kế hoạch: giới hạn Free 100 từ và màn mời Premium 169.000đ/năm.
+- Theo yêu cầu hiện tại: tạo bản không giới hạn số từ, kể cả từ đóng băng. Tạm hoãn giới hạn Free 100 từ và màn mời Premium; chỉ triển khai lại khi người dùng yêu cầu.
 - Không thêm dữ liệu mẫu, từ khởi tạo, từ điển lớn hoặc thanh toán thật.
 - Người dùng yêu cầu làm tuần tự từng bước chạy được và báo cách kiểm tra trên điện thoại sau mỗi bước.
 
