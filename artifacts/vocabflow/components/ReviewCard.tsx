@@ -114,7 +114,10 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
     return (
       <View key={`slot-${index}`} testID={`review-letter-slot-${index}`}
         style={[styles.letterSlot, { width: cellWidth, height: cellHeight, borderColor: answered ? tone : c.border, backgroundColor: c.input }]}>
-        <Text testID={`review-letter-value-${index}`} style={[styles.letterValue, { color: isTypedChar ? c.foreground : c.mutedForeground }]}>
+        <Text testID={`review-letter-value-${index}`} style={[
+          styles.letterValue,
+          { color: isTypedChar ? c.foreground : c.mutedForeground, opacity: isTypedChar ? 1 : 0.62 },
+        ]}>
           {visibleChar}
         </Text>
       </View>
