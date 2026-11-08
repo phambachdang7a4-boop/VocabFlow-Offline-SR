@@ -68,6 +68,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /sync/replace:
+    post:
+      operationId: replaceUserSyncData
+      tags: [sync]
+      summary: Replace the signed-in user's learning data with a confirmed backup
+      security:
+        - clerkBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserSyncSnapshot"
+      responses:
+        "200":
+          description: The replaced account snapshot, scoped to the authenticated Clerk user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSyncSnapshot"
+        "400":
+          description: Invalid backup data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: A valid Clerk session is required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Account replacement is temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /healthz:
     get:
       operationId: healthCheck
@@ -96,8 +134,13 @@ components:
           type: string
     UserSyncSnapshot:
       type: object
-      required: [words, deletedWords, courseProgress, courseSelections, reviewStats]
+      required:
+        [words, deletedWords, courseProgress, courseSelections, reviewStats]
       properties:
+        revision:
+          type: integer
+          minimum: 0
+          description: Account data generation used to prevent stale devices from restoring older data.
         words:
           type: array
           maxItems: 10000
@@ -125,7 +168,27 @@ components:
             $ref: "#/components/schemas/SyncReviewStat"
     SyncWord:
       type: object
-      required: [syncId, term, meaning, ipa, example, note, dictionaryEntryId, dictionarySenseId, createdAt, contentUpdatedAt, reviewCount, level, learnedOn, nextReviewOn, completed, lastReviewedOn, frozen, progressUpdatedAt]
+      required:
+        [
+          syncId,
+          term,
+          meaning,
+          ipa,
+          example,
+          note,
+          dictionaryEntryId,
+          dictionarySenseId,
+          createdAt,
+          contentUpdatedAt,
+          reviewCount,
+          level,
+          learnedOn,
+          nextReviewOn,
+          completed,
+          lastReviewedOn,
+          frozen,
+          progressUpdatedAt,
+        ]
       properties:
         syncId:
           type: string
@@ -258,4 +321,3 @@ components:
           type: string
       required:
         - status
-

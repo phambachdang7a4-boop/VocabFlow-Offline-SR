@@ -1,23 +1,30 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
-import { useVocabulary } from '@/contexts/VocabularyContext';
-import type { VocabularyWord } from '@/data/types';
-import { useColors } from '@/hooks/useColors';
-import { Button, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
-import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
-import { fold } from '@/utils/text';
-import { getReviewStatistics } from '@/data/vocabulary';
-import type { ReviewStatistics } from '@/domain/review-statistics';
-import { NotebookStatistics } from '@/components/NotebookStatistics';
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import { useVocabulary } from "@/contexts/VocabularyContext";
+import type { VocabularyWord } from "@/data/types";
+import { useColors } from "@/hooks/useColors";
+import { Button, EmptyState, ErrorBanner, F, Skeleton } from "@/components/ui";
+import { ScreenHeader, useBottomPad } from "@/components/ScreenHeader";
+import { filterNotebookWords } from "@/domain/notebook-filter";
+import { getReviewStatistics } from "@/data/vocabulary";
+import type { ReviewStatistics } from "@/domain/review-statistics";
+import { NotebookStatistics } from "@/components/NotebookStatistics";
 
 const REVIEW_LEVELS = [1, 2, 3, 4, 5, 6] as const;
 
 export default function VocabularyScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [statistics, setStatistics] = useState<ReviewStatistics | null>(null);
   const [statisticsLoading, setStatisticsLoading] = useState(true);
@@ -25,12 +32,10 @@ export default function VocabularyScreen() {
   const bottom = useBottomPad();
 
   const filtered = useMemo(() => {
-    const sorted = [...words].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const f = fold(q);
-    return sorted.filter((w) =>
-      (selectedLevel === null || w.level === selectedLevel) &&
-      (!f || [w.term, w.meaning, w.example].some((t) => fold(t ?? '').includes(f))),
+    const sorted = [...words].sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
     );
+    return filterNotebookWords(sorted, q, selectedLevel);
   }, [words, q, selectedLevel]);
 
   const loadStatistics = useCallback(async () => {
@@ -39,29 +44,48 @@ export default function VocabularyScreen() {
       setStatistics(await getReviewStatistics());
       setStatisticsError(null);
     } catch {
-      setStatisticsError('Không thể tải thống kê ôn tập. Dữ liệu từ vựng vẫn được giữ nguyên.');
+      setStatisticsError(
+        "Không thể tải thống kê ôn tập. Dữ liệu từ vựng vẫn được giữ nguyên.",
+      );
     } finally {
       setStatisticsLoading(false);
     }
   }, []);
 
-  useFocusEffect(useCallback(() => {
-    void loadStatistics();
-  }, [loadStatistics]));
+  useFocusEffect(
+    useCallback(() => {
+      void loadStatistics();
+    }, [loadStatistics]),
+  );
 
   const addBtn = (
     <Pressable
       testID="add-word"
       accessibilityLabel="Thêm từ mới"
-      onPress={() => router.push('/word')}
-      style={({ pressed }) => [styles.fab, { backgroundColor: c.button, transform: [{ scale: pressed ? 0.92 : 1 }] }]}
+      onPress={() => router.push("/word")}
+      style={({ pressed }) => [
+        styles.fab,
+        {
+          backgroundColor: c.button,
+          transform: [{ scale: pressed ? 0.92 : 1 }],
+        },
+      ]}
     >
       <Feather name="plus" size={24} color={c.buttonForeground} />
     </Pressable>
   );
 
   const searchBar = (
-    <View style={[styles.search, { backgroundColor: c.input, borderColor: c.border, borderRadius: c.radius }]}>
+    <View
+      style={[
+        styles.search,
+        {
+          backgroundColor: c.input,
+          borderColor: c.border,
+          borderRadius: c.radius,
+        },
+      ]}
+    >
       <Feather name="search" size={18} color={c.mutedForeground} />
       <TextInput
         testID="search"
@@ -75,7 +99,11 @@ export default function VocabularyScreen() {
         returnKeyType="search"
       />
       {q ? (
-        <Pressable onPress={() => setQ('')} hitSlop={10} accessibilityLabel="Xoá tìm kiếm">
+        <Pressable
+          onPress={() => setQ("")}
+          hitSlop={10}
+          accessibilityLabel="Xoá tìm kiếm"
+        >
           <Feather name="x-circle" size={18} color={c.mutedForeground} />
         </Pressable>
       ) : null}
@@ -94,7 +122,9 @@ export default function VocabularyScreen() {
             accessibilityLabel={`Lọc từ cấp ${level}`}
             accessibilityHint="Chạm lại cấp đang chọn để bỏ lọc."
             accessibilityState={{ selected }}
-            onPress={() => setSelectedLevel(current => current === level ? null : level)}
+            onPress={() =>
+              setSelectedLevel((current) => (current === level ? null : level))
+            }
             style={({ pressed }) => [
               styles.levelFilter,
               {
@@ -104,7 +134,12 @@ export default function VocabularyScreen() {
               },
             ]}
           >
-            <Text style={[styles.levelFilterText, { color: selected ? c.primaryForeground : c.foreground }]}>
+            <Text
+              style={[
+                styles.levelFilterText,
+                { color: selected ? c.primaryForeground : c.foreground },
+              ]}
+            >
               Cấp {level}
             </Text>
           </Pressable>
@@ -118,9 +153,15 @@ export default function VocabularyScreen() {
       {statistics ? (
         <NotebookStatistics totalWords={words.length} statistics={statistics} />
       ) : statisticsError ? (
-        <ErrorBanner message={statisticsError} onRetry={() => void loadStatistics()} />
+        <ErrorBanner
+          message={statisticsError}
+          onRetry={() => void loadStatistics()}
+        />
       ) : statisticsLoading ? (
-        <View style={{ gap: 8 }}><Skeleton h={76} /><Skeleton h={150} /></View>
+        <View style={{ gap: 8 }}>
+          <Skeleton h={76} />
+          <Skeleton h={150} />
+        </View>
       ) : null}
       {words.length > 0 ? searchBar : null}
       {words.length > 0 ? levelFilters : null}
@@ -130,20 +171,53 @@ export default function VocabularyScreen() {
   const renderItem = ({ item }: { item: VocabularyWord }) => (
     <Pressable
       testID={`word-${item.id}`}
-      onPress={() => router.push({ pathname: '/word', params: { id: String(item.id) } })}
+      onPress={() =>
+        router.push({ pathname: "/word", params: { id: String(item.id) } })
+      }
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: pressed ? c.vocabCardPressed : c.vocabCard, borderColor: c.navigationBorder, borderRadius: c.radius },
+        {
+          backgroundColor: pressed ? c.vocabCardPressed : c.vocabCard,
+          borderColor: c.navigationBorder,
+          borderRadius: c.radius,
+        },
       ]}
     >
       <View style={[styles.spine, { backgroundColor: c.vocabCardAccent }]} />
       <View style={{ flex: 1, gap: 3 }}>
         <View style={styles.termRow}>
-          <Text style={[styles.term, { color: c.vocabCardForeground }]} numberOfLines={1}>{item.term}</Text>
-          {item.ipa ? <Text style={[styles.ipa, { color: c.vocabCardAccent }]} numberOfLines={1}>{item.ipa}</Text> : null}
+          <Text
+            style={[styles.term, { color: c.vocabCardForeground }]}
+            numberOfLines={1}
+          >
+            {item.term}
+          </Text>
+          {item.ipa ? (
+            <Text
+              style={[styles.ipa, { color: c.vocabCardAccent }]}
+              numberOfLines={1}
+            >
+              {item.ipa}
+            </Text>
+          ) : null}
         </View>
-        <Text style={[styles.meaning, { color: c.vocabCardMuted }]} numberOfLines={2}>{item.meaning}</Text>
-        {item.frozen ? <Text style={[styles.ipa, styles.frozenTag, { color: c.frozenForeground, backgroundColor: c.frozen }]}>Đã đóng băng</Text> : null}
+        <Text
+          style={[styles.meaning, { color: c.vocabCardMuted }]}
+          numberOfLines={2}
+        >
+          {item.meaning}
+        </Text>
+        {item.frozen ? (
+          <Text
+            style={[
+              styles.ipa,
+              styles.frozenTag,
+              { color: c.frozenForeground, backgroundColor: c.frozen },
+            ]}
+          >
+            Đã đóng băng
+          </Text>
+        ) : null}
       </View>
       <Feather name="chevron-right" size={18} color={c.vocabCardMuted} />
     </Pressable>
@@ -151,11 +225,21 @@ export default function VocabularyScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker={`${words.length} từ trong sổ`} title="Sổ từ của bạn" right={words.length > 0 ? addBtn : undefined} />
-      {error ? <View style={styles.pad}><ErrorBanner message={error} onRetry={reload} /></View> : null}
+      <ScreenHeader
+        kicker={`${words.length} từ trong sổ`}
+        title="Sổ từ của bạn"
+        right={words.length > 0 ? addBtn : undefined}
+      />
+      {error ? (
+        <View style={styles.pad}>
+          <ErrorBanner message={error} onRetry={reload} />
+        </View>
+      ) : null}
       {loading && words.length === 0 ? (
         <View style={styles.pad}>
-          <Skeleton /><Skeleton /><Skeleton />
+          <Skeleton />
+          <Skeleton />
+          <Skeleton />
         </View>
       ) : (
         <FlatList
@@ -166,7 +250,12 @@ export default function VocabularyScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           ListHeaderComponent={listHeader}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: bottom, gap: 10 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 8,
+            paddingBottom: bottom,
+            gap: 10,
+          }}
           ListEmptyComponent={
             error ? undefined : words.length === 0 ? (
               <EmptyState
@@ -174,17 +263,28 @@ export default function VocabularyScreen() {
                 title="Trang đầu tiên đang chờ"
                 body="Mỗi từ bạn ghi lại là một từ bạn đã chọn để nhớ. Bắt đầu với từ bạn gặp hôm nay."
               >
-                <Button label="Ghi từ đầu tiên" icon="plus" onPress={() => router.push('/word')} testID="add-first" />
+                <Button
+                  label="Ghi từ đầu tiên"
+                  icon="plus"
+                  onPress={() => router.push("/word")}
+                  testID="add-first"
+                />
               </EmptyState>
             ) : (
               <EmptyState
                 icon="search"
-                title={selectedLevel === null ? 'Không tìm thấy' : 'Không có từ ở cấp này'}
-                body={selectedLevel === null
-                  ? `Không có từ nào khớp với “${q.trim()}”. Thử bỏ dấu hoặc viết ngắn hơn.`
-                  : q.trim()
-                    ? `Không có từ ở Cấp ${selectedLevel} khớp với “${q.trim()}”.`
-                    : `Sổ từ chưa có từ ở Cấp ${selectedLevel}.`}
+                title={
+                  selectedLevel === null
+                    ? "Không tìm thấy"
+                    : "Không có từ ở cấp này"
+                }
+                body={
+                  selectedLevel === null
+                    ? `Không có từ nào khớp với “${q.trim()}”. Thử bỏ dấu hoặc viết ngắn hơn.`
+                    : q.trim()
+                      ? `Không có từ ở Cấp ${selectedLevel} khớp với “${q.trim()}”.`
+                      : `Sổ từ chưa có từ ở Cấp ${selectedLevel}.`
+                }
               />
             )
           }
@@ -195,19 +295,63 @@ export default function VocabularyScreen() {
 }
 
 const styles = StyleSheet.create({
-  frozenTag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
+  frozenTag: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    overflow: "hidden",
+  },
   flex: { flex: 1 },
   pad: { paddingHorizontal: 20, paddingTop: 8 },
-  fab: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  fab: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   listHeader: { gap: 10 },
-  search: { borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 48 },
-  searchInput: { flex: 1, fontFamily: F.r, fontSize: 16, height: '100%' },
-  levelFilters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 1 },
-  levelFilter: { minHeight: 34, paddingHorizontal: 12, borderWidth: 1, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  search: {
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    height: 48,
+  },
+  searchInput: { flex: 1, fontFamily: F.r, fontSize: 16, height: "100%" },
+  levelFilters: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 1,
+  },
+  levelFilter: {
+    minHeight: 34,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   levelFilterText: { fontFamily: F.s, fontSize: 13 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, paddingLeft: 0, borderWidth: 1, overflow: 'hidden' },
-  spine: { width: 4, alignSelf: 'stretch', borderTopRightRadius: 4, borderBottomRightRadius: 4 },
-  termRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 16,
+    paddingLeft: 0,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  spine: {
+    width: 4,
+    alignSelf: "stretch",
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+  },
+  termRow: { flexDirection: "row", alignItems: "baseline", gap: 8 },
   term: { fontFamily: F.b, fontSize: 18, flexShrink: 1 },
   ipa: { fontFamily: F.r, fontSize: 14, flexShrink: 1 },
   meaning: { fontFamily: F.r, fontSize: 15, lineHeight: 21 },

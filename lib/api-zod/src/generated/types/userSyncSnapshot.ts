@@ -12,6 +12,11 @@ import type { SyncReviewStat } from './syncReviewStat';
 import type { SyncWord } from './syncWord';
 
 export interface UserSyncSnapshot {
+  /**
+     * Account data generation used to prevent stale devices from restoring older data.
+     * @minimum 0
+     */
+  revision?: number;
   /** @maxItems 10000 */
   words: SyncWord[];
   /** @maxItems 10000 */
