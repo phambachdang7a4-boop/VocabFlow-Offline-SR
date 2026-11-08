@@ -31,6 +31,7 @@ import {
   serializeAccountBackup,
   type AccountBackupFile,
   MAX_ACCOUNT_BACKUP_BYTES,
+  summarizeAccountBackup,
 } from "@/data/account-backup";
 import {
   exportSyncSnapshot,
@@ -60,6 +61,9 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === "web" ? 34 : insets.bottom) + 24;
   const syncBusy = sync.state === "checking" || sync.state === "syncing";
+  const restoreSummary = restoreCandidate
+    ? summarizeAccountBackup(restoreCandidate)
+    : null;
 
   const facts: {
     icon: keyof typeof Feather.glyphMap;
@@ -586,7 +590,13 @@ export default function SettingsScreen() {
         <ConfirmDialog
           visible={restoreCandidate !== null}
           title="Thay thế dữ liệu hiện tại?"
-          message="Sổ từ, tiến độ ôn, trạng thái đóng băng, tiến độ khóa học và thống kê trên thiết bị cùng tài khoản sẽ được thay bằng tệp này. Các thiết bị khác sẽ nhận dữ liệu mới khi đồng bộ; thay đổi chưa đồng bộ ở đó có thể bị thay thế. Nếu đang ngoại tuyến, tài khoản sẽ được cập nhật khi có mạng. Hãy xuất bản sao lưu trước nếu bạn muốn giữ dữ liệu hiện tại."
+          message={`Sổ từ, tiến độ ôn, trạng thái đóng băng, tiến độ khóa học và thống kê trên thiết bị cùng tài khoản sẽ được thay bằng tệp này. Các thiết bị khác sẽ nhận dữ liệu mới khi đồng bộ; thay đổi chưa đồng bộ ở đó có thể bị thay thế. Nếu đang ngoại tuyến, tài khoản sẽ được cập nhật khi có mạng. Hãy xuất bản sao lưu trước nếu bạn muốn giữ dữ liệu hiện tại.
+
+Nội dung tệp:
+• Từ cá nhân: ${restoreSummary?.personalWordCount ?? 0}
+• Từ đã đóng băng: ${restoreSummary?.frozenWordCount ?? 0}
+• Bản ghi khóa học (tiến độ và lựa chọn): ${restoreSummary?.courseRecordCount ?? 0}
+• Ngày có thống kê ôn: ${restoreSummary?.reviewStatDayCount ?? 0}`}
           confirmLabel="Ghi đè"
           onCancel={() => {
             setRestoreCandidate(null);

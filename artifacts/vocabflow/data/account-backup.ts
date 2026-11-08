@@ -13,6 +13,26 @@ export interface AccountBackupFile {
   payload: SyncPayload;
 }
 
+export interface AccountBackupSummary {
+  personalWordCount: number;
+  frozenWordCount: number;
+  courseRecordCount: number;
+  reviewStatDayCount: number;
+}
+
+export function summarizeAccountBackup(
+  backup: AccountBackupFile,
+): AccountBackupSummary {
+  const { words, courseProgress, courseSelections, reviewStats } =
+    backup.payload;
+  return {
+    personalWordCount: words.length,
+    frozenWordCount: words.filter((word) => word.frozen).length,
+    courseRecordCount: courseProgress.length + courseSelections.length,
+    reviewStatDayCount: new Set(reviewStats.map((stat) => stat.day)).size,
+  };
+}
+
 export function serializeAccountBackup(payload: SyncPayload): string {
   const backup: AccountBackupFile = {
     format: ACCOUNT_BACKUP_FORMAT,

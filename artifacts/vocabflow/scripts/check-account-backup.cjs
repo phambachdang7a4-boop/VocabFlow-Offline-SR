@@ -2,7 +2,14 @@ const assert = require('node:assert/strict');
 const { join } = require('node:path');
 const { loadTs } = require('./test-support.cjs');
 
-const { ACCOUNT_BACKUP_FORMAT, ACCOUNT_BACKUP_VERSION, MAX_ACCOUNT_BACKUP_BYTES, parseAccountBackup, serializeAccountBackup } = loadTs(join(__dirname, '../data/account-backup.ts'));
+const {
+  ACCOUNT_BACKUP_FORMAT,
+  ACCOUNT_BACKUP_VERSION,
+  MAX_ACCOUNT_BACKUP_BYTES,
+  parseAccountBackup,
+  serializeAccountBackup,
+  summarizeAccountBackup,
+} = loadTs(join(__dirname, '../data/account-backup.ts'));
 
 const payload = {
   revision: 0,
@@ -68,7 +75,42 @@ const olderBackup = JSON.parse(serialized);
 delete olderBackup.payload.reviewStats[0].sessionCount;
 assert.equal(parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewStats[0].sessionCount, 0, 'Backups without session history start at zero instead of fabricating data.');
 
-assert.throws(() => parseAccountBackup('not JSON'), /JSON/);
+const preview = summarizeAccountBackup({
+  ...restored,
+  payload: {
+    ...restored.payload,
+    words: [
+      ...restored.payload.words,
+      { ...restored.payload.words[0], syncId: "manual:frozen:word", frozen: true },
+    ],
+    courseSelections: [
+      ...restored.payload.courseSelections,
+      {
+        ...restored.payload.courseSelections[0],
+        wordId: "dict:3:4",
+      },
+    ],
+    reviewStats: [
+      ...restored.payload.reviewStats,
+      {
+        ...restored.payload.reviewStats[0],
+        deviceId: "another-device",
+      },
+      {
+        ...restored.payload.reviewStats[0],
+        day: "2026-11-07",
+      },
+    ],
+  },
+});
+assert.deepEqual(preview, {
+  personalWordCount: 2,
+  frozenWordCount: 1,
+  courseRecordCount: 3,
+  reviewStatDayCount: 2,
+});
+
+assert.throws(() => parseAccountBackup("not JSON"), /JSON/);
 assert.throws(
   () =>
     parseAccountBackup(
