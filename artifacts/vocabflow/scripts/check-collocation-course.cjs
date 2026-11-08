@@ -12,6 +12,7 @@ const {
 
 const root = resolve(__dirname, '..');
 const dataDir = join(root, 'data');
+const lessonScreen = fs.readFileSync(join(root, 'app/course/[lessonId].tsx'), 'utf8');
 const dictionaryPath = resolve(root, '../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const sourcePath = resolve(root, '../../generated-artifacts/collocations/opensubs-en.jsonl');
 const wordnetPath = resolve(root, '../../generated-artifacts/collocations/english-wordnet-2025-json.zip');
@@ -19,6 +20,12 @@ const manifest = JSON.parse(fs.readFileSync(join(dataDir, 'collocation-course-ma
 const { COLLOCATION_COURSES } = collocationCourses;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const normalize = value => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
+
+assert.match(
+  lessonScreen,
+  /testID=\{`course-select-collocation-type-\$\{word\.id\}`\}[\s\S]*?\{collocationType\}/,
+  'Danh sách chọn từ phải hiển thị nhãn loại cụm từ dữ liệu của từng mục.',
+);
 
 assert.equal(COLLOCATION_COURSES.length, 1);
 const course = COLLOCATION_COURSES[0];

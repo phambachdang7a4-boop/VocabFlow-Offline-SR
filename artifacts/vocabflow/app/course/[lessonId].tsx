@@ -235,6 +235,7 @@ export default function CourseLessonScreen() {
           <ScrollView style={styles.selectionList} contentContainerStyle={styles.selectionContent} keyboardShouldPersistTaps="handled">
             {lesson.words.map((word, index) => {
               const selected = selectedIds.has(word.id);
+              const collocationType = displayCollocationType(word);
               return (
                 <Pressable
                   key={word.id}
@@ -249,6 +250,14 @@ export default function CourseLessonScreen() {
                   </View>
                   <View style={styles.wordRowText}>
                     <Text style={[styles.wordTerm, { color: c.foreground }]}>{index + 1}. {word.term}</Text>
+                    {collocationType ? (
+                      <Text
+                        testID={`course-select-collocation-type-${word.id}`}
+                        style={[styles.selectionCollocationType, { color: c.primary }]}
+                      >
+                        {collocationType}
+                      </Text>
+                    ) : null}
                     <Text style={[styles.wordMeaning, { color: c.mutedForeground }]}>{displayCourseMeaning(word)}</Text>
                   </View>
                 </Pressable>
@@ -476,6 +485,7 @@ const styles = StyleSheet.create({
   checkbox: { width: 23, height: 23, borderWidth: 1.5, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
   wordRowText: { flex: 1, gap: 3 },
   wordTerm: { fontFamily: F.s, fontSize: 14 },
+  selectionCollocationType: { fontFamily: F.s, fontSize: 12 },
   wordMeaning: { fontFamily: F.r, fontSize: 13 },
   footer: { paddingHorizontal: 16, paddingTop: 11, borderTopWidth: 1, gap: 10 },
   addAllButton: { minHeight: 48, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
