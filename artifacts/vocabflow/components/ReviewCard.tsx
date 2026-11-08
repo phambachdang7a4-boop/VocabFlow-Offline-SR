@@ -22,7 +22,7 @@ export interface ReviewCardProps {
   /** Global context error: lock input/Continue until resolved. */
   blocked: boolean;
   isLast: boolean;
-  onCommitted: (id: number) => void;
+  onCommitted: (id: number, correct: boolean | null) => void;
   onBusyChange: (busy: boolean) => void;
   onNext: () => void;
 }
@@ -61,7 +61,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
       else await setWordFrozen(snap.current.id, true);
       if (!mounted.current) return;
       setPhase('saved');
-      cb.current.onCommitted(snap.current.id);
+      cb.current.onCommitted(snap.current.id, o.action === 'grade' ? o.correct : null);
     } catch (failure) {
       if (!mounted.current) return;
       setSaveError(failure instanceof Error ? failure.message : 'Không thể lưu. Hãy thử lại.');

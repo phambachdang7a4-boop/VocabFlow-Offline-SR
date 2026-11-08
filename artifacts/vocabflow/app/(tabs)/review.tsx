@@ -16,8 +16,20 @@ import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
 import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
+import { createReviewSessionSummary, formatReviewDuration, type ReviewSessionSummary } from '@/domain/review-session';
 
-type Session = { token: number; queue: number[]; processed: number[]; index: number; formatOffset: number; word: VocabularyWord; exercise: ReviewExercise };
+type Session = {
+  token: number;
+  queue: number[];
+  processed: number[];
+  answered: number[];
+  correct: number[];
+  startedAt: number;
+  index: number;
+  formatOffset: number;
+  word: VocabularyWord;
+  exercise: ReviewExercise;
+};
 
 export default function ReviewScreen() {
   const c = useColors();
@@ -28,8 +40,8 @@ export default function ReviewScreen() {
   const bottom = useBottomPad();
   const now = useReviewClock();
   const day = localDay(new Date(now));
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [summary, setSummary] = useState<ReviewSessionSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const sequence = useRef(0);
@@ -59,12 +71,37 @@ export default function ReviewScreen() {
   const start = () => {
     const first = overview.dueWords[0];
     if (!first || error || loading) return;
-    setFeedback(null);
-    setSession({ token: ++sequence.current, queue: overview.dueWords.map(w => w.id), processed: [], index: 0, formatOffset: first.reviewCount,
+    setSummary(null);
+    setSession({
+      token: ++sequence.current,
+      queue: overview.dueWords.map(w => w.id),
+      processed: [],
+      answered: [],
+      correct: [],
+      startedAt: Date.now(),
+      index: 0,
+      formatOffset: first.reviewCount,
       word: first, exercise: createReviewExercise(first, 0, first.reviewCount, words) });
   };
-  const committed = (token: number, id: number) => setSession(s =>
-    s && s.token === token && s.word.id === id && !s.processed.includes(id) ? { ...s, processed: [...s.processed, id] } : s);
+  const finishSession = (current: Session, completed: boolean) => {
+    setSummary(createReviewSessionSummary(current, Date.now(), completed));
+    sessionRef.current = null;
+    setSession(null);
+  };
+  const exitSession = () => {
+    const current = sessionRef.current;
+    if (!current || busyRef.current) return;
+    finishSession(current, false);
+  };
+  const committed = (token: number, id: number, correct: boolean | null = null) => setSession(s => {
+    if (!s || s.token !== token || s.word.id !== id || s.processed.includes(id)) return s;
+    return {
+      ...s,
+      processed: [...s.processed, id],
+      answered: correct === null ? s.answered : [...s.answered, id],
+      correct: correct === true ? [...s.correct, id] : s.correct,
+    };
+  });
   const changeBusy = (token: number, index: number, value: boolean) => {
     if (sessionRef.current?.token !== token || sessionRef.current.index !== index) return;
     busyRef.current = value;
@@ -76,20 +113,12 @@ export default function ReviewScreen() {
     const due = new Map(overview.dueWords.map(w => [w.id, w]));
     const id = s.queue.find(q => !s.processed.includes(q) && due.has(q));
     if (id === undefined) {
-      setSession(null);
-      setFeedback(`Hoàn tất phiên: đã xử lý ${s.processed.length} / ${s.queue.length} từ.`);
+      finishSession(s, true);
       return;
     }
     const w = due.get(id)!;
     setSession({ ...s, index: s.index + 1, word: w, exercise: createReviewExercise(w, s.index + 1, s.formatOffset, words) });
   };
-
-  const feedbackView = feedback ? (
-    <View accessibilityLiveRegion="polite" style={[styles.note, { backgroundColor: c.secondary, borderRadius: c.radius }]}>
-      <Feather name="check-circle" size={18} color={c.primary} />
-      <Text style={[styles.noteText, { color: c.secondaryForeground }]}>{feedback}</Text>
-    </View>
-  ) : null;
 
   let action: React.ReactNode;
   if (card) {
@@ -125,7 +154,7 @@ export default function ReviewScreen() {
         <View style={[styles.sessionHeader, { paddingTop: (Platform.OS === 'web' ? 67 : insets.top) + 10, backgroundColor: c.background }]}>
           <View style={styles.sessionProgressRow}>
             <Pressable testID="review-back-overview" accessibilityRole="button" accessibilityLabel="Thoát phiên ôn tập"
-              onPress={() => { if (!busyRef.current) setSession(null); }} disabled={busy} hitSlop={10}
+              onPress={exitSession} disabled={busy} hitSlop={10}
               style={({ pressed }) => [styles.sessionClose, { opacity: busy ? 0.35 : pressed ? 0.55 : 1 }]}>
               <Feather name="x" size={24} color={c.mutedForeground} />
             </Pressable>
@@ -166,7 +195,51 @@ export default function ReviewScreen() {
           <ReviewCard key={`${session.token}:${session.index}:${session.word.id}`} word={session.word} exercise={session.exercise}
             blocked={!!error} isLast={!session.queue.some(q => q !== session.word.id && !session.processed.includes(q) && overview.dueWords.some(w => w.id === q))}
             onBusyChange={value => changeBusy(session.token, session.index, value)}
-            onCommitted={id => committed(session.token, id)} onNext={() => next(session.token)} />
+            onCommitted={(id, correct) => committed(session.token, id, correct)} onNext={() => next(session.token)} />
+        ) : summary ? (
+          <View testID="review-session-summary" accessibilityLiveRegion="polite"
+            style={[styles.summaryCard, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 8 }]}>
+            <View style={[styles.summaryIcon, { backgroundColor: summary.completed ? c.successSoft : c.secondary }]}>
+              <Feather name={summary.completed ? 'check-circle' : 'pause-circle'}
+                size={28} color={summary.completed ? c.success : c.primary} />
+            </View>
+            <Text testID="review-summary-title" style={[styles.summaryTitle, { color: c.foreground }]}>
+              {summary.completed ? 'Hoàn thành phiên ôn' : 'Đã dừng phiên ôn'}
+            </Text>
+            <Text style={[styles.summarySubtitle, { color: c.mutedForeground }]}>
+              {summary.completed ? 'Kết quả của lượt ôn này' : 'Kết quả tính đến lúc bạn thoát'}
+            </Text>
+            <View style={[styles.summaryMetrics, { borderColor: c.border }]}>
+              <View style={styles.summaryMetric}>
+                <Text testID="review-summary-reviewed" style={[styles.summaryValue, { color: c.foreground }]}>
+                  {summary.reviewedCount}/{summary.plannedCount}
+                </Text>
+                <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>Đã ôn / tổng số từ</Text>
+              </View>
+              <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
+              <View style={styles.summaryMetric}>
+                <Text testID="review-summary-correct" style={[styles.summaryValue, { color: c.successText }]}>
+                  {summary.correctCount}/{summary.reviewedCount}
+                </Text>
+                <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>Đúng / đã ôn</Text>
+              </View>
+              <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
+              <View style={styles.summaryMetric}>
+                <Text testID="review-summary-accuracy" style={[styles.summaryValue, { color: c.primary }]}>
+                  {summary.reviewedCount ? `${Math.round(summary.correctCount / summary.reviewedCount * 100)}%` : '—'}
+                </Text>
+                <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>Tỉ lệ chính xác</Text>
+              </View>
+            </View>
+            <View style={[styles.durationRow, { backgroundColor: c.secondary, borderRadius: c.radius }]}>
+              <Feather name="clock" size={18} color={c.primary} />
+              <Text style={[styles.durationLabel, { color: c.secondaryForeground }]}>Thời gian ôn</Text>
+              <Text testID="review-summary-duration" style={[styles.durationValue, { color: c.secondaryForeground }]}>
+                {formatReviewDuration(summary.elapsedMs)}
+              </Text>
+            </View>
+            <Button testID="review-summary-close" label="Về Ôn tập" icon="arrow-right" onPress={() => setSummary(null)} />
+          </View>
         ) : loading ? (
           <>
             <Skeleton h={64} /><Skeleton h={260} /><Skeleton h={56} />
@@ -174,7 +247,6 @@ export default function ReviewScreen() {
         ) : error ? null : (
           <>
             <SavedTotal total={overview.total} frozen={overview.frozen} completed={overview.completed} />
-            {feedbackView}
             <View style={[styles.chartCard, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 8 }]}>
               <LevelDistributionChart levels={overview.levels} />
             </View>
@@ -188,11 +260,21 @@ export default function ReviewScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  note: { flexDirection: 'row', gap: 10, padding: 12, alignItems: 'flex-start' },
-  noteText: { flex: 1, fontFamily: F.m, fontSize: 13, lineHeight: 19 },
   due: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 10 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
+  summaryCard: { flex: 1, minHeight: 420, justifyContent: 'center', alignItems: 'stretch', padding: 20, borderWidth: 1, gap: 14 },
+  summaryIcon: { alignSelf: 'center', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  summaryTitle: { fontFamily: F.b, fontSize: 24, textAlign: 'center' },
+  summarySubtitle: { fontFamily: F.r, fontSize: 14, textAlign: 'center' },
+  summaryMetrics: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderBottomWidth: 1, paddingVertical: 16, marginTop: 8 },
+  summaryMetric: { flex: 1, alignItems: 'center', gap: 5 },
+  summaryValue: { fontFamily: F.b, fontSize: 20, fontVariant: ['tabular-nums'] },
+  summaryLabel: { fontFamily: F.m, fontSize: 10, textAlign: 'center' },
+  metricDivider: { width: 1, height: 36 },
+  durationRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 14 },
+  durationLabel: { flex: 1, fontFamily: F.m, fontSize: 14 },
+  durationValue: { fontFamily: F.b, fontSize: 16, fontVariant: ['tabular-nums'] },
   sessionHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 16 },
   sessionProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sessionClose: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },

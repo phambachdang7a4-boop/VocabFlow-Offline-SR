@@ -5,6 +5,7 @@ const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
 const dictionary = loadTs(join(__dirname, '../domain/dictionary.ts'));
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
+const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
 const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput'].map(type => [type, type]));
 native.StyleSheet = { create: value => value };
@@ -58,6 +59,7 @@ function mount(file, properties = {}, initial = {}) {
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
     '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,
+    '@/domain/review-session': reviewSession,
     '@/components/KeyboardAwareScrollViewCompat': { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' },
     '@/components/ui': { Button: 'Button', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },
@@ -113,6 +115,12 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(screen.tabOptions.at(-1).tabBarStyle.display, 'none', 'Hide the tab bar during the full-screen review');
   assert.equal(screen.byId('review-session-count').props.children.join(''), '0/1');
   screen.byId('review-back-overview').props.onPress();
+  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Đã dừng phiên ôn');
+  assert.equal(screen.byId('review-summary-reviewed').props.children.join(''), '0/1');
+  assert.equal(screen.byId('review-summary-correct').props.children.join(''), '0/0');
+  assert.equal(screen.byId('review-summary-accuracy').props.children.join(''), '—');
+  assert.equal(screen.byId('review-summary-duration').props.children.join(''), '00:00');
+  screen.byId('review-summary-close').props.onPress();
   assert.ok(screen.byId('review-start'));
   assert.ok(settingsButton(), 'Settings return on the overview');
   assert.equal(screen.tabOptions.at(-1).tabBarStyle, undefined, 'Restore the tab bar after leaving the session');
@@ -120,7 +128,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const question = screen.byType('ReviewCard').props;
   const reviewed = { ...tomorrowWord, ...srs.applyReview(tomorrowWord, true, '2026-11-08') };
   screen.update({ words: [reviewed] });
-  question.onCommitted(1);
+  question.onCommitted(1, true);
   assert.equal(screen.byType('ReviewCard').props.word, question.word, 'Hold the exact snapshot after save, including the last word');
   screen.update({ error: 'Refresh failed after commit' });
   assert.ok(screen.byType('ReviewCard'), 'A context error must not unmount saved feedback');
@@ -129,6 +137,11 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.ok(screen.byType('ReviewCard'));
   screen.update({ error: null });
   screen.byType('ReviewCard').props.onNext();
+  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Hoàn thành phiên ôn');
+  assert.equal(screen.byId('review-summary-reviewed').props.children.join(''), '1/1');
+  assert.equal(screen.byId('review-summary-correct').props.children.join(''), '1/1');
+  assert.equal(screen.byId('review-summary-accuracy').props.children.join(''), '100%');
+  screen.byId('review-summary-close').props.onPress();
   assert.ok(screen.byId('review-countdown'));
   screen.time(`${reviewed.nextReviewOn}T00:00:00`);
   assert.equal(screen.byType('ReviewCard'), undefined, 'Finishing must clear session state: a later deadline must not auto-open a card');
@@ -171,21 +184,26 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const stableExercise = current.exercise;
   both.time('2026-11-07T23:59:59.500');
   assert.equal(both.byType('ReviewCard').props.exercise, stableExercise, 'Clock rerenders cannot reshuffle the question or hints');
-  current.onCommitted(1);
+  current.onCommitted(1, true);
   both.byType('ReviewCard').props.onNext();
   current = both.byType('ReviewCard').props;
   assert.equal(current.word.id, 2);
   assert.equal(current.exercise.kind, 'multiple-choice');
   assert.equal(current.exercise.prompt, 'They ________ it.', 'Same English word with a different meaning remains a separate question');
   assert.equal(current.exercise.choices.length, 3, 'Sentence blanks must have three or four choices from the notebook.');
-  current.onCommitted(2);
+  current.onCommitted(2, false);
   both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
   both.byType('ReviewCard').props.onNext();
   assert.equal(both.byType('ReviewCard'), undefined, 'Original queue only, and processed IDs never regrade even if cached due data is stale');
+  assert.equal(both.byId('review-summary-reviewed').props.children.join(''), '2/2');
+  assert.equal(both.byId('review-summary-correct').props.children.join(''), '1/2');
+  assert.equal(both.byId('review-summary-accuracy').props.children.join(''), '50%');
+  both.byId('review-summary-close').props.onPress();
   assert.ok(both.byId('review-start'));
   both.byId('review-start').props.onPress();
   const abandoned = both.byType('ReviewCard').props;
   both.byId('review-back-overview').props.onPress();
+  both.byId('review-summary-close').props.onPress();
   both.byId('review-start').props.onPress();
   const fresh = both.byType('ReviewCard').props;
   fresh.onBusyChange(true);
