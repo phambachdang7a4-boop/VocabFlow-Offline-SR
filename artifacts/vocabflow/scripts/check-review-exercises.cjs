@@ -10,13 +10,21 @@ const word = {
   example: 'Whimsical paintings are whimsical.',
   ...srs.initialProgress('2026-11-07'),
 };
+const notebookWords = [
+  word,
+  { ...word, id: 2, term: 'playful' },
+  { ...word, id: 3, term: 'ordinary' },
+  { ...word, id: 4, term: 'serious' },
+];
 assert.equal(exercises.createReviewExercise(word, 0).kind, 'meaning');
-const cloze = exercises.createReviewExercise(word, 1);
-assert.equal(cloze.kind, 'cloze');
+const cloze = exercises.createReviewExercise(word, 1, 0, notebookWords);
+assert.equal(cloze.kind, 'multiple-choice');
 assert.equal(cloze.prompt, '________ paintings are ________.');
 assert.ok(!cloze.prompt.toLowerCase().includes(word.term));
-assert.equal(exercises.createReviewExercise({ ...word, reviewCount: 1 }, 0).kind, 'cloze', 'Single-word sessions also alternate across days');
-assert.equal(exercises.createReviewExercise({ ...word, reviewCount: 1 }, 1, 0).kind, 'cloze', 'A fixed session offset must alternate even when words have different review counts');
+assert.equal(exercises.createReviewExercise({ ...word, reviewCount: 1 }, 0, undefined, notebookWords).kind, 'multiple-choice',
+  'Single-word sessions also use multiple choice for sentence questions');
+assert.equal(exercises.createReviewExercise({ ...word, reviewCount: 1 }, 1, 0, notebookWords).kind, 'multiple-choice',
+  'A fixed session offset must keep sentence questions as choices');
 assert.equal(exercises.clozeSentence('The theater is there.', 'he'), null);
 assert.equal(exercises.clozeSentence('C++ is not C+.', 'C++'), '________ is not C+.');
 assert.equal(exercises.clozeSentence('They take  off.', 'take off'), 'They ________.');
@@ -49,12 +57,6 @@ for (const [input, target] of [['', 'go'], ['   ', 'go'], ['dessert', 'desert'],
   assert.equal(exercises.checkReviewAnswer(input, target), false);
 }
 
-const notebookWords = [
-  word,
-  { ...word, id: 2, term: 'playful' },
-  { ...word, id: 3, term: 'ordinary' },
-  { ...word, id: 4, term: 'serious' },
-];
 const multipleChoice = exercises.createReviewExercise(word, 2, 0, notebookWords);
 assert.equal(multipleChoice.kind, 'multiple-choice');
 assert.equal(multipleChoice.prompt, '________ paintings are ________.');
@@ -71,7 +73,7 @@ assert.deepEqual(
 );
 assert.equal(exercises.createReviewExercise(word, 2, 0, notebookWords.slice(0, 3)).choices.length, 3);
 const fewChoices = exercises.createReviewExercise(word, 2, 0, notebookWords.slice(0, 2));
-assert.equal(fewChoices.kind, 'cloze');
+assert.equal(fewChoices.kind, 'meaning');
 assert.match(fewChoices.fallbackNote, /ít nhất 3 từ/);
 const noSentenceQuiz = exercises.createReviewExercise({ ...word, example: 'A sentence without the saved word.' }, 2, 0, notebookWords);
 assert.equal(noSentenceQuiz.kind, 'meaning');
@@ -104,8 +106,9 @@ assert.match(noSentenceQuiz.fallbackNote, /Chưa có câu ví dụ/);
     go = (await storage.repo.listWords()).find(row => row.term === 'go');
     storage.setDay(go.nextReviewOn);
     const anchor = go.learnedOn;
-    const quiz = exercises.createReviewExercise(go, 2, 0, await storage.repo.listWords());
+    const quiz = exercises.createReviewExercise(go, 0, 1, await storage.repo.listWords());
     assert.equal(quiz.kind, 'multiple-choice');
+    assert.equal(quiz.prompt, 'They ________ home.');
     const wrongChoice = quiz.choices.find(choice => !exercises.checkReviewAnswer(choice, go.term));
     assert.ok(wrongChoice);
     await storage.repo.recordReview(go.id, exercises.checkReviewAnswer(wrongChoice, go.term), go.reviewCount);
@@ -113,7 +116,7 @@ assert.match(noSentenceQuiz.fallbackNote, /Chưa có câu ví dụ/);
     assert.equal(go.level, 1);
     assert.equal(go.reviewCount, 2);
     assert.equal(go.learnedOn, anchor);
-    console.log('PASS: mixed meaning/cloze/choice formats; 3/4 notebook-only choices; sensible fallbacks; stable hints/options; choice grading uses SQLite SRS with one-level wrong penalty.');
+    console.log('PASS: typed meaning plus sentence multiple choice; 3/4 notebook-only choices; safe fallbacks; stable options; correct/wrong choices grade through SQLite SRS.');
   } finally {
     storage.db?.close();
     rmSync(root, { recursive: true, force: true });

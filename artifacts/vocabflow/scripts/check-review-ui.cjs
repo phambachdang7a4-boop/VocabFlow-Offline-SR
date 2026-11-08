@@ -152,7 +152,15 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(bar(6).props.style.backgroundColor, palette.chartBarStrong);
   assert.equal(chart.byId('review-level-6').props.accessibilityLabel, 'Cấp 6: 10 từ');
 
-  const both = mount('../app/(tabs)/review.tsx', {}, { words: [word, { ...word, id: 2, reviewCount: 1, term: 'test', meaning: 'kiểm thử', example: 'They test it.' }] });
+  const sentenceDistractors = [
+    { ...word, id: 3, term: 'check', meaning: 'kiểm tra', nextReviewOn: '2026-11-10' },
+    { ...word, id: 4, term: 'verify', meaning: 'xác minh', nextReviewOn: '2026-11-10' },
+  ];
+  const both = mount('../app/(tabs)/review.tsx', {}, { words: [
+    word,
+    { ...word, id: 2, reviewCount: 1, term: 'test', meaning: 'kiểm thử', example: 'They test it.' },
+    ...sentenceDistractors,
+  ] });
   both.byId('review-start').props.onPress();
   let current = both.byType('ReviewCard').props;
   assert.equal(current.exercise.kind, 'meaning');
@@ -163,8 +171,9 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   both.byType('ReviewCard').props.onNext();
   current = both.byType('ReviewCard').props;
   assert.equal(current.word.id, 2);
-  assert.equal(current.exercise.kind, 'cloze');
+  assert.equal(current.exercise.kind, 'multiple-choice');
   assert.equal(current.exercise.prompt, 'They ________ it.', 'Same English word with a different meaning remains a separate question');
+  assert.equal(current.exercise.choices.length, 3, 'Sentence blanks must have three or four choices from the notebook.');
   current.onCommitted(2);
   both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
   both.byType('ReviewCard').props.onNext();
@@ -185,6 +194,23 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
 
   const makeProps = (item = word) => ({ word: item, exercise: exercises.createReviewExercise(item, 0),
     blocked: false, isLast: false, onCommitted() {}, onBusyChange() {}, onNext() {} });
+  const sentenceWord = { ...word, term: 'test', meaning: 'kiểm thử', example: 'They test it.' };
+  const sentenceWords = [
+    sentenceWord,
+    { ...word, id: 2, term: 'check' },
+    { ...word, id: 3, term: 'verify' },
+  ];
+  const sentenceExercise = exercises.createReviewExercise(sentenceWord, 1, 0, sentenceWords);
+  assert.equal(sentenceExercise.kind, 'multiple-choice');
+  const sentenceCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(sentenceWord),
+    exercise: sentenceExercise,
+  });
+  assert.ok(sentenceCard.byId('review-choice-options'));
+  assert.equal(sentenceCard.byId('review-answer-input'), undefined,
+    'Sentence questions now select an answer instead of typing into the blank.');
+  assert.equal(sentenceCard.byId('review-choice-0').props.accessibilityRole, 'button');
+
   let resolveSave;
   const calls = [], committed = [];
   let nexts = 0;

@@ -91,8 +91,8 @@ function multipleChoiceOptions(
   });
 }
 
-/** Alternate formats within/across reviews. Missing real examples fall back to the
- * saved meaning; generating questions never opens/downloads the dictionary. */
+/** Meaning questions remain typed; sentence questions use notebook-only choices.
+ * Missing examples or distractors fall back to the saved meaning. */
 export function createReviewExercise(
   word: VocabularyWord,
   questionIndex: number,
@@ -101,10 +101,9 @@ export function createReviewExercise(
 ): ReviewExercise {
   if (!Number.isSafeInteger(questionIndex) || questionIndex < 0 || !Number.isSafeInteger(formatOffset) || formatOffset < 0) throw new Error('Câu ôn không hợp lệ.');
   const mode = (questionIndex + formatOffset) % 3;
-  const wantsChoice = mode === 2;
-  const wantsCloze = mode === 1 || wantsChoice;
-  const sentence = wantsCloze ? clozeSentence(word.example, word.term) : null;
-  if (wantsChoice && sentence) {
+  const wantsSentenceChoice = mode !== 0;
+  const sentence = wantsSentenceChoice ? clozeSentence(word.example, word.term) : null;
+  if (wantsSentenceChoice && sentence) {
     const choices = multipleChoiceOptions(
       word,
       notebookWords,
@@ -112,15 +111,15 @@ export function createReviewExercise(
     );
     if (choices) return { kind: 'multiple-choice', prompt: sentence, fallback: false, hint: null, choices };
     return {
-      kind: 'cloze',
-      prompt: sentence,
+      kind: 'meaning',
+      prompt: exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
       fallback: true,
-      fallbackNote: 'Cần ít nhất 3 từ trong Sổ từ để tạo trắc nghiệm; chuyển sang điền từ.',
+      fallbackNote: 'Cần ít nhất 3 từ trong Sổ từ để tạo trắc nghiệm; chuyển sang ôn theo nghĩa.',
       hint: letterHint(word),
     };
   }
 
-  if (wantsChoice) {
+  if (wantsSentenceChoice) {
     return {
       kind: 'meaning',
       prompt: exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
@@ -131,10 +130,9 @@ export function createReviewExercise(
   }
 
   return {
-    kind: sentence ? 'cloze' : 'meaning',
-    prompt: sentence ?? exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
-    fallback: wantsCloze && !sentence,
-    fallbackNote: wantsCloze && !sentence ? 'Chưa có câu ví dụ phù hợp; chuyển sang ôn theo nghĩa.' : undefined,
+    kind: 'meaning',
+    prompt: exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
+    fallback: false,
     hint: letterHint(word),
   };
 }
