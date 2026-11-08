@@ -8,7 +8,8 @@
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check:course": "node scripts/check-basic-course.cjs",
+    "course:generate": "node scripts/generate-basic-course-from-dictionary.cjs && node scripts/generate-cefr-courses.cjs",
+    "check:course": "node scripts/check-basic-course.cjs && node scripts/check-cefr-course.cjs",
     "check:course-storage": "node scripts/check-course-storage.cjs"
   },
   "devDependencies": {

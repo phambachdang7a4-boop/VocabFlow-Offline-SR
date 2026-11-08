@@ -4,7 +4,7 @@ import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs } from 'expo-router';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import { SymbolView } from 'expo-symbols';
 
 // Keep Sổ từ (/) as the landing tab even though Tra Từ and Khóa Học are listed first.

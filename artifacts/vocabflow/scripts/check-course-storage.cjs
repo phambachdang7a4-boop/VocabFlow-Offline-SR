@@ -5,7 +5,7 @@ const { join } = require('node:path');
 const { createRepository, loadTs } = require('./test-support.cjs');
 
 const root = mkdtempSync(join(tmpdir(), 'vocabflow-course-'));
-const { BASIC_COURSE_LESSONS } = loadTs(join(__dirname, '../data/basic-course.ts'));
+const { BASIC_COURSE_ATTRIBUTION, BASIC_COURSE_LESSONS, displayCourseMeaning } = loadTs(join(__dirname, '../data/basic-course.ts'));
 const lesson = BASIC_COURSE_LESSONS[0];
 let first = createRepository(root, '2026-11-07T12:00:00');
 let second;
@@ -19,7 +19,7 @@ let second;
   await repo.saveCourseProgress(lesson.id, 1, 'answer');
   await repo.saveCourseSelection(lesson.id, selectedOne.id, true);
   await repo.saveCourseSelection(lesson.id, selectedTwo.id, true);
-  assert.deepEqual(await repo.getCourseSelections(lesson.id), [selectedOne.id, selectedTwo.id]);
+  assert.deepEqual((await repo.getCourseSelections(lesson.id)).sort(), [selectedOne.id, selectedTwo.id].sort());
   const inProgress = await repo.getCourseProgress(lesson.id);
   assert.equal(inProgress.stage, 'answer');
   assert.equal(inProgress.currentIndex, 1);
@@ -30,7 +30,7 @@ let second;
   const resumed = await second.repo.getCourseProgress(lesson.id);
   assert.equal(resumed.stage, 'answer');
   assert.equal(resumed.currentIndex, 1);
-  assert.deepEqual(await second.repo.getCourseSelections(lesson.id), [selectedOne.id, selectedTwo.id]);
+  assert.deepEqual((await second.repo.getCourseSelections(lesson.id)).sort(), [selectedOne.id, selectedTwo.id].sort());
 
   const added = await second.repo.finishCourseLesson(lesson.id, [selectedOne.id, selectedTwo.id]);
   assert.equal(added, 2);
@@ -38,8 +38,14 @@ let second;
   assert.equal(personalWords.length, 2, 'Only explicitly checked senses should be added.');
   assert.deepEqual(
     personalWords.map(word => `${word.term}|${word.meaning}`).sort(),
-    [selectedOne, selectedTwo].map(word => `${word.term}|${word.meaning}`).sort(),
+    [selectedOne, selectedTwo].map(word => `${word.term}|${displayCourseMeaning(word)}`).sort(),
   );
+  for (const source of [selectedOne, selectedTwo]) {
+    const saved = personalWords.find(word => word.term === source.term);
+    assert.equal(saved.dictionaryEntryId, source.dictionaryEntryId);
+    assert.equal(saved.dictionarySenseId, source.dictionarySenseId);
+    assert.ok(saved.note.includes(BASIC_COURSE_ATTRIBUTION), 'Nguồn từ điển phải được giữ khi lưu khóa học.');
+  }
   assert.ok(personalWords.every(word => word.level === 1 && word.reviewCount === 0 && word.nextReviewOn === '2026-11-07'));
   assert.ok(!personalWords.some(word => word.term === notSelected.term && word.meaning === notSelected.meaning));
   const completed = await second.repo.getCourseProgress(lesson.id);
@@ -49,8 +55,8 @@ let second;
 
   assert.equal(await second.repo.finishCourseLesson(lesson.id, [selectedOne.id, selectedTwo.id]), 0, 'Re-finishing must not create duplicates.');
   assert.equal((await second.repo.listWords()).length, 2);
-  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 6);
-  console.log('PASS: no seeded words; lesson/checklist state survives reopen; only checked senses enter the notebook at SRS level 1; completion and duplicate protection persist in SQLite.');
+  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 7);
+  console.log('PASS: no seeded words; lesson/checklist state survives reopen; only checked dictionary senses enter the notebook at SRS level 1 with source IDs and attribution; completion and duplicate protection persist in SQLite.');
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;

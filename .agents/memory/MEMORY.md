@@ -4,3 +4,4 @@
 - [Tải dữ liệu công khai](public-dictionary-download.md) — Tệp từ điển không được phụ thuộc đăng nhập preview; HTTP 200 từ sandbox không chứng minh trình duyệt tải được.
 - [Nhập SQLite WAL](sqlite-wal-import.md) — Tệp đọc được trên đĩa vẫn có thể lỗi 14 khi deserialize; kiểm bằng WASM thật, xác minh hash gốc trước chuẩn hóa.
 - [Tab Expo Router](expo-router-tabs.md) — SDK hiện tại dùng anchor và backBehavior, không nhận initialRouteName trực tiếp trên Tabs như ví dụ cũ.
+- [Lịch sử thống kê ôn tập](review-statistics-history.md) — Không thể khôi phục chính xác lượt ôn cũ; không giả lập dữ liệu lịch sử.

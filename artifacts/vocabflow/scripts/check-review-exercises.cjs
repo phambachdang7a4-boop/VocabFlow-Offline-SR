@@ -49,6 +49,34 @@ for (const [input, target] of [['', 'go'], ['   ', 'go'], ['dessert', 'desert'],
   assert.equal(exercises.checkReviewAnswer(input, target), false);
 }
 
+const notebookWords = [
+  word,
+  { ...word, id: 2, term: 'playful' },
+  { ...word, id: 3, term: 'ordinary' },
+  { ...word, id: 4, term: 'serious' },
+];
+const multipleChoice = exercises.createReviewExercise(word, 2, 0, notebookWords);
+assert.equal(multipleChoice.kind, 'multiple-choice');
+assert.equal(multipleChoice.prompt, '________ paintings are ________.');
+assert.equal(multipleChoice.choices.length, 4);
+assert.equal(new Set(multipleChoice.choices.map(exercises.normalizeReviewAnswer)).size, 4);
+assert.equal(multipleChoice.choices.filter(choice => exercises.checkReviewAnswer(choice, word.term)).length, 1);
+assert.ok(multipleChoice.choices.every(choice => notebookWords.some(candidate =>
+  exercises.checkReviewAnswer(choice, candidate.term),
+)), 'All answer choices must come from the notebook.');
+assert.deepEqual(
+  exercises.createReviewExercise(word, 2, 0, notebookWords).choices,
+  multipleChoice.choices,
+  'Choices must remain stable while a question is displayed.',
+);
+assert.equal(exercises.createReviewExercise(word, 2, 0, notebookWords.slice(0, 3)).choices.length, 3);
+const fewChoices = exercises.createReviewExercise(word, 2, 0, notebookWords.slice(0, 2));
+assert.equal(fewChoices.kind, 'cloze');
+assert.match(fewChoices.fallbackNote, /ít nhất 3 từ/);
+const noSentenceQuiz = exercises.createReviewExercise({ ...word, example: 'A sentence without the saved word.' }, 2, 0, notebookWords);
+assert.equal(noSentenceQuiz.kind, 'meaning');
+assert.match(noSentenceQuiz.fallbackNote, /Chưa có câu ví dụ/);
+
 (async () => {
   const root = mkdtempSync(join(tmpdir(), 'vocabflow-exercises-'));
   const storage = createRepository(root, '2026-11-07T12:00:00');
@@ -70,17 +98,22 @@ for (const [input, target] of [['', 'go'], ['   ', 'go'], ['dessert', 'desert'],
     assert.equal(finished.reviewCount, 6);
     assert.equal(finished.nextReviewOn, null);
     await storage.repo.saveWord({ term: 'go', meaning: 'đi', ipa: '', note: '', example: 'They go home.' });
+    await storage.repo.saveWord({ term: 'playful', meaning: 'tinh nghịch', ipa: '', note: '', example: '' });
     let go = (await storage.repo.listWords()).find(row => row.term === 'go');
     await storage.repo.recordReview(go.id, true, go.reviewCount);
     go = (await storage.repo.listWords()).find(row => row.term === 'go');
     storage.setDay(go.nextReviewOn);
     const anchor = go.learnedOn;
-    await storage.repo.recordReview(go.id, exercises.checkReviewAnswer('goes', go.term), go.reviewCount);
+    const quiz = exercises.createReviewExercise(go, 2, 0, await storage.repo.listWords());
+    assert.equal(quiz.kind, 'multiple-choice');
+    const wrongChoice = quiz.choices.find(choice => !exercises.checkReviewAnswer(choice, go.term));
+    assert.ok(wrongChoice);
+    await storage.repo.recordReview(go.id, exercises.checkReviewAnswer(wrongChoice, go.term), go.reviewCount);
     go = (await storage.repo.listWords()).find(row => row.term === 'go');
     assert.equal(go.level, 1);
     assert.equal(go.reviewCount, 2);
     assert.equal(go.learnedOn, anchor);
-    console.log('PASS: mixed/real-example fallback; whole-word cloze; stable decreasing hints and none at levels4–6; normalized automatic grading; actual SQLite once-only SRS, completion and one-level wrong penalty.');
+    console.log('PASS: mixed meaning/cloze/choice formats; 3/4 notebook-only choices; sensible fallbacks; stable hints/options; choice grading uses SQLite SRS with one-level wrong penalty.');
   } finally {
     storage.db?.close();
     rmSync(root, { recursive: true, force: true });

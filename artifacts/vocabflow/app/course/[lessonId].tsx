@@ -8,7 +8,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useVocabulary } from '@/contexts/VocabularyContext';
-import { BASIC_COURSE_LESSONS } from '@/data/basic-course';
+import { displayCourseMeaning } from '@/data/basic-course';
+import { courseForLesson } from '@/data/course-catalog';
 import {
   finishCourseLesson, getCourseProgress, getCourseSelections, normalizeTerm,
   saveCourseProgress, saveCourseSelection, type CourseLessonProgress, type CourseLessonStage,
@@ -18,7 +19,9 @@ import { useColors } from '@/hooks/useColors';
 export default function CourseLessonScreen() {
   const params = useLocalSearchParams<{ lessonId?: string | string[] }>();
   const lessonId = Array.isArray(params.lessonId) ? params.lessonId[0] : params.lessonId;
-  const lesson = useMemo(() => BASIC_COURSE_LESSONS.find(item => item.id === lessonId), [lessonId]);
+  const course = useMemo(() => lessonId ? courseForLesson(lessonId) : undefined, [lessonId]);
+  const lesson = useMemo(() => course?.lessons.find(item => item.id === lessonId), [course, lessonId]);
+  const lessonNumber = course?.lessons.findIndex(item => item.id === lessonId) ?? -1;
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { reload } = useVocabulary();
@@ -188,7 +191,7 @@ export default function CourseLessonScreen() {
           <View style={styles.headerText}>
             <Text style={[styles.headerTitle, { color: c.headerForeground }]} numberOfLines={1}>{lesson.title}</Text>
             <Text style={[styles.headerSubtitle, { color: c.headerMuted }]}>
-              Bài {BASIC_COURSE_LESSONS.findIndex(item => item.id === lesson.id) + 1} · {lesson.words.length} từ
+              Bài {lessonNumber + 1} · {lesson.words.length} mục từ-nghĩa
             </Text>
           </View>
           <Text style={[styles.counter, { color: c.headerForeground }]}>
@@ -208,7 +211,7 @@ export default function CourseLessonScreen() {
             <Text style={[styles.overline, { color: c.primary }]}>BÀI HỌC HOÀN TẤT</Text>
             <Text style={[styles.heading, { color: c.foreground }]}>Chọn từ muốn lưu</Text>
             <Text style={[styles.body, { color: c.mutedForeground }]}>
-              Đã học {lesson.words.length} từ. Chỉ những mục được tích mới được thêm vào Sổ từ.
+              Đã học {lesson.words.length} mục từ-nghĩa. Chỉ những mục được tích mới được thêm vào Sổ từ.
             </Text>
             <Text style={[styles.selectedCount, { color: c.primary }]}>{selectedIds.size} mục được chọn</Text>
           </View>
@@ -229,7 +232,7 @@ export default function CourseLessonScreen() {
                   </View>
                   <View style={styles.wordRowText}>
                     <Text style={[styles.wordTerm, { color: c.foreground }]}>{index + 1}. {word.term}</Text>
-                    <Text style={[styles.wordMeaning, { color: c.mutedForeground }]}>{word.meaning}</Text>
+                    <Text style={[styles.wordMeaning, { color: c.mutedForeground }]}>{displayCourseMeaning(word)}</Text>
                   </View>
                 </Pressable>
               );
@@ -277,7 +280,7 @@ export default function CourseLessonScreen() {
                 </View>
                 <Text style={[styles.flashTerm, { color: c.vocabCardForeground }]}>{currentWord.term}</Text>
                 <View style={[styles.divider, { backgroundColor: c.headerButton }]} />
-                <Text style={[styles.flashMeaning, { color: c.vocabCardMuted }]}>{currentWord.meaning}</Text>
+                <Text style={[styles.flashMeaning, { color: c.vocabCardMuted }]}>{displayCourseMeaning(currentWord)}</Text>
               </View>
               <Text style={[styles.helper, { color: c.mutedForeground }]}>
                 Đọc từ và nghĩa, sau đó thử viết lại từ tiếng Anh.
@@ -287,7 +290,7 @@ export default function CourseLessonScreen() {
           ) : stage === 'answer' && currentWord ? (
             <>
               <Text style={[styles.overline, { color: c.primary }]}>VIẾT LẠI TỪ</Text>
-              <Text style={[styles.prompt, { color: c.foreground }]}>{currentWord.meaning}</Text>
+              <Text style={[styles.prompt, { color: c.foreground }]}>{displayCourseMeaning(currentWord)}</Text>
               <TextInput
                 testID="course-answer"
                 accessibilityLabel="Viết từ tiếng Anh"

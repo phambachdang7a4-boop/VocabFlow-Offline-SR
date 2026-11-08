@@ -54,7 +54,7 @@ export default function ReviewScreen() {
     if (!first || error || loading) return;
     setFeedback(null);
     setSession({ token: ++sequence.current, queue: overview.dueWords.map(w => w.id), processed: [], index: 0, formatOffset: first.reviewCount,
-      word: first, exercise: createReviewExercise(first, 0, first.reviewCount) });
+      word: first, exercise: createReviewExercise(first, 0, first.reviewCount, words) });
   };
   const committed = (token: number, id: number) => setSession(s =>
     s && s.token === token && s.word.id === id && !s.processed.includes(id) ? { ...s, processed: [...s.processed, id] } : s);
@@ -74,7 +74,7 @@ export default function ReviewScreen() {
       return;
     }
     const w = due.get(id)!;
-    setSession({ ...s, index: s.index + 1, word: w, exercise: createReviewExercise(w, s.index + 1, s.formatOffset) });
+    setSession({ ...s, index: s.index + 1, word: w, exercise: createReviewExercise(w, s.index + 1, s.formatOffset, words) });
   };
 
   const feedbackView = feedback ? (
@@ -135,7 +135,9 @@ export default function ReviewScreen() {
               {session.processed.length}/{session.queue.length}
             </Text>
           </View>
-          <Text style={[styles.sessionTitle, { color: c.foreground }]}>Điền từ</Text>
+          <Text style={[styles.sessionTitle, { color: c.foreground }]}>
+            {session.exercise.kind === 'multiple-choice' ? 'Chọn từ đúng' : 'Điền từ'}
+          </Text>
         </View>
       ) : (
         <ScreenHeader kicker="Học ngắt quãng" title="Ôn tập" right={

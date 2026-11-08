@@ -82,6 +82,9 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
     Keyboard.dismiss();
     commit({ action: 'grade', correct: checkReviewAnswer(typed, word.term), typed });
   };
+  const choose = (choice: string) => {
+    commit({ action: 'grade', correct: checkReviewAnswer(choice, word.term), typed: choice });
+  };
   const dontKnow = () => { Keyboard.dismiss(); commit({ action: 'grade', correct: false, typed: '' }); };
   const freeze = () => { Keyboard.dismiss(); commit({ action: 'freeze' }); };
   const retry = () => { if (phase === 'failed' && !blocked) void persist(); };
@@ -92,6 +95,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const toneSoft = graded ? (graded.correct ? c.reviewRightSoft : c.destructiveSoft) : c.secondary;
   const hintPattern = exercise.hint ?? Array.from(word.term).map(char => /[\p{L}\p{N}]/u.test(char) ? '_' : char).join('');
   const sentenceAnswer = exercise.kind === 'cloze';
+  const choiceAnswer = exercise.kind === 'multiple-choice';
   const characters = Array.from(word.term.normalize('NFKC'));
   const hintCharacters = Array.from(hintPattern.normalize('NFKC'));
   const typedCharacters = Array.from(typed.normalize('NFKC').trim().replace(/\s+/g, ' '));
@@ -156,6 +160,9 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
     let inputInserted = false;
     return exercise.prompt.split(/(_{6,})/g).map((part, index) => {
       if (/^_{6,}$/.test(part)) {
+        if (choiceAnswer) {
+          return <Text key={`choice-blank-${index}`} style={[styles.extraBlank, { color: c.reviewHint }]}>________</Text>;
+        }
         if (inputInserted) {
           return <Text key={`extra-blank-${index}`} style={[styles.extraBlank, { color: c.reviewHint }]}>_____</Text>;
         }
@@ -171,8 +178,8 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
 
   return (
     <View style={[styles.root, styles.inlineRoot]}>
-      <View testID={sentenceAnswer ? 'review-inline-question' : 'review-inline-meaning'} style={styles.inlineQuestion}>
-        {sentenceAnswer ? (
+      <View testID={sentenceAnswer ? 'review-inline-question' : choiceAnswer ? 'review-choice-question' : 'review-inline-meaning'} style={styles.inlineQuestion}>
+        {sentenceAnswer || choiceAnswer ? (
           <View testID="review-inline-sentence" style={styles.sentenceFlow}>{inlinePrompt()}</View>
         ) : (
           <>
@@ -180,8 +187,41 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
             {answerInput}
           </>
         )}
+        {choiceAnswer ? (
+          <View testID="review-choice-options" style={styles.choiceGrid}>
+            {(exercise.choices ?? []).map((choice, index) => {
+              const isSelected = graded?.typed === choice;
+              const isCorrect = checkReviewAnswer(choice, word.term);
+              const revealRight = answered && isCorrect;
+              const revealWrong = answered && isSelected && !isCorrect;
+              const backgroundColor = revealRight ? c.successSoft : revealWrong ? c.destructiveSoft : c.card;
+              const borderColor = revealRight ? c.success : revealWrong ? c.destructive : c.border;
+              const textColor = revealRight ? c.successText : revealWrong ? c.destructiveText : c.foreground;
+              return (
+                <Pressable
+                  key={`${word.id}:${index}:${choice}`}
+                  testID={`review-choice-${index}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: answered || blocked, selected: isSelected }}
+                  onPress={() => choose(choice)}
+                  disabled={answered || blocked}
+                  style={({ pressed }) => [
+                    styles.choiceButton,
+                    { backgroundColor, borderColor, opacity: pressed && !answered ? 0.78 : 1 },
+                  ]}
+                >
+                  <Text style={[styles.choiceLabel, { color: textColor }]}>{choice}</Text>
+                  {revealRight ? <Feather name="check-circle" size={17} color={c.success} /> : null}
+                  {revealWrong ? <Feather name="x-circle" size={17} color={c.destructive} /> : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
         {exercise.fallback ? (
-          <Text style={[styles.small, { color: c.mutedForeground }]}>Chưa có câu ví dụ phù hợp, ôn theo nghĩa.</Text>
+          <Text style={[styles.small, { color: c.mutedForeground }]}>
+            {exercise.fallbackNote ?? 'Chưa có câu ví dụ phù hợp, ôn theo nghĩa.'}
+          </Text>
         ) : null}
       </View>
 
@@ -198,7 +238,8 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
               <Text style={[styles.small, { color: c.mutedForeground }]}>Đáp án</Text>
               <Text testID="review-answer-correct" style={[styles.answer, { color: c.foreground }]}>{word.term}</Text>
               {word.ipa ? <Text style={[styles.small, { color: c.mutedForeground }]}>{word.ipa}</Text> : null}
-              {exercise.kind === 'cloze' ? <Text style={[styles.small, { color: c.foreground }]}>{word.meaning}</Text>
+              {exercise.kind === 'cloze' || exercise.kind === 'multiple-choice'
+                ? <Text style={[styles.small, { color: c.foreground }]}>{word.meaning}</Text>
                 : word.example ? <Text style={[styles.small, { color: c.foreground, fontStyle: 'italic' }]}>{word.example}</Text> : null}
               <Text style={[styles.small, { color: c.mutedForeground }]}>
                 {phase === 'saved'
@@ -253,6 +294,9 @@ const styles = StyleSheet.create({
   sentenceFlow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 4, paddingHorizontal: 2 },
   sentenceToken: { fontFamily: F.m, fontSize: 18, lineHeight: 28 },
   extraBlank: { fontFamily: F.s, fontSize: 18, letterSpacing: 2, paddingHorizontal: 4 },
+  choiceGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+  choiceButton: { flexBasis: '48%', flexGrow: 1, minHeight: 52, paddingHorizontal: 10, paddingVertical: 11, borderWidth: 1.5, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  choiceLabel: { flexShrink: 1, fontFamily: F.s, fontSize: 16, lineHeight: 21, textAlign: 'center' },
   answerSlots: { position: 'relative', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', justifyContent: 'center', padding: 4 },
   letterSlot: { borderWidth: 1.5, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
   letterValue: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },

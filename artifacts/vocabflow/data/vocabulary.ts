@@ -2,7 +2,9 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 import type { VocabularyWord, WordInput } from './types';
 import { openDatabaseSafely } from './sqlite-connection';
 import { applyReview, freezeProgress, initialProgress, localDay, rescheduleProgress, unfreezeProgress, type SrsProgress } from '../domain/srs';
-import { BASIC_COURSE_LESSONS } from './basic-course';
+import { buildReviewStatistics, reviewWeekRange, type ReviewStatistics } from '../domain/review-statistics';
+import { displayCourseMeaning } from './basic-course';
+import { ALL_COURSE_LESSONS, courseForLesson } from './course-catalog';
 
 let connection: Promise<SQLiteDatabase> | undefined;
 
@@ -17,7 +19,7 @@ export interface CourseLessonProgress {
 }
 
 function courseLesson(lessonId: string) {
-  return BASIC_COURSE_LESSONS.find(lesson => lesson.id === lessonId);
+  return ALL_COURSE_LESSONS.find(lesson => lesson.id === lessonId);
 }
 
 export function normalizeTerm(value: string): string {
@@ -87,7 +89,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 6) {
+    if ((version?.user_version ?? 0) > 7) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -183,6 +185,19 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 7) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS review_day_statistics (
+            review_day TEXT PRIMARY KEY NOT NULL,
+            reviewed_count INTEGER NOT NULL DEFAULT 0 CHECK (reviewed_count >= 0),
+            correct_count INTEGER NOT NULL DEFAULT 0
+              CHECK (correct_count >= 0 AND correct_count <= reviewed_count)
+          );
+          PRAGMA user_version = 7;
+        `);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -224,6 +239,30 @@ export function listWords(): Promise<VocabularyWord[]> {
   });
 }
 
+export function getReviewStatistics(today = localDay(new Date())): Promise<ReviewStatistics> {
+  return serialize(async () => {
+    const { weekStart, weekEnd } = reviewWeekRange(today);
+    const db = await database();
+    const [totals, weeklyRows] = await Promise.all([
+      db.getFirstAsync<{ totalReviewed: number; totalCorrect: number }>(`
+        SELECT COALESCE(SUM(reviewed_count), 0) AS totalReviewed,
+          COALESCE(SUM(correct_count), 0) AS totalCorrect
+        FROM review_day_statistics
+      `),
+      db.getAllAsync<{
+        day: string;
+        reviewedCount: number;
+        correctCount: number;
+      }>(`
+        SELECT review_day AS day, reviewed_count AS reviewedCount, correct_count AS correctCount
+        FROM review_day_statistics WHERE review_day BETWEEN ? AND ?
+        ORDER BY review_day
+      `, weekStart, weekEnd),
+    ]);
+    return buildReviewStatistics(today, totals ?? { totalReviewed: 0, totalCorrect: 0 }, weeklyRows);
+  });
+}
+
 export function listCourseProgress(): Promise<CourseLessonProgress[]> {
   return serialize(async () => {
     const db = await database();
@@ -239,6 +278,8 @@ export function getCourseProgress(lessonId: string): Promise<CourseLessonProgres
   return serialize(async () => {
     const lesson = courseLesson(lessonId);
     if (!lesson) throw new Error('Không tìm thấy bài học.');
+    const catalog = courseForLesson(lessonId);
+    if (!catalog) throw new Error('Không tìm thấy nguồn khóa học.');
     const db = await database();
     const saved = await db.getFirstAsync<CourseLessonProgress>(`
       SELECT lesson_id AS lessonId, current_index AS currentIndex, stage,
@@ -321,6 +362,8 @@ export function finishCourseLesson(lessonId: string, selectedWordIds: string[]):
   return serialize(async () => {
     const lesson = courseLesson(lessonId);
     if (!lesson) throw new Error('Không tìm thấy bài học.');
+    const catalog = courseForLesson(lessonId);
+    if (!catalog) throw new Error('Không tìm thấy nguồn khóa học.');
     if (!Array.isArray(selectedWordIds) || selectedWordIds.some(id => typeof id !== 'string')) {
       throw new Error('Danh sách từ muốn lưu không hợp lệ.');
     }
@@ -343,14 +386,27 @@ export function finishCourseLesson(lessonId: string, selectedWordIds: string[]):
         `, lessonId, word.id, isSelected ? 1 : 0);
         if (!isSelected) continue;
 
+        const meaning = displayCourseMeaning(word);
+        const duplicate = await db.getFirstAsync<{ id: number }>(`
+          SELECT id FROM words
+          WHERE (dictionary_entry_id = ? AND dictionary_sense_id = ?)
+             OR (normalized_term = ? AND normalized_meaning = ?)
+          LIMIT 1
+        `,
+          word.dictionaryEntryId, word.dictionarySenseId,
+          normalizeTerm(word.term), normalizeTerm(meaning),
+        );
+        if (duplicate) continue;
+
         const result = await db.runAsync(`
           INSERT OR IGNORE INTO words
             (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
               dictionary_entry_id, dictionary_sense_id)
-          VALUES (?, ?, ?, ?, '', '', ?, ?, ?, NULL, NULL)
+          VALUES (?, ?, ?, ?, ?, '', ?, ?, ?, ?, ?)
         `,
-          word.term, normalizeTerm(word.term), word.meaning, normalizeTerm(word.meaning),
-          `Khóa học: ${lesson.title}`, now, now,
+          word.term, normalizeTerm(word.term), meaning, normalizeTerm(meaning), word.ipa,
+          `${catalog.attribution} · Khóa học: ${lesson.title}`,
+          now, now, word.dictionaryEntryId, word.dictionarySenseId,
         );
         if (result.changes === 1) {
           await db.runAsync(
@@ -459,7 +515,8 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
       if (row.reviewCount !== expectedReviewCount) {
         throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
       }
-      const next = applyReview({ ...row, completed: row.completed === 1, frozen: row.frozen === 1 }, correct, localDay(new Date()));
+      const reviewedOn = localDay(new Date());
+      const next = applyReview({ ...row, completed: row.completed === 1, frozen: row.frozen === 1 }, correct, reviewedOn);
       const result = await db.runAsync(
         `UPDATE word_progress SET learned_on = ?, level = ?, next_review_on = ?, completed = ?,
            review_count = ?, last_reviewed_on = ? WHERE word_id = ? AND review_count = ?`,
@@ -467,6 +524,13 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
         next.lastReviewedOn, id, expectedReviewCount,
       );
       if (result.changes !== 1) throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
+      await db.runAsync(`
+        INSERT INTO review_day_statistics (review_day, reviewed_count, correct_count)
+        VALUES (?, 1, ?)
+        ON CONFLICT(review_day) DO UPDATE SET
+          reviewed_count = reviewed_count + 1,
+          correct_count = correct_count + excluded.correct_count
+      `, reviewedOn, correct ? 1 : 0);
     });
   });
 }

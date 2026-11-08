@@ -20,8 +20,14 @@ function loadTs(filePath, dependencies = {}, globals = {}) {
 }
 
 const srs = loadTs(join(__dirname, '../domain/srs.ts'));
+const reviewStatistics = loadTs(join(__dirname, '../domain/review-statistics.ts'));
 const sqliteConnection = loadTs(join(__dirname, '../data/sqlite-connection.ts'));
 const basicCourse = loadTs(join(__dirname, '../data/basic-course.ts'));
+const cefrCourses = loadTs(join(__dirname, '../data/cefr-courses.ts'));
+const courseCatalog = loadTs(join(__dirname, '../data/course-catalog.ts'), {
+  './basic-course': basicCourse,
+  './cefr-courses': cefrCourses,
+});
 
 function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   let clock = today;
@@ -31,8 +37,10 @@ function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   }
   const repo = loadTs(join(__dirname, '../data/vocabulary.ts'), {
     '../domain/srs': srs,
+    '../domain/review-statistics': reviewStatistics,
     './sqlite-connection': sqliteConnection,
     './basic-course': basicCourse,
+    './course-catalog': courseCatalog,
     'expo-sqlite': {
       openDatabaseAsync: async filename => {
         handle = new DatabaseSync(join(root, filename));
@@ -58,4 +66,4 @@ function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   return { repo, get db() { return handle; }, setDay: day => { clock = `${day}T12:00:00`; } };
 }
 
-module.exports = { srs, createRepository, loadTs };
+module.exports = { srs, reviewStatistics, createRepository, loadTs };

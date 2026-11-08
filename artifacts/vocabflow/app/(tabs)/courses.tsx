@@ -5,7 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { ErrorBanner, F } from '@/components/ui';
 import { useColors } from '@/hooks/useColors';
-import { BASIC_COURSE_LESSONS, BASIC_COURSE_TITLE, BASIC_COURSE_WORD_COUNT } from '@/data/basic-course';
+import { COURSE_CATALOGS } from '@/data/course-catalog';
 import { listCourseProgress, type CourseLessonProgress } from '@/data/vocabulary';
 
 export default function CoursesScreen() {
@@ -15,8 +15,6 @@ export default function CoursesScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const completedIds = new Set(progress.filter(item => item.completedAt).map(item => item.lessonId));
-  const completedCount = completedIds.size;
-  const allComplete = completedCount === BASIC_COURSE_LESSONS.length;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,79 +38,56 @@ export default function CoursesScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom }]} showsVerticalScrollIndicator={false}>
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
-        <View style={[
-          styles.courseCard,
-          { backgroundColor: allComplete ? c.successSoft : c.vocabCard, borderColor: allComplete ? c.success : c.vocabCard },
-        ]}>
-          <View style={[styles.courseIcon, { backgroundColor: allComplete ? c.success : c.vocabCardAccent }]}>
-            <Feather name={allComplete ? 'check' : 'book-open'} size={23} color={allComplete ? '#FFFFFF' : c.buttonForeground} />
-          </View>
-          <View style={styles.courseText}>
-            <Text style={[styles.courseEyebrow, { color: allComplete ? c.successText : c.vocabCardMuted }]}>
-              {allComplete ? 'ĐÃ HOÀN THÀNH' : 'KHÓA HỌC OFFLINE'}
-            </Text>
-            <Text style={[styles.courseTitle, { color: allComplete ? c.successText : c.vocabCardForeground }]}>{BASIC_COURSE_TITLE}</Text>
-            <Text style={[styles.courseMeta, { color: allComplete ? c.successText : c.vocabCardMuted }]}>
-              {BASIC_COURSE_LESSONS.length} bài học · {BASIC_COURSE_WORD_COUNT.toLocaleString('vi-VN')} mục từ-nghĩa
-            </Text>
-          </View>
-        </View>
-
-        <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryTitle, { color: c.foreground }]}>Tiến độ khóa học</Text>
-            <Text style={[styles.summaryValue, { color: allComplete ? c.successText : c.primary }]}>
-              {completedCount}/{BASIC_COURSE_LESSONS.length} bài
-            </Text>
-          </View>
-          <View style={[styles.track, { backgroundColor: c.muted }]}>
-            <View style={[
-              styles.fill,
-              { width: `${(completedCount / BASIC_COURSE_LESSONS.length) * 100}%`, backgroundColor: allComplete ? c.success : c.accent },
-            ]} />
-          </View>
-          <Text style={[styles.summaryNote, { color: c.mutedForeground }]}>
-            Từ chỉ được thêm vào Sổ từ khi bạn chọn ở cuối bài.
-          </Text>
-        </View>
-
-        <Text style={[styles.sectionTitle, { color: c.foreground }]}>Các bài học</Text>
+        <Text style={[styles.sectionTitle, { color: c.foreground }]}>Chọn khóa học</Text>
         {loading ? (
           <View style={styles.loading}><ActivityIndicator color={c.primary} /><Text style={{ color: c.mutedForeground }}>Đang tải tiến độ…</Text></View>
-        ) : BASIC_COURSE_LESSONS.map((lesson, index) => {
-          const complete = completedIds.has(lesson.id);
-          const saved = progress.find(item => item.lessonId === lesson.id);
+        ) : COURSE_CATALOGS.map(course => {
+          const completedCount = course.lessons.filter(lesson => completedIds.has(lesson.id)).length;
+          const allComplete = course.lessons.length > 0 && completedCount === course.lessons.length;
+          const wordCount = course.lessons.reduce((sum, lesson) => sum + lesson.words.length, 0);
           return (
             <Pressable
-              key={lesson.id}
-              testID={`course-lesson-${lesson.id}`}
+              key={course.id}
+              testID={`course-card-${course.id}`}
               accessibilityRole="button"
-              accessibilityLabel={`Bài ${index + 1}: ${lesson.title}, ${lesson.words.length} từ${complete ? ', đã hoàn thành' : ''}`}
-              onPress={() => router.push(`/course/${lesson.id}` as never)}
-              style={({ pressed }) => [
-                styles.lessonCard,
-                {
-                  backgroundColor: complete ? c.successSoft : c.card,
-                  borderColor: complete ? c.success : c.border,
-                  opacity: pressed ? 0.82 : 1,
-                },
-              ]}
+              accessibilityLabel={`${course.title}, ${course.lessons.length} bài học, ${wordCount} mục từ-nghĩa, đã hoàn thành ${completedCount} bài`}
+              onPress={() => router.push(`/course-list/${course.id}` as never)}
+              style={({ pressed }) => ({
+                ...styles.courseCard,
+                backgroundColor: allComplete ? c.successSoft : c.card,
+                borderColor: allComplete ? c.success : c.border,
+                opacity: pressed ? 0.84 : 1,
+              })}
             >
-              <View style={[
-                styles.lessonNumber,
-                { backgroundColor: complete ? c.success : c.accentSoft },
-              ]}>
-                {complete
-                  ? <Feather name="check" size={17} color="#FFFFFF" />
-                  : <Text style={[styles.lessonNumberText, { color: c.primary }]}>{index + 1}</Text>}
+              <View style={[styles.courseIcon, { backgroundColor: allComplete ? c.success : c.vocabCardAccent }]}>
+                <Feather name={allComplete ? 'check' : 'book-open'} size={23} color={allComplete ? '#FFFFFF' : c.buttonForeground} />
               </View>
-              <View style={styles.lessonInfo}>
-                <Text style={[styles.lessonTitle, { color: complete ? c.successText : c.foreground }]}>{lesson.title}</Text>
-                <Text style={[styles.lessonMeta, { color: c.mutedForeground }]}>
-                  {lesson.words.length} từ{saved && !complete ? ' · Đang học' : ''}
+              <View style={styles.courseText}>
+                <Text style={[styles.courseEyebrow, { color: allComplete ? c.successText : c.primary }]}>
+                  {allComplete ? 'ĐÃ HOÀN THÀNH' : 'KHÓA HỌC OFFLINE'}
                 </Text>
+                <Text style={[styles.courseTitle, { color: allComplete ? c.successText : c.foreground }]}>{course.title}</Text>
+                <Text style={[styles.courseMeta, { color: c.mutedForeground }]}>
+                  {course.lessons.length} bài · {wordCount.toLocaleString('vi-VN')} mục từ-nghĩa
+                </Text>
+                {course.missingCount || course.skippedDuplicateCount ? (
+                  <Text style={[styles.courseNote, { color: c.mutedForeground }]}>
+                    {course.sourceCount} mục nguồn · thiếu {course.missingCount} trong kho · bỏ trùng {course.skippedDuplicateCount}
+                  </Text>
+                ) : null}
+                <View style={styles.progressRow}>
+                  <View style={[styles.track, styles.progressTrack, { backgroundColor: c.muted }]}>
+                    <View style={[
+                      styles.fill,
+                      { width: `${(completedCount / course.lessons.length) * 100}%`, backgroundColor: allComplete ? c.success : c.accent },
+                    ]} />
+                  </View>
+                  <Text style={[styles.progressText, { color: allComplete ? c.successText : c.primary }]}>
+                    {completedCount}/{course.lessons.length}
+                  </Text>
+                </View>
               </View>
-              <Feather name={complete ? 'check-circle' : 'chevron-right'} size={20} color={complete ? c.success : c.mutedForeground} />
+              <Feather name="chevron-right" size={20} color={allComplete ? c.success : c.mutedForeground} />
             </Pressable>
           );
         })}
@@ -130,19 +105,12 @@ const styles = StyleSheet.create({
   courseEyebrow: { fontFamily: F.s, fontSize: 10, letterSpacing: 1.2 },
   courseTitle: { fontFamily: F.b, fontSize: 22 },
   courseMeta: { fontFamily: F.m, fontSize: 13 },
-  summary: { borderWidth: 1, borderRadius: 16, padding: 15, gap: 10 },
-  summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  summaryTitle: { fontFamily: F.s, fontSize: 15 },
-  summaryValue: { fontFamily: F.b, fontSize: 14 },
+  courseNote: { fontFamily: F.r, fontSize: 11, lineHeight: 15 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  progressTrack: { flex: 1 },
+  progressText: { fontFamily: F.b, fontSize: 12, minWidth: 36, textAlign: 'right' },
   track: { height: 8, borderRadius: 6, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 6 },
-  summaryNote: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
   sectionTitle: { fontFamily: F.b, fontSize: 18, marginTop: 6 },
   loading: { padding: 24, alignItems: 'center', gap: 10 },
-  lessonCard: { minHeight: 76, borderRadius: 15, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  lessonNumber: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  lessonNumberText: { fontFamily: F.b, fontSize: 15 },
-  lessonInfo: { flex: 1, gap: 3 },
-  lessonTitle: { fontFamily: F.s, fontSize: 15 },
-  lessonMeta: { fontFamily: F.r, fontSize: 12 },
 });

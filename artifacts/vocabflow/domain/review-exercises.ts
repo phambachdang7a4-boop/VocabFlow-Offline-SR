@@ -2,10 +2,12 @@ import type { VocabularyWord } from '../data/types';
 import { exampleSegments } from './dictionary';
 
 export interface ReviewExercise {
-  kind: 'meaning' | 'cloze';
+  kind: 'meaning' | 'cloze' | 'multiple-choice';
   prompt: string;
   fallback: boolean;
+  fallbackNote?: string;
   hint: string | null;
+  choices?: string[];
 }
 
 // Tune these independently of SRS dates/levels. Always leave a character hidden.
@@ -58,16 +60,81 @@ export function clozeSentence(example: string, term: string): string | null {
   return segments.map(part => part.underline ? '________' : part.text).join('');
 }
 
+function multipleChoiceOptions(
+  word: VocabularyWord,
+  notebookWords: readonly VocabularyWord[],
+  seed: string,
+): string[] | null {
+  if (!notebookWords.some(candidate => candidate.id === word.id)) return null;
+  const answer = normalizeReviewAnswer(word.term);
+  const uniqueDistractors = new Map<string, string>();
+  for (const candidate of notebookWords) {
+    const key = normalizeReviewAnswer(candidate.term);
+    if (!key || key === answer || uniqueDistractors.has(key)) continue;
+    uniqueDistractors.set(key, candidate.term);
+  }
+
+  const orderedDistractors = [...uniqueDistractors.entries()]
+    .sort(([left], [right]) => {
+      const leftHash = hash(`${seed}:d:${left}`);
+      const rightHash = hash(`${seed}:d:${right}`);
+      return leftHash - rightHash || left.localeCompare(right);
+    })
+    .map(([, term]) => term);
+  if (orderedDistractors.length < 2) return null;
+
+  const options = [word.term, ...orderedDistractors.slice(0, 3)];
+  return options.sort((left, right) => {
+    const leftHash = hash(`${seed}:o:${normalizeReviewAnswer(left)}`);
+    const rightHash = hash(`${seed}:o:${normalizeReviewAnswer(right)}`);
+    return leftHash - rightHash || left.localeCompare(right);
+  });
+}
+
 /** Alternate formats within/across reviews. Missing real examples fall back to the
  * saved meaning; generating questions never opens/downloads the dictionary. */
-export function createReviewExercise(word: VocabularyWord, questionIndex: number, formatOffset = word.reviewCount): ReviewExercise {
+export function createReviewExercise(
+  word: VocabularyWord,
+  questionIndex: number,
+  formatOffset = word.reviewCount,
+  notebookWords: readonly VocabularyWord[] = [],
+): ReviewExercise {
   if (!Number.isSafeInteger(questionIndex) || questionIndex < 0 || !Number.isSafeInteger(formatOffset) || formatOffset < 0) throw new Error('Câu ôn không hợp lệ.');
-  const wantsCloze = (questionIndex + formatOffset) % 2 === 1;
+  const mode = (questionIndex + formatOffset) % 3;
+  const wantsChoice = mode === 2;
+  const wantsCloze = mode === 1 || wantsChoice;
   const sentence = wantsCloze ? clozeSentence(word.example, word.term) : null;
+  if (wantsChoice && sentence) {
+    const choices = multipleChoiceOptions(
+      word,
+      notebookWords,
+      `${word.id}:${word.reviewCount}:${questionIndex}:${formatOffset}`,
+    );
+    if (choices) return { kind: 'multiple-choice', prompt: sentence, fallback: false, hint: null, choices };
+    return {
+      kind: 'cloze',
+      prompt: sentence,
+      fallback: true,
+      fallbackNote: 'Cần ít nhất 3 từ trong Sổ từ để tạo trắc nghiệm; chuyển sang điền từ.',
+      hint: letterHint(word),
+    };
+  }
+
+  if (wantsChoice) {
+    return {
+      kind: 'meaning',
+      prompt: exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
+      fallback: true,
+      fallbackNote: 'Chưa có câu ví dụ phù hợp; chuyển sang ôn theo nghĩa.',
+      hint: letterHint(word),
+    };
+  }
+
   return {
     kind: sentence ? 'cloze' : 'meaning',
     prompt: sentence ?? exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
     fallback: wantsCloze && !sentence,
+    fallbackNote: wantsCloze && !sentence ? 'Chưa có câu ví dụ phù hợp; chuyển sang ôn theo nghĩa.' : undefined,
     hint: letterHint(word),
   };
 }
