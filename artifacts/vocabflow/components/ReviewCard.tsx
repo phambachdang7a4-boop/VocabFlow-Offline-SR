@@ -226,10 +226,12 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   return (
     <View style={[styles.root, styles.inlineRoot]}>
       <View testID={sentenceAnswer ? 'review-inline-question' : choiceAnswer ? 'review-choice-question' : 'review-inline-meaning'} style={styles.inlineQuestion}>
-        <Pressable testID="review-speak-word" accessibilityRole="button" accessibilityLabel={`Phát âm ${word.term}`}
-          onPress={() => { void speech.speakWord(word.term); }} hitSlop={10} style={styles.speakerButton}>
-          <Feather name="volume-2" size={23} color={c.primary} />
-        </Pressable>
+        {!choiceAnswer ? (
+          <Pressable testID="review-speak-word" accessibilityRole="button" accessibilityLabel={`Phát âm ${word.term}`}
+            onPress={() => { void speech.speakWord(word.term); }} hitSlop={10} style={styles.speakerButton}>
+            <Feather name="volume-2" size={23} color={c.primary} />
+          </Pressable>
+        ) : null}
         {sentenceAnswer || choiceAnswer ? (
           <View testID="review-inline-sentence" style={styles.sentenceFlow}>{inlinePrompt()}</View>
         ) : (

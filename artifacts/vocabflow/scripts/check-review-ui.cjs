@@ -25,8 +25,10 @@ function mount(file, properties = {}, initial = {}) {
   const slots = [], effects = [], routes = [], tabOptions = [];
   const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
+  const speechCalls = [];
   const speechContext = {
-    ready: true, autoRead: false, slowRead: false, stopSpeaking: async () => {}, speakWord: async () => {},
+    ready: true, autoRead: initial.speechAutoRead ?? false, slowRead: false, stopSpeaking: async () => {},
+    speakWord: async word => { speechCalls.push(word); },
   };
   const soundContext = {
     ready: true, enabled: true, volume: 0.7, saving: false, error: null,
@@ -85,6 +87,7 @@ function mount(file, properties = {}, initial = {}) {
   return {
     routes,
     tabOptions,
+    speechCalls,
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     update(next) { Object.assign(context, next); dirty = true; render(); },
@@ -185,9 +188,10 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
     word,
     { ...word, id: 2, reviewCount: 1, term: 'test', meaning: 'kiểm thử', example: 'They test it.' },
     ...sentenceDistractors,
-  ] });
+  ], speechAutoRead: true });
   both.byId('review-start').props.onPress();
   let current = both.byType('ReviewCard').props;
+  assert.deepEqual(both.speechCalls, ['test'], 'Auto-pronunciation remains enabled for non-quiz review cards.');
   assert.equal(current.exercise.kind, 'meaning');
   const stableExercise = current.exercise;
   both.time('2026-11-07T23:59:59.500');
@@ -197,6 +201,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   current = both.byType('ReviewCard').props;
   assert.equal(current.word.id, 2);
   assert.equal(current.exercise.kind, 'multiple-choice');
+  assert.deepEqual(both.speechCalls, ['test'], 'Multiple-choice review cards do not auto-pronounce the answer.');
   assert.equal(current.exercise.prompt, 'They ________ it.', 'Same English word with a different meaning remains a separate question');
   assert.equal(current.exercise.choices.length, 3, 'Sentence blanks must have three or four choices from the notebook.');
   current.onCommitted(2, false);
@@ -237,6 +242,8 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
     exercise: sentenceExercise,
   });
   assert.ok(sentenceCard.byId('review-choice-options'));
+  assert.equal(sentenceCard.byId('review-speak-word'), undefined,
+    'Multiple-choice questions do not show a pronunciation button.');
   assert.equal(sentenceCard.byId('review-answer-input'), undefined,
     'Sentence questions now select an answer instead of typing into the blank.');
   assert.equal(sentenceCard.byId('review-choice-0').props.accessibilityRole, 'button');

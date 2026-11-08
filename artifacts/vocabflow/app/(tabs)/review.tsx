@@ -67,9 +67,12 @@ export default function ReviewScreen() {
   }, [reload, speech.stopSpeaking]));
 
   useEffect(() => {
-    if (session && speech.ready && speech.autoRead) void speech.speakWord(session.word.term);
+    if (session && session.exercise.kind !== 'multiple-choice' && speech.ready && speech.autoRead) {
+      void speech.speakWord(session.word.term);
+    }
     return () => { void speech.stopSpeaking(); };
-  }, [session?.token, session?.index, session?.word.id, speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]);
+  }, [session?.token, session?.index, session?.word.id, session?.exercise.kind,
+    speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]);
 
   const start = () => {
     const first = overview.dueWords[0];
