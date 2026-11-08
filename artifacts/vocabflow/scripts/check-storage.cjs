@@ -14,7 +14,13 @@ let upgradedHarness;
 (async () => {
   const { repo } = harness;
   assert.equal((await repo.listWords()).length, 0, 'No seeded words');
-  const input = { term: ' Test Word ', meaning: 'Nghĩa kiểm thử', ipa: '', example: '', note: '' };
+  const input = {
+    term: ' Test Word ',
+    meaning: 'Nghĩa kiểm thử',
+    ipa: '',
+    example: '',
+    note: '',
+  };
   await repo.saveWord(input);
   const [word] = await repo.listWords();
   assert.equal(word.term, 'Test Word');
@@ -33,29 +39,24 @@ let upgradedHarness;
   assert.equal(edited.learnedOn, word.learnedOn);
   assert.equal(edited.nextReviewOn, word.nextReviewOn);
   await assert.rejects(repo.saveWord({ ...input, term: 'missing' }, 999), /không còn/);
-  const concurrent = await Promise.allSettled([
-    repo.saveWord({ ...input, term: 'concurrent' }),
-    repo.saveWord({ ...input, term: 'CONCURRENT' }),
-  ]);
-  assert.equal(concurrent.filter(result => result.status === 'fulfilled').length, 1);
+  const concurrent = await Promise.allSettled([repo.saveWord({ ...input, term: 'concurrent' }), repo.saveWord({ ...input, term: 'CONCURRENT' })]);
+  assert.equal(concurrent.filter((result) => result.status === 'fulfilled').length, 1);
 
   harness.setDay('2026-01-01');
-  const grades = await Promise.allSettled([
-    repo.recordReview(word.id, true, 0), repo.recordReview(word.id, false, 0),
-  ]);
-  assert.equal(grades.filter(result => result.status === 'fulfilled').length, 1, 'One answer per revision');
-  let reviewed = (await repo.listWords()).find(item => item.id === word.id);
+  const grades = await Promise.allSettled([repo.recordReview(word.id, true, 0), repo.recordReview(word.id, false, 0)]);
+  assert.equal(grades.filter((result) => result.status === 'fulfilled').length, 1, 'One answer per revision');
+  let reviewed = (await repo.listWords()).find((item) => item.id === word.id);
   assert.equal(reviewed.level, 2);
   assert.equal(reviewed.reviewCount, 1);
   assert.equal(reviewed.nextReviewOn, '2026-01-02');
   harness.setDay('2026-01-02');
   await repo.recordReview(word.id, true, 1);
-  reviewed = (await repo.listWords()).find(item => item.id === word.id);
+  reviewed = (await repo.listWords()).find((item) => item.id === word.id);
   assert.equal(reviewed.level, 3);
   assert.equal(reviewed.nextReviewOn, '2026-01-04', 'Absolute day 3, not 3 days after the last review');
   harness.setDay('2026-01-04');
   await repo.recordReview(word.id, false, 2);
-  reviewed = (await repo.listWords()).find(item => item.id === word.id);
+  reviewed = (await repo.listWords()).find((item) => item.id === word.id);
   assert.equal(reviewed.level, 2, 'Wrong answer retreats only one level');
   assert.equal(reviewed.learnedOn, '2026-01-01', 'Never reset learning date');
   assert.equal(reviewed.nextReviewOn, '2026-01-05');
@@ -63,11 +64,11 @@ let upgradedHarness;
   assert.equal(dailyStats.totalReviewed, 3);
   assert.equal(dailyStats.totalCorrect, Number(grades[0].status === 'fulfilled') + 1);
   assert.equal(dailyStats.weekReviewed, 3);
-  assert.equal(dailyStats.days.find(day => day.day === '2026-01-01').reviewedCount, 1);
-  assert.equal(dailyStats.days.find(day => day.day === '2026-01-02').correctCount, 1);
-  assert.equal(dailyStats.days.find(day => day.day === '2026-01-04').correctCount, 0);
+  assert.equal(dailyStats.days.find((day) => day.day === '2026-01-01').reviewedCount, 1);
+  assert.equal(dailyStats.days.find((day) => day.day === '2026-01-02').correctCount, 1);
+  assert.equal(dailyStats.days.find((day) => day.day === '2026-01-04').correctCount, 0);
   await repo.saveWord({ ...input, note: 'Updated without resetting SRS' }, word.id);
-  const afterEdit = (await repo.listWords()).find(item => item.id === word.id);
+  const afterEdit = (await repo.listWords()).find((item) => item.id === word.id);
   assert.equal(afterEdit.reviewCount, 3);
   assert.equal(afterEdit.level, 2);
   assert.equal(afterEdit.nextReviewOn, '2026-01-05');
@@ -128,19 +129,23 @@ let upgradedHarness;
   assert.equal(migrated.updatedAt, '2025-12-02T12:00:00Z');
   assert.equal(migrated.learnedOn, '2025-12-01');
   assert.equal(migrated.nextReviewOn, '2025-12-01');
-  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 9);
+  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 10);
   assert.equal((await legacyHarness.repo.listWords()).length, 1);
   // Restore a previous-schedule (v2) fixture with real history, then reopen.
   await legacyHarness.repo.saveWord({ ...input, term: 'finished' });
-  const finishedLegacy = (await legacyHarness.repo.listWords()).find(item => item.term === 'finished');
-  legacyHarness.db.prepare(
-    `UPDATE word_progress SET level = 3, review_count = 2, last_reviewed_on = '2025-12-02',
+  const finishedLegacy = (await legacyHarness.repo.listWords()).find((item) => item.term === 'finished');
+  legacyHarness.db
+    .prepare(
+      `UPDATE word_progress SET level = 3, review_count = 2, last_reviewed_on = '2025-12-02',
        next_review_on = '2025-12-06' WHERE word_id = 17`,
-  ).run();
-  legacyHarness.db.prepare(
-    `UPDATE word_progress SET level = 6, review_count = 6, completed = 1,
+    )
+    .run();
+  legacyHarness.db
+    .prepare(
+      `UPDATE word_progress SET level = 6, review_count = 6, completed = 1,
        last_reviewed_on = '2026-02-01', next_review_on = NULL WHERE word_id = ?`,
-  ).run(finishedLegacy.id);
+    )
+    .run(finishedLegacy.id);
   legacyHarness.db.exec(`
     DROP INDEX IF EXISTS idx_words_sync_id;
     ALTER TABLE words DROP COLUMN sync_id;
@@ -157,24 +162,30 @@ let upgradedHarness;
   legacyHarness.db.close();
   upgradedHarness = createRepository(legacyRoot);
   const upgraded = await upgradedHarness.repo.listWords();
-  const kept = upgraded.find(item => item.id === 17);
+  const kept = upgraded.find((item) => item.id === 17);
   assert.equal(kept.level, 3);
   assert.equal(kept.reviewCount, 2);
   assert.equal(kept.lastReviewedOn, '2025-12-02');
   assert.equal(kept.nextReviewOn, '2025-12-04', 'Existing checkpoint recalculated to new offset');
   assert.equal(kept.learnedOn, '2025-12-01');
   assert.equal(kept.note, 'ghi chú');
-  const stillFinished = upgraded.find(item => item.id === finishedLegacy.id);
+  const stillFinished = upgraded.find((item) => item.id === finishedLegacy.id);
   assert.equal(stillFinished.completed, true);
   assert.equal(stillFinished.nextReviewOn, null);
   assert.equal(stillFinished.reviewCount, 6);
-    assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 9);
+  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 10);
   console.log('PASS: CRUD, immediate new learning, persistent SRS, atomic grading, unchanged edit progress, completion, non-destructive old database and schedule migrations.');
-})().catch(error => {
-  console.error(error);
-  process.exitCode = 1;
-}).finally(() => {
-  for (const item of [harness, legacyHarness, upgradedHarness]) { try { item?.db?.close(); } catch {} }
-  rmSync(root, { recursive: true, force: true });
-  rmSync(legacyRoot, { recursive: true, force: true });
-});
+})()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => {
+    for (const item of [harness, legacyHarness, upgradedHarness]) {
+      try {
+        item?.db?.close();
+      } catch {}
+    }
+    rmSync(root, { recursive: true, force: true });
+    rmSync(legacyRoot, { recursive: true, force: true });
+  });

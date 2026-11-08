@@ -30,7 +30,13 @@ let harness = createRepository(root);
 
 (async () => {
   let { repo } = harness;
-  const input = { term: 'freeze-test', meaning: 'kiểm tra đóng băng', ipa: '', note: 'giữ ghi chú', example: '' };
+  const input = {
+    term: 'freeze-test',
+    meaning: 'kiểm tra đóng băng',
+    ipa: '',
+    note: 'giữ ghi chú',
+    example: '',
+  };
   await repo.saveWord(input);
   const [word] = await repo.listWords();
   assert.equal(word.frozen, false);
@@ -83,8 +89,12 @@ let harness = createRepository(root);
   assert.equal(saved.nextReviewOn, '2026-02-02');
   assert.equal(saved.reviewCount, count);
 
-  // Emulate an actual previous (v3) schema to verify additive migration.
-  harness.db.exec('ALTER TABLE word_progress DROP COLUMN frozen; PRAGMA user_version = 3;');
+  // Emulate a previous (v9) schema to verify the additive statistics migration.
+  harness.db.exec(`
+    ALTER TABLE review_day_statistics DROP COLUMN session_count;
+    ALTER TABLE device_review_day_statistics DROP COLUMN session_count;
+    PRAGMA user_version = 9;
+  `);
   harness.db.close();
   harness = createRepository(root);
   repo = harness.repo;
@@ -94,7 +104,7 @@ let harness = createRepository(root);
   assert.equal(migrated.reviewCount, saved.reviewCount);
   assert.equal(migrated.nextReviewOn, saved.nextReviewOn);
   assert.equal(migrated.meaning, saved.meaning);
-  assert.equal(harness.db.prepare('PRAGMA user_version').get().user_version, 8);
+  assert.equal(harness.db.prepare('PRAGMA user_version').get().user_version, 10);
   await assert.rejects(repo.setWordFrozen(999, true), /không còn tồn tại/);
   await assert.rejects(repo.setWordFrozen(-1, true), /không hợp lệ/);
   await repo.setWordFrozen(word.id, true);
@@ -102,10 +112,14 @@ let harness = createRepository(root);
   assert.equal((await repo.listWords()).length, 0);
   assert.equal(harness.db.prepare('SELECT COUNT(*) AS n FROM word_progress').get().n, 0);
   console.log('PASS: frozen exclusion, permanent pause, search/edit retention, total count, persistent freeze, unfreeze to level 6, resume dates, same-day protection, migration, deletion.');
-})().catch(error => {
-  console.error(error);
-  process.exitCode = 1;
-}).finally(() => {
-  try { harness.db?.close(); } catch {}
-  rmSync(root, { recursive: true, force: true });
-});
+})()
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => {
+    try {
+      harness.db?.close();
+    } catch {}
+    rmSync(root, { recursive: true, force: true });
+  });

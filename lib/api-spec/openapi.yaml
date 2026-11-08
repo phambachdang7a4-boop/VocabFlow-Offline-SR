@@ -305,6 +305,10 @@ components:
         correctCount:
           type: integer
           minimum: 0
+        sessionCount:
+          type: integer
+          minimum: 0
+          description: Number of times the learner started a review session on this device and day.
         updatedAt:
           type: string
           format: date-time

@@ -1,30 +1,11 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { AppState } from "react-native";
-import * as Network from "expo-network";
-import {
-  useMergeUserSyncData,
-  useReplaceUserSyncData,
-} from "@workspace/api-client-react";
-import {
-  clearPendingAccountReplacement,
-  exportSyncSnapshot,
-  hasPendingAccountReplacement,
-  getLocalSyncState,
-  mergeSyncSnapshot,
-  subscribeToSyncChanges,
-} from "@/data/vocabulary-sync";
-import { markSyncClean } from "@/data/vocabulary";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
+import * as Network from 'expo-network';
+import { useMergeUserSyncData, useReplaceUserSyncData } from '@workspace/api-client-react';
+import { clearPendingAccountReplacement, exportSyncSnapshot, hasPendingAccountReplacement, getLocalSyncState, mergeSyncSnapshot, subscribeToSyncChanges } from '@/data/vocabulary-sync';
+import { markSyncClean } from '@/data/vocabulary';
 
-export type SyncState =
-  "checking" | "offline" | "syncing" | "synced" | "pending" | "error";
+export type SyncState = 'checking' | 'offline' | 'syncing' | 'synced' | 'pending' | 'error';
 
 interface SyncContextValue {
   state: SyncState;
@@ -35,11 +16,8 @@ interface SyncContextValue {
 
 const SyncContext = createContext<SyncContextValue | null>(null);
 
-export function SyncProvider({
-  userId,
-  children,
-}: React.PropsWithChildren<{ userId: string }>) {
-  const [state, setState] = useState<SyncState>("checking");
+export function SyncProvider({ userId, children }: React.PropsWithChildren<{ userId: string }>) {
+  const [state, setState] = useState<SyncState>('checking');
   const [message, setMessage] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [online, setOnline] = useState<boolean | null>(null);
@@ -54,7 +32,7 @@ export function SyncProvider({
       const localState = await getLocalSyncState().catch(() => ({
         pending: true,
       }));
-      setState(localState.pending ? "pending" : "offline");
+      setState(localState.pending ? 'pending' : 'offline');
       return;
     }
     if (inFlight.current) {
@@ -62,49 +40,43 @@ export function SyncProvider({
       return;
     }
     inFlight.current = true;
-    setState("syncing");
+    setState('syncing');
     setMessage(null);
     try {
       const local = await exportSyncSnapshot();
       const replacing = await hasPendingAccountReplacement();
-      const remote = replacing
-        ? await replaceRemote({ data: local.payload })
-        : await mutateAsync({ data: local.payload });
+      const remote = replacing ? await replaceRemote({ data: local.payload }) : await mutateAsync({ data: local.payload });
       const remotePayload = {
         ...remote,
         revision: remote.revision ?? local.payload.revision,
+        reviewStats: remote.reviewStats.map((stat) => ({
+          ...stat,
+          sessionCount: stat.sessionCount ?? 0,
+        })),
       };
-      const [current, replacementPending] = await Promise.all([
-        getLocalSyncState(),
-        hasPendingAccountReplacement(),
-      ]);
-      const replacementChangedDuringSync =
-        (!replacing && replacementPending) ||
-        (replacing && current.generation !== local.generation);
+      const [current, replacementPending] = await Promise.all([getLocalSyncState(), hasPendingAccountReplacement()]);
+      const replacementChangedDuringSync = (!replacing && replacementPending) || (replacing && current.generation !== local.generation);
       if (replacementChangedDuringSync) {
-        setState("pending");
+        setState('pending');
         syncAgain.current = true;
       } else {
         await mergeSyncSnapshot(remotePayload);
-        if (
-          replacing &&
-          !(await clearPendingAccountReplacement(local.generation))
-        ) {
+        if (replacing && !(await clearPendingAccountReplacement(local.generation))) {
           syncAgain.current = true;
         }
         await markSyncClean(local.generation);
         const afterMerge = await getLocalSyncState();
         if (afterMerge.pending || syncAgain.current) {
-          setState("pending");
+          setState('pending');
           if (afterMerge.pending) syncAgain.current = true;
         } else {
-          setState("synced");
+          setState('synced');
           setLastSyncedAt(new Date().toISOString());
         }
       }
     } catch (error) {
-      setState("error");
-      setMessage("Chưa thể đồng bộ. Dữ liệu vẫn được giữ trên thiết bị.");
+      setState('error');
+      setMessage('Chưa thể đồng bộ. Dữ liệu vẫn được giữ trên thiết bị.');
     } finally {
       inFlight.current = false;
       if (syncAgain.current && online === true) {
@@ -120,8 +92,7 @@ export function SyncProvider({
   const refreshNetwork = useCallback(async () => {
     try {
       const network = await Network.getNetworkStateAsync();
-      const connected =
-        network.isConnected === true && network.isInternetReachable !== false;
+      const connected = network.isConnected === true && network.isInternetReachable !== false;
       setOnline(connected);
     } catch {
       setOnline(false);
@@ -131,8 +102,7 @@ export function SyncProvider({
   useEffect(() => {
     void refreshNetwork();
     const subscription = Network.addNetworkStateListener((network) => {
-      const connected =
-        network.isConnected === true && network.isInternetReachable !== false;
+      const connected = network.isConnected === true && network.isInternetReachable !== false;
       setOnline(connected);
     });
     return () => subscription.remove();
@@ -145,15 +115,15 @@ export function SyncProvider({
     }
     if (online === false) {
       void getLocalSyncState()
-        .then((local) => setState(local.pending ? "pending" : "offline"))
-        .catch(() => setState("offline"));
+        .then((local) => setState(local.pending ? 'pending' : 'offline'))
+        .catch(() => setState('offline'));
     }
   }, [online, syncNow]);
 
   useEffect(() => {
     const unsubscribe = subscribeToSyncChanges(() => {
       if (online !== true) {
-        setState("pending");
+        setState('pending');
         return;
       }
       if (debounce.current) clearTimeout(debounce.current);
@@ -161,8 +131,8 @@ export function SyncProvider({
         void syncNow();
       }, 450);
     });
-    const appState = AppState.addEventListener("change", (next) => {
-      if (next === "active") {
+    const appState = AppState.addEventListener('change', (next) => {
+      if (next === 'active') {
         void refreshNetwork();
         if (online === true) void syncNow();
       }
@@ -189,7 +159,6 @@ export function SyncProvider({
 
 export function useSyncStatus(): SyncContextValue {
   const value = useContext(SyncContext);
-  if (!value)
-    throw new Error("Tính năng đồng bộ chỉ khả dụng sau khi đăng nhập.");
+  if (!value) throw new Error('Tính năng đồng bộ chỉ khả dụng sau khi đăng nhập.');
   return value;
 }

@@ -69,6 +69,8 @@ export const mergeUserSyncDataBodyReviewStatsItemReviewedCountMin = 0;
 
 export const mergeUserSyncDataBodyReviewStatsItemCorrectCountMin = 0;
 
+export const mergeUserSyncDataBodyReviewStatsItemSessionCountMin = 0;
+
 export const mergeUserSyncDataBodyReviewStatsMax = 10000;
 
 
@@ -117,6 +119,7 @@ export const MergeUserSyncDataBody = zod.object({
   "day": zod.string().regex(mergeUserSyncDataBodyReviewStatsItemDayRegExp),
   "reviewedCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemReviewedCountMin),
   "correctCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemCorrectCountMin),
+  "sessionCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
 })).max(mergeUserSyncDataBodyReviewStatsMax)
 })
@@ -169,6 +172,8 @@ export const mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin = 0;
 
 export const mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin = 0;
 
+export const mergeUserSyncData200ResponseReviewStatsItemSessionCountMin = 0;
+
 export const mergeUserSyncData200ResponseReviewStatsMax = 10000;
 
 
@@ -217,6 +222,7 @@ export const MergeUserSyncData200Response = zod.object({
   "day": zod.string().regex(mergeUserSyncData200ResponseReviewStatsItemDayRegExp),
   "reviewedCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin),
   "correctCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin),
+  "sessionCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
 })).max(mergeUserSyncData200ResponseReviewStatsMax)
 })
@@ -285,6 +291,8 @@ export const replaceUserSyncDataBodyReviewStatsItemReviewedCountMin = 0;
 
 export const replaceUserSyncDataBodyReviewStatsItemCorrectCountMin = 0;
 
+export const replaceUserSyncDataBodyReviewStatsItemSessionCountMin = 0;
+
 export const replaceUserSyncDataBodyReviewStatsMax = 10000;
 
 
@@ -333,6 +341,7 @@ export const ReplaceUserSyncDataBody = zod.object({
   "day": zod.string().regex(replaceUserSyncDataBodyReviewStatsItemDayRegExp),
   "reviewedCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemReviewedCountMin),
   "correctCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemCorrectCountMin),
+  "sessionCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
 })).max(replaceUserSyncDataBodyReviewStatsMax)
 })
@@ -385,6 +394,8 @@ export const replaceUserSyncData200ResponseReviewStatsItemReviewedCountMin = 0;
 
 export const replaceUserSyncData200ResponseReviewStatsItemCorrectCountMin = 0;
 
+export const replaceUserSyncData200ResponseReviewStatsItemSessionCountMin = 0;
+
 export const replaceUserSyncData200ResponseReviewStatsMax = 10000;
 
 
@@ -433,6 +444,7 @@ export const ReplaceUserSyncData200Response = zod.object({
   "day": zod.string().regex(replaceUserSyncData200ResponseReviewStatsItemDayRegExp),
   "reviewedCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemReviewedCountMin),
   "correctCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemCorrectCountMin),
+  "sessionCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
 })).max(replaceUserSyncData200ResponseReviewStatsMax)
 })
