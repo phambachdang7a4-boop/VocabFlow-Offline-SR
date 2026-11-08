@@ -12,6 +12,8 @@ import { getDictionaryDraft } from '@/data/dictionary';
 import { sameWordSense, validDictionaryId } from '@/domain/dictionary';
 import { useDictionary } from '@/hooks/useDictionary';
 import { DictionaryGate } from '@/components/DictionaryGate';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
+import { soundCueFor, withSoundOutcome } from '@/domain/sound-cues';
 
 function goBack() {
   if (router.canGoBack()) router.back();
@@ -53,6 +55,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { words, saveWord, deleteWord, setWordFrozen } = useVocabulary();
+  const sound = useSoundEffects();
   const [form, setForm] = useState<WordInput>({
     term: existing?.term ?? initial?.term ?? '',
     meaning: existing?.meaning ?? initial?.meaning ?? '',
@@ -70,10 +73,20 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
   const [confirm, setConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const busyRef = useRef(false);
+  const mounted = useRef(true);
   const conflict = !existing && submitError
     ? words.find((w) => sameWordSense(w, form))
     : undefined;
   const meaningRef = useRef<any>(null);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  const playIfMounted = (cue: Parameters<typeof sound.play>[0]) => {
+    if (mounted.current) sound.play(cue);
+  };
 
   const set = (k: keyof WordInput) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const termErr = touched && !form.term.trim() ? 'Hãy nhập từ tiếng Anh.' : undefined;
@@ -86,8 +99,13 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
     if (!form.term.trim() || !form.meaning.trim()) return;
     busyRef.current = true;
     setSaving(true);
+    sound.unlockFromGesture();
     try {
-      await saveWord(form, existing?.id);
+      await withSoundOutcome(
+        () => saveWord(form, existing?.id),
+        playIfMounted,
+        soundCueFor(existing ? 'wordUpdated' : 'wordSaved'),
+      );
       goBack();
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : 'Không thể lưu từ. Hãy thử lại.');
@@ -101,8 +119,13 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
     if (!existing || busyRef.current) return;
     busyRef.current = true;
     setDeleting(true);
+    sound.unlockFromGesture();
     try {
-      await deleteWord(existing.id);
+      await withSoundOutcome(
+        () => deleteWord(existing.id),
+        playIfMounted,
+        soundCueFor('wordDeleted'),
+      );
       setConfirm(false);
       goBack();
     } catch (e) {
@@ -120,8 +143,13 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
     busyRef.current = true;
     setChangingFreeze(true);
     setSubmitError(null);
+    sound.unlockFromGesture();
     try {
-      await setWordFrozen(existing.id, !existing.frozen);
+      await withSoundOutcome(
+        () => setWordFrozen(existing.id, !existing.frozen),
+        playIfMounted,
+        soundCueFor(existing.frozen ? 'freezeDisabled' : 'freezeEnabled'),
+      );
     } catch (failure) {
       setSubmitError(failure instanceof Error ? failure.message : 'Không thể đổi trạng thái đóng băng.');
     } finally {

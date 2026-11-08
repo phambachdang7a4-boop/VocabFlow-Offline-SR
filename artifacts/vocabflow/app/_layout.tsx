@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { VocabularyProvider } from '@/contexts/VocabularyContext';
 import { AppearanceProvider, useAppearance } from '@/contexts/AppearanceContext';
 import { SpeechPreferencesProvider } from '@/contexts/SpeechPreferencesContext';
+import { SoundEffectsProvider } from '@/contexts/SoundEffectsContext';
 import { useColors } from '@/hooks/useColors';
 import {
   Inter_400Regular,
@@ -118,7 +119,9 @@ export default function RootLayout() {
         <AppearanceProvider>
           <ErrorBoundary>
             <SpeechPreferencesProvider>
-              <VocabularyProvider><AppearanceFrame /></VocabularyProvider>
+              <SoundEffectsProvider>
+                <VocabularyProvider><AppearanceFrame /></VocabularyProvider>
+              </SoundEffectsProvider>
             </SpeechPreferencesProvider>
           </ErrorBoundary>
         </AppearanceProvider>

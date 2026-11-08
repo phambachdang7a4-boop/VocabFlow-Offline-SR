@@ -9,6 +9,8 @@ import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
 import { PartOfSpeechFilter } from '@/components/PartOfSpeechFilter';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
+import { soundCueFor, withSoundOutcome } from '@/domain/sound-cues';
 
 /** Shared reading view for one dictionary entry. Caller guarantees a valid id and a ready dictionary. */
 export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay lại' }: {
@@ -17,6 +19,7 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
   const c = useColors();
   const { words, saveWord, loading: bookLoading, error: bookError, reload } = useVocabulary();
   const speech = useSpeechPreferences();
+  const sound = useSoundEffects();
   const [saving, setSaving] = useState<number | null>(null);
   const [committed, setCommitted] = useState<Set<string>>(() => new Set());
   const [lastSaved, setLastSaved] = useState<{ key: string; definition: string } | null>(null);
@@ -107,8 +110,13 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
     const draft = dictionaryDraft(entry, sense);
     saveLock.current = true;
     setSaving(sense.id); setSaveError(null);
+    sound.unlockFromGesture();
     try {
-      await saveWord(draft);
+      await withSoundOutcome(
+        () => saveWord(draft),
+        cue => { if (mounted.current) sound.play(cue); },
+        soundCueFor('wordSaved'),
+      );
       // Commit can succeed even if the provider's subsequent read fails; keep the marker.
       committedRef.current.add(key);
       if (mounted.current) {

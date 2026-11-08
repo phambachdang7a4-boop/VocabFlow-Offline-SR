@@ -6,6 +6,7 @@ const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './sr
 const dictionary = loadTs(join(__dirname, '../domain/dictionary.ts'));
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
+const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
 const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput'].map(type => [type, type]));
 native.StyleSheet = { create: value => value };
@@ -26,6 +27,11 @@ function mount(file, properties = {}, initial = {}) {
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const speechContext = {
     ready: true, autoRead: false, slowRead: false, stopSpeaking: async () => {}, speakWord: async () => {},
+  };
+  const soundContext = {
+    ready: true, enabled: true, volume: 0.7, saving: false, error: null,
+    unlockFromGesture() {}, play() {}, startLoop() {}, stopLoop() {},
+    setEnabled: async () => {}, setVolume: async () => {}, retryLoad: async () => {},
   };
   const react = {
     createElement: element,
@@ -56,10 +62,12 @@ function mount(file, properties = {}, initial = {}) {
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
     '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => speechContext },
+    '@/contexts/SoundEffectsContext': { useSoundEffects: () => soundContext },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
     '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,
     '@/domain/review-session': reviewSession,
+    '@/domain/sound-cues': soundCues,
     '@/components/KeyboardAwareScrollViewCompat': { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' },
     '@/components/ui': { Button: 'Button', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },

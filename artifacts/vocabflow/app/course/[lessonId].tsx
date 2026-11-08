@@ -17,6 +17,8 @@ import {
 } from '@/data/vocabulary';
 import { useColors } from '@/hooks/useColors';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
+import { createOutcomeGuard, soundCueFor, withSoundOutcome } from '@/domain/sound-cues';
 
 export default function CourseLessonScreen() {
   const params = useLocalSearchParams<{ lessonId?: string | string[] }>();
@@ -28,6 +30,7 @@ export default function CourseLessonScreen() {
   const insets = useSafeAreaInsets();
   const { reload } = useVocabulary();
   const speech = useSpeechPreferences();
+  const sound = useSoundEffects();
   const [progress, setProgress] = useState<CourseLessonProgress | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const selectedRef = useRef<Set<string>>(new Set());
@@ -38,6 +41,17 @@ export default function CourseLessonScreen() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
+  const answerGuard = useRef(createOutcomeGuard());
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  const playIfMounted = (cue: Parameters<typeof sound.play>[0]) => {
+    if (mounted.current) sound.play(cue);
+  };
 
   const load = useCallback(async () => {
     if (!lesson) {
@@ -104,9 +118,12 @@ export default function CourseLessonScreen() {
 
   const checkAnswer = () => {
     if (!currentWord || !answer.trim()) return;
+    if (!answerGuard.current.claim()) return;
+    sound.unlockFromGesture();
     Keyboard.dismiss();
     const correct = normalizeTerm(answer) === normalizeTerm(currentWord.term);
     setAnswerResult(correct ? 'correct' : 'incorrect');
+    sound.play(soundCueFor(correct ? 'courseAnswerCorrect' : 'courseAnswerIncorrect'));
   };
 
   const advanceWord = async () => {
@@ -116,6 +133,7 @@ export default function CourseLessonScreen() {
     const nextStage = atEnd ? 'selection' : 'flashcard';
     const saved = await persistProgress(nextIndex, nextStage);
     if (saved) {
+      answerGuard.current.reset();
       setAnswer('');
       setAnswerResult(null);
       setShowExample(false);
@@ -145,12 +163,17 @@ export default function CourseLessonScreen() {
 
   const finish = async (addAll = false) => {
     if (!lesson || busy) return;
+    sound.unlockFromGesture();
     Keyboard.dismiss();
     setBusy(true);
     setError(null);
     try {
       const ids = addAll ? lesson.words.map(word => word.id) : [...selectedRef.current];
-      const added = await finishCourseLesson(lesson.id, ids);
+      const added = await withSoundOutcome(
+        () => finishCourseLesson(lesson.id, ids),
+        playIfMounted,
+        soundCueFor('lessonCompleted'),
+      );
       if (addAll) {
         const allSelected = new Set(ids);
         selectedRef.current = allSelected;
@@ -423,7 +446,7 @@ export default function CourseLessonScreen() {
                 <Button testID="course-check-answer" label="Kiểm tra" icon="check" onPress={checkAnswer} disabled={!answer.trim()} />
               )}
               {answerResult === 'incorrect' ? (
-                <Pressable accessibilityRole="button" onPress={() => { setAnswer(''); setAnswerResult(null); }}>
+                <Pressable accessibilityRole="button" onPress={() => { answerGuard.current.reset(); setAnswer(''); setAnswerResult(null); }}>
                   <Text style={[styles.retry, { color: c.primary }]}>Thử viết lại</Text>
                 </Pressable>
               ) : null}

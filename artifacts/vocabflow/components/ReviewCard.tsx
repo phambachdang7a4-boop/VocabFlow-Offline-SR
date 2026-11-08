@@ -7,6 +7,8 @@ import type { VocabularyWord } from '@/data/types';
 import { checkReviewAnswer, displayReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
+import { soundCueFor, withSoundOutcome } from '@/domain/sound-cues';
 
 export function calendarLabel(day: string) {
   return day.split('-').reverse().join('/');
@@ -31,6 +33,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const c = useColors();
   const { recordReview, setWordFrozen } = useVocabulary();
   const speech = useSpeechPreferences();
+  const sound = useSoundEffects();
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('answering');
   const [inputFocused, setInputFocused] = useState(false);
@@ -57,8 +60,15 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
     if (mounted.current) { setPhase('saving'); setSaveError(null); }
     cb.current.onBusyChange(true);
     try {
-      if (o.action === 'grade') await recordReview(snap.current.id, o.correct, snap.current.expected);
-      else await setWordFrozen(snap.current.id, true);
+      const cue = o.action === 'freeze'
+        ? soundCueFor('freezeEnabled')
+        : soundCueFor(o.correct ? 'reviewCorrect' : 'reviewIncorrect');
+      await withSoundOutcome(async () => {
+        if (o.action === 'grade') await recordReview(snap.current.id, o.correct, snap.current.expected);
+        else await setWordFrozen(snap.current.id, true);
+      }, cueToPlay => {
+        if (mounted.current) sound.play(cueToPlay);
+      }, cue);
       if (!mounted.current) return;
       setPhase('saved');
       cb.current.onCommitted(snap.current.id, o.action === 'grade' ? o.correct : null);
@@ -84,15 +94,17 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const check = () => {
     const latestTyped = typedRef.current;
     if (!latestTyped.trim()) return;
+    sound.unlockFromGesture();
     Keyboard.dismiss();
     commit({ action: 'grade', correct: checkReviewAnswer(latestTyped, word.term), typed: latestTyped });
   };
   const choose = (choice: string) => {
+    sound.unlockFromGesture();
     commit({ action: 'grade', correct: checkReviewAnswer(choice, word.term), typed: choice });
   };
-  const dontKnow = () => { Keyboard.dismiss(); commit({ action: 'grade', correct: false, typed: '' }); };
-  const freeze = () => { Keyboard.dismiss(); commit({ action: 'freeze' }); };
-  const retry = () => { if (phase === 'failed' && !blocked) void persist(); };
+  const dontKnow = () => { sound.unlockFromGesture(); Keyboard.dismiss(); commit({ action: 'grade', correct: false, typed: '' }); };
+  const freeze = () => { sound.unlockFromGesture(); Keyboard.dismiss(); commit({ action: 'freeze' }); };
+  const retry = () => { if (phase === 'failed' && !blocked) { sound.unlockFromGesture(); void persist(); } };
 
   const answered = outcome !== null;
   const graded = outcome?.action === 'grade' ? outcome : null;

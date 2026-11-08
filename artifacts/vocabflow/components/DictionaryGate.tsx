@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { DICTIONARY, type DictionaryStage } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F } from './ui';
 import { useBottomPad } from './ScreenHeader';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
+import { soundCueFor, withSoundLoop } from '@/domain/sound-cues';
+
+const DICTIONARY_LOOP_KEY = 'dictionary-download-import';
 
 const STAGE_TEXT: Record<DictionaryStage, string> = {
   checking: 'Đang kiểm tra kho từ điển trên máy…',
@@ -15,10 +19,39 @@ const STAGE_TEXT: Record<DictionaryStage, string> = {
   ready: 'Sẵn sàng tra cứu ngoại tuyến.',
 };
 
-export function DictionaryGate({ stage, error, retry, approveDownload }: { stage: DictionaryStage; error: string | null; retry: () => void; approveDownload: () => void }) {
+export function DictionaryGate({ stage, error, retry, approveDownload }: { stage: DictionaryStage; error: string | null; retry: () => void; approveDownload: () => Promise<boolean> }) {
   const c = useColors();
   const bottom = useBottomPad();
+  const sound = useSoundEffects();
+  const mounted = useRef(true);
+  const approving = useRef(false);
   const needsConsent = stage === 'awaiting-consent';
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      sound.stopLoop(DICTIONARY_LOOP_KEY);
+    };
+  }, [sound.stopLoop]);
+
+  const startDownload = () => {
+    if (approving.current) return;
+    approving.current = true;
+    sound.unlockFromGesture();
+  void withSoundLoop(
+      () => sound.startLoop(DICTIONARY_LOOP_KEY, soundCueFor('dictionaryProcessing')),
+      approveDownload,
+      () => sound.stopLoop(DICTIONARY_LOOP_KEY),
+    ).then(completed => {
+      if (mounted.current) sound.play(soundCueFor(completed ? 'dictionaryReady' : 'dictionaryFailed'));
+    }).catch(() => {
+      if (mounted.current) sound.play(soundCueFor('dictionaryFailed'));
+    }).finally(() => {
+      approving.current = false;
+    });
+  };
+
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: bottom, gap: 14 }}
       keyboardShouldPersistTaps="handled" testID="dictionary-gate">
@@ -38,7 +71,7 @@ export function DictionaryGate({ stage, error, retry, approveDownload }: { stage
                 Dung lượng tải: 42,2 MiB (khoảng 44,2 MB). Nếu dùng dữ liệu di động 3G/4G/5G, có thể phát sinh cước. Nên chuyển sang Wi-Fi trước khi tải.
               </Text>
               <Text style={{ fontFamily: F.r, fontSize: 14, lineHeight: 20, color: c.mutedForeground }}>App chỉ tải sau khi bạn đồng ý, kể cả khi không xác định được loại mạng.</Text>
-              <Button testID="dictionary-approve-download" label="Đồng ý tải" icon="download" onPress={approveDownload} />
+              <Button testID="dictionary-approve-download" label="Đồng ý tải" icon="download" onPress={startDownload} />
               <Button testID="dictionary-download-later" label="Để sau" variant="ghost" onPress={() => router.replace('/')} />
             </>
           ) : null}

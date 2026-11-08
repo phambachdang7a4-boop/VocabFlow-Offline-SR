@@ -4,6 +4,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { loadTs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const dictionaryDomain = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const { exampleSegments } = dictionaryDomain;
 for (const [sentence, term, expected] of [
   ['I have not seen him since.', 'since', ['since']],
@@ -71,6 +72,12 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => ({
       ready: true, autoRead: false, slowRead: false, stopSpeaking: async () => {}, speakWord: async () => {},
     }) },
+    '@/contexts/SoundEffectsContext': { useSoundEffects: () => ({
+      ready: true, enabled: true, volume: 0.7, saving: false, error: null,
+      unlockFromGesture() {}, play() {}, startLoop() {}, stopLoop() {},
+      setEnabled: async () => {}, setVolume: async () => {}, retryLoad: async () => {},
+    }) },
+    '@/domain/sound-cues': soundCues,
     '@/data/vocabulary': { normalizeTerm }, '@/data/dictionary': services,
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
     '@/components/DictionaryEntryView': { DictionaryEntryView: 'DictionaryEntryView' },

@@ -8,12 +8,14 @@ import { Button, ErrorBanner, F } from '@/components/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppearance, type AppearanceMode } from '@/contexts/AppearanceContext';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
 
 export default function SettingsScreen() {
   const c = useColors();
   const { words, frozenWords, loading, error, reload } = useVocabulary();
   const appearance = useAppearance();
   const speech = useSpeechPreferences();
+  const sound = useSoundEffects();
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === 'web' ? 34 : insets.bottom) + 24;
 
@@ -96,6 +98,73 @@ export default function SettingsScreen() {
           </View>
         </View>
         {speech.error ? <ErrorBanner message={speech.error} onRetry={() => { void speech.retryLoad(); }} /> : null}
+        <Text style={[styles.section, { color: c.mutedForeground }]}>HIỆU ỨNG GIAO DIỆN</Text>
+        <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
+          Âm thanh được lưu trong ứng dụng, không tải lên mạng. Tắt bất cứ lúc nào trong phần cài đặt này.
+        </Text>
+        <View style={[styles.speechGroup, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }]}>
+          <View style={styles.speechRow}>
+            <View style={styles.speechText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>Âm thanh giao diện</Text>
+              <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>Phản hồi nhẹ khi lưu, trả lời và hoàn thành bài học.</Text>
+            </View>
+            <Switch
+              testID="sfx-enabled"
+              accessibilityLabel="Âm thanh giao diện"
+              value={sound.enabled}
+              disabled={!sound.ready || sound.saving}
+              onValueChange={value => {
+                if (value) sound.unlockFromGesture();
+                void sound.setEnabled(value);
+              }}
+              trackColor={{ false: c.border, true: c.primary }}
+              thumbColor={c.card}
+            />
+          </View>
+          <View style={[styles.volumeRow, { borderTopWidth: 1, borderTopColor: c.border }]}>
+            <View style={styles.speechText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>Âm lượng hiệu ứng</Text>
+              <Text testID="sfx-volume-value" style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+                {Math.round(sound.volume * 100)}%
+              </Text>
+            </View>
+            <View style={styles.volumeControls}>
+              <Pressable
+                testID="sfx-volume-down"
+                accessibilityRole="button"
+                accessibilityLabel="Giảm âm lượng hiệu ứng"
+                accessibilityState={{ disabled: !sound.ready || sound.saving || sound.volume <= 0 }}
+                disabled={!sound.ready || sound.saving || sound.volume <= 0}
+                onPress={() => {
+                  sound.unlockFromGesture();
+                  void sound.setVolume(sound.volume - 0.1);
+                }}
+                style={({ pressed }) => [
+                  styles.volumeButton,
+                  { backgroundColor: c.secondary, opacity: !sound.ready || sound.saving || sound.volume <= 0 ? 0.45 : pressed ? 0.65 : 1 },
+                ]}>
+                <Feather name="minus" size={19} color={c.primary} />
+              </Pressable>
+              <Pressable
+                testID="sfx-volume-up"
+                accessibilityRole="button"
+                accessibilityLabel="Tăng âm lượng hiệu ứng"
+                accessibilityState={{ disabled: !sound.ready || sound.saving || sound.volume >= 1 }}
+                disabled={!sound.ready || sound.saving || sound.volume >= 1}
+                onPress={() => {
+                  sound.unlockFromGesture();
+                  void sound.setVolume(sound.volume + 0.1);
+                }}
+                style={({ pressed }) => [
+                  styles.volumeButton,
+                  { backgroundColor: c.secondary, opacity: !sound.ready || sound.saving || sound.volume >= 1 ? 0.45 : pressed ? 0.65 : 1 },
+                ]}>
+                <Feather name="plus" size={19} color={c.primary} />
+              </Pressable>
+            </View>
+          </View>
+        </View>
+        {sound.error ? <ErrorBanner message={sound.error} onRetry={() => { void sound.retryLoad(); }} /> : null}
         <View style={[styles.stat, { backgroundColor: c.vocabCard, borderRadius: c.radius + 6 }]}>
           <Text style={[styles.statLabel, { color: c.accentSoft }]}>SỐ TỪ ĐÃ LƯU</Text>
           <Text style={[styles.statNum, { color: c.primaryForeground }]}>{loading && words.length === 0 ? '—' : words.length}</Text>
@@ -136,6 +205,9 @@ const styles = StyleSheet.create({
   appearanceDetail: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   speechGroup: { borderWidth: 1, overflow: 'hidden' },
   speechRow: { minHeight: 76, paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  volumeRow: { minHeight: 76, paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  volumeControls: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  volumeButton: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   speechText: { flex: 1, gap: 3 },
   group: { borderWidth: 1 },
   fact: { flexDirection: 'row', gap: 14, padding: 16 },

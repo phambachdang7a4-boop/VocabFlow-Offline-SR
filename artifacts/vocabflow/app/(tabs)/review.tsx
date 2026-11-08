@@ -17,6 +17,8 @@ import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
 import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 import { createReviewSessionSummary, formatReviewDuration, type ReviewSessionSummary } from '@/domain/review-session';
+import { useSoundEffects } from '@/contexts/SoundEffectsContext';
+import { soundCueFor } from '@/domain/sound-cues';
 
 type Session = {
   token: number;
@@ -35,6 +37,7 @@ export default function ReviewScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
   const speech = useSpeechPreferences();
+  const sound = useSoundEffects();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const bottom = useBottomPad();
@@ -71,6 +74,8 @@ export default function ReviewScreen() {
   const start = () => {
     const first = overview.dueWords[0];
     if (!first || error || loading) return;
+    sound.unlockFromGesture();
+    sound.play(soundCueFor('reviewStarted'));
     setSummary(null);
     setSession({
       token: ++sequence.current,
@@ -84,6 +89,7 @@ export default function ReviewScreen() {
       word: first, exercise: createReviewExercise(first, 0, first.reviewCount, words) });
   };
   const finishSession = (current: Session, completed: boolean) => {
+    if (completed) sound.play(soundCueFor('reviewCompleted'));
     setSummary(createReviewSessionSummary(current, Date.now(), completed));
     sessionRef.current = null;
     setSession(null);
