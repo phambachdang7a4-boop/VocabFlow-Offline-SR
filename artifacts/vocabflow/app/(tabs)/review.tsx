@@ -16,7 +16,7 @@ import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
 import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
-import { createReviewSessionSummary, formatReviewDuration, type ReviewSessionSummary } from '@/domain/review-session';
+import { createReviewSessionSummary, formatReviewDuration, getReviewGrade, type ReviewSessionSummary } from '@/domain/review-session';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
 import { soundCueFor } from '@/domain/sound-cues';
 
@@ -208,16 +208,18 @@ export default function ReviewScreen() {
         ) : summary ? (
           <View testID="review-session-summary" accessibilityLiveRegion="polite"
             style={[styles.summaryCard, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 8 }]}>
-            <View style={[styles.summaryIcon, { backgroundColor: summary.completed ? c.successSoft : c.secondary }]}>
-              <Feather name={summary.completed ? 'check-circle' : 'pause-circle'}
-                size={28} color={summary.completed ? c.success : c.primary} />
-            </View>
             <Text testID="review-summary-title" style={[styles.summaryTitle, { color: c.foreground }]}>
-              {summary.completed ? 'Hoàn thành phiên ôn' : 'Đã dừng phiên ôn'}
+              Bạn đã ôn được {summary.reviewedCount.toLocaleString('vi-VN')} từ!
             </Text>
-            <Text style={[styles.summarySubtitle, { color: c.mutedForeground }]}>
-              {summary.completed ? 'Kết quả của lượt ôn này' : 'Kết quả tính đến lúc bạn thoát'}
+            <Text testID="review-summary-status" style={[styles.summarySubtitle, { color: c.mutedForeground }]}>
+              {summary.completed ? 'Hoàn thành lượt ôn' : summary.reviewedCount ? 'Kết quả tính đến lúc bạn thoát' : 'Chưa có câu trả lời để tính tỉ lệ'}
             </Text>
+            <View style={styles.summaryGradeArea}>
+              <Text testID="review-summary-grade" accessibilityLabel={`Hạng ${getReviewGrade(summary.correctCount, summary.reviewedCount)}`}
+                style={[styles.summaryGrade, { color: c.primary }]}>
+                {getReviewGrade(summary.correctCount, summary.reviewedCount)}
+              </Text>
+            </View>
             <View style={[styles.summaryMetrics, { borderColor: c.border }]}>
               <View style={styles.summaryMetric}>
                 <Text testID="review-summary-reviewed" style={[styles.summaryValue, { color: c.foreground }]}>
@@ -272,10 +274,11 @@ const styles = StyleSheet.create({
   due: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 10 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
-  summaryCard: { flex: 1, minHeight: 420, justifyContent: 'center', alignItems: 'stretch', padding: 20, borderWidth: 1, gap: 14 },
-  summaryIcon: { alignSelf: 'center', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  summaryCard: { flex: 1, minHeight: 520, justifyContent: 'center', alignItems: 'stretch', padding: 20, borderWidth: 1, gap: 14 },
   summaryTitle: { fontFamily: F.b, fontSize: 24, textAlign: 'center' },
   summarySubtitle: { fontFamily: F.r, fontSize: 14, textAlign: 'center' },
+  summaryGradeArea: { flexGrow: 1, minHeight: 170, alignItems: 'center', justifyContent: 'center' },
+  summaryGrade: { fontFamily: F.b, fontSize: 100, lineHeight: 112, textAlign: 'center' },
   summaryMetrics: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderBottomWidth: 1, paddingVertical: 16, marginTop: 8 },
   summaryMetric: { flex: 1, alignItems: 'center', gap: 5 },
   summaryValue: { fontFamily: F.b, fontSize: 20, fontVariant: ['tabular-nums'] },

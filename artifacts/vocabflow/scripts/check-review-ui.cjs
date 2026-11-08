@@ -127,7 +127,9 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(screen.tabOptions.at(-1).tabBarStyle.display, 'none', 'Hide the tab bar during the full-screen review');
   assert.equal(screen.byId('review-session-count').props.children.join(''), '0/1');
   screen.byId('review-back-overview').props.onPress();
-  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Đã dừng phiên ôn');
+  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 0 từ!');
+  assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'C');
+  assert.equal(screen.byId('review-summary-status').props.children.join(''), 'Chưa có câu trả lời để tính tỉ lệ');
   assert.equal(screen.byId('review-summary-reviewed').props.children.join(''), '0/1');
   assert.equal(screen.byId('review-summary-correct').props.children.join(''), '0/0');
   assert.equal(screen.byId('review-summary-accuracy').props.children.join(''), '—');
@@ -136,6 +138,14 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.ok(screen.byId('review-start'));
   assert.ok(settingsButton(), 'Settings return on the overview');
   assert.equal(screen.tabOptions.at(-1).tabBarStyle, undefined, 'Restore the tab bar after leaving the session');
+  screen.byId('review-start').props.onPress();
+  screen.byType('ReviewCard').props.onCommitted(1, true);
+  screen.byId('review-back-overview').props.onPress();
+  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 1 từ!');
+  assert.equal(screen.byId('review-summary-status').props.children.join(''), 'Kết quả tính đến lúc bạn thoát');
+  assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S+',
+    'An interrupted session ranks only the words answered before exiting.');
+  screen.byId('review-summary-close').props.onPress();
   screen.byId('review-start').props.onPress();
   const question = screen.byType('ReviewCard').props;
   const reviewed = { ...tomorrowWord, ...srs.applyReview(tomorrowWord, true, '2026-11-08') };
@@ -149,7 +159,8 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.ok(screen.byType('ReviewCard'));
   screen.update({ error: null });
   screen.byType('ReviewCard').props.onNext();
-  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Hoàn thành phiên ôn');
+  assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 1 từ!');
+  assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S+');
   assert.equal(screen.byId('review-summary-reviewed').props.children.join(''), '1/1');
   assert.equal(screen.byId('review-summary-correct').props.children.join(''), '1/1');
   assert.equal(screen.byId('review-summary-accuracy').props.children.join(''), '100%');
@@ -209,6 +220,8 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
   both.byType('ReviewCard').props.onNext();
   assert.equal(both.byType('ReviewCard'), undefined, 'Original queue only, and processed IDs never regrade even if cached due data is stale');
+  assert.equal(both.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 2 từ!');
+  assert.equal(both.byId('review-summary-grade').props.children.join(''), 'B-');
   assert.equal(both.byId('review-summary-reviewed').props.children.join(''), '2/2');
   assert.equal(both.byId('review-summary-correct').props.children.join(''), '1/2');
   assert.equal(both.byId('review-summary-accuracy').props.children.join(''), '50%');

@@ -13,6 +13,21 @@ export interface ReviewSessionSummary {
   completed: boolean;
 }
 
+export type ReviewGrade = 'S+' | 'S' | 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C';
+
+export function getReviewGrade(correctCount: number, reviewedCount: number): ReviewGrade {
+  const accuracy = reviewedCount > 0 ? Math.round((correctCount / reviewedCount) * 100) : 0;
+  if (accuracy >= 97) return 'S+';
+  if (accuracy >= 90) return 'S';
+  if (accuracy >= 85) return 'A+';
+  if (accuracy >= 80) return 'A';
+  if (accuracy >= 75) return 'A-';
+  if (accuracy >= 70) return 'B+';
+  if (accuracy >= 60) return 'B';
+  if (accuracy >= 50) return 'B-';
+  return 'C';
+}
+
 export function createReviewSessionSummary(
   session: ReviewSessionRecord,
   endedAt: number,
