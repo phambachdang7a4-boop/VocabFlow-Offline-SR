@@ -5,6 +5,126 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface ApiError {
+  error: string;
+}
+
+export interface SyncWord {
+  /**
+     * @minLength 1
+     * @maxLength 7000
+     */
+  syncId: string;
+  /** @maxLength 200 */
+  term: string;
+  /** @maxLength 2000 */
+  meaning: string;
+  /** @maxLength 200 */
+  ipa: string;
+  /** @maxLength 4000 */
+  example: string;
+  /** @maxLength 4000 */
+  note: string;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  dictionaryEntryId: number | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  dictionarySenseId: number | null;
+  createdAt: string;
+  contentUpdatedAt: string;
+  /** @minimum 0 */
+  reviewCount: number;
+  /**
+     * @minimum 1
+     * @maximum 6
+     */
+  level: number;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  learnedOn: string;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  nextReviewOn: string | null;
+  completed: boolean;
+  /**
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  lastReviewedOn: string | null;
+  frozen: boolean;
+  progressUpdatedAt: string;
+}
+
+export interface SyncDeletedWord {
+  /**
+     * @minLength 1
+     * @maxLength 7000
+     */
+  syncId: string;
+  deletedAt: string;
+}
+
+export type SyncCourseProgressStage = typeof SyncCourseProgressStage[keyof typeof SyncCourseProgressStage];
+
+
+export const SyncCourseProgressStage = {
+  flashcard: 'flashcard',
+  answer: 'answer',
+  selection: 'selection',
+  completed: 'completed',
+} as const;
+
+export interface SyncCourseProgress {
+  /** @maxLength 200 */
+  lessonId: string;
+  /** @minimum 0 */
+  currentIndex: number;
+  stage: SyncCourseProgressStage;
+  /** @nullable */
+  completedAt: string | null;
+  updatedAt: string;
+}
+
+export interface SyncCourseSelection {
+  /** @maxLength 200 */
+  lessonId: string;
+  /** @maxLength 200 */
+  wordId: string;
+  selected: boolean;
+  updatedAt: string;
+}
+
+export interface SyncReviewStat {
+  /** @maxLength 80 */
+  deviceId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /** @minimum 0 */
+  reviewedCount: number;
+  /** @minimum 0 */
+  correctCount: number;
+  updatedAt: string;
+}
+
+export interface UserSyncSnapshot {
+  /** @maxItems 10000 */
+  words: SyncWord[];
+  /** @maxItems 10000 */
+  deletedWords: SyncDeletedWord[];
+  /** @maxItems 10000 */
+  courseProgress: SyncCourseProgress[];
+  /** @maxItems 10000 */
+  courseSelections: SyncCourseSelection[];
+  /** @maxItems 10000 */
+  reviewStats: SyncReviewStat[];
+}
+
 export interface DictionaryAssetError {
   error: string;
 }

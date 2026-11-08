@@ -8,7 +8,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useVocabulary } from '@/contexts/VocabularyContext';
-import { displayCollocationFrequency, displayCollocationType, displayCourseMeaning } from '@/data/basic-course';
+import { displayCollocationType, displayCourseMeaning } from '@/data/basic-course';
 import { courseForLesson } from '@/data/course-catalog';
 import { exampleSegments as segmentExample } from '@/domain/dictionary';
 import {
@@ -82,8 +82,7 @@ export default function CourseLessonScreen() {
 
   const stage: CourseLessonStage = progress?.stage ?? 'flashcard';
   const currentWord = lesson?.words[progress?.currentIndex ?? 0];
-  const currentFrequency = currentWord ? displayCollocationFrequency(currentWord.frequency) : null;
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const topInset = Platform.OS === 'web' ? 0 : insets.top;
   useEffect(() => {
     if (stage === 'flashcard' && currentWord && speech.ready && speech.autoRead) {
       void speech.speakWord(currentWord.term);
@@ -260,7 +259,6 @@ export default function CourseLessonScreen() {
             {lesson.words.map((word, index) => {
               const selected = selectedIds.has(word.id);
               const collocationType = displayCollocationType(word);
-              const frequency = displayCollocationFrequency(word.frequency);
               return (
                 <Pressable
                   key={word.id}
@@ -281,14 +279,6 @@ export default function CourseLessonScreen() {
                         style={[styles.selectionCollocationType, { color: c.primary }]}
                       >
                         {collocationType}
-                      </Text>
-                    ) : null}
-                    {frequency ? (
-                      <Text
-                        testID={`course-select-frequency-${word.id}`}
-                        style={[styles.selectionFrequency, { color: c.mutedForeground }]}
-                      >
-                        {frequency}
                       </Text>
                     ) : null}
                     <Text style={[styles.wordMeaning, { color: c.mutedForeground }]}>{displayCourseMeaning(word)}</Text>
@@ -382,11 +372,6 @@ export default function CourseLessonScreen() {
                     </View>
                     <View style={[styles.divider, { backgroundColor: c.headerButton }]} />
                     <Text style={[styles.flashMeaning, { color: c.vocabCardMuted }]}>{displayCourseMeaning(currentWord)}</Text>
-                    {currentFrequency ? (
-                      <Text testID="course-frequency" style={[styles.frequencyText, { color: c.vocabCardMuted }]}>
-                        {currentFrequency}
-                      </Text>
-                    ) : null}
                   </>
                 )}
               </View>
@@ -417,11 +402,6 @@ export default function CourseLessonScreen() {
                 </Text>
               ) : null}
               <Text style={[styles.prompt, { color: c.foreground }]}>{displayCourseMeaning(currentWord)}</Text>
-              {currentFrequency ? (
-                <Text testID="course-frequency" style={[styles.frequencyText, { color: c.mutedForeground }]}>
-                  {currentFrequency}
-                </Text>
-              ) : null}
               <TextInput
                 testID="course-answer"
                 accessibilityLabel="Viết từ tiếng Anh"
@@ -501,7 +481,6 @@ const styles = StyleSheet.create({
   collocationTypeBadge: { alignSelf: 'center', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   collocationTypeText: { fontFamily: F.s, fontSize: 13, fontWeight: '700', textAlign: 'center' },
   answerCollocationType: { fontFamily: F.s, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 12 },
-  frequencyText: { fontFamily: F.r, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   flashIcon: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   flashTerm: { fontFamily: F.b, fontSize: 34, textAlign: 'center' },
   termWithSpeaker: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
@@ -530,7 +509,6 @@ const styles = StyleSheet.create({
   wordRowText: { flex: 1, gap: 3 },
   wordTerm: { fontFamily: F.s, fontSize: 14 },
   selectionCollocationType: { fontFamily: F.s, fontSize: 12 },
-  selectionFrequency: { fontFamily: F.r, fontSize: 11, lineHeight: 16 },
   wordMeaning: { fontFamily: F.r, fontSize: 13 },
   footer: { paddingHorizontal: 16, paddingTop: 11, borderTopWidth: 1, gap: 10 },
   addAllButton: { minHeight: 48, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },

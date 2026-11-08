@@ -6,22 +6,28 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  ApiError,
   DictionaryAssetError,
-  HealthStatus
+  HealthStatus,
+  UserSyncSnapshot
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
-import type { ErrorType } from '../custom-fetch';
+import type { ErrorType , BodyType } from '../custom-fetch';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -123,6 +129,94 @@ export function useDownloadDictionaryAsset<TData = Awaited<ReturnType<typeof dow
 
 
 
+
+export const getMergeUserSyncDataUrl = () => {
+
+
+
+
+  return `/api/sync`
+}
+
+/**
+ * @summary Merge the signed-in user's offline learning data
+ */
+export const mergeUserSyncData = async (userSyncSnapshot: UserSyncSnapshot, options?: Parameters<typeof customFetch>[1]): Promise<UserSyncSnapshot> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UserSyncSnapshot>(getMergeUserSyncDataUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(userSyncSnapshot)
+  }
+);}
+
+
+
+
+
+export const getMergeUserSyncDataMutationKey = () => ['mergeUserSyncData'] as const;
+
+export const getMergeUserSyncDataMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeUserSyncData>>, TError,MergeUserSyncDataMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mergeUserSyncData>>, TError,MergeUserSyncDataMutationVariables, TContext> => {
+
+const mutationKey = getMergeUserSyncDataMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mergeUserSyncData>>, MergeUserSyncDataMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  mergeUserSyncData(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MergeUserSyncDataMutationResult = NonNullable<Awaited<ReturnType<typeof mergeUserSyncData>>>
+    export type MergeUserSyncDataMutationBody = BodyType<UserSyncSnapshot>
+    export type MergeUserSyncDataMutationError = ErrorType<ApiError>
+    export type MergeUserSyncDataMutationVariables = {data: BodyType<UserSyncSnapshot>}
+
+    /**
+ * @summary Merge the signed-in user's offline learning data
+ */
+export const useMergeUserSyncData = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeUserSyncData>>, TError,MergeUserSyncDataMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof mergeUserSyncData>>,
+        TError,
+        MergeUserSyncDataMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMergeUserSyncDataMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

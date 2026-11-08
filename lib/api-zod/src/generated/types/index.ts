@@ -6,5 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './apiError';
 export * from './dictionaryAssetError';
 export * from './healthStatus';
+export * from './syncCourseProgress';
+export * from './syncCourseProgressStage';
+export * from './syncCourseSelection';
+export * from './syncDeletedWord';
+export * from './syncReviewStat';
+export * from './syncWord';
+export * from './userSyncSnapshot';

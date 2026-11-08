@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
 pnpm install --frozen-lockfile
-# Vocabulary migrations run on-device in Expo SQLite. This app has no
-# server-owned user data, so merging must not push the unused DB scaffold.
+# Apply additive account-sync tables to the development PostgreSQL database.
+pnpm --filter @workspace/db run push
 pnpm run typecheck:libs

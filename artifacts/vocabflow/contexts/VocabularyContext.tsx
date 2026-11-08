@@ -4,6 +4,7 @@ import { storageFailureMessage } from '@/data/sqlite-connection';
 import type { VocabularyWord, WordInput } from '@/data/types';
 import { AppState } from 'react-native';
 import { isDue, localDay } from '@/domain/srs';
+import { subscribeSyncApplied } from '@/data/vocabulary';
 
 interface VocabularyContextValue {
   words: VocabularyWord[];
@@ -43,6 +44,7 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     void reload();
+    const unsubscribe = subscribeSyncApplied(() => { void reload(); });
     const clock = setInterval(() => setToday(localDay(new Date())), 1000);
     const subscription = AppState.addEventListener('change', state => {
       if (state === 'active') {
@@ -50,7 +52,7 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
         void reload();
       }
     });
-    return () => { clearInterval(clock); subscription.remove(); };
+    return () => { clearInterval(clock); subscription.remove(); unsubscribe(); };
   }, [reload]);
 
   const saveWord = useCallback(async (input: WordInput, id?: number) => {

@@ -19,6 +19,216 @@ export const DownloadDictionaryAsset503Response = zod.object({
 
 
 /**
+ * @summary Merge the signed-in user's offline learning data
+ */
+export const mergeUserSyncDataBodyWordsItemSyncIdMax = 7000;
+
+export const mergeUserSyncDataBodyWordsItemTermMax = 200;
+
+export const mergeUserSyncDataBodyWordsItemMeaningMax = 2000;
+
+export const mergeUserSyncDataBodyWordsItemIpaMax = 200;
+
+export const mergeUserSyncDataBodyWordsItemExampleMax = 4000;
+
+export const mergeUserSyncDataBodyWordsItemNoteMax = 4000;
+
+
+
+export const mergeUserSyncDataBodyWordsItemReviewCountMin = 0;
+
+export const mergeUserSyncDataBodyWordsItemLevelMax = 6;
+
+export const mergeUserSyncDataBodyWordsItemLearnedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyWordsItemNextReviewOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyWordsItemLastReviewedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyWordsMax = 10000;
+
+export const mergeUserSyncDataBodyDeletedWordsItemSyncIdMax = 7000;
+
+export const mergeUserSyncDataBodyDeletedWordsMax = 10000;
+
+export const mergeUserSyncDataBodyCourseProgressItemLessonIdMax = 200;
+
+export const mergeUserSyncDataBodyCourseProgressItemCurrentIndexMin = 0;
+
+export const mergeUserSyncDataBodyCourseProgressMax = 10000;
+
+export const mergeUserSyncDataBodyCourseSelectionsItemLessonIdMax = 200;
+
+export const mergeUserSyncDataBodyCourseSelectionsItemWordIdMax = 200;
+
+export const mergeUserSyncDataBodyCourseSelectionsMax = 10000;
+
+export const mergeUserSyncDataBodyReviewStatsItemDeviceIdMax = 80;
+
+export const mergeUserSyncDataBodyReviewStatsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyReviewStatsItemReviewedCountMin = 0;
+
+export const mergeUserSyncDataBodyReviewStatsItemCorrectCountMin = 0;
+
+export const mergeUserSyncDataBodyReviewStatsMax = 10000;
+
+
+
+export const MergeUserSyncDataBody = zod.object({
+  "words": zod.array(zod.object({
+  "syncId": zod.string().min(1).max(mergeUserSyncDataBodyWordsItemSyncIdMax),
+  "term": zod.string().max(mergeUserSyncDataBodyWordsItemTermMax),
+  "meaning": zod.string().max(mergeUserSyncDataBodyWordsItemMeaningMax),
+  "ipa": zod.string().max(mergeUserSyncDataBodyWordsItemIpaMax),
+  "example": zod.string().max(mergeUserSyncDataBodyWordsItemExampleMax),
+  "note": zod.string().max(mergeUserSyncDataBodyWordsItemNoteMax),
+  "dictionaryEntryId": zod.number().int().min(1).nullable(),
+  "dictionarySenseId": zod.number().int().min(1).nullable(),
+  "createdAt": zod.coerce.date(),
+  "contentUpdatedAt": zod.coerce.date(),
+  "reviewCount": zod.number().int().min(mergeUserSyncDataBodyWordsItemReviewCountMin),
+  "level": zod.number().int().min(1).max(mergeUserSyncDataBodyWordsItemLevelMax),
+  "learnedOn": zod.string().regex(mergeUserSyncDataBodyWordsItemLearnedOnRegExp),
+  "nextReviewOn": zod.string().regex(mergeUserSyncDataBodyWordsItemNextReviewOnRegExp).nullable(),
+  "completed": zod.boolean(),
+  "lastReviewedOn": zod.string().regex(mergeUserSyncDataBodyWordsItemLastReviewedOnRegExp).nullable(),
+  "frozen": zod.boolean(),
+  "progressUpdatedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyWordsMax),
+  "deletedWords": zod.array(zod.object({
+  "syncId": zod.string().min(1).max(mergeUserSyncDataBodyDeletedWordsItemSyncIdMax),
+  "deletedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyDeletedWordsMax),
+  "courseProgress": zod.array(zod.object({
+  "lessonId": zod.string().max(mergeUserSyncDataBodyCourseProgressItemLessonIdMax),
+  "currentIndex": zod.number().int().min(mergeUserSyncDataBodyCourseProgressItemCurrentIndexMin),
+  "stage": zod.enum(['flashcard', 'answer', 'selection', 'completed']),
+  "completedAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyCourseProgressMax),
+  "courseSelections": zod.array(zod.object({
+  "lessonId": zod.string().max(mergeUserSyncDataBodyCourseSelectionsItemLessonIdMax),
+  "wordId": zod.string().max(mergeUserSyncDataBodyCourseSelectionsItemWordIdMax),
+  "selected": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyCourseSelectionsMax),
+  "reviewStats": zod.array(zod.object({
+  "deviceId": zod.string().max(mergeUserSyncDataBodyReviewStatsItemDeviceIdMax),
+  "day": zod.string().regex(mergeUserSyncDataBodyReviewStatsItemDayRegExp),
+  "reviewedCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemReviewedCountMin),
+  "correctCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemCorrectCountMin),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyReviewStatsMax)
+})
+
+export const mergeUserSyncData200ResponseWordsItemSyncIdMax = 7000;
+
+export const mergeUserSyncData200ResponseWordsItemTermMax = 200;
+
+export const mergeUserSyncData200ResponseWordsItemMeaningMax = 2000;
+
+export const mergeUserSyncData200ResponseWordsItemIpaMax = 200;
+
+export const mergeUserSyncData200ResponseWordsItemExampleMax = 4000;
+
+export const mergeUserSyncData200ResponseWordsItemNoteMax = 4000;
+
+
+
+export const mergeUserSyncData200ResponseWordsItemReviewCountMin = 0;
+
+export const mergeUserSyncData200ResponseWordsItemLevelMax = 6;
+
+export const mergeUserSyncData200ResponseWordsItemLearnedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseWordsItemNextReviewOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseWordsItemLastReviewedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseWordsMax = 10000;
+
+export const mergeUserSyncData200ResponseDeletedWordsItemSyncIdMax = 7000;
+
+export const mergeUserSyncData200ResponseDeletedWordsMax = 10000;
+
+export const mergeUserSyncData200ResponseCourseProgressItemLessonIdMax = 200;
+
+export const mergeUserSyncData200ResponseCourseProgressItemCurrentIndexMin = 0;
+
+export const mergeUserSyncData200ResponseCourseProgressMax = 10000;
+
+export const mergeUserSyncData200ResponseCourseSelectionsItemLessonIdMax = 200;
+
+export const mergeUserSyncData200ResponseCourseSelectionsItemWordIdMax = 200;
+
+export const mergeUserSyncData200ResponseCourseSelectionsMax = 10000;
+
+export const mergeUserSyncData200ResponseReviewStatsItemDeviceIdMax = 80;
+
+export const mergeUserSyncData200ResponseReviewStatsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin = 0;
+
+export const mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin = 0;
+
+export const mergeUserSyncData200ResponseReviewStatsMax = 10000;
+
+
+
+export const MergeUserSyncData200Response = zod.object({
+  "words": zod.array(zod.object({
+  "syncId": zod.string().min(1).max(mergeUserSyncData200ResponseWordsItemSyncIdMax),
+  "term": zod.string().max(mergeUserSyncData200ResponseWordsItemTermMax),
+  "meaning": zod.string().max(mergeUserSyncData200ResponseWordsItemMeaningMax),
+  "ipa": zod.string().max(mergeUserSyncData200ResponseWordsItemIpaMax),
+  "example": zod.string().max(mergeUserSyncData200ResponseWordsItemExampleMax),
+  "note": zod.string().max(mergeUserSyncData200ResponseWordsItemNoteMax),
+  "dictionaryEntryId": zod.number().int().min(1).nullable(),
+  "dictionarySenseId": zod.number().int().min(1).nullable(),
+  "createdAt": zod.coerce.date(),
+  "contentUpdatedAt": zod.coerce.date(),
+  "reviewCount": zod.number().int().min(mergeUserSyncData200ResponseWordsItemReviewCountMin),
+  "level": zod.number().int().min(1).max(mergeUserSyncData200ResponseWordsItemLevelMax),
+  "learnedOn": zod.string().regex(mergeUserSyncData200ResponseWordsItemLearnedOnRegExp),
+  "nextReviewOn": zod.string().regex(mergeUserSyncData200ResponseWordsItemNextReviewOnRegExp).nullable(),
+  "completed": zod.boolean(),
+  "lastReviewedOn": zod.string().regex(mergeUserSyncData200ResponseWordsItemLastReviewedOnRegExp).nullable(),
+  "frozen": zod.boolean(),
+  "progressUpdatedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseWordsMax),
+  "deletedWords": zod.array(zod.object({
+  "syncId": zod.string().min(1).max(mergeUserSyncData200ResponseDeletedWordsItemSyncIdMax),
+  "deletedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseDeletedWordsMax),
+  "courseProgress": zod.array(zod.object({
+  "lessonId": zod.string().max(mergeUserSyncData200ResponseCourseProgressItemLessonIdMax),
+  "currentIndex": zod.number().int().min(mergeUserSyncData200ResponseCourseProgressItemCurrentIndexMin),
+  "stage": zod.enum(['flashcard', 'answer', 'selection', 'completed']),
+  "completedAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseCourseProgressMax),
+  "courseSelections": zod.array(zod.object({
+  "lessonId": zod.string().max(mergeUserSyncData200ResponseCourseSelectionsItemLessonIdMax),
+  "wordId": zod.string().max(mergeUserSyncData200ResponseCourseSelectionsItemWordIdMax),
+  "selected": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseCourseSelectionsMax),
+  "reviewStats": zod.array(zod.object({
+  "deviceId": zod.string().max(mergeUserSyncData200ResponseReviewStatsItemDeviceIdMax),
+  "day": zod.string().regex(mergeUserSyncData200ResponseReviewStatsItemDayRegExp),
+  "reviewedCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin),
+  "correctCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseReviewStatsMax)
+})
+
+export const MergeUserSyncData400Response = zod.object({
+  "error": zod.string()
+})
+
+export const MergeUserSyncData401Response = zod.object({
+  "error": zod.string()
+})
+
+export const MergeUserSyncData503Response = zod.object({
+  "error": zod.string()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

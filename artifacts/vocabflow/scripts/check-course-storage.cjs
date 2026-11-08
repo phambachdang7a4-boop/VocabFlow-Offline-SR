@@ -105,7 +105,16 @@ let second;
     nextReviewOn: legacyCourseWord.nextReviewOn,
   };
   second.db.prepare("UPDATE words SET example = '' WHERE id = ?").run(legacyCourseWord.id);
-  second.db.exec('PRAGMA user_version = 7;');
+  second.db.exec(`
+    DROP INDEX IF EXISTS idx_words_sync_id;
+    ALTER TABLE words DROP COLUMN sync_id;
+    ALTER TABLE word_progress DROP COLUMN sync_updated_at;
+    ALTER TABLE course_word_selection DROP COLUMN updated_at;
+    DROP TABLE IF EXISTS sync_word_tombstones;
+    DROP TABLE IF EXISTS device_review_day_statistics;
+    DROP TABLE IF EXISTS sync_state;
+    PRAGMA user_version = 7;
+  `);
   second.db.close();
   second = createRepository(root, '2026-11-07T12:00:00');
   const afterMigration = await second.repo.listWords();
@@ -118,8 +127,18 @@ let second;
   }, progressBeforeMigration, 'Migration không đổi tiến độ SRS.');
   const manualWord = afterMigration.find(word => word.dictionarySenseId === manualSource.dictionarySenseId);
   assert.equal(manualWord.example, '', 'Migration không ghi đè mục người dùng tự quản lý.');
-  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 8);
+  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 9);
   const lessonScreen = readFileSync(join(__dirname, '../app/course/[lessonId].tsx'), 'utf8');
+  const rootLayout = readFileSync(join(__dirname, '../app/_layout.tsx'), 'utf8');
+  const courseListScreen = readFileSync(join(__dirname, '../app/course-list/[courseId].tsx'), 'utf8');
+  assert.match(rootLayout, /name="course-list\/\[courseId\]" options=\{\{ headerShown: false \}\}/,
+    'The course list uses its own header without the duplicate route-title bar.');
+  assert.match(lessonScreen, /const topInset = Platform\.OS === 'web' \? 0 : insets\.top/,
+    'The web lesson header does not add an empty status-bar gap; native safe areas remain.');
+  assert.doesNotMatch(lessonScreen, /course-frequency|course-select-frequency|displayCollocationFrequency/,
+    'The learning card, answer prompt and final selection list hide collocation counts and corpus names.');
+  assert.match(courseListScreen, /testID="collocation-frequency-context"/,
+    'Course attribution remains available on the overview page.');
   assert.match(lessonScreen, /testID="course-flip-example"/, 'Bài học cần có nút lật thẻ xem ví dụ.');
   assert.match(lessonScreen, /testID="course-add-all"/, 'Bài học cần có nút thêm tất cả mục từ.');
   console.log('PASS: source examples from offline SQLite; lesson flip/add-all controls; selected and all-word saves; old course-example migration without overwriting personal data or SRS; persistence and duplicate protection.');

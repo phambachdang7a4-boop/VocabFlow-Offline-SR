@@ -1,8 +1,10 @@
 import React from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useClerk, useUser } from '@clerk/expo';
 import { useVocabulary } from '@/contexts/VocabularyContext';
+import { useSyncStatus } from '@/contexts/SyncContext';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,14 +18,36 @@ export default function SettingsScreen() {
   const appearance = useAppearance();
   const speech = useSpeechPreferences();
   const sound = useSoundEffects();
+  const sync = useSyncStatus();
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const [accountError, setAccountError] = React.useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === 'web' ? 34 : insets.bottom) + 24;
 
   const facts: { icon: keyof typeof Feather.glyphMap; title: string; body: string }[] = [
     { icon: 'smartphone', title: 'Lưu trên thiết bị này', body: 'Sổ từ được lưu trong bộ nhớ cục bộ của ứng dụng trên máy bạn.' },
-    { icon: 'wifi-off', title: 'Không cần mạng', body: 'Ứng dụng không gửi từ vựng của bạn lên máy chủ nào. Không có tài khoản, không đồng bộ.' },
-    { icon: 'alert-triangle', title: 'Cần lưu ý', body: 'Gỡ cài đặt ứng dụng hoặc xoá dữ liệu ứng dụng sẽ xoá sổ từ. Hiện chưa có tính năng sao lưu.' },
+    { icon: 'wifi-off', title: 'Học offline', body: 'Tra từ, học và ôn tập dùng SQLite cục bộ. Khi có mạng, sổ từ và tiến độ sẽ đồng bộ với tài khoản.' },
+    { icon: 'alert-triangle', title: 'Dữ liệu tài khoản', body: 'Đăng xuất không xóa dữ liệu. Bản chưa đồng bộ chỉ nằm trên thiết bị; hãy kết nối mạng trước khi gỡ ứng dụng.' },
   ];
+
+  const syncStatus = {
+    checking: 'Đang kiểm tra kết nối…',
+    offline: 'Ngoại tuyến · dữ liệu vẫn lưu trên thiết bị',
+    syncing: 'Đang đồng bộ dữ liệu…',
+    synced: 'Đã đồng bộ với tài khoản',
+    pending: 'Có thay đổi đang chờ đồng bộ',
+    error: sync.message ?? 'Đồng bộ chưa thành công.',
+  }[sync.state];
+
+  const handleSignOut = async () => {
+    setAccountError(null);
+    try {
+      await signOut();
+    } catch {
+      setAccountError('Không thể đăng xuất lúc này. Hãy thử lại.');
+    }
+  };
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
@@ -98,6 +122,66 @@ export default function SettingsScreen() {
           </View>
         </View>
         {speech.error ? <ErrorBanner message={speech.error} onRetry={() => { void speech.retryLoad(); }} /> : null}
+        <Text style={[styles.section, { color: c.mutedForeground }]}>TÀI KHOẢN & ĐỒNG BỘ</Text>
+        <View style={[styles.accountCard, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }]}>
+          <View style={styles.accountHeader}>
+            <View style={[styles.accountIcon, { backgroundColor: c.secondary }]}>
+              <Feather name="user" size={19} color={c.primary} />
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>Đang đăng nhập</Text>
+              <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+                {user?.primaryEmailAddress?.emailAddress ?? 'Tài khoản VocabFlow'}
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.syncRow, { borderTopColor: c.border }]}>
+            {sync.state === 'syncing' || sync.state === 'checking'
+              ? <ActivityIndicator size="small" color={c.primary} />
+              : <Feather
+                  name={sync.state === 'synced' ? 'check-circle' : sync.state === 'error' ? 'alert-circle' : 'cloud'}
+                  size={18}
+                  color={sync.state === 'error' ? '#C0392B' : c.primary}
+                />}
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text accessibilityLiveRegion="polite" style={[styles.appearanceTitle, { color: c.foreground }]}>{syncStatus}</Text>
+              {sync.lastSyncedAt ? (
+                <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+                  Lần gần nhất: {new Date(sync.lastSyncedAt).toLocaleString('vi-VN')}
+                </Text>
+              ) : null}
+            </View>
+            {sync.state === 'error' || sync.state === 'pending' || sync.state === 'offline' ? (
+              <Pressable
+                testID="sync-retry"
+                accessibilityRole="button"
+                accessibilityLabel="Thử đồng bộ lại"
+                onPress={() => { void sync.retry(); }}
+                style={[styles.smallAction, { backgroundColor: c.secondary }]}
+              >
+                <Feather name="refresh-cw" size={16} color={c.primary} />
+                <Text style={[styles.smallActionText, { color: c.primary }]}>Thử lại</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          {sync.state === 'error' || accountError ? (
+            <Text accessibilityRole="alert" style={[styles.accountError, { color: '#C0392B' }]}>
+              {accountError ?? sync.message}
+            </Text>
+          ) : null}
+          <Pressable
+            testID="account-sign-out"
+            accessibilityRole="button"
+            onPress={() => { void handleSignOut(); }}
+            style={[styles.signOutButton, { borderColor: c.border }]}
+          >
+            <Feather name="log-out" size={17} color={c.primary} />
+            <Text style={[styles.signOutText, { color: c.primary }]}>Đăng xuất</Text>
+          </Pressable>
+          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+            Đăng xuất không xóa sổ từ hoặc dữ liệu trên máy.
+          </Text>
+        </View>
         <Text style={[styles.section, { color: c.mutedForeground }]}>HIỆU ỨNG GIAO DIỆN</Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
           Âm thanh được lưu trong ứng dụng, không tải lên mạng. Tắt bất cứ lúc nào trong phần cài đặt này.
@@ -209,6 +293,15 @@ const styles = StyleSheet.create({
   volumeControls: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   volumeButton: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   speechText: { flex: 1, gap: 3 },
+  accountCard: { borderWidth: 1, overflow: 'hidden' },
+  accountHeader: { minHeight: 76, paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  accountIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  syncRow: { minHeight: 76, paddingHorizontal: 15, paddingVertical: 12, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  smallAction: { minHeight: 38, borderRadius: 12, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  smallActionText: { fontFamily: F.s, fontSize: 12 },
+  accountError: { paddingHorizontal: 15, paddingVertical: 8, fontFamily: F.r, fontSize: 13, lineHeight: 18 },
+  signOutButton: { minHeight: 48, marginHorizontal: 15, borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 9 },
+  signOutText: { fontFamily: F.s, fontSize: 14 },
   group: { borderWidth: 1 },
   fact: { flexDirection: 'row', gap: 14, padding: 16 },
   factIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

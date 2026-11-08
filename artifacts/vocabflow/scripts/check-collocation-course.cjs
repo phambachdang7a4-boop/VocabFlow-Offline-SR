@@ -31,10 +31,8 @@ assert.match(
   /testID=\{`course-select-collocation-type-\$\{word\.id\}`\}[\s\S]*?\{collocationType\}/,
   'Danh sách chọn từ phải hiển thị nhãn loại cụm từ dữ liệu của từng mục.',
 );
-assert.match(lessonScreen, /testID="course-frequency"/,
-  'Màn học phải hiển thị số đếm theo cụm trên thẻ và câu hỏi.');
-assert.match(lessonScreen, /testID=\{`course-select-frequency-\$\{word\.id\}`\}/,
-  'Danh sách chọn từ phải hiển thị tần suất từng cụm.');
+assert.doesNotMatch(lessonScreen, /course-frequency|course-select-frequency|displayCollocationFrequency/,
+  'Màn học và danh sách chọn từ không hiển thị số đếm hoặc corpus.');
 assert.match(courseListScreen, /testID="collocation-frequency-context"/,
   'Trang khóa học phải giải thích nguồn và giới hạn so sánh số đếm.');
 assert.equal(basicCourse.displayCollocationFrequency({

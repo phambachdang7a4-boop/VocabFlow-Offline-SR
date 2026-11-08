@@ -6,6 +6,15 @@ const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const dictionaryDomain = loadTs(join(__dirname, '../domain/dictionary.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const { exampleSegments } = dictionaryDomain;
+const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
+const dictionaryTabSource = readFileSync(join(__dirname, '../app/(tabs)/dictionary.tsx'), 'utf8');
+const dictionarySourcesSource = readFileSync(join(__dirname, '../app/dictionary-sources.tsx'), 'utf8');
+assert.doesNotMatch(dictionaryEntrySource, /entry-open-sources|Nguồn và giấy phép từ điển/,
+  'Entry results do not repeat the source attribution link under each lookup.');
+assert.match(dictionaryTabSource, /dictionary-open-sources/,
+  'A compact info button still provides access to the attribution page.');
+assert.match(dictionarySourcesSource, /Nguồn từ điển/,
+  'The full dictionary attribution page remains available in the app.');
 for (const [sentence, term, expected] of [
   ['I have not seen him since.', 'since', ['since']],
   ['Since then, since yesterday.', 'since', ['Since', 'since']],

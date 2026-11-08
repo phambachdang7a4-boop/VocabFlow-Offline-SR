@@ -1,6 +1,6 @@
 # VocabFlow
 
-Ứng dụng Android học từ vựng Anh–Việt cho người Việt, offline-first, không tài khoản hay API trả phí.
+Ứng dụng Android học từ vựng Anh–Việt cho người Việt, offline-first, hỗ trợ đăng nhập và đồng bộ qua tài khoản; không dùng API trả phí.
 
 ## Phạm vi và tiến trình
 
@@ -56,7 +56,7 @@
 - `pnpm --filter @workspace/vocabflow run check:course`: kiểm tra khóa cơ bản 49 bài/978 mục, B1/B2, ID và nghĩa nguyên văn từ SQLite, nguồn trích dẫn và chống trùng nghĩa.
 - `pnpm --filter @workspace/vocabflow run check:course-storage`: kiểm tra lưu/khôi phục tiến độ, checklist và thêm đúng mục đã chọn vào SQLite.
 - `node artifacts/vocabflow/scripts/check-sqlite-connection.cjs`: kiểm tra mở SQLite tuần tự giữa các kho, quyền sở hữu một tab trên web và phục hồi hàng đợi khi lỗi.
-- App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không dùng cookie hay phụ thuộc đăng nhập của máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; mọi truy vấn, sổ cá nhân và tiến độ vẫn trên máy. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.
+- App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không phụ thuộc đăng nhập máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; kho tra cứu luôn ở máy. Sổ từ và tiến độ lưu SQLite trước, chỉ đồng bộ qua `/api/sync` sau khi đăng nhập. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.
 
 ## Cấu trúc
@@ -100,12 +100,12 @@
 
 ## Lưu trữ
 
-SQLite cục bộ là nguồn dữ liệu cho từ và tiến độ; không thay bằng AsyncStorage hay cơ sở dữ liệu máy chủ. Migration có phiên bản, không xóa hoặc seed dữ liệu. Các thao tác được tuần tự hóa và dùng tham số SQL. Sửa từ không thay ngày tạo.
+SQLite cục bộ là nguồn dữ liệu chính trên thiết bị cho từ và tiến độ; không thay bằng AsyncStorage. Bản sao trên máy chủ chỉ phục vụ đồng bộ dữ liệu tài khoản đã xác thực, không thay SQLite offline. Migration có phiên bản, không xóa hoặc seed dữ liệu. Các thao tác được tuần tự hóa và dùng tham số SQL. Sửa từ không thay ngày tạo.
 
 Kho tra cứu dùng SQLite riêng, có kiểm SHA-256 và kích thước trước khi nhập, chỉ đọc sau khi thêm chỉ mục tìm kiếm và dấu hoàn tất. Lần đầu cần mạng, sau đó mở lại kho đã nạp không cần API. Nếu nạp lỗi chỉ được xóa bộ nhớ đệm tham chiếu có tên riêng, tuyệt đối không xóa `vocabflow.db`. Bản mirror lớn lưu bền trong App Storage; bản tải để kiểm tra đặt trong `/generated-artifacts/`, bị loại khỏi Git và gói triển khai.
 
 Nguồn kho Skypedia công bố CC BY-SA 4.0, có ghi chú OVDP GPLv2; kho upstream MinhQND có LICENSE MIT nhưng README dẫn CC BY-SA. Giữ đầy đủ thông báo nguồn trong app; chưa coi quyền tái phân phối thương mại là đã được xác minh. Dữ liệu tham chiếu không chỉnh nội dung; chỉ thêm chỉ mục và dấu khởi tạo cục bộ. Tệp nguồn để phân phối vẫn giữ nguyên bytes. Sau khi kiểm kích thước/SHA-256 của bản tải nguyên gốc, bản sao riêng dùng cho `deserialize` được chuẩn hóa hai byte định dạng nhật ký WAL sang rollback để không đòi tệp WAL phụ trong bộ nhớ; không sửa hàng dữ liệu hay tệp nguồn.
 
-Đóng app không xóa dữ liệu. Gỡ app/xóa dữ liệu ứng dụng (hoặc xóa dữ liệu Expo Go) có thể làm mất dữ liệu; chưa có sao lưu hoặc đồng bộ.
+Đóng app và đăng xuất không xóa dữ liệu; đăng xuất chỉ chuyển sang kho khách trên thiết bị. Sổ khách chưa đồng bộ chỉ có trên máy. Gỡ app/xóa dữ liệu ứng dụng (hoặc xóa dữ liệu Expo Go) có thể làm mất dữ liệu chưa đồng bộ; đồng bộ tài khoản không thay thế bản sao lưu độc lập.
 
 Kiểm tra SQL tự động chạy trên SQLite của Node với adapter mô phỏng cầu nối Expo. Không thay thế kiểm tra thực tế Android/Expo Go.

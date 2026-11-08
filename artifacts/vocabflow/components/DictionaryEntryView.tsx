@@ -278,16 +278,12 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
       onEndReached={loadMore}
       contentContainerStyle={{ padding: 20, paddingBottom: bottomPad }}
       ListEmptyComponent={empty}
-      ListFooterComponent={
+      ListFooterComponent={moreError || hasMore ? (
         <View style={{ gap: 12, marginTop: 16 }}>
           {moreError ? <ErrorBanner message={moreError} onRetry={loadMore} /> : null}
           {hasMore ? <Button testID="entry-load-more" label="Xem thêm nghĩa" variant="ghost" loading={loadingMore} onPress={loadMore} /> : null}
-          <Pressable testID="entry-open-sources" onPress={() => router.push('/dictionary-sources')} style={styles.ipaRow} hitSlop={6}>
-            <Feather name="info" size={14} color={c.dictHead} />
-            <Text style={[styles.link, { color: c.dictHead }]}>Nguồn và giấy phép từ điển</Text>
-          </Pressable>
         </View>
-      }
+      ) : undefined}
     />
     </View>
   );
@@ -318,5 +314,4 @@ const styles = StyleSheet.create({
   bullet: { width: 5, height: 5, borderRadius: 3, marginTop: 9 },
   example: { flex: 1, fontFamily: F.r, fontSize: 15, lineHeight: 22 },
   exampleHeadword: { textDecorationLine: 'underline' },
-  link: { fontFamily: F.s, fontSize: 14 },
 });

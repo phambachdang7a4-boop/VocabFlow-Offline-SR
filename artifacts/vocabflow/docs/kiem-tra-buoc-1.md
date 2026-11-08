@@ -22,5 +22,5 @@
 
 - Expo Go là môi trường phát triển. Tải/mở lại bản JavaScript có thể cần mạng; khả năng khởi chạy nguội hoàn toàn offline cần kiểm tra trên bản Android cài độc lập sau này.
 - Không gỡ ứng dụng hoặc xóa dữ liệu Expo Go để kiểm tra lưu bền vững; việc đó có thể xóa cơ sở dữ liệu.
-- Dữ liệu chỉ ở thiết bị hiện tại. Trình duyệt, trình mô phỏng và điện thoại có dữ liệu riêng, không đồng bộ.
+- Dữ liệu được lưu trong SQLite cục bộ. Sau khi đăng nhập, sổ từ và tiến độ đồng bộ khi có mạng; mỗi thiết bị vẫn dùng được offline.
 - Chưa có SRS, đóng băng hoặc giới hạn Free trong Bước 1.
