@@ -4,11 +4,13 @@ const fs = require('node:fs');
 const { resolve, join } = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { basicCourse, cefrCourses, advancedCourses, collocationCourses, courseCatalog } = require('./test-support.cjs');
+const { createSupplementalRows, supplementalSource } = require('./generate-collocation-course.cjs');
 
 const root = resolve(__dirname, '..');
 const dataDir = join(root, 'data');
 const dictionaryPath = resolve(root, '../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const sourcePath = resolve(root, '../../generated-artifacts/collocations/opensubs-en.jsonl');
+const wordnetPath = resolve(root, '../../generated-artifacts/collocations/english-wordnet-2025-json.zip');
 const manifest = JSON.parse(fs.readFileSync(join(dataDir, 'collocation-course-manifest.json'), 'utf8'));
 const { COLLOCATION_COURSES } = collocationCourses;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -22,20 +24,37 @@ assert.equal(manifest.source.name, 'OpenSubtitles Collocations');
 assert.equal(manifest.source.commit, 'd051fefa5b85c9ffe6882eace8a1abe5543ee730');
 assert.equal(manifest.source.license, 'CC BY 4.0');
 assert.equal(manifest.source.originalCorpus, 'OpenSubtitles v2018');
+assert.equal(manifest.source.licenseUrl, 'https://creativecommons.org/licenses/by/4.0/');
+assert.equal(manifest.supplementalSource.name, supplementalSource.name);
+assert.equal(manifest.supplementalSource.version, supplementalSource.version);
+assert.equal(manifest.supplementalSource.url, supplementalSource.url);
+assert.equal(manifest.supplementalSource.releaseUrl, supplementalSource.releaseUrl);
+assert.equal(manifest.supplementalSource.license, supplementalSource.license);
+assert.equal(manifest.supplementalSource.licenseUrl, supplementalSource.licenseUrl);
+assert.equal(manifest.supplementalSource.upstreamLicense, supplementalSource.upstreamLicense);
+assert.equal(manifest.supplementalSource.upstreamLicenseUrl, supplementalSource.upstreamLicenseUrl);
+assert.equal(manifest.supplementalSource.fileUrl, supplementalSource.fileUrl);
+assert.equal(manifest.supplementalSource.bytes, supplementalSource.bytes);
+assert.equal(manifest.supplementalSource.sha256, supplementalSource.sha256);
 assert.equal(manifest.dictionary.commit, '388adc0826300912e5b0311c089e0e70494b065f');
 assert.equal(manifest.dictionary.license, 'CC BY-SA 4.0');
 
 const sourceBytes = fs.readFileSync(sourcePath);
+const wordnetBytes = fs.readFileSync(wordnetPath);
 const dictionaryBytes = fs.readFileSync(dictionaryPath);
 assert.equal(sha256(sourceBytes), manifest.source.sha256);
+assert.equal(wordnetBytes.byteLength, manifest.supplementalSource.bytes);
+assert.equal(sha256(wordnetBytes), manifest.supplementalSource.sha256);
 assert.equal(sha256(dictionaryBytes), manifest.dictionary.sha256);
 const sourceRows = sourceBytes.toString('utf8').trim().split(/\r?\n/).map(line => JSON.parse(line));
 assert.equal(sourceRows.length, 15000);
 assert.equal(manifest.sourceCount, sourceRows.length);
-assert.equal(manifest.words.length + manifest.missingWords.length + manifest.noExampleWords.length + manifest.skippedDuplicateWords.length, sourceRows.length);
-assert.equal(course.sourceCount, sourceRows.length);
-assert.equal(course.missingWords.length, manifest.missingWords.length + manifest.noExampleWords.length);
-assert.equal(course.skippedDuplicateCount, manifest.skippedDuplicateWords.length);
+assert.equal(manifest.words.filter(item => item.sourceId === 'opensubs').length +
+  manifest.missingWords.length + manifest.noExampleWords.length +
+  manifest.mismatchedPosWords.length + manifest.skippedDuplicateWords.length, sourceRows.length);
+assert.equal(course.sourceCount, manifest.sourceCount + manifest.supplementalSourceCount);
+assert.equal(course.missingWords.length, manifest.missingWords.length + manifest.noExampleWords.length + manifest.mismatchedPosWords.length);
+assert.equal(course.skippedDuplicateCount, manifest.skippedDuplicateWords.length + manifest.supplementalSkippedDuplicateCount);
 assert.equal(course.lessons.reduce((sum, lesson) => sum + lesson.words.length, 0), manifest.words.length);
 assert.equal(course.lessons.length, Math.ceil(manifest.words.length / 20));
 assert.ok(course.lessons.every(lesson => lesson.words.length > 0 && lesson.words.length <= 20));
@@ -43,6 +62,8 @@ assert.ok(course.lessons.slice(0, -1).every(lesson => lesson.words.length === 20
 assert.match(course.attribution, /OpenSubtitles Collocations/);
 assert.match(course.attribution, /CC BY 4\.0/);
 assert.match(course.attribution, /CC BY-SA 4\.0/);
+assert.match(course.attribution, /Open English WordNet 2025 Edition/);
+assert.match(course.attribution, /WordNet 3\.1, Copyright 2011 Princeton University/);
 
 const sourceByRank = sourceRows;
 const db = new DatabaseSync(dictionaryPath, { readOnly: true });
@@ -57,6 +78,20 @@ const dictionarySense = db.prepare(`
 const seenSenses = new Set();
 const seenMeanings = new Set();
 try {
+  const supplementalRows = createSupplementalRows(
+    db,
+    wordnetPath,
+    new Set(sourceRows.map(row => normalize(row.bigram))),
+  );
+  assert.equal(manifest.supplementalSourceCount, supplementalRows.length);
+  const supplementalAcceptedCount = manifest.words.filter(item => item.sourceId === 'oewn-2025').length;
+  assert.equal(supplementalAcceptedCount +
+    manifest.supplementalMissingCount +
+    manifest.supplementalNoExampleCount +
+    manifest.supplementalMismatchedPosCount +
+    manifest.supplementalSkippedDuplicateCount, supplementalRows.length);
+  assert.ok(manifest.words.length > 862, 'Collocation 1 cần lớn hơn phiên bản chỉ có OpenSubtitles.');
+  assert.ok(supplementalAcceptedCount > 0, 'Chưa có mục nào được thêm từ nguồn bổ sung.');
   for (const sourceCourse of [
     { lessons: basicCourse.BASIC_COURSE_LESSONS },
     ...cefrCourses.CEFR_COURSES,
@@ -70,11 +105,29 @@ try {
     }
   }
   const acceptedKeys = new Set();
+  const acceptedTerms = new Set();
+  const primarySourceTerms = new Set(sourceRows.map(row => normalize(row.bigram)));
   for (const item of manifest.words) {
-    const source = sourceByRank[item.rank - 1];
-    assert.equal(source.bigram, item.bigram);
-    assert.equal(source.type, item.type);
-    assert.equal(source.lang, 'en');
+    assert.ok(['opensubs', 'oewn-2025'].includes(item.sourceId), `Nguồn không hợp lệ: ${item.sourceId}.`);
+    assert.ok(Number.isInteger(item.sourceRank) && item.sourceRank > 0);
+    const normalizedTerm = normalize(item.bigram);
+    assert.ok(!acceptedTerms.has(normalizedTerm), `Cụm bị lặp trong Collocation 1: ${item.bigram}.`);
+    acceptedTerms.add(normalizedTerm);
+    if (item.sourceId === 'opensubs') {
+      const source = sourceByRank[item.sourceRank - 1];
+      assert.equal(source.bigram, item.bigram);
+      assert.equal(source.type, item.type);
+      assert.equal(source.lang, 'en');
+    } else {
+      assert.ok(!primarySourceTerms.has(normalizedTerm), `Cụm WordNet đã có trong nguồn OpenSubtitles: ${item.bigram}.`);
+      const source = supplementalRows[item.sourceRank - 1];
+      assert.ok(source, `Không tìm thấy mục WordNet hạng ${item.sourceRank}.`);
+      assert.equal(source.bigram, item.bigram);
+      assert.equal(source.type, item.type);
+      assert.ok(['VERB+ADP', 'VERB+NOUN'].includes(item.type)
+        ? source.sourcePos === 'verb'
+        : source.sourcePos === 'noun');
+    }
     acceptedKeys.add(`${item.entryId}:${item.senseId}`);
   }
   const words = course.lessons.flatMap(lesson => lesson.words);
