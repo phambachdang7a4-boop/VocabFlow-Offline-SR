@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
@@ -34,6 +34,8 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const { recordReview, setWordFrozen } = useVocabulary();
   const speech = useSpeechPreferences();
   const sound = useSoundEffects();
+  const { height: windowHeight } = useWindowDimensions();
+  const resultPanelHeight = Math.round(windowHeight * 0.58);
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('answering');
   const [inputFocused, setInputFocused] = useState(false);
@@ -279,9 +281,10 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
       </View>
 
       {answered ? (
-        <View testID="review-result" accessibilityLiveRegion="polite" style={[styles.result, { backgroundColor: toneSoft, borderRadius: c.radius }]}>
+        <View testID="review-result" accessibilityLiveRegion="polite"
+          style={[styles.resultPanel, { height: resultPanelHeight, backgroundColor: toneSoft, borderRadius: c.radius }]}>
           {graded ? (
-            <>
+            <View style={styles.resultInfo}>
               <View style={styles.labelRow}>
                 <Feather name={graded.correct ? 'check-circle' : 'x-circle'} size={20} color={tone} />
                 <Text style={[styles.resultTitle, { color: tone }]}>
@@ -293,29 +296,40 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
               {word.ipa ? <Text style={[styles.small, { color: c.mutedForeground }]}>{word.ipa}</Text> : null}
               {exercise.kind === 'cloze' || exercise.kind === 'multiple-choice'
                 ? <Text style={[styles.small, { color: c.foreground }]}>{word.meaning}</Text>
-                : word.example ? <Text style={[styles.small, { color: c.foreground, fontStyle: 'italic' }]}>{word.example}</Text> : null}
+                : null}
+              {word.example
+                ? <Text style={[styles.small, { color: c.foreground, fontStyle: 'italic' }]}>{word.example}</Text>
+                : null}
               <Text style={[styles.small, { color: c.mutedForeground }]}>
                 {phase === 'saved'
                   ? graded.correct ? (word.level === 6 ? 'Đã lưu: hoàn tất 6 cấp.' : `Đã lưu: lên cấp ${word.level + 1}.`)
                     : `Đã lưu: ${word.level === 1 ? 'giữ cấp 1' : `lùi về cấp ${word.level - 1}`}, ôn lại ngày mai.`
                   : phase === 'saving' ? 'Đang lưu…' : 'Chưa lưu được kết quả.'}
               </Text>
-            </>
-          ) : (
-            <View style={styles.labelRow}>
-              <Feather name="pause-circle" size={20} color={c.primary} />
-              <Text style={[styles.resultTitle, { color: c.primary, flex: 1 }]}>
-                {phase === 'saved' ? 'Đã đóng băng từ này. Bỏ đóng băng trong Cài đặt.' : phase === 'saving' ? 'Đang đóng băng…' : 'Chưa đóng băng được.'}
-              </Text>
             </View>
+          ) : (
+            <View style={styles.resultInfo}>
+              <View style={styles.labelRow}>
+                <Feather name="pause-circle" size={20} color={c.primary} />
+                <Text style={[styles.resultTitle, { color: c.primary, flex: 1 }]}>
+                  {phase === 'saved' ? 'Đã đóng băng từ này. Bỏ đóng băng trong Cài đặt.' : phase === 'saving' ? 'Đang đóng băng…' : 'Chưa đóng băng được.'}
+                </Text>
+              </View>
+            </View>
+          )}
+          {saveError ? <ErrorBanner message={saveError} /> : null}
+          {phase === 'failed' ? (
+            <Button testID="review-retry-save" label="Thử lưu lại" icon="refresh-cw" onPress={retry} disabled={blocked} />
+          ) : (
+            <Button testID="review-continue" label={isLast ? 'Kết thúc' : 'Tiếp tục'} icon={isLast ? 'flag' : 'arrow-right'}
+              onPress={() => { if (phase === 'saved' && !blocked && !inFlight.current) cb.current.onNext(); }}
+              loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} style={styles.continueButton} />
           )}
         </View>
       ) : null}
 
-      {saveError ? <ErrorBanner message={saveError} /> : null}
-
-      <View style={[styles.actions, styles.inlineActions]}>
-        {!answered ? (
+      {!answered ? (
+        <View style={[styles.actions, styles.inlineActions]}>
           <>
             <Button testID="review-check" label="Kiểm tra" icon="check" onPress={check} disabled={!typed.trim() || blocked} />
             <Pressable testID="review-dont-know" accessibilityRole="button" onPress={dontKnow} disabled={blocked} hitSlop={8}>
@@ -328,14 +342,8 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
               <Text style={[styles.freezeText, { color: c.mutedForeground }]}>Đóng băng từ này</Text>
             </Pressable>
           </>
-        ) : phase === 'failed' ? (
-          <Button testID="review-retry-save" label="Thử lưu lại" icon="refresh-cw" onPress={retry} disabled={blocked} />
-        ) : (
-          <Button testID="review-continue" label={isLast ? 'Kết thúc' : 'Tiếp tục'} icon={isLast ? 'flag' : 'arrow-right'}
-            onPress={() => { if (phase === 'saved' && !blocked && !inFlight.current) cb.current.onNext(); }}
-            loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} style={styles.continueButton} />
-        )}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -363,7 +371,11 @@ const styles = StyleSheet.create({
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   meaning: { fontFamily: F.b, fontSize: 24, lineHeight: 32, textAlign: 'center' },
   small: { fontFamily: F.m, fontSize: 13, lineHeight: 19 },
-  result: { padding: 16, gap: 6 },
+  resultPanel: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20, elevation: 12,
+    padding: 16, gap: 10, justifyContent: 'space-between',
+  },
+  resultInfo: { gap: 6 },
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },
   actions: { gap: 12 },

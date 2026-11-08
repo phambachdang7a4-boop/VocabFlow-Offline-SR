@@ -12,6 +12,7 @@ const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'T
 native.StyleSheet = { create: value => value };
 native.Platform = { OS: 'android' };
 native.Keyboard = { dismiss() {} };
+native.useWindowDimensions = () => ({ width: 400, height: 800, scale: 1, fontScale: 1 });
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function find(node, predicate) {
   if (Array.isArray(node)) return node.map(child => find(child, predicate)).find(Boolean);
@@ -240,6 +241,8 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const sentenceCard = mount('../components/ReviewCard.tsx', {
     ...makeProps(sentenceWord),
     exercise: sentenceExercise,
+  }, {
+    recordReview: async () => {},
   });
   assert.ok(sentenceCard.byId('review-choice-options'));
   assert.equal(sentenceCard.byId('review-speak-word'), undefined,
@@ -247,6 +250,11 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(sentenceCard.byId('review-answer-input'), undefined,
     'Sentence questions now select an answer instead of typing into the blank.');
   assert.equal(sentenceCard.byId('review-choice-0').props.accessibilityRole, 'button');
+  sentenceCard.byId('review-choice-0').props.onPress();
+  await sentenceCard.settle();
+  assert.ok(find(sentenceCard.byId('review-result'), node =>
+    node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
+  'Show the dictionary example in the word information after a multiple-choice answer.');
 
   let resolveSave;
   const calls = [], committed = [];
@@ -293,6 +301,13 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.deepEqual(committed, [1]);
   assert.ok(card.byId('review-result'));
   assert.ok(card.byId('review-answer-correct'));
+  const resultPanelStyles = card.byId('review-result').props.style;
+  assert.ok(resultPanelStyles.some(style => style?.position === 'absolute'),
+    'Keep result information and its action in one anchored panel.');
+  assert.equal(resultPanelStyles.find(style => style?.height)?.height, 464,
+    'The result panel occupies about 58% of the screen height.');
+  assert.ok(find(card.byId('review-result'), node => node.props?.testID === 'review-continue'),
+    'Continue stays attached to the result information.');
   assert.equal(card.byId('review-continue').props.style.minHeight, 68,
     'Continue button is larger for the full-screen review session');
   card.byId('review-continue').props.onPress();
