@@ -331,6 +331,7 @@ function buildLessons(manifest, lookup) {
       dictionarySenseId: item.senseId,
       term: sense.term,
       definition: sense.definition,
+      collocationType: item.type,
       pos: sense.pos,
       subPos: sense.subPos,
       ipa: sense.ipa,

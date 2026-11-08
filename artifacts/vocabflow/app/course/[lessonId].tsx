@@ -8,7 +8,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useVocabulary } from '@/contexts/VocabularyContext';
-import { displayCourseMeaning } from '@/data/basic-course';
+import { displayCollocationType, displayCourseMeaning } from '@/data/basic-course';
 import { courseForLesson } from '@/data/course-catalog';
 import { exampleSegments as segmentExample } from '@/domain/dictionary';
 import {
@@ -297,6 +297,13 @@ export default function CourseLessonScreen() {
             <>
               <Text style={[styles.overline, { color: c.primary }]}>THẺ TỪ {progress.currentIndex + 1}</Text>
               <View style={[styles.flashcard, { backgroundColor: c.vocabCard, borderColor: c.vocabCard }]}>
+                {displayCollocationType(currentWord) ? (
+                  <View style={[styles.collocationTypeBadge, { backgroundColor: c.vocabCardAccent }]}>
+                    <Text testID="course-collocation-type" style={[styles.collocationTypeText, { color: c.buttonForeground }]}>
+                      {displayCollocationType(currentWord)}
+                    </Text>
+                  </View>
+                ) : null}
                 {showExample ? (
                   <>
                     <Text style={[styles.exampleWord, { color: c.vocabCardMuted }]}>{currentWord.term}</Text>
@@ -341,6 +348,11 @@ export default function CourseLessonScreen() {
           ) : stage === 'answer' && currentWord ? (
             <>
               <Text style={[styles.overline, { color: c.primary }]}>VIẾT LẠI TỪ</Text>
+              {displayCollocationType(currentWord) ? (
+                <Text testID="course-collocation-type" style={[styles.answerCollocationType, { color: c.primary }]}>
+                  {displayCollocationType(currentWord)}
+                </Text>
+              ) : null}
               <Text style={[styles.prompt, { color: c.foreground }]}>{displayCourseMeaning(currentWord)}</Text>
               <TextInput
                 testID="course-answer"
@@ -418,6 +430,9 @@ const styles = StyleSheet.create({
   lessonContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 24, gap: 18 },
   overline: { fontFamily: F.s, fontSize: 12, letterSpacing: 1.1, textAlign: 'center' },
   flashcard: { borderRadius: 24, borderWidth: 1, padding: 28, minHeight: 300, alignItems: 'center', justifyContent: 'center', gap: 18 },
+  collocationTypeBadge: { alignSelf: 'center', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
+  collocationTypeText: { fontFamily: F.s, fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  answerCollocationType: { fontFamily: F.s, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 12 },
   flashIcon: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   flashTerm: { fontFamily: F.b, fontSize: 34, textAlign: 'center' },
   divider: { width: 52, height: 2, borderRadius: 2 },

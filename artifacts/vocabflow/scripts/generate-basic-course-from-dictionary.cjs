@@ -315,11 +315,14 @@ function renderTypeScript(lessons) {
   dictionarySenseId: number;
   term: string;
   definition: string;
+  collocationType?: CollocationType;
   pos: string | null;
   subPos: string | null;
   ipa: string;
   example: string;
 }
+
+export type CollocationType = 'VERB+ADP' | 'ADJ+NOUN' | 'VERB+NOUN';
 
 export interface BasicCourseLesson {
   id: string;
@@ -348,6 +351,15 @@ export const BASIC_COURSE_WORD_COUNT = BASIC_COURSE_LESSONS.reduce((sum, lesson)
 export function displayCourseMeaning(word: BasicCourseWord): string {
   const kind = [word.pos, word.subPos].filter(Boolean).join(' · ');
   return \`\${kind ? \`(\${kind}) \` : ''}\${word.definition}\`;
+}
+
+export function displayCollocationType(word: BasicCourseWord): string | null {
+  switch (word.collocationType) {
+    case 'VERB+ADP': return 'Động từ + giới từ';
+    case 'ADJ+NOUN': return 'Tính từ + danh từ';
+    case 'VERB+NOUN': return 'Động từ + danh từ';
+    default: return null;
+  }
 }
 `;
 }

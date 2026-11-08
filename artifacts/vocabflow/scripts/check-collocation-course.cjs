@@ -106,6 +106,10 @@ try {
   }
   const acceptedKeys = new Set();
   const acceptedTerms = new Set();
+  const manifestWordsBySense = new Map(manifest.words.map(item => [
+    `${item.entryId}:${item.senseId}`,
+    item,
+  ]));
   const primarySourceTerms = new Set(sourceRows.map(row => normalize(row.bigram)));
   for (const item of manifest.words) {
     assert.ok(['opensubs', 'oewn-2025'].includes(item.sourceId), `Nguồn không hợp lệ: ${item.sourceId}.`);
@@ -132,11 +136,23 @@ try {
   }
   const words = course.lessons.flatMap(lesson => lesson.words);
   assert.equal(words.length, manifest.words.length);
+  const seenCollocationTypes = new Set();
   for (const lesson of course.lessons) {
     assert.ok(lesson.id.startsWith('collocation-1-v1-'));
     for (const word of lesson.words) {
       const key = `${word.dictionaryEntryId}:${word.dictionarySenseId}`;
       assert.ok(acceptedKeys.has(key), `Mục không nằm trong manifest: ${word.term}.`);
+      const manifestWord = manifestWordsBySense.get(key);
+      assert.ok(manifestWord, `Không tìm thấy loại cụm trong manifest: ${word.term}.`);
+      assert.equal(word.collocationType, manifestWord.type, `Loại cụm không khớp nguồn đã ghim: ${word.term}.`);
+      const expectedLabel = {
+        'VERB+ADP': 'Động từ + giới từ',
+        'ADJ+NOUN': 'Tính từ + danh từ',
+        'VERB+NOUN': 'Động từ + danh từ',
+      }[manifestWord.type];
+      assert.ok(expectedLabel, `Loại cụm không được hỗ trợ: ${manifestWord.type}.`);
+      assert.equal(basicCourse.displayCollocationType(word), expectedLabel);
+      seenCollocationTypes.add(word.collocationType);
       assert.equal(word.id, `dict:${word.dictionaryEntryId}:${word.dictionarySenseId}`);
       assert.ok(word.example.trim(), `Thiếu ví dụ từ điển offline: ${word.term}.`);
       const exact = dictionarySense.get(word.dictionaryEntryId, word.dictionarySenseId);
@@ -154,6 +170,8 @@ try {
       seenMeanings.add(meaningKey);
     }
   }
+  assert.deepEqual(seenCollocationTypes, new Set(['VERB+ADP', 'ADJ+NOUN', 'VERB+NOUN']));
+  assert.equal(basicCourse.displayCollocationType(basicCourse.BASIC_COURSE_LESSONS[0].words[0]), null);
   assert.ok(courseCatalog.COURSE_CATALOGS.some(item => item.id === 'collocation-1-v1'));
 } finally {
   db.close();
