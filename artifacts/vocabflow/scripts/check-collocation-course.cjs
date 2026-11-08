@@ -16,6 +16,7 @@ const {
 const root = resolve(__dirname, '..');
 const dataDir = join(root, 'data');
 const lessonScreen = fs.readFileSync(join(root, 'app/course/[lessonId].tsx'), 'utf8');
+const courseListScreen = fs.readFileSync(join(root, 'app/course-list/[courseId].tsx'), 'utf8');
 const dictionaryPath = resolve(root, '../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const sourcePath = resolve(root, '../../generated-artifacts/collocations/opensubs-en.jsonl');
 const wordnetPath = resolve(root, '../../generated-artifacts/collocations/english-wordnet-2025-json.zip');
@@ -30,6 +31,22 @@ assert.match(
   /testID=\{`course-select-collocation-type-\$\{word\.id\}`\}[\s\S]*?\{collocationType\}/,
   'Danh sách chọn từ phải hiển thị nhãn loại cụm từ dữ liệu của từng mục.',
 );
+assert.match(lessonScreen, /testID="course-frequency"/,
+  'Màn học phải hiển thị số đếm theo cụm trên thẻ và câu hỏi.');
+assert.match(lessonScreen, /testID=\{`course-select-frequency-\$\{word\.id\}`\}/,
+  'Danh sách chọn từ phải hiển thị tần suất từng cụm.');
+assert.match(courseListScreen, /testID="collocation-frequency-context"/,
+  'Trang khóa học phải giải thích nguồn và giới hạn so sánh số đếm.');
+assert.equal(basicCourse.displayCollocationFrequency({
+  count: 408628, source: 'opensubs-v2018',
+}), 'Số lần xuất hiện: 408.628 · OpenSubtitles v2018');
+assert.equal(basicCourse.displayCollocationFrequency({
+  count: 0, source: 'wikitext-103-raw-v1',
+}), 'Số lần xuất hiện: 0 · WikiText-103 Raw v1 (tập huấn luyện)');
+assert.equal(basicCourse.displayCollocationFrequency({
+  count: null, source: 'opensubs-v2018',
+}), 'Số đếm trực tiếp: Chưa có · OpenSubtitles v2018');
+assert.equal(basicCourse.displayCollocationFrequency(undefined), null);
 
 assert.equal(COLLOCATION_COURSES.length, 1);
 const course = COLLOCATION_COURSES[0];
@@ -190,6 +207,12 @@ try {
   }
   const words = course.lessons.flatMap(lesson => lesson.words);
   assert.equal(words.length, manifest.words.length);
+  assert.ok(words.every((word, index) =>
+    word.frequency?.count === manifest.words[index].count &&
+    word.frequency?.source === (manifest.words[index].sourceId === 'opensubs'
+      ? 'opensubs-v2018'
+      : 'wikitext-103-raw-v1')),
+  'Số đếm trực tiếp và corpus phải được giữ trên từng mục từ trong bài học.');
   assert.deepEqual(
     words.map(word => `${word.dictionaryEntryId}:${word.dictionarySenseId}`),
     manifest.words.map(item => `${item.entryId}:${item.senseId}`),

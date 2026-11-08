@@ -5,13 +5,31 @@ export interface BasicCourseWord {
   term: string;
   definition: string;
   collocationType?: CollocationType;
+  frequency?: CollocationFrequency;
   pos: string | null;
   subPos: string | null;
   ipa: string;
   example: string;
 }
 
+export type CollocationFrequencySource = 'opensubs-v2018' | 'wikitext-103-raw-v1';
+
+export interface CollocationFrequency {
+  count: number | null;
+  source: CollocationFrequencySource;
+}
+
 export type CollocationType = 'VERB+ADP' | 'ADJ+NOUN' | 'VERB+NOUN';
+
+export function displayCollocationFrequency(frequency?: CollocationFrequency): string | null {
+  if (!frequency) return null;
+  const sourceName = frequency.source === 'opensubs-v2018'
+    ? 'OpenSubtitles v2018'
+    : 'WikiText-103 Raw v1 (tập huấn luyện)';
+  return frequency.count === null
+    ? `Số đếm trực tiếp: Chưa có · ${sourceName}`
+    : `Số lần xuất hiện: ${frequency.count.toLocaleString('vi-VN')} · ${sourceName}`;
+}
 
 export interface BasicCourseLesson {
   id: string;

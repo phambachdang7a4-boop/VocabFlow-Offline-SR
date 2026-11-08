@@ -88,6 +88,11 @@ export default function CourseListScreen() {
               Danh sách tham khảo có {course.sourceCount} mục; {course.missingCount} từ không có nghĩa Việt trong kho offline và {course.skippedDuplicateCount} mục trùng với khóa trước được bỏ qua.
             </Text>
           ) : null}
+          {course.id === 'collocation-1-v1' ? (
+            <Text testID="collocation-frequency-context" style={[styles.note, { color: c.mutedForeground }]}>
+              Số đếm là số lần xuất hiện chính xác của cụm trong nguồn tương ứng. OpenSubtitles v2018 và WikiText-103 Raw v1 là hai corpus riêng, nên không so sánh trực tiếp thứ hạng giữa chúng. Cụm không có số đếm trực tiếp sẽ được ghi rõ là chưa có.
+            </Text>
+          ) : null}
           <Text style={[styles.attribution, { color: c.mutedForeground }]}>{course.attribution}</Text>
         </View>
 

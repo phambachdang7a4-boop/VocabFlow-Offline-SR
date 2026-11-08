@@ -441,6 +441,10 @@ function buildLessons(manifest, lookup) {
       term: sense.term,
       definition: sense.definition,
       collocationType: item.type,
+      frequency: {
+        count: item.count,
+        source: item.sourceId === 'opensubs' ? 'opensubs-v2018' : 'wikitext-103-raw-v1',
+      },
       pos: sense.pos,
       subPos: sense.subPos,
       ipa: sense.ipa,
