@@ -14,3 +14,17 @@ mtime_ms = 1794039016614
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/fd3390cc-8e13-4e6b-8826-dbc3a16db289/89818664-f31d-4523-8d9a-f77ab1095f97"
 storage_version_token = "1794039232424804"
 content_type = "image/png"
+
+[[outputs]]
+id = "zG4A1go5ecjvjP4oQpGgi"
+uri = "file://generated-artifacts/978-tu-co-ban.txt"
+type = "text"
+title = "978 từ trong khóa cơ bản"
+description = "Danh sách 978 mục từ tiếng Anh từ khóa cơ bản, mỗi mục một dòng, giữ nguyên thứ tự bài học."
+logical_id = "2d474065-d068-41a6-a11f-6f01aa456fb1"
+content_hash = "sha256:0b30bbc8b004e25a439eb9f009644663befa6fa0c067dd2e45efde888ba3660b"
+size = 6384
+mtime_ms = 1794120447810
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/2d474065-d068-41a6-a11f-6f01aa456fb1/6814f1ee-20ec-44a9-ad39-5edb55694621"
+storage_version_token = "1794120457914655"
+content_type = "text/plain"
