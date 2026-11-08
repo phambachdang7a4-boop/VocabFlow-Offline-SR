@@ -28,3 +28,17 @@ mtime_ms = 1794120447810
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/2d474065-d068-41a6-a11f-6f01aa456fb1/6814f1ee-20ec-44a9-ad39-5edb55694621"
 storage_version_token = "1794120457914655"
 content_type = "text/plain"
+
+[[outputs]]
+id = "_jZ62KAL6WdnCNQ1_4aDT"
+uri = "file://generated-artifacts/tai-978-tu-co-ban.html"
+type = "html"
+title = "Tải danh sách từ dạng TXT"
+description = "Mở trang này rồi bấm Tải file TXT để tải 978 mục từ về điện thoại hoặc máy tính."
+logical_id = "43c90723-5ef6-4f66-8ca6-8a25cd0383b0"
+content_hash = "sha256:63b0b375d86d137560676dbb1418223121be9d1726ed1ce6d9e71554e75d0955"
+size = 8706
+mtime_ms = 1794120566890
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/43c90723-5ef6-4f66-8ca6-8a25cd0383b0/036c877a-3908-4476-bbf3-f5e00a5c10fc"
+storage_version_token = "1794120576364654"
+content_type = "text/html"
