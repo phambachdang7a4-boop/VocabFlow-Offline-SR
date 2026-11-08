@@ -15,17 +15,22 @@ export interface ReviewSessionSummary {
 
 export type ReviewGrade = 'S+' | 'S' | 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C';
 
-export function getReviewGrade(correctCount: number, reviewedCount: number): ReviewGrade {
+export function getReviewGrade(correctCount: number, reviewedCount: number, completed = true): ReviewGrade {
   const accuracy = reviewedCount > 0 ? Math.round((correctCount / reviewedCount) * 100) : 0;
-  if (accuracy >= 97) return 'S+';
-  if (accuracy >= 90) return 'S';
-  if (accuracy >= 85) return 'A+';
-  if (accuracy >= 80) return 'A';
-  if (accuracy >= 75) return 'A-';
-  if (accuracy >= 70) return 'B+';
-  if (accuracy >= 60) return 'B';
-  if (accuracy >= 50) return 'B-';
-  return 'C';
+  let grade: ReviewGrade;
+  if (accuracy >= 97) grade = 'S+';
+  else if (accuracy >= 90) grade = 'S';
+  else if (accuracy >= 85) grade = 'A+';
+  else if (accuracy >= 80) grade = 'A';
+  else if (accuracy >= 75) grade = 'A-';
+  else if (accuracy >= 70) grade = 'B+';
+  else if (accuracy >= 60) grade = 'B';
+  else if (accuracy >= 50) grade = 'B-';
+  else grade = 'C';
+
+  if (completed || grade === 'C') return grade;
+  const gradeOrder: ReviewGrade[] = ['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C'];
+  return gradeOrder[Math.min(gradeOrder.indexOf(grade) + 1, gradeOrder.length - 1)];
 }
 
 export function createReviewSessionSummary(

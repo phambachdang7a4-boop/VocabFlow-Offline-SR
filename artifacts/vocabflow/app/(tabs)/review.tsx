@@ -215,9 +215,9 @@ export default function ReviewScreen() {
               {summary.completed ? 'Hoàn thành lượt ôn' : summary.reviewedCount ? 'Kết quả tính đến lúc bạn thoát' : 'Chưa có câu trả lời để tính tỉ lệ'}
             </Text>
             <View style={styles.summaryGradeArea}>
-              <Text testID="review-summary-grade" accessibilityLabel={`Hạng ${getReviewGrade(summary.correctCount, summary.reviewedCount)}`}
+              <Text testID="review-summary-grade" accessibilityLabel={`Hạng ${getReviewGrade(summary.correctCount, summary.reviewedCount, summary.completed)}`}
                 style={[styles.summaryGrade, { color: c.primary }]}>
-                {getReviewGrade(summary.correctCount, summary.reviewedCount)}
+                {getReviewGrade(summary.correctCount, summary.reviewedCount, summary.completed)}
               </Text>
             </View>
             <View style={[styles.summaryMetrics, { borderColor: c.border }]}>

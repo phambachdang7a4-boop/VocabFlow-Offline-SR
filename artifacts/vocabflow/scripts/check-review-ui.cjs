@@ -143,7 +143,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   screen.byId('review-back-overview').props.onPress();
   assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 1 từ!');
   assert.equal(screen.byId('review-summary-status').props.children.join(''), 'Kết quả tính đến lúc bạn thoát');
-  assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S+',
+  assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S',
     'An interrupted session ranks only the words answered before exiting.');
   screen.byId('review-summary-close').props.onPress();
   screen.byId('review-start').props.onPress();

@@ -54,4 +54,12 @@ for (const [correct, total, expected] of [
 ]) {
   assert.equal(getReviewGrade(correct, total), expected, `${correct}/${total} must receive grade ${expected}`);
 }
+for (const [correct, total, expected] of [
+  [100, 100, 'S'], [96, 100, 'A+'], [90, 100, 'A+'], [85, 100, 'A'],
+  [80, 100, 'A-'], [75, 100, 'B+'], [70, 100, 'B'], [60, 100, 'B-'],
+  [50, 100, 'C'], [49, 100, 'C'], [0, 0, 'C'],
+]) {
+  assert.equal(getReviewGrade(correct, total, false), expected,
+    `An interrupted ${correct}/${total} session must be lowered to ${expected}`);
+}
 console.log('PASS: completed and interrupted session summaries, grade thresholds, and elapsed-time formatting.');
