@@ -72,7 +72,7 @@ function dictionaryPos(value) {
 function loadDictionary(db) {
   const candidates = db.prepare(`
     SELECT w.id AS entryId, w.word AS term, wd.id AS senseId,
-      d.definition, d.pos, d.sub_pos AS subPos,
+      d.definition, d.pos, d.sub_pos AS subPos, wd.example,
       COALESCE((SELECT ipa FROM pronunciations WHERE word_id = w.id ORDER BY id LIMIT 1), '') AS ipa
     FROM words w
     JOIN word_definitions wd ON wd.word_id = w.id
@@ -180,6 +180,7 @@ function buildLessons(level, levelManifest, lookup) {
       pos: sense.pos,
       subPos: sense.subPos,
       ipa: sense.ipa,
+      example: sense.example,
     };
   });
   const lessons = [];

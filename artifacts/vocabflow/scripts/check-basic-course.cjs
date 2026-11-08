@@ -46,7 +46,7 @@ assert.equal(new Set(BASIC_COURSE_LESSONS.map(lesson => lesson.id)).size, 49, 'I
 const byId = new Map(manifest.lessons.map(lesson => [lesson.id, lesson]));
 const exactSense = new (require('node:sqlite').DatabaseSync)(dictionaryPath, { readOnly: true });
 const query = exactSense.prepare(`
-  SELECT w.word AS term, wd.id AS senseId, d.definition, d.pos, d.sub_pos AS subPos,
+  SELECT w.word AS term, wd.id AS senseId, d.definition, d.pos, d.sub_pos AS subPos, wd.example,
     COALESCE((SELECT ipa FROM pronunciations WHERE word_id = w.id ORDER BY id LIMIT 1), '') AS ipa
   FROM words w
   JOIN word_definitions wd ON wd.word_id = w.id
@@ -74,6 +74,8 @@ try {
       assert.equal(word.pos, source.pos);
       assert.equal(word.subPos, source.subPos);
       assert.equal(word.ipa, source.ipa);
+      assert.ok(source.example?.trim(), `Thiếu ví dụ trong từ điển offline: ${word.term}.`);
+      assert.equal(word.example, source.example, `Ví dụ không trùng từ điển offline: ${word.term}.`);
       const senseKey = `${word.dictionaryEntryId}:${word.dictionarySenseId}`;
       const meaningKey = `${normalize(word.term)}|${normalize(word.definition)}`;
       assert.ok(!usedSenses.has(senseKey), `Nghĩa bị lặp: ${word.term}.`);

@@ -7,6 +7,9 @@ import { displayCourseMeaning } from './basic-course';
 import { ALL_COURSE_LESSONS, courseForLesson } from './course-catalog';
 
 let connection: Promise<SQLiteDatabase> | undefined;
+const COURSE_EXAMPLES = new Map(ALL_COURSE_LESSONS.flatMap(lesson =>
+  lesson.words.map(word => [`${word.dictionaryEntryId}:${word.dictionarySenseId}`, word.example] as const),
+));
 
 export type CourseLessonStage = 'flashcard' | 'answer' | 'selection' | 'completed';
 
@@ -89,7 +92,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 7) {
+    if ((version?.user_version ?? 0) > 8) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -196,6 +199,31 @@ async function initialize(): Promise<SQLiteDatabase> {
           );
           PRAGMA user_version = 7;
         `);
+      });
+    }
+    if ((version?.user_version ?? 0) < 8) {
+      await db.withTransactionAsync(async () => {
+        const savedCourseWords = await db.getAllAsync<{
+          id: number;
+          dictionaryEntryId: number;
+          dictionarySenseId: number;
+        }>(`
+          SELECT id, dictionary_entry_id AS dictionaryEntryId,
+            dictionary_sense_id AS dictionarySenseId
+          FROM words
+          WHERE TRIM(example) = '' AND note LIKE '%Khóa học:%'
+            AND dictionary_entry_id IS NOT NULL AND dictionary_sense_id IS NOT NULL
+        `);
+        for (const word of savedCourseWords) {
+          const example = COURSE_EXAMPLES.get(`${word.dictionaryEntryId}:${word.dictionarySenseId}`);
+          if (example?.trim()) {
+            await db.runAsync(
+              "UPDATE words SET example = ? WHERE id = ? AND TRIM(example) = ''",
+              example, word.id,
+            );
+          }
+        }
+        await db.execAsync('PRAGMA user_version = 8;');
       });
     }
     return db;
@@ -402,9 +430,9 @@ export function finishCourseLesson(lessonId: string, selectedWordIds: string[]):
           INSERT OR IGNORE INTO words
             (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
               dictionary_entry_id, dictionary_sense_id)
-          VALUES (?, ?, ?, ?, ?, '', ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-          word.term, normalizeTerm(word.term), meaning, normalizeTerm(meaning), word.ipa,
+          word.term, normalizeTerm(word.term), meaning, normalizeTerm(meaning), word.ipa, word.example,
           `${catalog.attribution} · Khóa học: ${lesson.title}`,
           now, now, word.dictionaryEntryId, word.dictionarySenseId,
         );

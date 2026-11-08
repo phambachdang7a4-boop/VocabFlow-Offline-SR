@@ -172,7 +172,7 @@ function readLegacyTerms() {
 function queryDictionary(db) {
   const candidates = db.prepare(`
     SELECT w.id AS entryId, w.word AS term, wd.id AS senseId,
-      d.definition, d.pos, d.sub_pos AS subPos,
+      d.definition, d.pos, d.sub_pos AS subPos, wd.example,
       COALESCE((SELECT ipa FROM pronunciations WHERE word_id = w.id ORDER BY id LIMIT 1), '') AS ipa
     FROM words w
     JOIN word_definitions wd ON wd.word_id = w.id
@@ -182,7 +182,7 @@ function queryDictionary(db) {
   `);
   const exactSense = db.prepare(`
     SELECT w.id AS entryId, w.word AS term, wd.id AS senseId,
-      d.definition, d.pos, d.sub_pos AS subPos,
+      d.definition, d.pos, d.sub_pos AS subPos, wd.example,
       COALESCE((SELECT ipa FROM pronunciations WHERE word_id = w.id ORDER BY id LIMIT 1), '') AS ipa
     FROM words w
     JOIN word_definitions wd ON wd.word_id = w.id
@@ -296,6 +296,7 @@ function buildCourseData(db, manifest) {
         pos: sense.pos,
         subPos: sense.subPos,
         ipa: sense.ipa,
+        example: sense.example,
       };
     }),
   }));
@@ -306,7 +307,7 @@ function renderTypeScript(lessons) {
   const specs = lessons.map(({ id, title }) => ({ id, title }));
   const rows = lessons.flatMap(lesson => lesson.words.map(word => [
     lesson.id, word.id, word.dictionaryEntryId, word.dictionarySenseId, word.term,
-    word.definition, word.pos, word.subPos, word.ipa,
+    word.definition, word.pos, word.subPos, word.ipa, word.example,
   ]));
   return `export interface BasicCourseWord {
   id: string;
@@ -317,6 +318,7 @@ function renderTypeScript(lessons) {
   pos: string | null;
   subPos: string | null;
   ipa: string;
+  example: string;
 }
 
 export interface BasicCourseLesson {
@@ -326,7 +328,7 @@ export interface BasicCourseLesson {
 }
 
 const lessonSpecs: { id: string; title: string }[] = ${JSON.stringify(specs)};
-const courseRows: [string, string, number, number, string, string, string | null, string | null, string][] =
+const courseRows: [string, string, number, number, string, string, string | null, string | null, string, string][] =
   ${JSON.stringify(rows)};
 
 export const BASIC_COURSE_ID = 'basic-965-v2';
@@ -336,8 +338,8 @@ export const BASIC_COURSE_ATTRIBUTION = 'Nguồn: Skypedia / MinhQND, CC BY-SA 4
 
 export const BASIC_COURSE_LESSONS: BasicCourseLesson[] = lessonSpecs.map(lesson => ({
   ...lesson,
-  words: courseRows.filter(row => row[0] === lesson.id).map(([, id, dictionaryEntryId, dictionarySenseId, term, definition, pos, subPos, ipa]) => ({
-    id, dictionaryEntryId, dictionarySenseId, term, definition, pos, subPos, ipa,
+  words: courseRows.filter(row => row[0] === lesson.id).map(([, id, dictionaryEntryId, dictionarySenseId, term, definition, pos, subPos, ipa, example]) => ({
+    id, dictionaryEntryId, dictionarySenseId, term, definition, pos, subPos, ipa, example,
   })),
 }));
 

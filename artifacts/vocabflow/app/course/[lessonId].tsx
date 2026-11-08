@@ -10,6 +10,7 @@ import { Button, ErrorBanner, F } from '@/components/ui';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { displayCourseMeaning } from '@/data/basic-course';
 import { courseForLesson } from '@/data/course-catalog';
+import { exampleSegments as segmentExample } from '@/domain/dictionary';
 import {
   finishCourseLesson, getCourseProgress, getCourseSelections, normalizeTerm,
   saveCourseProgress, saveCourseSelection, type CourseLessonProgress, type CourseLessonStage,
@@ -29,6 +30,7 @@ export default function CourseLessonScreen() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const selectedRef = useRef<Set<string>>(new Set());
   const [answer, setAnswer] = useState('');
+  const [showExample, setShowExample] = useState(false);
   const [answerResult, setAnswerResult] = useState<'correct' | 'incorrect' | null>(null);
   const [addedCount, setAddedCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,6 +109,7 @@ export default function CourseLessonScreen() {
     if (saved) {
       setAnswer('');
       setAnswerResult(null);
+      setShowExample(false);
     }
   };
 
@@ -131,14 +134,19 @@ export default function CourseLessonScreen() {
     }
   };
 
-  const finish = async () => {
+  const finish = async (addAll = false) => {
     if (!lesson || busy) return;
     Keyboard.dismiss();
     setBusy(true);
     setError(null);
     try {
-      const ids = [...selectedRef.current];
+      const ids = addAll ? lesson.words.map(word => word.id) : [...selectedRef.current];
       const added = await finishCourseLesson(lesson.id, ids);
+      if (addAll) {
+        const allSelected = new Set(ids);
+        selectedRef.current = allSelected;
+        setSelectedIds(allSelected);
+      }
       setAddedCount(added);
       setProgress({
         lessonId: lesson.id,
@@ -247,6 +255,20 @@ export default function CourseLessonScreen() {
               loading={busy}
               style={{ minHeight: 56, borderRadius: 18 }}
             />
+            <Pressable
+              testID="course-add-all"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              disabled={busy}
+              onPress={() => void finish(true)}
+              style={[
+                styles.addAllButton,
+                { backgroundColor: c.secondary, borderColor: c.border, opacity: busy ? 0.6 : 1 },
+              ]}
+            >
+              <Feather name="plus-circle" size={18} color={c.primary} />
+              <Text style={[styles.addAllText, { color: c.foreground }]}>Thêm tất cả từ</Text>
+            </Pressable>
           </View>
         </View>
       ) : stage === 'completed' ? (
@@ -275,13 +297,42 @@ export default function CourseLessonScreen() {
             <>
               <Text style={[styles.overline, { color: c.primary }]}>THẺ TỪ {progress.currentIndex + 1}</Text>
               <View style={[styles.flashcard, { backgroundColor: c.vocabCard, borderColor: c.vocabCard }]}>
-                <View style={[styles.flashIcon, { backgroundColor: c.vocabCardAccent }]}>
-                  <Feather name="bookmark" size={20} color={c.buttonForeground} />
-                </View>
-                <Text style={[styles.flashTerm, { color: c.vocabCardForeground }]}>{currentWord.term}</Text>
-                <View style={[styles.divider, { backgroundColor: c.headerButton }]} />
-                <Text style={[styles.flashMeaning, { color: c.vocabCardMuted }]}>{displayCourseMeaning(currentWord)}</Text>
+                {showExample ? (
+                  <>
+                    <Text style={[styles.exampleWord, { color: c.vocabCardMuted }]}>{currentWord.term}</Text>
+                    <View style={[styles.divider, { backgroundColor: c.headerButton }]} />
+                    <Text testID="course-example" style={[styles.flashExample, { color: c.vocabCardForeground }]}>
+                      {segmentExample(currentWord.example, currentWord.term).map((segment, index) => (
+                        <Text key={`${segment.text}-${index}`} style={segment.underline ? styles.exampleUnderline : undefined}>
+                          {segment.text}
+                        </Text>
+                      ))}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <View style={[styles.flashIcon, { backgroundColor: c.vocabCardAccent }]}>
+                      <Feather name="bookmark" size={20} color={c.buttonForeground} />
+                    </View>
+                    <Text style={[styles.flashTerm, { color: c.vocabCardForeground }]}>{currentWord.term}</Text>
+                    <View style={[styles.divider, { backgroundColor: c.headerButton }]} />
+                    <Text style={[styles.flashMeaning, { color: c.vocabCardMuted }]}>{displayCourseMeaning(currentWord)}</Text>
+                  </>
+                )}
               </View>
+              <Pressable
+                testID="course-flip-example"
+                accessibilityRole="button"
+                accessibilityState={{ selected: showExample }}
+                accessibilityLabel={showExample ? 'Lật lại từ và nghĩa' : 'Lật thẻ xem ví dụ'}
+                onPress={() => setShowExample(value => !value)}
+                style={[styles.flipButton, { backgroundColor: c.secondary, borderColor: c.border }]}
+              >
+                <Feather name={showExample ? 'rotate-ccw' : 'rotate-cw'} size={17} color={c.primary} />
+                <Text style={[styles.flipText, { color: c.primary }]}>
+                  {showExample ? 'Lật lại từ và nghĩa' : 'Lật thẻ xem ví dụ'}
+                </Text>
+              </Pressable>
               <Text style={[styles.helper, { color: c.mutedForeground }]}>
                 Đọc từ và nghĩa, sau đó thử viết lại từ tiếng Anh.
               </Text>
@@ -371,6 +422,11 @@ const styles = StyleSheet.create({
   flashTerm: { fontFamily: F.b, fontSize: 34, textAlign: 'center' },
   divider: { width: 52, height: 2, borderRadius: 2 },
   flashMeaning: { fontFamily: F.m, fontSize: 21, textAlign: 'center', lineHeight: 30 },
+  exampleWord: { fontFamily: F.s, fontSize: 16, textAlign: 'center' },
+  flashExample: { fontFamily: F.m, fontSize: 19, textAlign: 'center', lineHeight: 29 },
+  exampleUnderline: { textDecorationLine: 'underline' },
+  flipButton: { alignSelf: 'center', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16 },
+  flipText: { fontFamily: F.s, fontSize: 14 },
   helper: { fontFamily: F.r, fontSize: 14, textAlign: 'center', lineHeight: 21 },
   prompt: { fontFamily: F.s, fontSize: 27, lineHeight: 37, textAlign: 'center', marginTop: 16 },
   answerInput: { minHeight: 58, borderRadius: 16, borderWidth: 1, paddingHorizontal: 17, fontFamily: F.m, fontSize: 19 },
@@ -388,7 +444,9 @@ const styles = StyleSheet.create({
   wordRowText: { flex: 1, gap: 3 },
   wordTerm: { fontFamily: F.s, fontSize: 14 },
   wordMeaning: { fontFamily: F.r, fontSize: 13 },
-  footer: { paddingHorizontal: 16, paddingTop: 11, borderTopWidth: 1 },
+  footer: { paddingHorizontal: 16, paddingTop: 11, borderTopWidth: 1, gap: 10 },
+  addAllButton: { minHeight: 48, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  addAllText: { fontFamily: F.s, fontSize: 15 },
   completedWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 15 },
   completedIcon: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
 });

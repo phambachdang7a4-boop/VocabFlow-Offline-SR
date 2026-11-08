@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { mkdtempSync, rmSync } = require('node:fs');
+const { mkdtempSync, readFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { createRepository, loadTs } = require('./test-support.cjs');
@@ -44,6 +44,8 @@ let second;
     const saved = personalWords.find(word => word.term === source.term);
     assert.equal(saved.dictionaryEntryId, source.dictionaryEntryId);
     assert.equal(saved.dictionarySenseId, source.dictionarySenseId);
+    assert.ok(source.example.trim(), `Ví dụ khóa học phải lấy từ từ điển offline: ${source.term}`);
+    assert.equal(saved.example, source.example);
     assert.ok(saved.note.includes(BASIC_COURSE_ATTRIBUTION), 'Nguồn từ điển phải được giữ khi lưu khóa học.');
   }
   assert.ok(personalWords.every(word => word.level === 1 && word.reviewCount === 0 && word.nextReviewOn === '2026-11-07'));
@@ -55,8 +57,58 @@ let second;
 
   assert.equal(await second.repo.finishCourseLesson(lesson.id, [selectedOne.id, selectedTwo.id]), 0, 'Re-finishing must not create duplicates.');
   assert.equal((await second.repo.listWords()).length, 2);
-  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 7);
-  console.log('PASS: no seeded words; lesson/checklist state survives reopen; only checked dictionary senses enter the notebook at SRS level 1 with source IDs and attribution; completion and duplicate protection persist in SQLite.');
+
+  const allWordsLesson = BASIC_COURSE_LESSONS[1];
+  const allWordIds = allWordsLesson.words.map(word => word.id);
+  assert.equal(
+    await second.repo.finishCourseLesson(allWordsLesson.id, allWordIds),
+    allWordsLesson.words.length,
+    'Thêm tất cả phải lưu mọi mục từ-nghĩa trong bài.',
+  );
+  const afterAddAll = await second.repo.listWords();
+  for (const source of allWordsLesson.words) {
+    const saved = afterAddAll.find(word =>
+      word.dictionaryEntryId === source.dictionaryEntryId &&
+      word.dictionarySenseId === source.dictionarySenseId);
+    assert.ok(saved, `Thiếu mục đã chọn tất cả: ${source.term}.`);
+    assert.equal(saved.example, source.example);
+  }
+
+  const manualSource = BASIC_COURSE_LESSONS[2].words[0];
+  await second.repo.saveWord({
+    term: manualSource.term,
+    meaning: displayCourseMeaning(manualSource),
+    ipa: manualSource.ipa,
+    example: '',
+    note: 'Ví dụ do người dùng quản lý',
+    dictionaryEntryId: manualSource.dictionaryEntryId,
+    dictionarySenseId: manualSource.dictionarySenseId,
+  });
+  const legacyCourseWord = afterAddAll.find(word => word.dictionarySenseId === selectedOne.dictionarySenseId);
+  const progressBeforeMigration = {
+    level: legacyCourseWord.level,
+    reviewCount: legacyCourseWord.reviewCount,
+    nextReviewOn: legacyCourseWord.nextReviewOn,
+  };
+  second.db.prepare("UPDATE words SET example = '' WHERE id = ?").run(legacyCourseWord.id);
+  second.db.exec('PRAGMA user_version = 7;');
+  second.db.close();
+  second = createRepository(root, '2026-11-07T12:00:00');
+  const afterMigration = await second.repo.listWords();
+  const restoredCourseWord = afterMigration.find(word => word.id === legacyCourseWord.id);
+  assert.equal(restoredCourseWord.example, selectedOne.example, 'Migration bổ sung ví dụ cho từ khóa học cũ.');
+  assert.deepEqual({
+    level: restoredCourseWord.level,
+    reviewCount: restoredCourseWord.reviewCount,
+    nextReviewOn: restoredCourseWord.nextReviewOn,
+  }, progressBeforeMigration, 'Migration không đổi tiến độ SRS.');
+  const manualWord = afterMigration.find(word => word.dictionarySenseId === manualSource.dictionarySenseId);
+  assert.equal(manualWord.example, '', 'Migration không ghi đè mục người dùng tự quản lý.');
+  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 8);
+  const lessonScreen = readFileSync(join(__dirname, '../app/course/[lessonId].tsx'), 'utf8');
+  assert.match(lessonScreen, /testID="course-flip-example"/, 'Bài học cần có nút lật thẻ xem ví dụ.');
+  assert.match(lessonScreen, /testID="course-add-all"/, 'Bài học cần có nút thêm tất cả mục từ.');
+  console.log('PASS: source examples from offline SQLite; lesson flip/add-all controls; selected and all-word saves; old course-example migration without overwriting personal data or SRS; persistence and duplicate protection.');
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
