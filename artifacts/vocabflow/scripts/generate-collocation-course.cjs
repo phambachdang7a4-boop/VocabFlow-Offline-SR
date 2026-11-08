@@ -174,6 +174,42 @@ function isComponentPos(componentPos, term, expected) {
   return componentPos.get(normalize(term))?.has(expected) ?? false;
 }
 
+function classifySupplementalTerm(term, lexicalPos, componentPos) {
+  const normalizedTerm = normalize(term);
+  if (!/^[a-z]+ [a-z]+$/i.test(normalizedTerm)) return null;
+  const [first, second] = normalizedTerm.split(' ');
+  if (lexicalPos.has('v')) {
+    if (particlesAndPrepositions.has(second)) {
+      return { type: 'VERB+ADP', sourcePos: 'verb' };
+    }
+    if (
+      isComponentPos(componentPos, first, 'verb') &&
+      isComponentPos(componentPos, second, 'noun')
+    ) {
+      return { type: 'VERB+NOUN', sourcePos: 'verb' };
+    }
+  }
+  if (
+    lexicalPos.has('n') &&
+    isComponentPos(componentPos, first, 'adjective') &&
+    isComponentPos(componentPos, second, 'noun')
+  ) {
+    return { type: 'ADJ+NOUN', sourcePos: 'noun' };
+  }
+  return null;
+}
+
+function validateSupplementalRows(rows) {
+  const seenTerms = new Set();
+  for (const row of rows) {
+    const term = normalize(row.bigram);
+    assert.match(term, /^[a-z]+ [a-z]+$/i,
+      `Cụm nguồn bổ sung phải có đúng hai từ: ${row.bigram}.`);
+    assert.ok(!seenTerms.has(term), `Cụm nguồn bổ sung bị trùng: ${row.bigram}.`);
+    seenTerms.add(term);
+  }
+}
+
 function createComponentFrequency(sourceRows) {
   const frequencies = new Map();
   for (const row of sourceRows) {
@@ -230,35 +266,12 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), freq
 
   const rows = [];
   for (const [term, lexicalPos] of lexicalPosByTerm) {
+    const classification = classifySupplementalTerm(term, lexicalPos, componentPos);
+    if (!classification) continue;
     const [first, second] = term.split(' ');
-    let type;
-    let sourcePos;
-    if (lexicalPos.has('v')) {
-      if (particlesAndPrepositions.has(second)) {
-        type = 'VERB+ADP';
-        sourcePos = 'verb';
-      } else if (
-        isComponentPos(componentPos, first, 'verb') &&
-        isComponentPos(componentPos, second, 'noun')
-      ) {
-        type = 'VERB+NOUN';
-        sourcePos = 'verb';
-      }
-    }
-    if (
-      !type &&
-      lexicalPos.has('n') &&
-      isComponentPos(componentPos, first, 'adjective') &&
-      isComponentPos(componentPos, second, 'noun')
-    ) {
-      type = 'ADJ+NOUN';
-      sourcePos = 'noun';
-    }
-    if (!type) continue;
     rows.push({
       bigram: term,
-      type,
-      sourcePos,
+      ...classification,
       lang: 'en',
       count: null,
       npmi: null,
@@ -274,6 +287,7 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), freq
     right.popularityScore - left.popularityScore ||
     left.bigram.localeCompare(right.bigram, 'en') ||
     left.type.localeCompare(right.type));
+  validateSupplementalRows(rows);
   return rows;
 }
 
@@ -476,4 +490,12 @@ if (require.main === module) {
   }
 }
 
-module.exports = { createSupplementalRows, supplementalSource, supplementalOrdering };
+module.exports = {
+  classifySupplementalTerm,
+  createSupplementalRows,
+  expectedPos,
+  mapCollocations,
+  supplementalSource,
+  supplementalOrdering,
+  validateSupplementalRows,
+};

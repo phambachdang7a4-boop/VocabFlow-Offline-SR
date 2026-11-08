@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check:speech": "node scripts/check-speech.cjs",
     "course:generate": "node scripts/generate-basic-course-from-dictionary.cjs && node scripts/generate-cefr-courses.cjs && node scripts/generate-advanced-courses.cjs && node scripts/generate-collocation-course.cjs",
-    "check:course": "node scripts/check-basic-course.cjs && node scripts/check-cefr-course.cjs && node scripts/check-advanced-courses.cjs && node scripts/check-collocation-course.cjs",
+    "check:course": "node scripts/check-basic-course.cjs && node scripts/check-cefr-course.cjs && node scripts/check-advanced-courses.cjs && node scripts/check-collocation-classification.cjs && node scripts/check-collocation-course.cjs",
     "check:course-storage": "node scripts/check-course-storage.cjs"
   },
   "devDependencies": {
