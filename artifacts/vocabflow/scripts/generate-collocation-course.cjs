@@ -16,6 +16,7 @@ const cefrManifestPath = join(dataDir, 'cefr-course-manifest.json');
 const advancedManifestPath = join(dataDir, 'advanced-course-manifest.json');
 const outputManifestPath = join(dataDir, 'collocation-course-manifest.json');
 const outputTypeScriptPath = join(dataDir, 'collocation-courses.ts');
+const phraseFrequencyPath = join(dataDir, 'wikitext-103-raw-v1-train-bigram-counts.jsonl');
 
 const source = {
   name: 'OpenSubtitles Collocations',
@@ -43,15 +44,51 @@ const supplementalSource = {
   bytes: 9986555,
   sha256: '7d749f6e2c39e6970e4997839dcf6e42fd281f3c2fae0171d2192bae8cfa4b51',
 };
+const frequencySource = {
+  name: 'WikiText-103 Raw Bigram Counts',
+  version: 'wikitext-103-raw-v1',
+  url: 'https://huggingface.co/datasets/Salesforce/wikitext',
+  commit: 'b08601e04326c79dfdd32d625aee71d232d685c3',
+  license: 'CC BY-SA 3.0',
+  licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+  upstreamLicense: 'GFDL',
+  upstreamLicenseUrl: 'https://www.gnu.org/licenses/fdl-1.3.html',
+  sourceFiles: [
+    {
+      file: 'wikitext-103-raw-v1/train-00000-of-00002.parquet',
+      fileUrl: 'https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00000-of-00002.parquet',
+      bytes: 156987808,
+      sha256: '74da360f23826045b3e6ac6375411fdb15f003030aa74f2596ed08b857cb9212',
+    },
+    {
+      file: 'wikitext-103-raw-v1/train-00001-of-00002.parquet',
+      fileUrl: 'https://huggingface.co/datasets/Salesforce/wikitext/resolve/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1/train-00001-of-00002.parquet',
+      bytes: 157088770,
+      sha256: 'ba090ac30dbf5461e8dcbdd1a1b8e6f3cf9c2c756d64f0c1220450acd514f720',
+    },
+  ],
+  countFile: 'wikitext-103-raw-v1-train-bigram-counts.jsonl',
+  countFileBytes: 533489,
+  countFileSha256: 'd8e0f2b933705385db897bfed107d02c3997ec25d398ab00a15903814a10485d',
+  countMetric: 'exact, case-insensitive two-word occurrences separated by whitespace in raw training rows',
+};
 const frequencyOrdering = {
-  name: 'OpenSubtitles direct phrase frequency',
-  sourceName: source.name,
-  sourceCommit: source.commit,
-  sourceFile: source.file,
-  sourceSha256: source.sha256,
-  metric: 'count for the exact bigram and collocation type in the pinned dataset',
+  name: 'Source-specific direct phrase frequency',
+  primarySource: source.name,
+  primarySourceCommit: source.commit,
+  primarySourceFile: source.file,
+  primarySourceSha256: source.sha256,
+  primaryMetric: 'count for the exact bigram and collocation type in the pinned dataset',
+  supplementalSource: frequencySource.name,
+  supplementalSourceVersion: frequencySource.version,
+  supplementalSourceCommit: frequencySource.commit,
+  supplementalSourceFiles: frequencySource.sourceFiles.map(({ file, sha256 }) => ({ file, sha256 })),
+  supplementalCountFile: frequencySource.countFile,
+  supplementalCountFileSha256: frequencySource.countFileSha256,
+  supplementalMetric: frequencySource.countMetric,
   direction: 'descending',
-  missingFrequency: 'null; ranked after directly observed phrases',
+  crossSourceComparison: 'counts are ranked within their own source and are not comparable across sources',
+  zeroFrequency: '0 means the exact phrase does not occur in the pinned WikiText-103 training split',
   tieBreak: 'bigram ascending (English locale), then type ascending',
 };
 const dictionary = {
@@ -92,6 +129,21 @@ function downloadVerifiedWordNet() {
   assert.equal(bytes.byteLength, supplementalSource.bytes, 'Tệp Open English WordNet có kích thước khác bản đã ghim.');
   assert.equal(sha256(bytes), supplementalSource.sha256, 'Tệp Open English WordNet không khớp SHA-256.');
   return wordnetPath;
+}
+
+function readVerifiedPhraseFrequency() {
+  const bytes = fs.readFileSync(phraseFrequencyPath);
+  assert.equal(bytes.byteLength, frequencySource.countFileBytes,
+    'Tệp số đếm cụm WikiText-103 có kích thước khác bản đã ghim.');
+  assert.equal(sha256(bytes), frequencySource.countFileSha256,
+    'Tệp số đếm cụm WikiText-103 không khớp SHA-256.');
+  return bytes.toString('utf8').trim().split(/\r?\n/).map((line, index) => {
+    try {
+      return JSON.parse(line);
+    } catch {
+      throw new Error(`Tệp số đếm cụm WikiText-103 có JSONL không hợp lệ tại dòng ${index + 1}.`);
+    }
+  });
 }
 
 function normalize(value) {
@@ -215,10 +267,10 @@ function createPhraseFrequency(sourceRows) {
   const frequencies = new Map();
   for (const row of sourceRows) {
     const count = Number(row.count);
-    if (!Number.isSafeInteger(count) || count < 0) {
+    if (!row.bigram || !Number.isSafeInteger(count) || count < 0) {
       throw new Error(`Tần suất không hợp lệ trong nguồn: ${row.bigram}.`);
     }
-    const key = `${normalize(row.bigram)}|${row.type}`;
+    const key = normalize(row.bigram);
     if (frequencies.has(key)) throw new Error(`Cụm tần suất bị trùng trong nguồn: ${row.bigram}.`);
     frequencies.set(key, count);
   }
@@ -235,7 +287,7 @@ function compareFrequencyRows(left, right) {
 
 function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), frequencyRows) {
   assert.ok(Array.isArray(frequencyRows) && frequencyRows.length > 0,
-    'Cần danh sách collocation OpenSubtitles đã xác minh để xếp hạng cụm WordNet.');
+    'Cần số đếm cụm WikiText-103 đã xác minh để xếp hạng cụm WordNet.');
   const fileNames = execFileSync('unzip', ['-Z1', wordnetPath], { encoding: 'utf8' })
     .trim()
     .split(/\r?\n/)
@@ -277,16 +329,20 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), freq
   for (const [term, lexicalPos] of lexicalPosByTerm) {
     const classification = classifySupplementalTerm(term, lexicalPos, componentPos);
     if (!classification) continue;
+    const count = phraseFrequency.get(normalize(term));
+    assert.notEqual(count, undefined, `Thiếu số đếm trực tiếp trong WikiText-103: ${term}.`);
     rows.push({
       bigram: term,
       ...classification,
       lang: 'en',
-      count: phraseFrequency.get(`${normalize(term)}|${classification.type}`) ?? null,
+      count,
       npmi: null,
       score: null,
     });
   }
 
+  assert.equal(phraseFrequency.size, rows.length,
+    'Tệp số đếm WikiText-103 phải khớp chính xác các cụm WordNet đủ điều kiện.');
   rows.sort(compareFrequencyRows);
   validateSupplementalRows(rows);
   return rows;
@@ -365,9 +421,11 @@ function attribution() {
     `${dictionary.license}, ${dictionary.url}/tree/${dictionary.commit}. ` +
     `${supplementalSource.name} ${supplementalSource.version}, ${supplementalSource.license}, ` +
     `${supplementalSource.releaseUrl}; based on WordNet 3.1, Copyright 2011 Princeton University, ` +
-    `${supplementalSource.upstreamLicenseUrl}. Direct phrase counts and ordering use the pinned ` +
-    `${frequencyOrdering.sourceName} dataset (${frequencyOrdering.sourceCommit}); phrases without ` +
-    `a direct count are placed after observed phrases.`;
+    `${supplementalSource.upstreamLicenseUrl}. OpenSubtitles phrase counts use its pinned dataset; ` +
+    `${frequencySource.name} ${frequencySource.version}, ${frequencySource.license} / ` +
+    `${frequencySource.upstreamLicense}, ${frequencySource.upstreamLicenseUrl}, ` +
+    `${frequencySource.url}/tree/${frequencySource.commit} supplies direct counts for WordNet phrases. ` +
+    `Ranks are within each source because their corpus counts are not comparable.`;
 }
 
 function buildLessons(manifest, lookup) {
@@ -426,6 +484,7 @@ function main() {
   const rows = downloadVerified();
   assert.equal(rows.length, 15000, 'Nguồn cần đúng 15.000 collocation tiếng Anh.');
   rows.sort(compareFrequencyRows);
+  const phraseFrequencyRows = readVerifiedPhraseFrequency();
   const verifiedWordNetPath = downloadVerifiedWordNet();
   const dictionaryBytes = fs.readFileSync(dictionaryPath);
   assert.equal(dictionaryBytes.byteLength, dictionary.bytes, 'Kho từ điển có kích thước khác bản đã ghim.');
@@ -437,7 +496,7 @@ function main() {
       db,
       verifiedWordNetPath,
       new Set(rows.map(row => normalize(row.bigram))),
-      rows,
+      phraseFrequencyRows,
     );
     const lookup = createLookup(db, [...rows, ...supplementalRows].map(row => row.bigram));
     const primary = mapCollocations(rows, lookup, usedSenses, usedMeanings, 'opensubs');
@@ -457,6 +516,7 @@ function main() {
     const manifest = {
       source: { ...source },
       supplementalSource: { ...supplementalSource },
+      frequencySource: { ...frequencySource },
       frequencyOrdering: { ...frequencyOrdering },
       dictionary: { ...dictionary },
       sourceCount: primary.sourceCount,
@@ -499,6 +559,8 @@ module.exports = {
   mapCollocations,
   compareFrequencyRows,
   supplementalSource,
+  frequencySource,
   frequencyOrdering,
+  readVerifiedPhraseFrequency,
   validateSupplementalRows,
 };

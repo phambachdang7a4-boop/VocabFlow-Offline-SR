@@ -8,7 +8,9 @@ const {
   createSupplementalRows,
   compareFrequencyRows,
   supplementalSource,
+  frequencySource,
   frequencyOrdering,
+  readVerifiedPhraseFrequency,
 } = require('./generate-collocation-course.cjs');
 
 const root = resolve(__dirname, '..');
@@ -17,6 +19,7 @@ const lessonScreen = fs.readFileSync(join(root, 'app/course/[lessonId].tsx'), 'u
 const dictionaryPath = resolve(root, '../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const sourcePath = resolve(root, '../../generated-artifacts/collocations/opensubs-en.jsonl');
 const wordnetPath = resolve(root, '../../generated-artifacts/collocations/english-wordnet-2025-json.zip');
+const phraseFrequencyPath = join(dataDir, frequencySource.countFile);
 const manifest = JSON.parse(fs.readFileSync(join(dataDir, 'collocation-course-manifest.json'), 'utf8'));
 const { COLLOCATION_COURSES } = collocationCourses;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -48,20 +51,25 @@ assert.equal(manifest.supplementalSource.upstreamLicenseUrl, supplementalSource.
 assert.equal(manifest.supplementalSource.fileUrl, supplementalSource.fileUrl);
 assert.equal(manifest.supplementalSource.bytes, supplementalSource.bytes);
 assert.equal(manifest.supplementalSource.sha256, supplementalSource.sha256);
+assert.deepEqual(manifest.frequencySource, frequencySource);
 assert.deepEqual(manifest.frequencyOrdering, frequencyOrdering);
-assert.equal(manifest.frequencyOrdering.sourceCommit, manifest.source.commit);
-assert.equal(manifest.frequencyOrdering.sourceSha256, manifest.source.sha256);
+assert.equal(manifest.frequencyOrdering.primarySourceCommit, manifest.source.commit);
+assert.equal(manifest.frequencyOrdering.primarySourceSha256, manifest.source.sha256);
 assert.equal(manifest.dictionary.commit, '388adc0826300912e5b0311c089e0e70494b065f');
 assert.equal(manifest.dictionary.license, 'CC BY-SA 4.0');
 
 const sourceBytes = fs.readFileSync(sourcePath);
 const wordnetBytes = fs.readFileSync(wordnetPath);
 const dictionaryBytes = fs.readFileSync(dictionaryPath);
+const phraseFrequencyBytes = fs.readFileSync(phraseFrequencyPath);
 assert.equal(sha256(sourceBytes), manifest.source.sha256);
 assert.equal(wordnetBytes.byteLength, manifest.supplementalSource.bytes);
 assert.equal(sha256(wordnetBytes), manifest.supplementalSource.sha256);
 assert.equal(sha256(dictionaryBytes), manifest.dictionary.sha256);
+assert.equal(phraseFrequencyBytes.byteLength, manifest.frequencySource.countFileBytes);
+assert.equal(sha256(phraseFrequencyBytes), manifest.frequencySource.countFileSha256);
 const sourceRows = sourceBytes.toString('utf8').trim().split(/\r?\n/).map(line => JSON.parse(line));
+const phraseFrequencyRows = readVerifiedPhraseFrequency();
 assert.equal(sourceRows.length, 15000);
 assert.equal(manifest.sourceCount, sourceRows.length);
 assert.equal(manifest.words.filter(item => item.sourceId === 'opensubs').length +
@@ -86,6 +94,8 @@ assert.match(course.attribution, /CC BY 4\.0/);
 assert.match(course.attribution, /CC BY-SA 4\.0/);
 assert.match(course.attribution, /Open English WordNet 2025 Edition/);
 assert.match(course.attribution, /WordNet 3\.1, Copyright 2011 Princeton University/);
+assert.match(course.attribution, /WikiText-103 Raw Bigram Counts/);
+assert.match(course.attribution, /CC BY-SA 3\.0/);
 
 const sourceByRank = [...sourceRows].sort(compareFrequencyRows);
 assert.ok(sourceByRank.every((item, index) => Number.isSafeInteger(item.count) &&
@@ -107,12 +117,15 @@ try {
     db,
     wordnetPath,
     new Set(sourceRows.map(row => normalize(row.bigram))),
-    sourceRows,
+    phraseFrequencyRows,
   );
   assert.ok(supplementalRows.every((row, index) =>
     index === 0 || compareFrequencyRows(supplementalRows[index - 1], row) <= 0),
-  'Các cụm WordNet phải xếp theo count trực tiếp, null cuối cùng và thứ tự phụ ổn định.');
+  'Các cụm WordNet phải xếp theo count trực tiếp và thứ tự phụ ổn định.');
   assert.equal(manifest.supplementalSourceCount, supplementalRows.length);
+  assert.equal(phraseFrequencyRows.length, supplementalRows.length);
+  assert.ok(supplementalRows.every(row => Number.isSafeInteger(row.count) && row.count >= 0),
+    'Mọi cụm WordNet phải có số đếm trực tiếp từ WikiText-103, kể cả số đếm 0.');
   const supplementalAcceptedCount = manifest.words.filter(item => item.sourceId === 'oewn-2025').length;
   assert.equal(supplementalAcceptedCount +
     manifest.supplementalMissingCount +
