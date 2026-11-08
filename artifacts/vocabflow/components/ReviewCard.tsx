@@ -6,6 +6,7 @@ import { useColors } from '@/hooks/useColors';
 import type { VocabularyWord } from '@/data/types';
 import { checkReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
 import { Button, ErrorBanner, F } from '@/components/ui';
+import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 
 export function calendarLabel(day: string) {
   return day.split('-').reverse().join('/');
@@ -29,6 +30,7 @@ export interface ReviewCardProps {
 export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBusyChange, onNext }: ReviewCardProps) {
   const c = useColors();
   const { recordReview, setWordFrozen } = useVocabulary();
+  const speech = useSpeechPreferences();
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('answering');
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -179,6 +181,10 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   return (
     <View style={[styles.root, styles.inlineRoot]}>
       <View testID={sentenceAnswer ? 'review-inline-question' : choiceAnswer ? 'review-choice-question' : 'review-inline-meaning'} style={styles.inlineQuestion}>
+        <Pressable testID="review-speak-word" accessibilityRole="button" accessibilityLabel={`Phát âm ${word.term}`}
+          onPress={() => { void speech.speakWord(word.term); }} hitSlop={10} style={styles.speakerButton}>
+          <Feather name="volume-2" size={23} color={c.primary} />
+        </Pressable>
         {sentenceAnswer || choiceAnswer ? (
           <View testID="review-inline-sentence" style={styles.sentenceFlow}>{inlinePrompt()}</View>
         ) : (
@@ -291,6 +297,7 @@ const styles = StyleSheet.create({
   root: { gap: 12 },
   inlineRoot: { flexGrow: 1, justifyContent: 'space-between', paddingBottom: 8 },
   inlineQuestion: { flexGrow: 1, minHeight: 180, alignItems: 'center', justifyContent: 'flex-start', gap: 20, paddingHorizontal: 4, paddingTop: 8 },
+  speakerButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
   sentenceFlow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 4, paddingHorizontal: 2 },
   sentenceToken: { fontFamily: F.m, fontSize: 18, lineHeight: 28 },
   extraBlank: { fontFamily: F.s, fontSize: 18, letterSpacing: 2, paddingHorizontal: 4 },

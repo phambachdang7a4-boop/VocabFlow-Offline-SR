@@ -23,6 +23,9 @@ function mount(file, properties = {}, initial = {}) {
   const slots = [], effects = [], routes = [], tabOptions = [];
   const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
+  const speechContext = {
+    ready: true, autoRead: false, slowRead: false, stopSpeaking: async () => {}, speakWord: async () => {},
+  };
   const react = {
     createElement: element,
     useState(initial) {
@@ -51,6 +54,7 @@ function mount(file, properties = {}, initial = {}) {
     'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; }, useNavigation: () => navigation },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
+    '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => speechContext },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
     '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,

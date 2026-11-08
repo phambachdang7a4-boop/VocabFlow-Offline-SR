@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
@@ -7,11 +7,13 @@ import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppearance, type AppearanceMode } from '@/contexts/AppearanceContext';
+import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 
 export default function SettingsScreen() {
   const c = useColors();
   const { words, frozenWords, loading, error, reload } = useVocabulary();
   const appearance = useAppearance();
+  const speech = useSpeechPreferences();
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === 'web' ? 34 : insets.bottom) + 24;
 
@@ -57,6 +59,43 @@ export default function SettingsScreen() {
         {appearance.error ? <ErrorBanner message={appearance.error} onRetry={() => { void appearance.retryLoad(); }} /> : null}
         {appearance.loading ? <Text accessibilityLiveRegion="polite" style={[styles.appearanceHint, { color: c.mutedForeground }]}>Đang tải lựa chọn giao diện…</Text> : null}
         {appearance.saving ? <Text accessibilityLiveRegion="polite" style={[styles.appearanceHint, { color: c.mutedForeground }]}>Đang lưu giao diện…</Text> : null}
+        <Text style={[styles.section, { color: c.mutedForeground }]}>PHÁT ÂM</Text>
+        <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
+          Dùng giọng tiếng Anh có sẵn trên điện thoại. Không tải từ hoặc âm thanh lên mạng.
+        </Text>
+        <View style={[styles.speechGroup, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }]}>
+          <View style={styles.speechRow}>
+            <View style={styles.speechText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>Tự phát âm khi hiện từ mới</Text>
+              <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>Đọc từ bằng giọng tiếng Anh khi mở thẻ mới.</Text>
+            </View>
+            <Switch
+              testID="speech-auto-read"
+              accessibilityLabel="Tự phát âm khi hiện từ mới"
+              value={speech.autoRead}
+              disabled={!speech.ready || speech.saving}
+              onValueChange={value => { void speech.setAutoRead(value); }}
+              trackColor={{ false: c.border, true: c.primary }}
+              thumbColor={c.card}
+            />
+          </View>
+          <View style={[styles.speechRow, { borderTopWidth: 1, borderTopColor: c.border }]}>
+            <View style={styles.speechText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>Đọc chậm</Text>
+              <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>Giảm tốc độ phát âm cho dễ nghe.</Text>
+            </View>
+            <Switch
+              testID="speech-slow-read"
+              accessibilityLabel="Đọc chậm"
+              value={speech.slowRead}
+              disabled={!speech.ready || speech.saving}
+              onValueChange={value => { void speech.setSlowRead(value); }}
+              trackColor={{ false: c.border, true: c.primary }}
+              thumbColor={c.card}
+            />
+          </View>
+        </View>
+        {speech.error ? <ErrorBanner message={speech.error} onRetry={() => { void speech.retryLoad(); }} /> : null}
         <View style={[styles.stat, { backgroundColor: c.vocabCard, borderRadius: c.radius + 6 }]}>
           <Text style={[styles.statLabel, { color: c.accentSoft }]}>SỐ TỪ ĐÃ LƯU</Text>
           <Text style={[styles.statNum, { color: c.primaryForeground }]}>{loading && words.length === 0 ? '—' : words.length}</Text>
@@ -95,6 +134,9 @@ const styles = StyleSheet.create({
   appearanceOption: { minHeight: 66, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 12 },
   appearanceTitle: { fontFamily: F.b, fontSize: 16 },
   appearanceDetail: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
+  speechGroup: { borderWidth: 1, overflow: 'hidden' },
+  speechRow: { minHeight: 76, paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  speechText: { flex: 1, gap: 3 },
   group: { borderWidth: 1 },
   fact: { flexDirection: 'row', gap: 14, padding: 16 },
   factIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },

@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { getDictionaryEntry } from '@/data/dictionary';
 import { dictionaryDraft, exampleSegments, sameWordSense, type DictionaryEntry, type DictionaryPartOfSpeech, type DictionarySense } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
 import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
 import { PartOfSpeechFilter } from '@/components/PartOfSpeechFilter';
+import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 
 /** Shared reading view for one dictionary entry. Caller guarantees a valid id and a ready dictionary. */
 export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay lại' }: {
@@ -15,6 +16,7 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
 }) {
   const c = useColors();
   const { words, saveWord, loading: bookLoading, error: bookError, reload } = useVocabulary();
+  const speech = useSpeechPreferences();
   const [saving, setSaving] = useState<number | null>(null);
   const [committed, setCommitted] = useState<Set<string>>(() => new Set());
   const [lastSaved, setLastSaved] = useState<{ key: string; definition: string } | null>(null);
@@ -47,6 +49,11 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
     () => parts ?? entry?.partsOfSpeech.slice(0, 1) ?? [],
     [parts, entry?.partsOfSpeech],
   );
+
+  useFocusEffect(useCallback(() => {
+    if (entry && speech.ready && speech.autoRead) void speech.speakWord(entry.term);
+    return () => { void speech.stopSpeaking(); };
+  }, [entry?.id, speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]));
 
   useEffect(() => {
     const rid = ++reqRef.current;
@@ -144,7 +151,13 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
       {saveError ? <ErrorBanner message={saveError} /> : null}
       {lastSaved ? <Text testID="entry-save-success" accessibilityLiveRegion="polite" style={[styles.noticeTitle, { color: c.dictSaved }]}>Đã lưu nghĩa “{lastSaved.definition}” vào Sổ từ.</Text> : null}
       <View style={{ gap: 10 }}>
-        <Text style={[styles.term, { color: c.dictHead }]} selectable>{entry.term}</Text>
+        <View style={styles.termRow}>
+          <Text style={[styles.term, { color: c.dictHead, flex: 1 }]} selectable>{entry.term}</Text>
+          <Pressable testID="dictionary-speak-word" accessibilityRole="button" accessibilityLabel={`Phát âm ${entry.term}`}
+            onPress={() => { void speech.speakWord(entry.term); }} hitSlop={10} style={styles.speakerButton}>
+            <Feather name="volume-2" size={23} color={c.dictHead} />
+          </Pressable>
+        </View>
         {entry.pronunciations.map((p, i) => (
           <View key={`${p.ipa}-${i}`} style={styles.ipaRow}>
             {p.region ? <Text style={[styles.region, { color: c.dictMuted }]}>{p.region.toUpperCase()}</Text> : null}
@@ -276,6 +289,8 @@ const styles = StyleSheet.create({
   back: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', minHeight: 32 },
   backText: { fontFamily: F.s, fontSize: 14 },
   term: { fontFamily: F.b, fontSize: 36, letterSpacing: -0.8 },
+  termRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  speakerButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   ipaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   region: { fontFamily: F.s, fontSize: 12, letterSpacing: 1, minWidth: 36 },
   ipa: { fontFamily: F.m, fontSize: 16 },

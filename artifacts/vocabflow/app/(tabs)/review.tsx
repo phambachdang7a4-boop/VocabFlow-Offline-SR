@@ -15,12 +15,14 @@ import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
 import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
+import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 
 type Session = { token: number; queue: number[]; processed: number[]; index: number; formatOffset: number; word: VocabularyWord; exercise: ReviewExercise };
 
 export default function ReviewScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
+  const speech = useSpeechPreferences();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const bottom = useBottomPad();
@@ -46,8 +48,13 @@ export default function ReviewScreen() {
     setSession(null);
     busyRef.current = false; setBusy(false);
     void reload();
-    return () => { setSession(null); busyRef.current = false; setBusy(false); };
-  }, [reload]));
+    return () => { void speech.stopSpeaking(); setSession(null); busyRef.current = false; setBusy(false); };
+  }, [reload, speech.stopSpeaking]));
+
+  useEffect(() => {
+    if (session && speech.ready && speech.autoRead) void speech.speakWord(session.word.term);
+    return () => { void speech.stopSpeaking(); };
+  }, [session?.token, session?.index, session?.word.id, speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]);
 
   const start = () => {
     const first = overview.dueWords[0];

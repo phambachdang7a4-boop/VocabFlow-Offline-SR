@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { VocabularyProvider } from '@/contexts/VocabularyContext';
 import { AppearanceProvider, useAppearance } from '@/contexts/AppearanceContext';
+import { SpeechPreferencesProvider } from '@/contexts/SpeechPreferencesContext';
 import { useColors } from '@/hooks/useColors';
 import {
   Inter_400Regular,
@@ -116,7 +117,9 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AppearanceProvider>
           <ErrorBoundary>
-            <VocabularyProvider><AppearanceFrame /></VocabularyProvider>
+            <SpeechPreferencesProvider>
+              <VocabularyProvider><AppearanceFrame /></VocabularyProvider>
+            </SpeechPreferencesProvider>
           </ErrorBoundary>
         </AppearanceProvider>
       </QueryClientProvider>

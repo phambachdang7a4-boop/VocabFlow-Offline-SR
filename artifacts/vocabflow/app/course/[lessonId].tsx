@@ -4,7 +4,7 @@ import {
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useVocabulary } from '@/contexts/VocabularyContext';
@@ -16,6 +16,7 @@ import {
   saveCourseProgress, saveCourseSelection, type CourseLessonProgress, type CourseLessonStage,
 } from '@/data/vocabulary';
 import { useColors } from '@/hooks/useColors';
+import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 
 export default function CourseLessonScreen() {
   const params = useLocalSearchParams<{ lessonId?: string | string[] }>();
@@ -26,6 +27,7 @@ export default function CourseLessonScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { reload } = useVocabulary();
+  const speech = useSpeechPreferences();
   const [progress, setProgress] = useState<CourseLessonProgress | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const selectedRef = useRef<Set<string>>(new Set());
@@ -62,10 +64,17 @@ export default function CourseLessonScreen() {
   }, [lesson]);
 
   useEffect(() => { void load(); }, [load]);
+  useFocusEffect(useCallback(() => () => { void speech.stopSpeaking(); }, [speech.stopSpeaking]));
 
   const stage: CourseLessonStage = progress?.stage ?? 'flashcard';
   const currentWord = lesson?.words[progress?.currentIndex ?? 0];
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  useEffect(() => {
+    if (stage === 'flashcard' && currentWord && speech.ready && speech.autoRead) {
+      void speech.speakWord(currentWord.term);
+    }
+    return () => { void speech.stopSpeaking(); };
+  }, [stage, currentWord?.id, speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]);
 
   const persistProgress = async (index: number, nextStage: Exclude<CourseLessonStage, 'completed'>) => {
     if (!lesson) return false;
@@ -321,7 +330,14 @@ export default function CourseLessonScreen() {
                     <View style={[styles.flashIcon, { backgroundColor: c.vocabCardAccent }]}>
                       <Feather name="bookmark" size={20} color={c.buttonForeground} />
                     </View>
-                    <Text style={[styles.flashTerm, { color: c.vocabCardForeground }]}>{currentWord.term}</Text>
+                    <View style={styles.termWithSpeaker}>
+                      <Text style={[styles.flashTerm, { color: c.vocabCardForeground }]}>{currentWord.term}</Text>
+                      <Pressable testID="course-speak-word" accessibilityRole="button" accessibilityLabel={`Phát âm ${currentWord.term}`}
+                        onPress={() => { void speech.speakWord(currentWord.term); }} hitSlop={10}
+                        style={styles.speakerButton}>
+                        <Feather name="volume-2" size={21} color={c.accent} />
+                      </Pressable>
+                    </View>
                     <View style={[styles.divider, { backgroundColor: c.headerButton }]} />
                     <Text style={[styles.flashMeaning, { color: c.vocabCardMuted }]}>{displayCourseMeaning(currentWord)}</Text>
                   </>
@@ -435,6 +451,8 @@ const styles = StyleSheet.create({
   answerCollocationType: { fontFamily: F.s, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 12 },
   flashIcon: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   flashTerm: { fontFamily: F.b, fontSize: 34, textAlign: 'center' },
+  termWithSpeaker: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  speakerButton: { minWidth: 40, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
   divider: { width: 52, height: 2, borderRadius: 2 },
   flashMeaning: { fontFamily: F.m, fontSize: 21, textAlign: 'center', lineHeight: 30 },
   exampleWord: { fontFamily: F.s, fontSize: 16, textAlign: 'center' },

@@ -63,10 +63,13 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@expo/vector-icons': { Feather: 'Feather' },
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
-    'expo-router': { router: { push: route => routes.push(route) } },
+    'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: () => {} },
     '@/contexts/VocabularyContext': { useVocabulary: () => ({
       words: personalWords, saveWord: services.saveWord,
       loading: services.bookLoading ?? false, error: services.bookError ?? null, reload: async () => {},
+    }) },
+    '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => ({
+      ready: true, autoRead: false, slowRead: false, stopSpeaking: async () => {}, speakWord: async () => {},
     }) },
     '@/data/vocabulary': { normalizeTerm }, '@/data/dictionary': services,
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
