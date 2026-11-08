@@ -4,7 +4,11 @@ const fs = require('node:fs');
 const { resolve, join } = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { basicCourse, cefrCourses, advancedCourses, collocationCourses, courseCatalog } = require('./test-support.cjs');
-const { createSupplementalRows, supplementalSource } = require('./generate-collocation-course.cjs');
+const {
+  createSupplementalRows,
+  supplementalSource,
+  supplementalOrdering,
+} = require('./generate-collocation-course.cjs');
 
 const root = resolve(__dirname, '..');
 const dataDir = join(root, 'data');
@@ -36,6 +40,9 @@ assert.equal(manifest.supplementalSource.upstreamLicenseUrl, supplementalSource.
 assert.equal(manifest.supplementalSource.fileUrl, supplementalSource.fileUrl);
 assert.equal(manifest.supplementalSource.bytes, supplementalSource.bytes);
 assert.equal(manifest.supplementalSource.sha256, supplementalSource.sha256);
+assert.deepEqual(manifest.supplementalOrdering, supplementalOrdering);
+assert.equal(manifest.supplementalOrdering.sourceCommit, manifest.source.commit);
+assert.equal(manifest.supplementalOrdering.sourceSha256, manifest.source.sha256);
 assert.equal(manifest.dictionary.commit, '388adc0826300912e5b0311c089e0e70494b065f');
 assert.equal(manifest.dictionary.license, 'CC BY-SA 4.0');
 
@@ -82,7 +89,20 @@ try {
     db,
     wordnetPath,
     new Set(sourceRows.map(row => normalize(row.bigram))),
+    sourceRows,
   );
+  assert.ok(supplementalRows.every((row, index) =>
+    index === 0 || supplementalRows[index - 1].popularityScore >= row.popularityScore),
+  'Các cụm WordNet không được xếp theo điểm phổ biến giảm dần.');
+  for (let index = 1; index < supplementalRows.length; index += 1) {
+    const previous = supplementalRows[index - 1];
+    const current = supplementalRows[index];
+    if (previous.popularityScore === current.popularityScore) {
+      const byTerm = previous.bigram.localeCompare(current.bigram, 'en');
+      assert.ok(byTerm < 0 || (byTerm === 0 && previous.type.localeCompare(current.type) <= 0),
+        'Thứ tự phụ khi bằng điểm không xác định.');
+    }
+  }
   assert.equal(manifest.supplementalSourceCount, supplementalRows.length);
   const supplementalAcceptedCount = manifest.words.filter(item => item.sourceId === 'oewn-2025').length;
   assert.equal(supplementalAcceptedCount +
@@ -106,6 +126,16 @@ try {
   }
   const acceptedKeys = new Set();
   const acceptedTerms = new Set();
+  for (const sourceId of ['opensubs', 'oewn-2025']) {
+    const rankedWords = manifest.words.filter(item => item.sourceId === sourceId);
+    assert.ok(rankedWords.every((item, index) =>
+      index === 0 || rankedWords[index - 1].sourceRank < item.sourceRank),
+    `Thứ tự hạng nguồn không được giữ nguyên: ${sourceId}.`);
+  }
+  const acceptedSupplementalRows = manifest.words.filter(item => item.sourceId === 'oewn-2025');
+  assert.ok(acceptedSupplementalRows.every((item, index) =>
+    index === 0 || acceptedSupplementalRows[index - 1].popularityScore >= item.popularityScore),
+  'Các cụm WordNet trong manifest không được xếp theo điểm phổ biến giảm dần.');
   const manifestWordsBySense = new Map(manifest.words.map(item => [
     `${item.entryId}:${item.senseId}`,
     item,
@@ -128,6 +158,7 @@ try {
       assert.ok(source, `Không tìm thấy mục WordNet hạng ${item.sourceRank}.`);
       assert.equal(source.bigram, item.bigram);
       assert.equal(source.type, item.type);
+      assert.equal(item.popularityScore, source.popularityScore);
       assert.ok(['VERB+ADP', 'VERB+NOUN'].includes(item.type)
         ? source.sourcePos === 'verb'
         : source.sourcePos === 'noun');
@@ -136,6 +167,11 @@ try {
   }
   const words = course.lessons.flatMap(lesson => lesson.words);
   assert.equal(words.length, manifest.words.length);
+  assert.deepEqual(
+    words.map(word => `${word.dictionaryEntryId}:${word.dictionarySenseId}`),
+    manifest.words.map(item => `${item.entryId}:${item.senseId}`),
+    'Thứ tự từ trong bài học không khớp thứ tự xếp hạng trong manifest.',
+  );
   const seenCollocationTypes = new Set();
   for (const lesson of course.lessons) {
     assert.ok(lesson.id.startsWith('collocation-1-v1-'));

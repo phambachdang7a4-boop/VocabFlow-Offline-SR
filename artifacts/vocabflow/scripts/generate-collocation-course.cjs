@@ -43,6 +43,16 @@ const supplementalSource = {
   bytes: 9986555,
   sha256: '7d749f6e2c39e6970e4997839dcf6e42fd281f3c2fae0171d2192bae8cfa4b51',
 };
+const supplementalOrdering = {
+  name: 'OpenSubtitles component-frequency proxy',
+  sourceName: source.name,
+  sourceCommit: source.commit,
+  sourceFile: source.file,
+  sourceSha256: source.sha256,
+  metric: 'minimum of the summed source bigram counts for the two components',
+  direction: 'descending',
+  tieBreak: 'bigram ascending (English locale), then type ascending',
+};
 const dictionary = {
   url: 'https://github.com/skypediacode/english-vietnamese-dictionary',
   commit: '388adc0826300912e5b0311c089e0e70494b065f',
@@ -164,7 +174,23 @@ function isComponentPos(componentPos, term, expected) {
   return componentPos.get(normalize(term))?.has(expected) ?? false;
 }
 
-function createSupplementalRows(db, wordnetPath, excludedTerms = new Set()) {
+function createComponentFrequency(sourceRows) {
+  const frequencies = new Map();
+  for (const row of sourceRows) {
+    const count = Number(row.count);
+    if (!Number.isFinite(count) || count < 0) {
+      throw new Error(`Tần suất không hợp lệ trong nguồn: ${row.bigram}.`);
+    }
+    for (const component of new Set(normalize(row.bigram).split(' '))) {
+      frequencies.set(component, (frequencies.get(component) ?? 0) + count);
+    }
+  }
+  return frequencies;
+}
+
+function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), frequencyRows) {
+  assert.ok(Array.isArray(frequencyRows) && frequencyRows.length > 0,
+    'Cần danh sách collocation OpenSubtitles đã xác minh để xếp hạng cụm WordNet.');
   const fileNames = execFileSync('unzip', ['-Z1', wordnetPath], { encoding: 'utf8' })
     .trim()
     .split(/\r?\n/)
@@ -188,6 +214,7 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set()) {
   }
 
   const componentPos = new Map();
+  const componentFrequency = createComponentFrequency(frequencyRows);
   const componentRows = db.prepare(`
     SELECT w.word AS term, d.pos
     FROM words w
@@ -236,10 +263,17 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set()) {
       count: null,
       npmi: null,
       score: null,
+      popularityScore: Math.min(
+        componentFrequency.get(normalize(first)) ?? 0,
+        componentFrequency.get(normalize(second)) ?? 0,
+      ),
     });
   }
 
-  rows.sort((left, right) => left.bigram.localeCompare(right.bigram, 'en') || left.type.localeCompare(right.type));
+  rows.sort((left, right) =>
+    right.popularityScore - left.popularityScore ||
+    left.bigram.localeCompare(right.bigram, 'en') ||
+    left.type.localeCompare(right.type));
   return rows;
 }
 
@@ -302,6 +336,7 @@ function mapCollocations(rows, lookup, usedSenses, usedMeanings, sourceId, stric
       count: row.count,
       npmi: row.npmi,
       score: row.score,
+      ...(row.popularityScore === undefined ? {} : { popularityScore: row.popularityScore }),
       entryId: selected.entryId,
       senseId: selected.senseId,
       term: selected.term,
@@ -316,7 +351,8 @@ function attribution() {
     `${dictionary.license}, ${dictionary.url}/tree/${dictionary.commit}. ` +
     `${supplementalSource.name} ${supplementalSource.version}, ${supplementalSource.license}, ` +
     `${supplementalSource.releaseUrl}; based on WordNet 3.1, Copyright 2011 Princeton University, ` +
-    `${supplementalSource.upstreamLicenseUrl}.`;
+    `${supplementalSource.upstreamLicenseUrl}. Supplemental phrase ordering uses the pinned ` +
+    `${supplementalOrdering.sourceName} component-frequency proxy (${supplementalOrdering.sourceCommit}).`;
 }
 
 function buildLessons(manifest, lookup) {
@@ -385,6 +421,7 @@ function main() {
       db,
       verifiedWordNetPath,
       new Set(rows.map(row => normalize(row.bigram))),
+      rows,
     );
     const lookup = createLookup(db, [...rows, ...supplementalRows].map(row => row.bigram));
     const primary = mapCollocations(rows, lookup, usedSenses, usedMeanings, 'opensubs');
@@ -404,6 +441,7 @@ function main() {
     const manifest = {
       source: { ...source },
       supplementalSource: { ...supplementalSource },
+      supplementalOrdering: { ...supplementalOrdering },
       dictionary: { ...dictionary },
       sourceCount: primary.sourceCount,
       missingWords: primary.missingWords,
@@ -438,4 +476,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { createSupplementalRows, supplementalSource };
+module.exports = { createSupplementalRows, supplementalSource, supplementalOrdering };
