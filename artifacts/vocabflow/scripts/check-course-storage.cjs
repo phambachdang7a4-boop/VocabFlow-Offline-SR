@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const { mkdtempSync, readFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
-const { createRepository, loadTs } = require('./test-support.cjs');
+const { createRepository, loadTs, courseCatalog } = require('./test-support.cjs');
 
 const root = mkdtempSync(join(tmpdir(), 'vocabflow-course-'));
 const { BASIC_COURSE_ATTRIBUTION, BASIC_COURSE_LESSONS, displayCourseMeaning } = loadTs(join(__dirname, '../data/basic-course.ts'));
@@ -57,6 +57,20 @@ let second;
 
   assert.equal(await second.repo.finishCourseLesson(lesson.id, [selectedOne.id, selectedTwo.id]), 0, 'Re-finishing must not create duplicates.');
   assert.equal((await second.repo.listWords()).length, 2);
+
+  for (const courseId of ['vocab-c1-v1', 'vocab-c2-v1', 'collocation-1-v1']) {
+    const course = courseCatalog.COURSE_CATALOGS.find(item => item.id === courseId);
+    assert.ok(course, `Thiếu khóa mới trong catalog: ${courseId}.`);
+    const courseLesson = course.lessons[0];
+    const courseWord = courseLesson.words[0];
+    assert.equal(await second.repo.finishCourseLesson(courseLesson.id, [courseWord.id]), 1);
+    const saved = (await second.repo.listWords()).find(word =>
+      word.dictionaryEntryId === courseWord.dictionaryEntryId &&
+      word.dictionarySenseId === courseWord.dictionarySenseId);
+    assert.ok(saved, `Không lưu được mục ${courseWord.term} từ ${course.title}.`);
+    assert.equal(saved.example, courseWord.example);
+    assert.equal((await second.repo.getCourseProgress(courseLesson.id)).stage, 'completed');
+  }
 
   const allWordsLesson = BASIC_COURSE_LESSONS[1];
   const allWordIds = allWordsLesson.words.map(word => word.id);

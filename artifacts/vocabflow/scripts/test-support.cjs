@@ -24,9 +24,13 @@ const reviewStatistics = loadTs(join(__dirname, '../domain/review-statistics.ts'
 const sqliteConnection = loadTs(join(__dirname, '../data/sqlite-connection.ts'));
 const basicCourse = loadTs(join(__dirname, '../data/basic-course.ts'));
 const cefrCourses = loadTs(join(__dirname, '../data/cefr-courses.ts'));
+const advancedCourses = loadTs(join(__dirname, '../data/advanced-courses.ts'));
+const collocationCourses = loadTs(join(__dirname, '../data/collocation-courses.ts'));
 const courseCatalog = loadTs(join(__dirname, '../data/course-catalog.ts'), {
   './basic-course': basicCourse,
   './cefr-courses': cefrCourses,
+  './advanced-courses': advancedCourses,
+  './collocation-courses': collocationCourses,
 });
 
 function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
@@ -66,4 +70,7 @@ function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   return { repo, get db() { return handle; }, setDay: day => { clock = `${day}T12:00:00`; } };
 }
 
-module.exports = { srs, reviewStatistics, createRepository, loadTs };
+module.exports = {
+  srs, reviewStatistics, createRepository, loadTs,
+  basicCourse, cefrCourses, advancedCourses, collocationCourses, courseCatalog,
+};

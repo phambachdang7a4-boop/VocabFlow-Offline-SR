@@ -1,5 +1,7 @@
 import { BASIC_COURSE_ATTRIBUTION, BASIC_COURSE_ID, BASIC_COURSE_LESSONS, BASIC_COURSE_TITLE, BASIC_COURSE_WORD_COUNT, type BasicCourseLesson } from './basic-course';
 import { CEFR_COURSES, CEFR_COURSE_LESSONS } from './cefr-courses';
+import { ADVANCED_COURSES, ADVANCED_COURSE_LESSONS } from './advanced-courses';
+import { COLLOCATION_COURSES, COLLOCATION_COURSE_LESSONS } from './collocation-courses';
 
 export interface CourseCatalogItem {
   id: string;
@@ -30,11 +32,31 @@ export const COURSE_CATALOGS: CourseCatalogItem[] = [
     lessons: course.lessons,
     attribution: course.attribution,
   })),
+  ...ADVANCED_COURSES.map(course => ({
+    id: course.id,
+    title: course.title,
+    sourceCount: course.sourceCount,
+    missingCount: course.missingWords.length,
+    skippedDuplicateCount: course.skippedDuplicateCount,
+    lessons: course.lessons,
+    attribution: course.attribution,
+  })),
+  ...COLLOCATION_COURSES.map(course => ({
+    id: course.id,
+    title: course.title,
+    sourceCount: course.sourceCount,
+    missingCount: course.missingWords.length,
+    skippedDuplicateCount: course.skippedDuplicateCount,
+    lessons: course.lessons,
+    attribution: course.attribution,
+  })),
 ];
 
 export const ALL_COURSE_LESSONS: BasicCourseLesson[] = [
   ...BASIC_COURSE_LESSONS,
   ...CEFR_COURSE_LESSONS,
+  ...ADVANCED_COURSE_LESSONS,
+  ...COLLOCATION_COURSE_LESSONS,
 ];
 
 export function courseForLesson(lessonId: string): CourseCatalogItem | undefined {
