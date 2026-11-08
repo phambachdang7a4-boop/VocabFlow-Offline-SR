@@ -237,12 +237,16 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(card.byId('review-correct'), undefined);
   assert.equal(card.byId('review-answer-correct'), undefined);
   assert.equal(card.byId('review-check').props.disabled, true);
-  card.byId('review-answer-input').props.onSubmitEditing();
+  const answerInput = card.byId('review-answer-input');
+  answerInput.props.onSubmitEditing();
   assert.equal(calls.length, 0, 'Empty answer must not submit');
-  card.byId('review-answer-input').props.onChangeText('X');
+  answerInput.props.onFocus();
+  assert.ok(card.byId('review-cursor-0'), 'Show the visible cursor in the first answer cell while focused');
+  answerInput.props.onChangeText('X');
   const afterOneLetter = Array.from({ length: 4 }, (_, index) =>
     card.byId(`review-letter-value-${index}`).props.children.join(''));
   assert.equal(afterOneLetter[0], 'X', 'Typed letter overwrites the hint in the same slot');
+  assert.ok(card.byId('review-cursor-1'), 'Move the visible cursor to the next answer cell');
   assert.notEqual(letterColor(0), hintColor, 'Typed letters use a stronger color than the hints');
   assert.ok(letterOpacity(0) > hintOpacity, 'Hints are more transparent than typed letters');
   assert.deepEqual(afterOneLetter.slice(1), initialSlots.slice(1), 'Hints in untouched slots remain visible');
@@ -261,6 +265,32 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   card.byId('review-continue').props.onPress();
   assert.equal(nexts, 1);
   assert.equal(calls.length, 1, 'Continue never persists another grade');
+
+  const invisibleSpaceCalls = [];
+  const multiWord = { ...word, term: 'find out', meaning: 'phát hiện ra', level: 4 };
+  const invisibleSpaceCard = mount('../components/ReviewCard.tsx', makeProps(multiWord), {
+    recordReview: async (...args) => { invisibleSpaceCalls.push(args); },
+  });
+  const multiWordInput = invisibleSpaceCard.byId('review-answer-input');
+  multiWordInput.props.onFocus();
+  multiWordInput.props.onChangeText('find\u200Bout');
+  assert.ok(invisibleSpaceCard.byId('review-cursor-7'), 'Keep the cursor aligned after the normalized final character');
+  invisibleSpaceCard.byId('review-check').props.onPress();
+  await invisibleSpaceCard.settle();
+  assert.deepEqual(invisibleSpaceCalls, [[1, true, 0]],
+    'A zero-width word separator from the mobile keyboard must still grade the visible answer correctly');
+
+  const immediateCalls = [];
+  const immediateCard = mount('../components/ReviewCard.tsx', makeProps(multiWord), {
+    recordReview: async (...args) => { immediateCalls.push(args); },
+  });
+  const immediateInput = immediateCard.byId('review-answer-input');
+  const submitFromPreviousRender = immediateCard.byId('review-check').props.onPress;
+  immediateInput.props.onChangeText('find out');
+  submitFromPreviousRender();
+  await immediateCard.settle();
+  assert.deepEqual(immediateCalls, [[1, true, 0]],
+    'Submission reads the latest native input value even before React rerenders');
 
   const retryCalls = [];
   let rejectFirst, retryResolve;

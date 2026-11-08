@@ -53,6 +53,13 @@ assert.equal(exercises.letterHint({ ...word, term: '++' }), null);
 for (const [input, target] of [[' WHIMSICAL ', 'whimsical'], ['TAKE   OFF', 'take off'], ['don’t', "don't"], ['part‑time', 'part-time'], ['ＨＥＬＬＯ', 'hello']]) {
   assert.equal(exercises.checkReviewAnswer(input, target), true);
 }
+for (const [input, target] of [
+  ['find\u200Bout', 'find out'],
+  ['find\uFEFFout', 'find out'],
+  ['find\u200Bout\u200B', 'find out'],
+]) {
+  assert.equal(exercises.checkReviewAnswer(input, target), true, 'Invisible word separators must not make a visually correct answer wrong');
+}
 for (const [input, target] of [['', 'go'], ['   ', 'go'], ['dessert', 'desert'], ['goes', 'go'], ['cant', "can't"], ['take-off', 'take off']]) {
   assert.equal(exercises.checkReviewAnswer(input, target), false);
 }

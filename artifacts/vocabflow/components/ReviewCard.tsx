@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
 import type { VocabularyWord } from '@/data/types';
-import { checkReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
+import { checkReviewAnswer, displayReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 
@@ -33,11 +33,13 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const speech = useSpeechPreferences();
   const [typed, setTyped] = useState('');
   const [phase, setPhase] = useState<Phase>('answering');
+  const [inputFocused, setInputFocused] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const lock = useRef(false);
   const inFlight = useRef(false);
   const outcomeRef = useRef<Outcome | null>(null);
+  const typedRef = useRef('');
   const mounted = useRef(true);
   const cb = useRef({ onCommitted, onBusyChange, onNext });
   cb.current = { onCommitted, onBusyChange, onNext };
@@ -80,9 +82,10 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   };
 
   const check = () => {
-    if (!typed.trim()) return;
+    const latestTyped = typedRef.current;
+    if (!latestTyped.trim()) return;
     Keyboard.dismiss();
-    commit({ action: 'grade', correct: checkReviewAnswer(typed, word.term), typed });
+    commit({ action: 'grade', correct: checkReviewAnswer(latestTyped, word.term), typed: latestTyped });
   };
   const choose = (choice: string) => {
     commit({ action: 'grade', correct: checkReviewAnswer(choice, word.term), typed: choice });
@@ -98,9 +101,22 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const hintPattern = exercise.hint ?? Array.from(word.term).map(char => /[\p{L}\p{N}]/u.test(char) ? '_' : char).join('');
   const sentenceAnswer = exercise.kind === 'cloze';
   const choiceAnswer = exercise.kind === 'multiple-choice';
-  const characters = Array.from(word.term.normalize('NFKC'));
-  const hintCharacters = Array.from(hintPattern.normalize('NFKC'));
-  const typedCharacters = Array.from(typed.normalize('NFKC').trim().replace(/\s+/g, ' '));
+  const characters = Array.from(displayReviewAnswer(word.term));
+  const hintCharacters = Array.from(displayReviewAnswer(hintPattern));
+  const typedCharacters = Array.from(displayReviewAnswer(typed).trim());
+  let cursorIndex = -1;
+  const lastLetterIndex = characters.reduce(
+    (lastIndex, char, index) => char === ' ' ? lastIndex : index,
+    -1,
+  );
+  if (inputFocused && characters.length > 0) {
+    if (typedCharacters.length >= characters.length) {
+      cursorIndex = lastLetterIndex;
+    } else {
+      cursorIndex = typedCharacters.length;
+      while (cursorIndex < characters.length - 1 && characters[cursorIndex] === ' ') cursorIndex += 1;
+    }
+  }
   const cellWidth = sentenceAnswer ? 25 : 32;
   const cellHeight = sentenceAnswer ? 36 : 44;
   const cellGap = sentenceAnswer ? 3 : 4;
@@ -126,6 +142,13 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
         ]}>
           {visibleChar}
         </Text>
+        {cursorIndex === index ? (
+          <View testID={`review-cursor-${index}`} style={[
+            styles.visibleCursor,
+            cursorIndex === lastLetterIndex && typedCharacters.length >= characters.length && styles.cursorAtEnd,
+            { backgroundColor: c.primary },
+          ]} />
+        ) : null}
       </View>
     );
   });
@@ -136,7 +159,9 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
         testID="review-answer-input"
         value={typed}
         selection={{ start: typed.length, end: typed.length }}
-        onChangeText={setTyped}
+        onChangeText={value => { typedRef.current = value; setTyped(value); }}
+        onFocus={() => setInputFocused(true)}
+        onBlur={() => setInputFocused(false)}
         editable={!answered && !blocked}
         placeholder=""
         autoCorrect={false}
@@ -306,6 +331,11 @@ const styles = StyleSheet.create({
   choiceLabel: { flexShrink: 1, fontFamily: F.s, fontSize: 16, lineHeight: 21, textAlign: 'center' },
   answerSlots: { position: 'relative', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', justifyContent: 'center', padding: 4 },
   letterSlot: { borderWidth: 1.5, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },
+  visibleCursor: {
+    position: 'absolute', left: '50%', top: '50%', width: 2, height: 22, borderRadius: 1,
+    transform: [{ translateX: -1 }, { translateY: -11 }],
+  },
+  cursorAtEnd: { left: undefined, right: 4, transform: [{ translateY: -11 }] },
   letterValue: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
   hiddenInput: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 2, opacity: 0.01, color: 'transparent', backgroundColor: 'transparent', borderWidth: 0, padding: 0, margin: 0 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

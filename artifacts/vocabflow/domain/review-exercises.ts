@@ -13,9 +13,18 @@ export interface ReviewExercise {
 // Tune these independently of SRS dates/levels. Always leave a character hidden.
 export const LETTER_HINT_RATIOS = [0.65, 0.4, 0.2] as const;
 
+export function displayReviewAnswer(value: string): string {
+  return value.normalize('NFKC')
+    // Android keyboards/browsers may use a zero-width space as a word separator.
+    .replace(/[\u200B\uFEFF]/gu, ' ')
+    // Remove invisible format controls that do not belong to an English answer.
+    .replace(/\p{Cf}/gu, '')
+    .replace(/[‘’]/g, "'").replace(/[‐‑–]/g, '-')
+    .replace(/\p{White_Space}+/gu, ' ');
+}
+
 export function normalizeReviewAnswer(value: string): string {
-  return value.normalize('NFKC').replace(/[‘’]/g, "'").replace(/[‐‑–]/g, '-')
-    .trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
+  return displayReviewAnswer(value).trim().toLocaleLowerCase('en');
 }
 
 export function checkReviewAnswer(answer: string, term: string): boolean {
