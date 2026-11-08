@@ -300,6 +300,14 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   const multiWordInput = invisibleSpaceCard.byId('review-answer-input');
   multiWordInput.props.onFocus();
   multiWordInput.props.onChangeText('find\u200Bout');
+  assert.equal(invisibleSpaceCard.byId('review-answer-input').props.value, 'findout',
+    'Whitespace and invisible separators are removed from typed input.');
+  const displayedMultiWord = [0, 1, 2, 3, 5, 6, 7].map(index =>
+    invisibleSpaceCard.byId(`review-letter-value-${index}`).props.children.join('')).join('');
+  assert.equal(displayedMultiWord, 'findout',
+    'Characters fill consecutive boxes while the answer slots retain their word gap.');
+  assert.equal(invisibleSpaceCard.byId('review-letter-slot-4'), undefined,
+    'The visual word boundary remains a gap, not an editable letter slot.');
   assert.ok(invisibleSpaceCard.byId('review-cursor-7'), 'Keep the cursor aligned after the normalized final character');
   invisibleSpaceCard.byId('review-check').props.onPress();
   await invisibleSpaceCard.settle();

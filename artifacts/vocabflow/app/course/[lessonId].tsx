@@ -12,9 +12,10 @@ import { displayCollocationType, displayCourseMeaning } from '@/data/basic-cours
 import { courseForLesson } from '@/data/course-catalog';
 import { exampleSegments as segmentExample } from '@/domain/dictionary';
 import {
-  finishCourseLesson, getCourseProgress, getCourseSelections, normalizeTerm,
+  finishCourseLesson, getCourseProgress, getCourseSelections,
   saveCourseProgress, saveCourseSelection, type CourseLessonProgress, type CourseLessonStage,
 } from '@/data/vocabulary';
+import { checkReviewAnswer } from '@/domain/review-exercises';
 import { useColors } from '@/hooks/useColors';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
@@ -121,7 +122,7 @@ export default function CourseLessonScreen() {
     if (!answerGuard.current.claim()) return;
     sound.unlockFromGesture();
     Keyboard.dismiss();
-    const correct = normalizeTerm(answer) === normalizeTerm(currentWord.term);
+    const correct = checkReviewAnswer(answer, currentWord.term);
     setAnswerResult(correct ? 'correct' : 'incorrect');
     sound.play(soundCueFor(correct ? 'courseAnswerCorrect' : 'courseAnswerIncorrect'));
   };

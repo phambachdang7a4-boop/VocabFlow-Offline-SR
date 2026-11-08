@@ -50,7 +50,17 @@ for (const term of ['a', 'go', 'résumé', 'take off', 'C++', '123']) {
   }
 }
 assert.equal(exercises.letterHint({ ...word, term: '++' }), null);
-for (const [input, target] of [[' WHIMSICAL ', 'whimsical'], ['TAKE   OFF', 'take off'], ['don’t', "don't"], ['part‑time', 'part-time'], ['ＨＥＬＬＯ', 'hello']]) {
+assert.equal(exercises.normalizeReviewAnswer('grow up'), 'growup');
+for (const [input, target] of [
+  [' WHIMSICAL ', 'whimsical'],
+  ['TAKE   OFF', 'take off'],
+  ['bumpinto', 'bump into'],
+  ['growup', 'grow up'],
+  ['bump into', 'bumpinto'],
+  ['don’t', "don't"],
+  ['part‑time', 'part-time'],
+  ['ＨＥＬＬＯ', 'hello'],
+]) {
   assert.equal(exercises.checkReviewAnswer(input, target), true);
 }
 for (const [input, target] of [

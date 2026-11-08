@@ -51,20 +51,36 @@ function Field({ label, required, error, hint, ...props }: TextInputProps & { re
   );
 }
 
+function ReadOnlyField({ label, value, multiline = false }: { label: string; value: string; multiline?: boolean }) {
+  const c = useColors();
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={[styles.label, { color: c.foreground }]}>{label}</Text>
+      <View style={[
+        styles.readOnlyValue,
+        { backgroundColor: c.input, borderColor: c.border, borderRadius: c.radius },
+        multiline && styles.readOnlyMulti,
+      ]}>
+        <Text style={[styles.readOnlyText, { color: c.foreground }]}>{value.trim() ? value : '—'}</Text>
+      </View>
+    </View>
+  );
+}
+
 function WordForm({ existing, initial, fromDictionary }: { existing?: VocabularyWord; initial?: WordInput; fromDictionary?: boolean }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const { words, saveWord, deleteWord, setWordFrozen } = useVocabulary();
   const sound = useSoundEffects();
   const [form, setForm] = useState<WordInput>({
-    term: existing?.term ?? initial?.term ?? '',
-    meaning: existing?.meaning ?? initial?.meaning ?? '',
-    ipa: existing?.ipa ?? initial?.ipa ?? '',
-    example: existing?.example ?? initial?.example ?? '',
-    note: existing?.note ?? initial?.note ?? '',
-    // Source IDs are metadata, not editable fields; they survive edits.
-    dictionaryEntryId: existing?.dictionaryEntryId ?? initial?.dictionaryEntryId ?? null,
-    dictionarySenseId: existing?.dictionarySenseId ?? initial?.dictionarySenseId ?? null,
+    term: initial?.term ?? '',
+    meaning: initial?.meaning ?? '',
+    ipa: initial?.ipa ?? '',
+    example: initial?.example ?? '',
+    note: '',
+    // Source IDs are metadata, not editable fields; preserve them on first save.
+    dictionaryEntryId: initial?.dictionaryEntryId ?? null,
+    dictionarySenseId: initial?.dictionarySenseId ?? null,
   });
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -93,7 +109,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
   const meaningErr = touched && !form.meaning.trim() ? 'Hãy nhập nghĩa tiếng Việt.' : undefined;
 
   const submit = async () => {
-    if (busyRef.current) return;
+    if (existing || busyRef.current) return;
     setTouched(true);
     setSubmitError(null);
     if (!form.term.trim() || !form.meaning.trim()) return;
@@ -102,9 +118,9 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
     sound.unlockFromGesture();
     try {
       await withSoundOutcome(
-        () => saveWord(form, existing?.id),
+        () => saveWord(form),
         playIfMounted,
-        soundCueFor(existing ? 'wordUpdated' : 'wordSaved'),
+        soundCueFor('wordSaved'),
       );
       goBack();
     } catch (e) {
@@ -160,16 +176,16 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
 
   return (
     <>
-      <Stack.Screen options={{ title: existing ? 'Sửa từ' : 'Từ mới' }} />
+      <Stack.Screen options={{ title: existing ? 'Chi tiết từ' : 'Từ mới' }} />
       <KeyboardAwareScrollViewCompat
         style={{ backgroundColor: c.background }}
         contentContainerStyle={{ padding: 20, paddingBottom: bottomPad, gap: 18 }}
         bottomOffset={24}
       >
         <View style={{ gap: 4 }}>
-          <Text style={[styles.title, { color: c.foreground }]}>{existing ? 'Chỉnh lại trang này' : fromDictionary ? 'Xem lại trước khi lưu' : 'Ghi một từ vào sổ'}</Text>
+          <Text style={[styles.title, { color: c.foreground }]}>{existing ? 'Thông tin từ' : fromDictionary ? 'Xem lại trước khi lưu' : 'Ghi một từ vào sổ'}</Text>
           <Text style={[styles.sub, { color: c.mutedForeground }]}>
-            {existing ? `Ghi lần đầu ngày ${formatDate(existing.createdAt)}` : fromDictionary ? 'Đã điền sẵn từ từ điển. Bạn có thể sửa mọi ô; chưa có gì được lưu.' : 'Chỉ từ và nghĩa là bắt buộc.'}
+            {existing ? `Ghi lần đầu ngày ${formatDate(existing.createdAt)}` : fromDictionary ? 'Đã điền sẵn từ từ điển. Hãy kiểm tra nội dung trước khi lưu.' : 'Chỉ từ và nghĩa là bắt buộc.'}
           </Text>
         </View>
         {existing ? (
@@ -183,7 +199,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
                 : 'Không còn lịch ôn trong chu kỳ này.'}
             </Text>
             <Text style={[styles.sub, { color: c.mutedForeground }]}>
-              Đã trả lời {existing.reviewCount} lần. Sửa nội dung không đặt lại tiến độ.
+              Đã trả lời {existing.reviewCount} lần.
             </Text>
           </View>
         ) : (
@@ -204,13 +220,23 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
             </Text>
           </View>
         ) : null}
-        <Field testID="field-term" label="Từ tiếng Anh" required error={termErr} value={form.term} onChangeText={set('term')}
-          autoCapitalize="none" autoCorrect={false} returnKeyType="next" onSubmitEditing={() => meaningRef.current?.focus()} editable={!saving} />
-        <Field testID="field-meaning" ref={meaningRef} label="Nghĩa tiếng Việt" required error={meaningErr} value={form.meaning} onChangeText={set('meaning')} multiline editable={!saving} />
-        <Field testID="field-ipa" label="Phiên âm IPA" value={form.ipa} onChangeText={set('ipa')} autoCapitalize="none" autoCorrect={false} editable={!saving} />
-        <Field testID="field-example" label="Câu ví dụ" value={form.example} onChangeText={set('example')} multiline editable={!saving} />
-        <Field testID="field-note" label="Ghi chú riêng" value={form.note} onChangeText={set('note')} multiline editable={!saving} />
-        <Button testID="save" label={existing ? 'Lưu thay đổi' : 'Lưu vào sổ'} icon="check" onPress={submit} loading={saving} disabled={deleting || changingFreeze} />
+        {existing ? (
+          <View testID="word-readonly-details" style={{ gap: 14 }}>
+            <ReadOnlyField label="Từ tiếng Anh" value={existing.term} />
+            <ReadOnlyField label="Nghĩa tiếng Việt" value={existing.meaning} multiline />
+            <ReadOnlyField label="Phiên âm IPA" value={existing.ipa} />
+            <ReadOnlyField label="Câu ví dụ" value={existing.example} multiline />
+          </View>
+        ) : (
+          <>
+            <Field testID="field-term" label="Từ tiếng Anh" required error={termErr} value={form.term} onChangeText={set('term')}
+              autoCapitalize="none" autoCorrect={false} returnKeyType="next" onSubmitEditing={() => meaningRef.current?.focus()} editable={!saving} />
+            <Field testID="field-meaning" ref={meaningRef} label="Nghĩa tiếng Việt" required error={meaningErr} value={form.meaning} onChangeText={set('meaning')} multiline editable={!saving} />
+            <Field testID="field-ipa" label="Phiên âm IPA" value={form.ipa} onChangeText={set('ipa')} autoCapitalize="none" autoCorrect={false} editable={!saving} />
+            <Field testID="field-example" label="Câu ví dụ" value={form.example} onChangeText={set('example')} multiline editable={!saving} />
+            <Button testID="save" label="Lưu vào sổ" icon="check" onPress={submit} loading={saving} disabled={deleting || changingFreeze} />
+          </>
+        )}
         {existing ? (
           <Button testID="delete" label="Xoá từ này" icon="trash-2" variant="ghost" onPress={() => setConfirm(true)} disabled={saving || deleting || changingFreeze}
             style={{ borderColor: c.destructiveSoft }} />
@@ -362,6 +388,9 @@ const styles = StyleSheet.create({
   label: { fontFamily: F.s, fontSize: 14 },
   input: { fontFamily: F.r, fontSize: 16, paddingHorizontal: 14, paddingVertical: 12, minHeight: 50 },
   multi: { minHeight: 90, textAlignVertical: 'top' },
+  readOnlyValue: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, minHeight: 50, justifyContent: 'center' },
+  readOnlyMulti: { minHeight: 90, justifyContent: 'flex-start' },
+  readOnlyText: { fontFamily: F.r, fontSize: 16, lineHeight: 24 },
   err: { fontFamily: F.m, fontSize: 13 },
   hint: { fontFamily: F.r, fontSize: 13 },
 });

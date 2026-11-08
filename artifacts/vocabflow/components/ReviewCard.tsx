@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
 import type { VocabularyWord } from '@/data/types';
-import { checkReviewAnswer, displayReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
+import { checkReviewAnswer, compactReviewAnswer, displayReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
 import { Button, ErrorBanner, F } from '@/components/ui';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
@@ -115,33 +115,37 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const choiceAnswer = exercise.kind === 'multiple-choice';
   const characters = Array.from(displayReviewAnswer(word.term));
   const hintCharacters = Array.from(displayReviewAnswer(hintPattern));
-  const typedCharacters = Array.from(displayReviewAnswer(typed).trim());
+  const typedCharacters = Array.from(compactReviewAnswer(typed));
+  const letterCount = characters.filter(char => char !== ' ').length;
   let cursorIndex = -1;
   const lastLetterIndex = characters.reduce(
     (lastIndex, char, index) => char === ' ' ? lastIndex : index,
     -1,
   );
   if (inputFocused && characters.length > 0) {
-    if (typedCharacters.length >= characters.length) {
+    if (typedCharacters.length >= letterCount) {
       cursorIndex = lastLetterIndex;
     } else {
-      cursorIndex = typedCharacters.length;
-      while (cursorIndex < characters.length - 1 && characters[cursorIndex] === ' ') cursorIndex += 1;
+      let lettersBefore = 0;
+      cursorIndex = characters.findIndex(char => {
+        if (char === ' ') return false;
+        return lettersBefore++ === typedCharacters.length;
+      });
     }
   }
   const cellWidth = sentenceAnswer ? 25 : 32;
   const cellHeight = sentenceAnswer ? 36 : 44;
   const cellGap = sentenceAnswer ? 3 : 4;
   const spaceGap = sentenceAnswer ? 8 : 12;
-  const letterCount = characters.filter(char => char !== ' ').length;
   const spaceCount = characters.filter(char => char === ' ').length;
   const answerWidth = Math.max(cellWidth + 8, Math.min(
     310,
     letterCount * cellWidth + Math.max(0, letterCount - 1) * cellGap + spaceCount * spaceGap + 8,
   ));
+  let typedSlotIndex = 0;
   const answerCells = characters.map((char, index) => {
     if (char === ' ') return <View key={`space-${index}`} style={{ width: spaceGap, height: cellHeight }} />;
-    const typedChar = typedCharacters[index];
+    const typedChar = typedCharacters[typedSlotIndex++];
     const hintChar = hintCharacters[index];
     const isTypedChar = typedChar !== undefined;
     const visibleChar = isTypedChar ? typedChar : (hintChar && hintChar !== '_' ? hintChar : '');
@@ -157,7 +161,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
         {cursorIndex === index ? (
           <View testID={`review-cursor-${index}`} style={[
             styles.visibleCursor,
-            cursorIndex === lastLetterIndex && typedCharacters.length >= characters.length && styles.cursorAtEnd,
+            cursorIndex === lastLetterIndex && typedCharacters.length >= letterCount && styles.cursorAtEnd,
             { backgroundColor: c.primary },
           ]} />
         ) : null}
@@ -171,7 +175,11 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
         testID="review-answer-input"
         value={typed}
         selection={{ start: typed.length, end: typed.length }}
-        onChangeText={value => { typedRef.current = value; setTyped(value); }}
+        onChangeText={value => {
+          const compact = compactReviewAnswer(value);
+          typedRef.current = compact;
+          setTyped(compact);
+        }}
         onFocus={() => setInputFocused(true)}
         onBlur={() => setInputFocused(false)}
         editable={!answered && !blocked}
@@ -180,7 +188,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
         spellCheck={false}
         autoCapitalize="none"
         autoComplete="off"
-        maxLength={Math.min(200, characters.length)}
+        maxLength={Math.min(200, letterCount)}
         returnKeyType="done"
         onSubmitEditing={check}
         blurOnSubmit

@@ -23,8 +23,12 @@ export function displayReviewAnswer(value: string): string {
     .replace(/\p{White_Space}+/gu, ' ');
 }
 
+export function compactReviewAnswer(value: string): string {
+  return displayReviewAnswer(value).replace(/\p{White_Space}+/gu, '');
+}
+
 export function normalizeReviewAnswer(value: string): string {
-  return displayReviewAnswer(value).trim().toLocaleLowerCase('en');
+  return compactReviewAnswer(value).toLocaleLowerCase('en');
 }
 
 export function checkReviewAnswer(answer: string, term: string): boolean {

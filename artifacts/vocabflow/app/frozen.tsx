@@ -35,7 +35,7 @@ function FrozenItem({ word, disabled, onSaved }: { word: VocabularyWord; disable
         style={({ pressed }) => ({ gap: 6, opacity: pressed ? 0.7 : 1 })}>
         <Text style={[styles.term, { color: c.foreground }]}>{word.term}</Text>
         <Text style={[styles.body, { color: c.mutedForeground }]}>{word.meaning}</Text>
-        <Text style={[styles.label, { color: c.primary }]}>Đã đóng băng · Xem hoặc sửa từ</Text>
+         <Text style={[styles.label, { color: c.primary }]}>Đã đóng băng · Xem từ</Text>
       </Pressable>
       {error ? <ErrorBanner message={error} /> : null}
       <Button testID={`unfreeze-${word.id}`} label="Bỏ đóng băng" icon="play-circle" variant="ghost"

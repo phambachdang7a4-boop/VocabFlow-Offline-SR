@@ -12,10 +12,13 @@ import { getReviewStatistics } from '@/data/vocabulary';
 import type { ReviewStatistics } from '@/domain/review-statistics';
 import { NotebookStatistics } from '@/components/NotebookStatistics';
 
+const REVIEW_LEVELS = [1, 2, 3, 4, 5, 6] as const;
+
 export default function VocabularyScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
   const [q, setQ] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [statistics, setStatistics] = useState<ReviewStatistics | null>(null);
   const [statisticsLoading, setStatisticsLoading] = useState(true);
   const [statisticsError, setStatisticsError] = useState<string | null>(null);
@@ -24,11 +27,11 @@ export default function VocabularyScreen() {
   const filtered = useMemo(() => {
     const sorted = [...words].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const f = fold(q);
-    if (!f) return sorted;
     return sorted.filter((w) =>
-      [w.term, w.meaning, w.example, w.note].some((t) => fold(t ?? '').includes(f)),
+      (selectedLevel === null || w.level === selectedLevel) &&
+      (!f || [w.term, w.meaning, w.example].some((t) => fold(t ?? '').includes(f))),
     );
-  }, [words, q]);
+  }, [words, q, selectedLevel]);
 
   const loadStatistics = useCallback(async () => {
     setStatisticsLoading(true);
@@ -79,6 +82,37 @@ export default function VocabularyScreen() {
     </View>
   );
 
+  const levelFilters = (
+    <View testID="notebook-level-filters" style={styles.levelFilters}>
+      {REVIEW_LEVELS.map((level) => {
+        const selected = selectedLevel === level;
+        return (
+          <Pressable
+            key={level}
+            testID={`level-filter-${level}`}
+            accessibilityRole="button"
+            accessibilityLabel={`Lọc từ cấp ${level}`}
+            accessibilityHint="Chạm lại cấp đang chọn để bỏ lọc."
+            accessibilityState={{ selected }}
+            onPress={() => setSelectedLevel(current => current === level ? null : level)}
+            style={({ pressed }) => [
+              styles.levelFilter,
+              {
+                backgroundColor: selected ? c.primary : c.secondary,
+                borderColor: selected ? c.primary : c.border,
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <Text style={[styles.levelFilterText, { color: selected ? c.primaryForeground : c.foreground }]}>
+              Cấp {level}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+
   const listHeader = (
     <View style={styles.listHeader}>
       {statistics ? (
@@ -89,6 +123,7 @@ export default function VocabularyScreen() {
         <View style={{ gap: 8 }}><Skeleton h={76} /><Skeleton h={150} /></View>
       ) : null}
       {words.length > 0 ? searchBar : null}
+      {words.length > 0 ? levelFilters : null}
     </View>
   );
 
@@ -142,7 +177,15 @@ export default function VocabularyScreen() {
                 <Button label="Ghi từ đầu tiên" icon="plus" onPress={() => router.push('/word')} testID="add-first" />
               </EmptyState>
             ) : (
-              <EmptyState icon="search" title="Không tìm thấy" body={`Không có từ nào khớp với “${q.trim()}”. Thử bỏ dấu hoặc viết ngắn hơn.`} />
+              <EmptyState
+                icon="search"
+                title={selectedLevel === null ? 'Không tìm thấy' : 'Không có từ ở cấp này'}
+                body={selectedLevel === null
+                  ? `Không có từ nào khớp với “${q.trim()}”. Thử bỏ dấu hoặc viết ngắn hơn.`
+                  : q.trim()
+                    ? `Không có từ ở Cấp ${selectedLevel} khớp với “${q.trim()}”.`
+                    : `Sổ từ chưa có từ ở Cấp ${selectedLevel}.`}
+              />
             )
           }
         />
@@ -159,6 +202,9 @@ const styles = StyleSheet.create({
   listHeader: { gap: 10 },
   search: { borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 48 },
   searchInput: { flex: 1, fontFamily: F.r, fontSize: 16, height: '100%' },
+  levelFilters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 1 },
+  levelFilter: { minHeight: 34, paddingHorizontal: 12, borderWidth: 1, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  levelFilterText: { fontFamily: F.s, fontSize: 13 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, paddingLeft: 0, borderWidth: 1, overflow: 'hidden' },
   spine: { width: 4, alignSelf: 'stretch', borderTopRightRadius: 4, borderBottomRightRadius: 4 },
   termRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },

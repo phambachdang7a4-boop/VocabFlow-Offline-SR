@@ -135,6 +135,8 @@ let second;
     'The course list uses its own header without the duplicate route-title bar.');
   assert.match(lessonScreen, /const topInset = Platform\.OS === 'web' \? 0 : insets\.top/,
     'The web lesson header does not add an empty status-bar gap; native safe areas remain.');
+  assert.match(lessonScreen, /checkReviewAnswer\(answer, currentWord\.term\)/,
+    'Course answers accept multiword phrases without requiring typed spaces.');
   assert.doesNotMatch(lessonScreen, /course-frequency|course-select-frequency|displayCollocationFrequency/,
     'The learning card, answer prompt and final selection list hide collocation counts and corpus names.');
   assert.match(courseListScreen, /testID="collocation-frequency-context"/,
