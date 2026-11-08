@@ -6,8 +6,9 @@ const { DatabaseSync } = require('node:sqlite');
 const { basicCourse, cefrCourses, advancedCourses, collocationCourses, courseCatalog } = require('./test-support.cjs');
 const {
   createSupplementalRows,
+  compareFrequencyRows,
   supplementalSource,
-  supplementalOrdering,
+  frequencyOrdering,
 } = require('./generate-collocation-course.cjs');
 
 const root = resolve(__dirname, '..');
@@ -47,9 +48,9 @@ assert.equal(manifest.supplementalSource.upstreamLicenseUrl, supplementalSource.
 assert.equal(manifest.supplementalSource.fileUrl, supplementalSource.fileUrl);
 assert.equal(manifest.supplementalSource.bytes, supplementalSource.bytes);
 assert.equal(manifest.supplementalSource.sha256, supplementalSource.sha256);
-assert.deepEqual(manifest.supplementalOrdering, supplementalOrdering);
-assert.equal(manifest.supplementalOrdering.sourceCommit, manifest.source.commit);
-assert.equal(manifest.supplementalOrdering.sourceSha256, manifest.source.sha256);
+assert.deepEqual(manifest.frequencyOrdering, frequencyOrdering);
+assert.equal(manifest.frequencyOrdering.sourceCommit, manifest.source.commit);
+assert.equal(manifest.frequencyOrdering.sourceSha256, manifest.source.sha256);
 assert.equal(manifest.dictionary.commit, '388adc0826300912e5b0311c089e0e70494b065f');
 assert.equal(manifest.dictionary.license, 'CC BY-SA 4.0');
 
@@ -70,6 +71,13 @@ assert.equal(course.sourceCount, manifest.sourceCount + manifest.supplementalSou
 assert.equal(course.missingWords.length, manifest.missingWords.length + manifest.noExampleWords.length + manifest.mismatchedPosWords.length);
 assert.equal(course.skippedDuplicateCount, manifest.skippedDuplicateWords.length + manifest.supplementalSkippedDuplicateCount);
 assert.equal(course.lessons.reduce((sum, lesson) => sum + lesson.words.length, 0), manifest.words.length);
+const firstUnrankedIndex = manifest.words.findIndex(item => item.count === null);
+assert.ok(manifest.words.every(item => item.count === null ||
+  (Number.isSafeInteger(item.count) && item.count >= 0)),
+'Mỗi mục phải có count trực tiếp hợp lệ hoặc null nếu nguồn không có số đếm.');
+assert.ok(firstUnrankedIndex === -1 ||
+  manifest.words.slice(firstUnrankedIndex).every(item => item.count === null),
+'Các cụm không có count trực tiếp phải đứng sau mọi cụm có tần suất quan sát được.');
 assert.equal(course.lessons.length, Math.ceil(manifest.words.length / 20));
 assert.ok(course.lessons.every(lesson => lesson.words.length > 0 && lesson.words.length <= 20));
 assert.ok(course.lessons.slice(0, -1).every(lesson => lesson.words.length === 20));
@@ -79,7 +87,10 @@ assert.match(course.attribution, /CC BY-SA 4\.0/);
 assert.match(course.attribution, /Open English WordNet 2025 Edition/);
 assert.match(course.attribution, /WordNet 3\.1, Copyright 2011 Princeton University/);
 
-const sourceByRank = sourceRows;
+const sourceByRank = [...sourceRows].sort(compareFrequencyRows);
+assert.ok(sourceByRank.every((item, index) => Number.isSafeInteger(item.count) &&
+  item.count >= 0 && (index === 0 || compareFrequencyRows(sourceByRank[index - 1], item) <= 0)),
+'Nguồn tần suất phải có count trực tiếp và thứ tự ổn định.');
 const db = new DatabaseSync(dictionaryPath, { readOnly: true });
 const dictionarySense = db.prepare(`
   SELECT w.word AS term, wd.id AS senseId, d.definition, d.pos, d.sub_pos AS subPos, wd.example,
@@ -99,17 +110,8 @@ try {
     sourceRows,
   );
   assert.ok(supplementalRows.every((row, index) =>
-    index === 0 || supplementalRows[index - 1].popularityScore >= row.popularityScore),
-  'Các cụm WordNet không được xếp theo điểm phổ biến giảm dần.');
-  for (let index = 1; index < supplementalRows.length; index += 1) {
-    const previous = supplementalRows[index - 1];
-    const current = supplementalRows[index];
-    if (previous.popularityScore === current.popularityScore) {
-      const byTerm = previous.bigram.localeCompare(current.bigram, 'en');
-      assert.ok(byTerm < 0 || (byTerm === 0 && previous.type.localeCompare(current.type) <= 0),
-        'Thứ tự phụ khi bằng điểm không xác định.');
-    }
-  }
+    index === 0 || compareFrequencyRows(supplementalRows[index - 1], row) <= 0),
+  'Các cụm WordNet phải xếp theo count trực tiếp, null cuối cùng và thứ tự phụ ổn định.');
   assert.equal(manifest.supplementalSourceCount, supplementalRows.length);
   const supplementalAcceptedCount = manifest.words.filter(item => item.sourceId === 'oewn-2025').length;
   assert.equal(supplementalAcceptedCount +
@@ -141,8 +143,8 @@ try {
   }
   const acceptedSupplementalRows = manifest.words.filter(item => item.sourceId === 'oewn-2025');
   assert.ok(acceptedSupplementalRows.every((item, index) =>
-    index === 0 || acceptedSupplementalRows[index - 1].popularityScore >= item.popularityScore),
-  'Các cụm WordNet trong manifest không được xếp theo điểm phổ biến giảm dần.');
+    index === 0 || compareFrequencyRows(acceptedSupplementalRows[index - 1], item) <= 0),
+  'Các cụm WordNet trong manifest phải xếp theo count trực tiếp, null cuối cùng.');
   const manifestWordsBySense = new Map(manifest.words.map(item => [
     `${item.entryId}:${item.senseId}`,
     item,
@@ -159,13 +161,14 @@ try {
       assert.equal(source.bigram, item.bigram);
       assert.equal(source.type, item.type);
       assert.equal(source.lang, 'en');
+      assert.equal(item.count, source.count);
     } else {
       assert.ok(!primarySourceTerms.has(normalizedTerm), `Cụm WordNet đã có trong nguồn OpenSubtitles: ${item.bigram}.`);
       const source = supplementalRows[item.sourceRank - 1];
       assert.ok(source, `Không tìm thấy mục WordNet hạng ${item.sourceRank}.`);
       assert.equal(source.bigram, item.bigram);
       assert.equal(source.type, item.type);
-      assert.equal(item.popularityScore, source.popularityScore);
+      assert.equal(item.count, source.count);
       assert.ok(['VERB+ADP', 'VERB+NOUN'].includes(item.type)
         ? source.sourcePos === 'verb'
         : source.sourcePos === 'noun');

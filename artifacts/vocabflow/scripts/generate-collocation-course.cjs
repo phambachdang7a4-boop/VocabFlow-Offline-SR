@@ -43,14 +43,15 @@ const supplementalSource = {
   bytes: 9986555,
   sha256: '7d749f6e2c39e6970e4997839dcf6e42fd281f3c2fae0171d2192bae8cfa4b51',
 };
-const supplementalOrdering = {
-  name: 'OpenSubtitles component-frequency proxy',
+const frequencyOrdering = {
+  name: 'OpenSubtitles direct phrase frequency',
   sourceName: source.name,
   sourceCommit: source.commit,
   sourceFile: source.file,
   sourceSha256: source.sha256,
-  metric: 'minimum of the summed source bigram counts for the two components',
+  metric: 'count for the exact bigram and collocation type in the pinned dataset',
   direction: 'descending',
+  missingFrequency: 'null; ranked after directly observed phrases',
   tieBreak: 'bigram ascending (English locale), then type ascending',
 };
 const dictionary = {
@@ -210,18 +211,26 @@ function validateSupplementalRows(rows) {
   }
 }
 
-function createComponentFrequency(sourceRows) {
+function createPhraseFrequency(sourceRows) {
   const frequencies = new Map();
   for (const row of sourceRows) {
     const count = Number(row.count);
-    if (!Number.isFinite(count) || count < 0) {
+    if (!Number.isSafeInteger(count) || count < 0) {
       throw new Error(`Tần suất không hợp lệ trong nguồn: ${row.bigram}.`);
     }
-    for (const component of new Set(normalize(row.bigram).split(' '))) {
-      frequencies.set(component, (frequencies.get(component) ?? 0) + count);
-    }
+    const key = `${normalize(row.bigram)}|${row.type}`;
+    if (frequencies.has(key)) throw new Error(`Cụm tần suất bị trùng trong nguồn: ${row.bigram}.`);
+    frequencies.set(key, count);
   }
   return frequencies;
+}
+
+function compareFrequencyRows(left, right) {
+  const leftCount = left.count === null || left.count === undefined ? -1 : Number(left.count);
+  const rightCount = right.count === null || right.count === undefined ? -1 : Number(right.count);
+  return rightCount - leftCount ||
+    left.bigram.localeCompare(right.bigram, 'en') ||
+    left.type.localeCompare(right.type);
 }
 
 function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), frequencyRows) {
@@ -250,7 +259,7 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), freq
   }
 
   const componentPos = new Map();
-  const componentFrequency = createComponentFrequency(frequencyRows);
+  const phraseFrequency = createPhraseFrequency(frequencyRows);
   const componentRows = db.prepare(`
     SELECT w.word AS term, d.pos
     FROM words w
@@ -268,25 +277,17 @@ function createSupplementalRows(db, wordnetPath, excludedTerms = new Set(), freq
   for (const [term, lexicalPos] of lexicalPosByTerm) {
     const classification = classifySupplementalTerm(term, lexicalPos, componentPos);
     if (!classification) continue;
-    const [first, second] = term.split(' ');
     rows.push({
       bigram: term,
       ...classification,
       lang: 'en',
-      count: null,
+      count: phraseFrequency.get(`${normalize(term)}|${classification.type}`) ?? null,
       npmi: null,
       score: null,
-      popularityScore: Math.min(
-        componentFrequency.get(normalize(first)) ?? 0,
-        componentFrequency.get(normalize(second)) ?? 0,
-      ),
     });
   }
 
-  rows.sort((left, right) =>
-    right.popularityScore - left.popularityScore ||
-    left.bigram.localeCompare(right.bigram, 'en') ||
-    left.type.localeCompare(right.type));
+  rows.sort(compareFrequencyRows);
   validateSupplementalRows(rows);
   return rows;
 }
@@ -350,7 +351,6 @@ function mapCollocations(rows, lookup, usedSenses, usedMeanings, sourceId, stric
       count: row.count,
       npmi: row.npmi,
       score: row.score,
-      ...(row.popularityScore === undefined ? {} : { popularityScore: row.popularityScore }),
       entryId: selected.entryId,
       senseId: selected.senseId,
       term: selected.term,
@@ -365,8 +365,9 @@ function attribution() {
     `${dictionary.license}, ${dictionary.url}/tree/${dictionary.commit}. ` +
     `${supplementalSource.name} ${supplementalSource.version}, ${supplementalSource.license}, ` +
     `${supplementalSource.releaseUrl}; based on WordNet 3.1, Copyright 2011 Princeton University, ` +
-    `${supplementalSource.upstreamLicenseUrl}. Supplemental phrase ordering uses the pinned ` +
-    `${supplementalOrdering.sourceName} component-frequency proxy (${supplementalOrdering.sourceCommit}).`;
+    `${supplementalSource.upstreamLicenseUrl}. Direct phrase counts and ordering use the pinned ` +
+    `${frequencyOrdering.sourceName} dataset (${frequencyOrdering.sourceCommit}); phrases without ` +
+    `a direct count are placed after observed phrases.`;
 }
 
 function buildLessons(manifest, lookup) {
@@ -424,6 +425,7 @@ export const COLLOCATION_COURSE_LESSONS: BasicCourseLesson[] = COLLOCATION_COURS
 function main() {
   const rows = downloadVerified();
   assert.equal(rows.length, 15000, 'Nguồn cần đúng 15.000 collocation tiếng Anh.');
+  rows.sort(compareFrequencyRows);
   const verifiedWordNetPath = downloadVerifiedWordNet();
   const dictionaryBytes = fs.readFileSync(dictionaryPath);
   assert.equal(dictionaryBytes.byteLength, dictionary.bytes, 'Kho từ điển có kích thước khác bản đã ghim.');
@@ -455,7 +457,7 @@ function main() {
     const manifest = {
       source: { ...source },
       supplementalSource: { ...supplementalSource },
-      supplementalOrdering: { ...supplementalOrdering },
+      frequencyOrdering: { ...frequencyOrdering },
       dictionary: { ...dictionary },
       sourceCount: primary.sourceCount,
       missingWords: primary.missingWords,
@@ -495,7 +497,8 @@ module.exports = {
   createSupplementalRows,
   expectedPos,
   mapCollocations,
+  compareFrequencyRows,
   supplementalSource,
-  supplementalOrdering,
+  frequencyOrdering,
   validateSupplementalRows,
 };
