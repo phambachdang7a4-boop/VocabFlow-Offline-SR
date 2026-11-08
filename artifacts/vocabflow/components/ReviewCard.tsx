@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
 import type { VocabularyWord } from '@/data/types';
@@ -41,6 +41,10 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const [inputFocused, setInputFocused] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [freezeDialogOpen, setFreezeDialogOpen] = useState(false);
+  const [freezeBusy, setFreezeBusy] = useState(false);
+  const [freezeError, setFreezeError] = useState<string | null>(null);
+  const [frozenAfterAnswer, setFrozenAfterAnswer] = useState(false);
   const lock = useRef(false);
   const inFlight = useRef(false);
   const outcomeRef = useRef<Outcome | null>(null);
@@ -54,6 +58,15 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
     mounted.current = true;
     return () => { mounted.current = false; cb.current.onBusyChange(false); };
   }, []);
+
+  const answered = outcome !== null;
+  const graded = outcome?.action === 'grade' ? outcome : null;
+
+  useEffect(() => {
+    if (!answered || !graded || !speech.ready || !speech.autoRead) return;
+    void speech.speakWord(word.term);
+    return () => { void speech.stopSpeaking(); };
+  }, [answered, outcome, word.term, speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]);
 
   const persist = async () => {
     const o = outcomeRef.current;
@@ -107,9 +120,23 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
   const dontKnow = () => { sound.unlockFromGesture(); Keyboard.dismiss(); commit({ action: 'grade', correct: false, typed: '' }); };
   const freeze = () => { sound.unlockFromGesture(); Keyboard.dismiss(); commit({ action: 'freeze' }); };
   const retry = () => { if (phase === 'failed' && !blocked) { sound.unlockFromGesture(); void persist(); } };
+  const freezeAnsweredWord = async () => {
+    if (!graded || phase !== 'saved' || blocked || freezeBusy || frozenAfterAnswer) return;
+    sound.unlockFromGesture();
+    setFreezeBusy(true);
+    setFreezeError(null);
+    try {
+      await withSoundOutcome(async () => setWordFrozen(snap.current.id, true), cueToPlay => {
+        if (mounted.current) sound.play(cueToPlay);
+      }, soundCueFor('freezeEnabled'));
+      if (mounted.current) setFrozenAfterAnswer(true);
+    } catch (failure) {
+      if (mounted.current) setFreezeError(failure instanceof Error ? failure.message : 'Không thể đóng băng từ này. Hãy thử lại.');
+    } finally {
+      if (mounted.current) setFreezeBusy(false);
+    }
+  };
 
-  const answered = outcome !== null;
-  const graded = outcome?.action === 'grade' ? outcome : null;
   const tone = graded ? (graded.correct ? c.successText : c.destructiveText) : c.primary;
   const toneSoft = graded ? (graded.correct ? c.reviewRightSoft : c.destructiveSoft) : c.secondary;
   const hintPattern = exercise.hint ?? Array.from(word.term).map(char => /[\p{L}\p{N}]/u.test(char) ? '_' : char).join('');
@@ -285,15 +312,36 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
           style={[styles.resultPanel, { height: resultPanelHeight, backgroundColor: toneSoft, borderRadius: c.radius }]}>
           {graded ? (
             <View style={styles.resultInfo}>
-              <View style={styles.labelRow}>
-                <Feather name={graded.correct ? 'check-circle' : 'x-circle'} size={20} color={tone} />
-                <Text style={[styles.resultTitle, { color: tone }]}>
-                  {graded.correct ? 'Chính xác!' : graded.typed ? 'Chưa đúng' : 'Đã đánh dấu chưa thuộc'}
-                </Text>
+              <View style={styles.resultHeader}>
+                <View style={[styles.labelRow, styles.resultStatus]}>
+                  <Feather name={graded.correct ? 'check-circle' : 'x-circle'} size={20} color={tone} />
+                  <Text style={[styles.resultTitle, { color: tone }]}>
+                    {graded.correct ? 'Chính xác!' : graded.typed ? 'Chưa đúng' : 'Đã đánh dấu chưa thuộc'}
+                  </Text>
+                </View>
+                <Pressable testID="review-result-freeze" accessibilityRole="button"
+                  accessibilityLabel={frozenAfterAnswer ? 'Từ đã đóng băng' : 'Đóng băng từ này'}
+                  accessibilityState={{ disabled: blocked || phase !== 'saved' || freezeBusy || frozenAfterAnswer }}
+                  onPress={() => setFreezeDialogOpen(true)}
+                  disabled={blocked || phase !== 'saved' || freezeBusy || frozenAfterAnswer}
+                  hitSlop={8} style={({ pressed }) => [styles.resultFreezePressable,
+                    { opacity: blocked || phase !== 'saved' || freezeBusy || frozenAfterAnswer ? 0.45 : pressed ? 0.65 : 1 }]}>
+                  <View style={[styles.resultFreezeCircle, { borderColor: c.border }]}>
+                    <MaterialCommunityIcons name="snowflake" size={20} color={frozenAfterAnswer ? c.success : c.primary} />
+                  </View>
+                </Pressable>
               </View>
               <Text style={[styles.small, { color: c.mutedForeground }]}>Đáp án</Text>
               <Text testID="review-answer-correct" style={[styles.answer, { color: c.foreground }]}>{word.term}</Text>
-              {word.ipa ? <Text style={[styles.small, { color: c.mutedForeground }]}>{word.ipa}</Text> : null}
+              <View style={styles.ipaRow}>
+                {word.ipa ? <Text style={[styles.small, { color: c.mutedForeground }]}>{word.ipa}</Text> : null}
+                <Pressable testID="review-result-speak-word" accessibilityRole="button"
+                  accessibilityLabel={`Phát âm ${word.term}`}
+                  onPress={() => { void speech.speakWord(word.term); }} hitSlop={10}
+                  style={({ pressed }) => [styles.resultAudioButton, { opacity: pressed ? 0.55 : 1 }]}>
+                  <Feather name="volume-2" size={20} color={c.primary} />
+                </Pressable>
+              </View>
               {exercise.kind === 'cloze' || exercise.kind === 'multiple-choice'
                 ? <Text style={[styles.small, { color: c.foreground }]}>{word.meaning}</Text>
                 : null}
@@ -318,12 +366,16 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
             </View>
           )}
           {saveError ? <ErrorBanner message={saveError} /> : null}
+          {freezeError ? <ErrorBanner message={freezeError} /> : null}
+          {frozenAfterAnswer ? (
+            <Text testID="review-result-frozen" style={[styles.small, { color: c.successText }]}>Đã đóng băng từ này.</Text>
+          ) : null}
           {phase === 'failed' ? (
             <Button testID="review-retry-save" label="Thử lưu lại" icon="refresh-cw" onPress={retry} disabled={blocked} />
           ) : (
             <Button testID="review-continue" label={isLast ? 'Kết thúc' : 'Tiếp tục'} icon={isLast ? 'flag' : 'arrow-right'}
               onPress={() => { if (phase === 'saved' && !blocked && !inFlight.current) cb.current.onNext(); }}
-              loading={phase === 'saving'} disabled={phase !== 'saved' || blocked} style={styles.continueButton} />
+              loading={phase === 'saving'} disabled={phase !== 'saved' || blocked || freezeBusy} style={styles.continueButton} />
           )}
         </View>
       ) : null}
@@ -343,6 +395,30 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
             </Pressable>
           </>
         </View>
+      ) : null}
+
+      {freezeDialogOpen ? (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setFreezeDialogOpen(false)}>
+          <View style={[styles.freezeModalOverlay, { backgroundColor: c.overlay }]}>
+            <View testID="review-freeze-dialog"
+              style={[styles.freezeDialog, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 6 }]}>
+              <View style={[styles.resultFreezeCircle, { borderColor: c.border, alignSelf: 'flex-start' }]}>
+                <MaterialCommunityIcons name="snowflake" size={20} color={c.primary} />
+              </View>
+              <Text style={[styles.freezeDialogTitle, { color: c.foreground }]}>Bạn có muốn đóng băng từ này?</Text>
+              <Text style={[styles.freezeDialogMessage, { color: c.mutedForeground }]}>
+                Từ sẽ không xuất hiện trong ôn tập cho đến khi bạn bỏ đóng băng.
+              </Text>
+              <View style={styles.freezeDialogActions}>
+                <Button testID="review-freeze-cancel" label="Không" variant="ghost"
+                  onPress={() => setFreezeDialogOpen(false)} disabled={freezeBusy} style={{ flex: 1 }} />
+                <Button testID="review-freeze-confirm" label="Có" icon="check"
+                  onPress={() => { setFreezeDialogOpen(false); void freezeAnsweredWord(); }}
+                  disabled={freezeBusy} loading={freezeBusy} style={{ flex: 1 }} />
+              </View>
+            </View>
+          </View>
+        </Modal>
       ) : null}
     </View>
   );
@@ -376,6 +452,17 @@ const styles = StyleSheet.create({
     padding: 16, gap: 10, justifyContent: 'space-between',
   },
   resultInfo: { gap: 6 },
+  resultHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  resultStatus: { flex: 1 },
+  resultFreezePressable: { padding: 2 },
+  resultFreezeCircle: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  ipaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  resultAudioButton: { width: 36, height: 32, alignItems: 'center', justifyContent: 'center' },
+  freezeModalOverlay: { flex: 1, justifyContent: 'center', padding: 24 },
+  freezeDialog: { padding: 22, gap: 12, borderWidth: 1 },
+  freezeDialogTitle: { fontFamily: F.b, fontSize: 19 },
+  freezeDialogMessage: { fontFamily: F.r, fontSize: 15, lineHeight: 22 },
+  freezeDialogActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },
   actions: { gap: 12 },

@@ -8,7 +8,7 @@ const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
-const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput'].map(type => [type, type]));
+const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput', 'Modal'].map(type => [type, type]));
 native.StyleSheet = { create: value => value };
 native.Platform = { OS: 'android' };
 native.Keyboard = { dismiss() {} };
@@ -60,7 +60,7 @@ function mount(file, properties = {}, initial = {}) {
   const calendarLabel = day => day.split('-').reverse().join('/');
   const loaded = loadTs(join(__dirname, file), {
     react: { ...react, default: react }, 'react-native': native,
-    '@expo/vector-icons': { Feather: 'Feather' },
+    '@expo/vector-icons': { Feather: 'Feather', MaterialCommunityIcons: 'MaterialCommunityIcons' },
     'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; }, useNavigation: () => navigation },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
@@ -251,11 +251,14 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   ];
   const sentenceExercise = exercises.createReviewExercise(sentenceWord, 1, 0, sentenceWords);
   assert.equal(sentenceExercise.kind, 'multiple-choice');
+  const resultFreezeCalls = [];
   const sentenceCard = mount('../components/ReviewCard.tsx', {
     ...makeProps(sentenceWord),
     exercise: sentenceExercise,
   }, {
+    speechAutoRead: true,
     recordReview: async () => {},
+    setWordFrozen: async (...args) => { resultFreezeCalls.push(args); },
   });
   assert.ok(sentenceCard.byId('review-choice-options'));
   assert.equal(sentenceCard.byId('review-speak-word'), undefined,
@@ -265,9 +268,26 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(sentenceCard.byId('review-choice-0').props.accessibilityRole, 'button');
   sentenceCard.byId('review-choice-0').props.onPress();
   await sentenceCard.settle();
+  assert.deepEqual(sentenceCard.speechCalls, ['test'],
+    'Auto-pronounce the word when the multiple-choice result appears.');
   assert.ok(find(sentenceCard.byId('review-result'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
   'Show the dictionary example in the word information after a multiple-choice answer.');
+  sentenceCard.byId('review-result-speak-word').props.onPress();
+  assert.deepEqual(sentenceCard.speechCalls, ['test', 'test'],
+    'Keep a manual pronunciation control beside the phonetic transcription.');
+  sentenceCard.byId('review-result-freeze').props.onPress();
+  assert.ok(sentenceCard.byId('review-freeze-dialog'));
+  assert.deepEqual(resultFreezeCalls, [], 'Opening the freeze confirmation must not freeze the word yet.');
+  sentenceCard.byId('review-freeze-cancel').props.onPress();
+  assert.equal(sentenceCard.byId('review-freeze-dialog'), undefined,
+    'Choosing “Không” closes the confirmation without freezing.');
+  sentenceCard.byId('review-result-freeze').props.onPress();
+  sentenceCard.byId('review-freeze-confirm').props.onPress();
+  await sentenceCard.settle();
+  assert.deepEqual(resultFreezeCalls, [[sentenceWord.id, true]],
+    'Choosing “Có” freezes the answered word without grading it a second time.');
+  assert.ok(sentenceCard.byId('review-result-frozen'));
 
   let resolveSave;
   const calls = [], committed = [];
