@@ -42,3 +42,17 @@ mtime_ms = 1794120566890
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/43c90723-5ef6-4f66-8ca6-8a25cd0383b0/036c877a-3908-4476-bbf3-f5e00a5c10fc"
 storage_version_token = "1794120576364654"
 content_type = "text/html"
+
+[[outputs]]
+id = "EOleO6wQr_dDqSsa1TxxX"
+uri = "file://generated-artifacts/vocabflow-examples-needing-translation.csv"
+type = "table"
+title = "Câu ví dụ cần dịch"
+description = "CSV UTF-8 gồm 173.512 câu ví dụ duy nhất chưa có dấu hiệu bản dịch tiếng Việt, kèm từ, nghĩa, mã ghép lại và cột trống để điền bản dịch."
+logical_id = "9d9ffe16-d6af-48ad-b027-0bc0e0554b86"
+content_hash = "sha256:87257fbc539cf50fd7eebc049a7e2a9ca1b86fcd07095b667416432e39355a3a"
+size = 23416815
+mtime_ms = 1794191046646
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/9d9ffe16-d6af-48ad-b027-0bc0e0554b86/a6f5c11f-90e4-485b-b455-4420593e8a51"
+storage_version_token = "1794191072913124"
+content_type = "text/csv"
