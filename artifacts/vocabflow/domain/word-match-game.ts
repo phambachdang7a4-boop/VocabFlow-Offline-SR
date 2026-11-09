@@ -7,8 +7,8 @@ export type WordMatchSide = 'term' | 'meaning';
 export interface WordMatchGameState {
   queue: VocabularyWord[];
   active: VocabularyWord[];
-  termOrder: number[];
-  meaningOrder: number[];
+  termOrder: Array<number | null>;
+  meaningOrder: Array<number | null>;
   matchedIds: number[];
   selectedTermId: number | null;
   selectedMeaningId: number | null;
@@ -62,7 +62,6 @@ export function selectWordMatch(
   current: WordMatchGameState,
   side: WordMatchSide,
   id: number,
-  random: () => number = Math.random,
 ): WordMatchSelection {
   if (!current.active.some(word => word.id === id)) return { state: current, result: 'ignored' };
 
@@ -109,16 +108,26 @@ export function selectWordMatch(
     };
   }
 
+  const termSlot = current.termOrder.indexOf(selectedTermId);
+  const meaningSlot = current.meaningOrder.indexOf(selectedMeaningId);
+  if (termSlot < 0 || meaningSlot < 0) return { state: current, result: 'ignored' };
+
   const remaining = current.active.filter(word => word.id !== selectedTermId);
   const nextWord = current.queue[0];
   const active = nextWord ? [...remaining, nextWord] : remaining;
+  const termOrder = [...current.termOrder];
+  const meaningOrder = [...current.meaningOrder];
+  const replacementId = nextWord?.id ?? null;
+  termOrder[termSlot] = replacementId;
+  meaningOrder[meaningSlot] = replacementId;
+
   return {
     state: {
       ...current,
       queue: nextWord ? current.queue.slice(1) : current.queue,
       active,
-      termOrder: shuffledIds(active, random),
-      meaningOrder: shuffledIds(active, random),
+      termOrder,
+      meaningOrder,
       matchedIds: [...current.matchedIds, selectedTermId],
       selectedTermId: null,
       selectedMeaningId: null,

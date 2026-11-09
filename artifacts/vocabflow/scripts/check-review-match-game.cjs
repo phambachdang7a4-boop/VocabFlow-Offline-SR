@@ -18,11 +18,13 @@ assert.equal(new Set([...state.active, ...state.queue].map(word => word.id)).siz
   'Repeated mistake IDs are deduplicated');
 assert.notDeepEqual(state.termOrder, state.meaningOrder,
   'The English and meaning columns are shuffled independently');
+assert.equal(state.termOrder.length, 5, 'The English column starts with five fixed slots');
+assert.equal(state.meaningOrder.length, 5, 'The meaning column starts with five fixed slots');
 
-let selection = domain.selectWordMatch(state, 'term', 1, () => 0.5);
+let selection = domain.selectWordMatch(state, 'term', 1);
 assert.equal(selection.result, 'selected');
 state = selection.state;
-selection = domain.selectWordMatch(state, 'meaning', 2, () => 0.5);
+selection = domain.selectWordMatch(state, 'meaning', 2);
 assert.equal(selection.result, 'incorrect');
 state = selection.state;
 assert.equal(state.mistakes, 1, 'A wrong connection increments only the game counter');
@@ -30,27 +32,39 @@ assert.equal(state.correctCount, 0);
 assert.equal(state.lastWrongTermId, 1);
 assert.equal(state.lastWrongMeaningId, 2);
 
-selection = domain.selectWordMatch(state, 'term', 1, () => 0.5);
+selection = domain.selectWordMatch(state, 'term', 1);
 state = selection.state;
-selection = domain.selectWordMatch(state, 'meaning', 1, () => 0.5);
+const termSlotsBeforeMatch = new Map(state.termOrder.map((id, index) => [id, index]));
+const meaningSlotsBeforeMatch = new Map(state.meaningOrder.map((id, index) => [id, index]));
+selection = domain.selectWordMatch(state, 'meaning', 1);
 assert.equal(selection.result, 'correct');
 state = selection.state;
 assert.equal(state.correctCount, 1);
 assert.equal(state.active.length, 5, 'A queued pair fills the just-vacated space');
 assert.equal(state.queue.length, 1);
 assert.ok(state.active.some(word => word.id === 6), 'The sixth pair loads after the first match');
+assert.equal(state.termOrder[termSlotsBeforeMatch.get(1)], 6, 'The next term fills the matched term slot');
+assert.equal(state.meaningOrder[meaningSlotsBeforeMatch.get(1)], 6, 'The next meaning fills the matched meaning slot');
+for (const id of [2, 3, 4, 5]) {
+  assert.equal(state.termOrder.indexOf(id), termSlotsBeforeMatch.get(id), `Term ${id} stays in its original slot`);
+  assert.equal(state.meaningOrder.indexOf(id), meaningSlotsBeforeMatch.get(id), `Meaning ${id} stays in its original slot`);
+}
 assert.ok(!state.active.some(word => word.id === 1), 'A matched pair cannot be selected again');
 assert.deepEqual(state.matchedIds, [1]);
 
 for (const word of words.slice(1)) {
-  state = domain.selectWordMatch(state, 'meaning', word.id, () => 0.5).state;
-  const result = domain.selectWordMatch(state, 'term', word.id, () => 0.5);
+  state = domain.selectWordMatch(state, 'meaning', word.id).state;
+  const result = domain.selectWordMatch(state, 'term', word.id);
   assert.equal(result.result, 'correct');
   state = result.state;
 }
 assert.equal(state.correctCount, 7, 'All queued pairs can be completed in one game');
 assert.equal(state.active.length, 0);
 assert.equal(state.queue.length, 0);
+assert.equal(state.termOrder.length, 5, 'Empty slots remain in place after the queue is exhausted');
+assert.equal(state.meaningOrder.length, 5, 'Meaning slots remain stable after the queue is exhausted');
+assert.ok(state.termOrder.every(id => id === null), 'All cleared term slots remain empty');
+assert.ok(state.meaningOrder.every(id => id === null), 'All cleared meaning slots remain empty');
 assert.equal(state.mistakes, 1, 'Wrong selections remain a separate cumulative count');
 assert.equal(domain.selectWordMatch(state, 'term', 1).result, 'ignored');
 
@@ -96,7 +110,7 @@ native.BackHandler = {
     return { remove() { backHandler = null; } };
   },
 };
-const animation = { duration: () => ({}) };
+const animation = { duration: () => ({}), delay: () => ({ duration: () => ({}) }) };
 const Animated = { View: 'AnimatedView' };
 const haptics = {
   NotificationFeedbackType: { Success: 'success', Error: 'error' },
@@ -111,7 +125,13 @@ const speech = {
 const loaded = loadTs(join(__dirname, '../components/ReviewMistakeMatchGame.tsx'), {
   react: { ...react, default: react },
   'react-native': native,
-  'react-native-reanimated': { default: Animated, ...Animated, FadeInDown: animation, FadeOutUp: animation },
+  'react-native-reanimated': {
+    default: Animated,
+    ...Animated,
+    FadeIn: animation,
+    FadeInDown: animation,
+    FadeOut: animation,
+  },
   'expo-haptics': haptics,
   '@expo/vector-icons': { Feather: 'Feather' },
   'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
@@ -155,6 +175,13 @@ function mount(properties) {
     render,
   };
 }
+function slotFor(game, side, id) {
+  for (let slotIndex = 0; slotIndex < 5; slotIndex++) {
+    const slot = game.byId(`match-${side}-slot-${slotIndex}`);
+    if (find(slot, node => node.props?.testID === `match-${side}-${id}`)) return slotIndex;
+  }
+  return -1;
+}
 
 const gameWords = words.map((word, index) => ({
   ...word,
@@ -174,6 +201,10 @@ const game = mount({ words: gameWords, onReturnToReview: () => returned++ });
 assert.ok(game.byId('match-term-1'));
 assert.ok(game.byId('match-meaning-1'));
 assert.equal(game.byId('match-term-6'), undefined, 'The sixth pair waits until a slot opens');
+const initialTermSlots = new Map(words.slice(0, 5).map(word => [word.id, slotFor(game, 'term', word.id)]));
+const initialMeaningSlots = new Map(words.slice(0, 5).map(word => [word.id, slotFor(game, 'meaning', word.id)]));
+assert.equal(game.byId(`match-term-slot-${initialTermSlots.get(1)}`).props.style.height, 62,
+  'Match cards use the larger fixed slot height');
 assert.equal(typeof backHandler, 'function', 'Hardware back is intercepted while playing');
 
 game.press('match-term-1');
@@ -185,6 +216,14 @@ assert.deepEqual(hapticCalls, ['light', 'error'], 'Selections and wrong matches 
 game.press('match-term-1');
 game.press('match-meaning-1');
 assert.ok(game.byId('match-term-6'), 'The sixth pair fills the opened slot');
+assert.equal(slotFor(game, 'term', 6), initialTermSlots.get(1), 'A new English card appears in the vacated slot');
+assert.equal(slotFor(game, 'meaning', 6), initialMeaningSlots.get(1), 'A new meaning appears in its vacated slot');
+for (const word of words.slice(1, 5)) {
+  assert.equal(slotFor(game, 'term', word.id), initialTermSlots.get(word.id),
+    `The English card ${word.id} does not shift after another match`);
+  assert.equal(slotFor(game, 'meaning', word.id), initialMeaningSlots.get(word.id),
+    `The meaning card ${word.id} does not shift after another match`);
+}
 assert.equal(game.byId('match-term-1'), undefined, 'Correctly matched choices disappear');
 for (const word of words.slice(1)) {
   game.press(`match-term-${word.id}`);

@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -80,11 +80,11 @@ export function ReviewMistakeMatchGame({ words, onReturnToReview }: ReviewMistak
   };
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
-  const orderedTerms = game.termOrder.map(id => wordById.get(id)).filter((word): word is VocabularyWord => !!word);
-  const orderedMeanings = game.meaningOrder.map(id => wordById.get(id)).filter((word): word is VocabularyWord => !!word);
+  const orderedTerms = game.termOrder.map(id => (id === null ? undefined : wordById.get(id)));
+  const orderedMeanings = game.meaningOrder.map(id => (id === null ? undefined : wordById.get(id)));
   const progress = words.length ? game.correctCount / words.length : 1;
 
-  const renderOption = (word: VocabularyWord, side: WordMatchSide) => {
+  const renderOption = (word: VocabularyWord, side: WordMatchSide, slotIndex: number) => {
     const id = word.id;
     const selected = side === 'term' ? game.selectedTermId === id : game.selectedMeaningId === id;
     const wrong = side === 'term' ? game.lastWrongTermId === id : game.lastWrongMeaningId === id;
@@ -93,7 +93,12 @@ export function ReviewMistakeMatchGame({ words, onReturnToReview }: ReviewMistak
     const textColor = wrong ? c.destructiveText : c.foreground;
     const label = side === 'term' ? word.term : word.meaning;
     return (
-      <Animated.View key={id} entering={FadeInDown.duration(180)} exiting={FadeOutUp.duration(140)} style={styles.optionWrap}>
+      <Animated.View
+        key={`${side}-slot-${slotIndex}-word-${id}`}
+        entering={FadeIn.delay(150).duration(240)}
+        exiting={FadeOut.duration(140)}
+        style={styles.optionMotion}
+      >
         <Pressable
           testID={`match-${side}-${id}`}
           accessibilityRole="button"
@@ -105,13 +110,30 @@ export function ReviewMistakeMatchGame({ words, onReturnToReview }: ReviewMistak
             { backgroundColor, borderColor, opacity: pressed ? 0.76 : 1, borderRadius: c.radius },
           ]}
         >
-          <Text style={[styles.optionText, { color: textColor }]}>{label}</Text>
+          <Text
+            style={[styles.optionText, { color: textColor }]}
+            numberOfLines={3}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+          >
+            {label}
+          </Text>
           {selected ? <Feather name="check" size={17} color={c.primary} /> : null}
           {wrong ? <Feather name="x" size={17} color={c.destructive} /> : null}
         </Pressable>
       </Animated.View>
     );
   };
+
+  const renderSlot = (word: VocabularyWord | undefined, side: WordMatchSide, slotIndex: number) => (
+    <View
+      key={`${side}-slot-${slotIndex}`}
+      testID={`match-${side}-slot-${slotIndex}`}
+      style={styles.optionWrap}
+    >
+      {word ? renderOption(word, side, slotIndex) : null}
+    </View>
+  );
 
   return (
     <View style={[styles.root, { backgroundColor: c.background }]}>
@@ -175,11 +197,11 @@ export function ReviewMistakeMatchGame({ words, onReturnToReview }: ReviewMistak
           <View style={styles.columns}>
             <View style={styles.column}>
               <Text style={[styles.columnTitle, { color: c.mutedForeground }]}>TỪ</Text>
-              {orderedTerms.map(word => renderOption(word, 'term'))}
+              {orderedTerms.map((word, slotIndex) => renderSlot(word, 'term', slotIndex))}
             </View>
             <View style={styles.column}>
               <Text style={[styles.columnTitle, { color: c.mutedForeground }]}>NGHĨA</Text>
-              {orderedMeanings.map(word => renderOption(word, 'meaning'))}
+              {orderedMeanings.map((word, slotIndex) => renderSlot(word, 'meaning', slotIndex))}
             </View>
           </View>
           <Text testID="match-mistake-count" style={[styles.mistakeCount, { color: c.mutedForeground }]}>
@@ -250,18 +272,19 @@ const styles = StyleSheet.create({
   columns: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   column: { flex: 1, gap: 8 },
   columnTitle: { fontFamily: F.s, fontSize: 11, letterSpacing: 0.6, textAlign: 'center', paddingVertical: 2 },
-  optionWrap: { minHeight: 48 },
+  optionWrap: { height: 62 },
+  optionMotion: { flex: 1 },
   option: {
-    minHeight: 48,
-    paddingHorizontal: 9,
-    paddingVertical: 8,
+    height: '100%',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
   },
-  optionText: { flexShrink: 1, fontFamily: F.m, fontSize: 14, lineHeight: 18, textAlign: 'center' },
+  optionText: { flexShrink: 1, fontFamily: F.m, fontSize: 14, lineHeight: 15, textAlign: 'center' },
   mistakeCount: { fontFamily: F.m, fontSize: 13, textAlign: 'center', paddingVertical: 2 },
   result: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 14 },
   resultIcon: { width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center' },
