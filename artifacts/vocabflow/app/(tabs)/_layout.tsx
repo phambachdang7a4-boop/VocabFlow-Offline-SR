@@ -22,7 +22,7 @@ function NativeTabLayout() {
         <NativeTabs.Trigger.Label>Khóa Học</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="review">
-        <NativeTabs.Trigger.Icon sf={{ default: 'rectangle.on.rectangle', selected: 'rectangle.on.rectangle' }} />
+        <NativeTabs.Trigger.Icon sf={{ default: 'arrow.2.circlepath', selected: 'arrow.2.circlepath' }} />
         <NativeTabs.Trigger.Label>Ôn tập</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="index">
@@ -40,7 +40,7 @@ function NativeTabLayout() {
 const ICONS = {
   index: { sf: 'book', fe: 'book-open' },
   dictionary: { sf: 'character.book.closed', fe: 'search' },
-  review: { sf: 'rectangle.on.rectangle', fe: 'layers' },
+  review: { sf: 'arrow.2.circlepath', fe: 'repeat' },
   courses: { sf: 'square.grid.2x2', fe: 'grid' },
   blank: { sf: 'checklist', fe: 'check-square' },
 } as const;
