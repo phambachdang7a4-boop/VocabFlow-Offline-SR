@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErrorBanner, F } from '@/components/ui';
 import { useColors } from '@/hooks/useColors';
 import { COURSE_CATALOGS } from '@/data/course-catalog';
+import { getLessonIconName } from '@/data/lesson-icon';
 import { listCourseProgress, type CourseLessonProgress } from '@/data/vocabulary';
 
 export default function CourseListScreen() {
@@ -109,10 +110,10 @@ export default function CourseListScreen() {
                 opacity: pressed ? 0.84 : 1,
               })}
             >
-              <View style={[styles.lessonNumber, { backgroundColor: complete ? c.success : c.accentSoft }]}>
+              <View style={[styles.lessonBadge, { backgroundColor: complete ? c.success : c.accentSoft }]}>
                 {complete
                   ? <Feather name="check" size={16} color="#FFFFFF" />
-                  : <Text style={[styles.lessonNumberText, { color: c.primary }]}>{index + 1}</Text>}
+                  : <Feather name={getLessonIconName(lesson.title, course.title)} size={17} color={c.primary} />}
               </View>
               <View style={styles.lessonText}>
                 <Text style={[styles.lessonTitle, { color: complete ? c.successText : c.foreground }]}>{lesson.title}</Text>
@@ -149,8 +150,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: F.b, fontSize: 18, marginTop: 6 },
   loading: { padding: 24, alignItems: 'center', gap: 10 },
   lessonCard: { minHeight: 70, borderRadius: 15, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  lessonNumber: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  lessonNumberText: { fontFamily: F.b, fontSize: 14 },
+  lessonBadge: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   lessonText: { flex: 1, gap: 3 },
   lessonTitle: { fontFamily: F.s, fontSize: 15 },
   lessonMeta: { fontFamily: F.r, fontSize: 12 },
