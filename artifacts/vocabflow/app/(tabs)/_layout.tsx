@@ -74,6 +74,10 @@ function ClassicTabLayout() {
           borderTopWidth: 1,
           borderTopColor: colors.navigationBorder,
           elevation: 0,
+          shadowColor: colors.shade,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 10,
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>

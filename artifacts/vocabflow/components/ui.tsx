@@ -2,6 +2,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -9,6 +10,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/useColors";
 
 export const F = {
@@ -17,6 +19,24 @@ export const F = {
   s: "Inter_600SemiBold",
   b: "Inter_700Bold",
 } as const;
+
+/** A restrained reflective finish. It is purely decorative and never intercepts touches. */
+export function MaterialSheen({ tone = "surface", radius }: { tone?: "surface" | "navy" | "gold"; radius?: number }) {
+  const c = useColors();
+  const colors = tone === "gold"
+    ? [c.goldSheen, "rgba(255,255,255,0.03)", c.shade] as const
+    : [c.sheen, c.sheenSoft, c.shade] as const;
+  return (
+    <LinearGradient
+      pointerEvents="none"
+      colors={colors}
+      locations={[0, 0.48, 1]}
+      start={{ x: 0.08, y: 0 }}
+      end={{ x: 0.94, y: 1 }}
+      style={[StyleSheet.absoluteFill, { borderRadius: radius ?? c.radius }]}
+    />
+  );
+}
 
 type BtnProps = {
   label: string;
@@ -65,11 +85,18 @@ export function Button({
           backgroundColor: bg,
           borderRadius: c.radius,
           borderColor: variant === "ghost" ? c.border : bg,
+          overflow: "visible",
+          shadowColor: c.shade,
+          shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+          shadowOpacity: off ? 0 : pressed ? 0.08 : 0.18,
+          shadowRadius: pressed ? 2 : 7,
+          elevation: off ? 0 : pressed ? 1 : 3,
         },
-        { opacity: off ? 0.55 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+        { opacity: off ? 0.58 : 1, transform: [{ scale: pressed ? 0.975 : 1 }] },
         style,
       ]}
     >
+      {!off && variant !== "ghost" ? <MaterialSheen tone={variant === "primary" ? "gold" : "navy"} /> : null}
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : icon ? (
@@ -114,10 +141,22 @@ export function ConfirmDialog({
         <Pressable
           style={[
             styles.dialog,
-            { backgroundColor: c.card, borderRadius: c.radius + 6 },
+            {
+              backgroundColor: c.card,
+              borderRadius: c.radius + 6,
+              borderWidth: 1,
+              borderColor: c.border,
+              overflow: "hidden",
+              ...Platform.select({
+                ios: { shadowColor: c.shade, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 22 },
+                android: { elevation: 10 },
+                default: {},
+              }),
+            },
           ]}
           onPress={() => {}}
         >
+          <MaterialSheen />
           <View
             style={[styles.dialogIcon, { backgroundColor: c.destructiveSoft }]}
           >

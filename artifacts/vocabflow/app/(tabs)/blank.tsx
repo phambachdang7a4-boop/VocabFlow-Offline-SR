@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
-import { ErrorBanner, F } from '@/components/ui';
+import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { getDailyMissionOverview, type DailyMissionOverview } from '@/data/vocabulary';
 import {
   CHEST_RARITY_COLORS,
@@ -45,7 +45,11 @@ export default function BlankScreen() {
         showsVerticalScrollIndicator={false}
       >
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
-        <View style={[styles.walletCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        <View style={[styles.walletCard, {
+          backgroundColor: c.card, borderColor: c.border,
+          shadowColor: c.shade, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 7, elevation: 3,
+        }]}>
+          <MaterialSheen radius={20} />
           <View style={[styles.walletIcon, { backgroundColor: c.accent }]}>
             <Feather name="award" size={24} color={c.buttonForeground} />
           </View>
@@ -67,14 +71,19 @@ export default function BlankScreen() {
           accessibilityRole="button"
           accessibilityLabel="Mở Bộ Sưu Tập mảnh ghép và tranh"
           onPress={() => router.push('/collection')}
-          style={[styles.collectionButton, { backgroundColor: c.vocabCardAccent }]}
+          style={({ pressed }) => [styles.collectionButton, {
+            backgroundColor: c.vocabCardAccent, opacity: pressed ? 0.88 : 1,
+            shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+            shadowOpacity: pressed ? 0.06 : 0.18, shadowRadius: 6, elevation: pressed ? 1 : 3,
+          }]}
         >
+          <MaterialSheen tone="gold" radius={18} />
           <View style={[styles.collectionIcon, { backgroundColor: c.accent }]}>
             <Feather name="image" size={20} color={c.buttonForeground} />
           </View>
           <View style={styles.collectionCopy}>
-            <Text style={[styles.collectionTitle, { color: c.foreground }]}>Bộ Sưu Tập</Text>
-            <Text style={[styles.collectionDescription, { color: c.mutedForeground }]}>Mảnh ghép và tranh đã mở</Text>
+            <Text style={[styles.collectionTitle, { color: c.buttonForeground }]}>Bộ Sưu Tập</Text>
+            <Text style={[styles.collectionDescription, { color: c.buttonForeground }]}>Mảnh ghép và tranh đã mở</Text>
           </View>
           <Feather name="chevron-right" size={21} color={c.primary} />
         </Pressable>
@@ -107,11 +116,14 @@ export default function BlankScreen() {
               style={[
                 styles.missionCard,
                 {
-                  backgroundColor: finished ? c.successSoft : c.card,
+                 backgroundColor: finished ? c.successSoft : c.card,
                   borderColor: finished ? c.success : c.border,
+                 shadowColor: c.shade, shadowOffset: { width: 0, height: 3 },
+                 shadowOpacity: 0.12, shadowRadius: 6, elevation: 2,
                 },
               ]}
             >
+              <MaterialSheen radius={20} />
               <View style={styles.missionTop}>
                 <View style={[styles.missionIcon, { backgroundColor: finished ? c.success : c.vocabCardAccent }]}>
                   <Feather name={finished ? 'check' : iconName} size={21} color={finished ? '#FFFFFF' : c.buttonForeground} />
@@ -206,13 +218,13 @@ function ChestCard({ chest, colors }: { chest: MissionChest; colors: ReturnType<
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 18, gap: 12 },
-  walletCard: { borderWidth: 1, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  walletCard: { position: 'relative', borderWidth: 1, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
   walletIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   walletText: { flex: 1, gap: 3 },
   walletLabel: { fontFamily: F.s, fontSize: 10, letterSpacing: 1.2 },
   walletValue: { fontFamily: F.b, fontSize: 20 },
   walletDate: { fontFamily: F.m, fontSize: 12 },
-  collectionButton: { borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  collectionButton: { position: 'relative', borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11 },
   collectionIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   collectionCopy: { flex: 1, gap: 2 },
   collectionTitle: { fontFamily: F.b, fontSize: 15 },
@@ -222,7 +234,7 @@ const styles = StyleSheet.create({
   sectionHint: { fontFamily: F.r, fontSize: 13 },
   loading: { padding: 30, alignItems: 'center', gap: 10 },
   loadingText: { fontFamily: F.r, fontSize: 14 },
-  missionCard: { borderWidth: 1, borderRadius: 20, padding: 15, gap: 13 },
+  missionCard: { position: 'relative', borderWidth: 1, borderRadius: 20, padding: 15, gap: 13 },
   missionTop: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   missionIcon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   missionCopy: { flex: 1, gap: 3 },

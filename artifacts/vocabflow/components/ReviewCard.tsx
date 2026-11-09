@@ -5,7 +5,7 @@ import { useVocabulary } from '@/contexts/VocabularyContext';
 import { useColors } from '@/hooks/useColors';
 import type { VocabularyWord } from '@/data/types';
 import { checkReviewAnswer, compactReviewAnswer, displayReviewAnswer, type ReviewExercise } from '@/domain/review-exercises';
-import { Button, ErrorBanner, F } from '@/components/ui';
+import { Button, ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
 import { soundCueFor, withSoundOutcome } from '@/domain/sound-cues';
@@ -289,7 +289,12 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
                   disabled={answered || blocked}
                   style={({ pressed }) => [
                     styles.choiceButton,
-                    { backgroundColor, borderColor, opacity: pressed && !answered ? 0.78 : 1 },
+                    {
+                      backgroundColor, borderColor, opacity: pressed && !answered ? 0.78 : 1,
+                      shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                      shadowOpacity: pressed ? 0.06 : answered ? 0.04 : 0.13,
+                      shadowRadius: pressed ? 2 : 5, elevation: pressed ? 1 : answered ? 0 : 2,
+                    },
                   ]}
                 >
                   <Text style={[styles.choiceLabel, { color: textColor }]}>{choice}</Text>
@@ -310,6 +315,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
       {answered ? (
         <View testID="review-result" accessibilityLiveRegion="polite"
           style={[styles.resultPanel, { height: resultPanelHeight, backgroundColor: toneSoft, borderRadius: c.radius }]}>
+          <MaterialSheen radius={c.radius} />
           {graded ? (
             <View style={styles.resultInfo}>
               <View style={styles.resultHeader}>

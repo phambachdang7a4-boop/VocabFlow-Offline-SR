@@ -15,7 +15,7 @@ import { useClerk, useUser } from "@clerk/expo";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useSyncStatus } from "@/contexts/SyncContext";
 import { useColors } from "@/hooks/useColors";
-import { Button, ConfirmDialog, ErrorBanner, F } from "@/components/ui";
+import { Button, ConfirmDialog, ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useAppearance,
@@ -243,6 +243,7 @@ export default function SettingsScreen() {
             },
           ]}
         >
+          <MaterialSheen radius={c.radius} />
           {[
             {
               mode: "light" as AppearanceMode,
@@ -282,9 +283,12 @@ export default function SettingsScreen() {
                       : appearance.loading || appearance.saving
                         ? 0.55
                         : 1,
+                    shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                    shadowOpacity: pressed ? 0.06 : 0.15, shadowRadius: 5, elevation: pressed ? 1 : 2,
                   },
                 ]}
               >
+                <MaterialSheen tone={selected ? "gold" : "navy"} radius={14} />
                 <Feather
                   name={option.icon}
                   size={19}
@@ -364,6 +368,7 @@ export default function SettingsScreen() {
             },
           ]}
         >
+          <MaterialSheen radius={c.radius} />
           <View style={styles.speechRow}>
             <View style={styles.speechText}>
               <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
@@ -437,6 +442,7 @@ export default function SettingsScreen() {
             },
           ]}
         >
+          <MaterialSheen radius={c.radius} />
           <View style={styles.accountHeader}>
             <View
               style={[styles.accountIcon, { backgroundColor: c.secondary }]}
@@ -551,6 +557,7 @@ export default function SettingsScreen() {
             },
           ]}
         >
+          <MaterialSheen radius={c.radius} />
           <Button
             testID="account-export-data"
             label="Xuất và chia sẻ tệp"
@@ -735,9 +742,13 @@ Nội dung tệp:
         <View
           style={[
             styles.stat,
-            { backgroundColor: c.vocabCard, borderRadius: c.radius + 6 },
+            {
+              backgroundColor: c.vocabCard, borderRadius: c.radius + 6, position: "relative",
+              shadowColor: c.shade, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 9, elevation: 4,
+            },
           ]}
         >
+          <MaterialSheen tone="navy" radius={c.radius + 6} />
           <Text style={[styles.statLabel, { color: c.accentSoft }]}>
             SỐ TỪ ĐÃ LƯU
           </Text>
@@ -768,6 +779,7 @@ Nội dung tệp:
             },
           ]}
         >
+          <MaterialSheen radius={c.radius} />
           {facts.map((f, i) => (
             <View
               key={f.title}

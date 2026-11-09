@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import type { ReviewOverview } from '@/domain/review-overview';
-import { F } from '@/components/ui';
+import { F, MaterialSheen } from '@/components/ui';
 
 const CHART_H = 210;
 
@@ -52,7 +52,11 @@ export function LevelDistributionChart({ levels }: { levels: ReviewOverview['lev
 export function SavedTotal({ total, frozen, completed }: { total: number; frozen: number; completed: number }) {
   const c = useColors();
   return (
-    <View style={[styles.total, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 8 }]}>
+    <View style={[styles.total, {
+      backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 8,
+      shadowColor: c.shade, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 7, elevation: 3,
+    }]}>
+      <MaterialSheen radius={c.radius + 8} />
       <View style={[styles.icon, { backgroundColor: c.secondary }]}>
         <Feather name="book" size={18} color={c.primary} />
       </View>
@@ -69,7 +73,10 @@ export function ReviewStatusBar({ testID, icon, title, body }: { testID: string;
   const c = useColors();
   return (
     <View testID={testID} accessibilityRole="text" accessibilityLabel={`${title}. ${body}`}
-      style={[styles.bar, { backgroundColor: c.reviewTrack, borderRadius: 999 }]}>
+      style={[styles.bar, {
+        backgroundColor: c.reviewTrack, borderRadius: 999,
+        shadowColor: c.shade, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+      }]}>
       <Feather name={icon} size={18} color={c.primary} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.barTitle, { color: c.secondaryForeground }]} numberOfLines={1} adjustsFontSizeToFit>{title}</Text>
@@ -86,7 +93,7 @@ const styles = StyleSheet.create({
   axis: { flexDirection: 'row', gap: 8, marginTop: 8 },
   level: { flex: 1, textAlign: 'center', fontFamily: F.b, fontSize: 18 },
   caption: { fontFamily: F.m, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 10 },
-  total: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1 },
+  total: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1 },
   icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   totalLabel: { fontFamily: F.s, fontSize: 14 },
   totalNum: { fontFamily: F.b, fontSize: 26, letterSpacing: -0.5 },

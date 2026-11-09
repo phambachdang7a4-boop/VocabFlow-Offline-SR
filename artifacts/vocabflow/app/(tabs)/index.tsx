@@ -5,7 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import type { VocabularyWord } from '@/data/types';
 import { useColors } from '@/hooks/useColors';
-import { Button, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { Button, EmptyState, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { filterNotebookWords } from '@/domain/notebook-filter';
 import { getReviewStatistics } from '@/data/vocabulary';
@@ -62,9 +62,15 @@ export default function VocabularyScreen() {
         {
           backgroundColor: c.button,
           transform: [{ scale: pressed ? 0.92 : 1 }],
+          shadowColor: c.shade,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: pressed ? 0.1 : 0.22,
+          shadowRadius: 7,
+          elevation: pressed ? 1 : 4,
         },
       ]}
     >
+      <MaterialSheen tone="gold" radius={16} />
       <Feather name="plus" size={24} color={c.buttonForeground} />
     </Pressable>
   );
@@ -156,9 +162,15 @@ export default function VocabularyScreen() {
           backgroundColor: pressed ? c.vocabCardPressed : c.vocabCard,
           borderColor: c.navigationBorder,
           borderRadius: c.radius,
+          shadowColor: c.shade,
+          shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+          shadowOpacity: pressed ? 0.08 : 0.18,
+          shadowRadius: pressed ? 2 : 7,
+          elevation: pressed ? 1 : 3,
         },
       ]}
     >
+      <MaterialSheen tone="navy" radius={c.radius} />
       <View style={[styles.spine, { backgroundColor: c.vocabCardAccent }]} />
       <View style={{ flex: 1, gap: 3 }}>
         <View style={styles.termRow}>
@@ -240,11 +252,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
-    overflow: 'hidden',
   },
   flex: { flex: 1 },
   pad: { paddingHorizontal: 20, paddingTop: 8 },
   fab: {
+    position: 'relative',
     width: 48,
     height: 48,
     borderRadius: 16,
@@ -277,6 +289,7 @@ const styles = StyleSheet.create({
   },
   levelFilterText: { fontFamily: F.s, fontSize: 13 },
   card: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,

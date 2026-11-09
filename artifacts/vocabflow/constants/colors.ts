@@ -81,6 +81,12 @@ const light = {
   reviewRightSoft: '#DCEDE1',
   reviewHint: NAVY,
   reviewPaper: '#FDFAF3',
+  // Material overlays are translucent finishes; semantic colors above remain unchanged.
+  sheen: 'rgba(255,255,255,0.22)',
+  sheenSoft: 'rgba(255,255,255,0.10)',
+  sheenEdge: 'rgba(255,255,255,0.38)',
+  shade: 'rgba(30,33,48,0.10)',
+  goldSheen: 'rgba(255,255,255,0.30)',
 };
 
 const dark: typeof light = {
@@ -153,6 +159,11 @@ const dark: typeof light = {
   reviewRightSoft: '#22402F',
   reviewHint: '#C9D8F2',
   reviewPaper: '#262A3C',
+  sheen: 'rgba(255,255,255,0.14)',
+  sheenSoft: 'rgba(255,255,255,0.06)',
+  sheenEdge: 'rgba(255,255,255,0.22)',
+  shade: 'rgba(8,10,18,0.32)',
+  goldSheen: 'rgba(255,255,255,0.26)',
 };
 
 const colors = {

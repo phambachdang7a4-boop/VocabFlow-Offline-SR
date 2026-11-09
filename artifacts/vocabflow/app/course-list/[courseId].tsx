@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ErrorBanner, F } from '@/components/ui';
+import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { useColors } from '@/hooks/useColors';
 import { COURSE_CATALOGS } from '@/data/course-catalog';
 import { getLessonIconName } from '@/data/lesson-icon';
@@ -69,7 +69,11 @@ export default function CourseListScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
-        <View style={[styles.summary, { backgroundColor: allComplete ? c.successSoft : c.card, borderColor: allComplete ? c.success : c.border }]}>
+          <View style={[styles.summary, {
+            backgroundColor: allComplete ? c.successSoft : c.card, borderColor: allComplete ? c.success : c.border,
+            shadowColor: c.shade, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 7, elevation: 3,
+          }]}>
+            <MaterialSheen radius={16} />
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryTitle, { color: c.foreground }]}>
               {totalWords.toLocaleString('vi-VN')} mục từ-nghĩa · {course.lessons.length} bài
@@ -108,8 +112,11 @@ export default function CourseListScreen() {
                 backgroundColor: complete ? c.successSoft : c.card,
                 borderColor: complete ? c.success : c.border,
                 opacity: pressed ? 0.84 : 1,
+                shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                shadowOpacity: pressed ? 0.05 : 0.12, shadowRadius: 5, elevation: pressed ? 1 : 2,
               })}
             >
+              <MaterialSheen radius={15} />
               <View style={[styles.lessonBadge, { backgroundColor: complete ? c.success : c.accentSoft }]}>
                 {complete
                   ? <Feather name="check" size={16} color="#FFFFFF" />
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: F.b, fontSize: 22 },
   backText: { fontFamily: F.s, fontSize: 15 },
   content: { padding: 18, paddingBottom: 40, gap: 11 },
-  summary: { borderWidth: 1, borderRadius: 16, padding: 15, gap: 9 },
+  summary: { position: 'relative', borderWidth: 1, borderRadius: 16, padding: 15, gap: 9 },
   summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   summaryTitle: { fontFamily: F.s, fontSize: 14, flex: 1 },
   progressText: { fontFamily: F.b, fontSize: 13 },
@@ -149,7 +156,7 @@ const styles = StyleSheet.create({
   attribution: { fontFamily: F.r, fontSize: 10, lineHeight: 15 },
   sectionTitle: { fontFamily: F.b, fontSize: 18, marginTop: 6 },
   loading: { padding: 24, alignItems: 'center', gap: 10 },
-  lessonCard: { minHeight: 70, borderRadius: 15, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  lessonCard: { position: 'relative', minHeight: 70, borderRadius: 15, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
   lessonBadge: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   lessonText: { flex: 1, gap: 3 },
   lessonTitle: { fontFamily: F.s, fontSize: 15 },

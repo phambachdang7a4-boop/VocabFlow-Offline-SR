@@ -132,6 +132,9 @@ const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math
     assert.equal(c.destructive.toUpperCase(), '#C0392B');
     assert.equal(c.success.toUpperCase(), '#3E8E5A');
     assert.equal(c.reviewRight.toUpperCase(), '#3E8E5A');
+    assert.equal(c.sheen, mode === 'light' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.14)');
+    assert.equal(c.sheenEdge, mode === 'light' ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.22)');
+    assert.equal(c.goldSheen, mode === 'light' ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.26)');
     for (const [foreground, background] of [
       ['foreground', 'background'], ['mutedForeground', 'background'],
       ['headerForeground', 'header'], ['headerMuted', 'header'],

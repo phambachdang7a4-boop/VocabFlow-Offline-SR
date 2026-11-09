@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
-import { ErrorBanner, F } from '@/components/ui';
+import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { useColors } from '@/hooks/useColors';
 import { COURSE_CATALOGS } from '@/data/course-catalog';
 import { listCourseProgress, type CourseLessonProgress } from '@/data/vocabulary';
@@ -57,8 +57,11 @@ export default function CoursesScreen() {
                 backgroundColor: allComplete ? c.successSoft : c.card,
                 borderColor: allComplete ? c.success : c.border,
                 opacity: pressed ? 0.84 : 1,
+                shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+                shadowOpacity: pressed ? 0.06 : 0.14, shadowRadius: pressed ? 2 : 7, elevation: pressed ? 1 : 3,
               })}
             >
+              <MaterialSheen radius={20} />
               <View style={[styles.courseIcon, { backgroundColor: allComplete ? c.success : c.vocabCardAccent }]}>
                 <Feather name={allComplete ? 'check' : 'book-open'} size={23} color={allComplete ? '#FFFFFF' : c.buttonForeground} />
               </View>
@@ -99,7 +102,7 @@ export default function CoursesScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 18, gap: 12 },
-  courseCard: { borderWidth: 1, borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },
+  courseCard: { position: 'relative', borderWidth: 1, borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },
   courseIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   courseText: { flex: 1, gap: 3 },
   courseEyebrow: { fontFamily: F.s, fontSize: 10, letterSpacing: 1.2 },
