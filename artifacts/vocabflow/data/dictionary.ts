@@ -3,6 +3,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { DICTIONARY, type DictionaryStage } from '../domain/dictionary';
 import { dictionaryDownloadUrl } from '../domain/dictionary-download';
 import { dictionaryImportBytes } from '../domain/dictionary-import';
+import { DICTIONARY_EXAMPLE_REVISION, DICTIONARY_EXAMPLE_UPDATES } from '../domain/dictionary-example-updates';
 import { draftInDictionary, entryInDictionary, searchInDictionary, suggestInDictionary } from './dictionary-queries';
 import type { DictionaryPartOfSpeech } from '../domain/dictionary';
 import { openDatabaseSafely, storageFailureMessage } from './sqlite-connection';
@@ -17,6 +18,27 @@ export class DictionaryDownloadConsentRequired extends Error {
   }
 }
 
+async function applyExampleUpdates(db: SQLiteDatabase): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    for (const update of DICTIONARY_EXAMPLE_UPDATES) {
+      const result = await db.runAsync(
+        `UPDATE word_definitions
+         SET example = ?
+         WHERE id = ? AND word_id = ?
+           AND EXISTS (SELECT 1 FROM words WHERE id = ? AND word = ?)`,
+        update.example,
+        update.senseId,
+        update.entryId,
+        update.entryId,
+        update.term,
+      );
+      if (result.changes !== 1) {
+        throw new Error(`Không thể cập nhật ví dụ từ điển cho "${update.term}".`);
+      }
+    }
+  });
+}
+
 async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownload = false): Promise<SQLiteDatabase> {
   onStage?.('checking');
   const db = await openDatabaseSafely(() => openDatabaseAsync(filename));
@@ -24,7 +46,17 @@ async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownl
     const table = await db.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'vocabflow_dictionary_meta'",
     );
-    const cached = table ? await db.getFirstAsync<{ source_hash: string }>('SELECT source_hash FROM vocabflow_dictionary_meta LIMIT 1') : null;
+    if (table) {
+      const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(vocabflow_dictionary_meta)');
+      if (!columns.some(column => column.name === 'example_revision')) {
+        await db.execAsync("ALTER TABLE vocabflow_dictionary_meta ADD COLUMN example_revision TEXT NOT NULL DEFAULT '';");
+      }
+    }
+    const cached = table
+      ? await db.getFirstAsync<{ source_hash: string; example_revision: string }>(
+        'SELECT source_hash, example_revision FROM vocabflow_dictionary_meta LIMIT 1',
+      )
+      : null;
     if (cached?.source_hash !== DICTIONARY.sha256) {
       if (!allowDownload) {
         onStage?.('awaiting-consent');
@@ -50,6 +82,7 @@ async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownl
       try {
         const check = await imported.getFirstAsync<{ quick_check: string }>('PRAGMA quick_check');
         if (check?.quick_check !== 'ok') throw new Error('Kho từ điển bị lỗi. Hãy tải lại.');
+        await applyExampleUpdates(imported);
         await backupDatabaseAsync({ sourceDatabase: imported, destDatabase: db });
       } finally {
         await imported.closeAsync();
@@ -58,9 +91,26 @@ async function initialize(onStage?: (stage: DictionaryStage) => void, allowDownl
       const count = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) AS count FROM words');
       if (count?.count !== DICTIONARY.wordCount) throw new Error('Số lượng từ điển không khớp phiên bản đã kiểm tra.');
       await db.withTransactionAsync(async () => {
-        await db.execAsync('CREATE TABLE IF NOT EXISTS vocabflow_dictionary_meta (source_hash TEXT NOT NULL); DELETE FROM vocabflow_dictionary_meta;');
-        await db.runAsync('INSERT INTO vocabflow_dictionary_meta (source_hash) VALUES (?)', DICTIONARY.sha256);
+        await db.execAsync(`CREATE TABLE IF NOT EXISTS vocabflow_dictionary_meta (
+          source_hash TEXT NOT NULL,
+          example_revision TEXT NOT NULL DEFAULT ''
+        ); DELETE FROM vocabflow_dictionary_meta;`);
+        await db.runAsync(
+          'INSERT INTO vocabflow_dictionary_meta (source_hash, example_revision) VALUES (?, ?)',
+          DICTIONARY.sha256,
+          DICTIONARY_EXAMPLE_REVISION,
+        );
       });
+    } else if (cached.example_revision !== DICTIONARY_EXAMPLE_REVISION) {
+      // Upgrade an already-downloaded offline copy in place: no second 44 MB download.
+      const check = await db.getFirstAsync<{ quick_check: string }>('PRAGMA quick_check');
+      if (check?.quick_check !== 'ok') throw new Error('Kho từ điển bị lỗi. Hãy tải lại.');
+      await db.execAsync('PRAGMA query_only = OFF;');
+      await applyExampleUpdates(db);
+      await db.runAsync(
+        'UPDATE vocabflow_dictionary_meta SET example_revision = ?',
+        DICTIONARY_EXAMPLE_REVISION,
+      );
     }
     // No application query may mutate the reference dictionary after setup.
     await db.execAsync('PRAGMA query_only = ON;');

@@ -33,6 +33,11 @@ function adapter(filename, readOnly = false) {
   const domain = loadTs(join(__dirname, '../domain/dictionary.ts'));
   const download = loadTs(join(__dirname, '../domain/dictionary-download.ts'), { './dictionary': domain });
   const importer = loadTs(join(__dirname, '../domain/dictionary-import.ts'));
+  const familyExamples = require('../data/basic-family-example-overrides.json');
+  const exampleUpdates = loadTs(join(__dirname, '../domain/dictionary-example-updates.ts'), {
+    '../data/basic-family-example-overrides.json': familyExamples,
+  });
+  const basicManifest = require('../data/basic-course-manifest.json');
   const spelling = loadTs(join(__dirname, '../domain/dictionary-suggestions.ts'));
   assert.equal(spelling.spellingDistance('recieve', 'receive'), 1);
   assert.equal(spelling.spellingDistance('sincth', 'since'), 2);
@@ -55,6 +60,20 @@ function adapter(filename, readOnly = false) {
   assert.equal(reference.handle.prepare('SELECT count(*) AS n FROM words').get().n, DICTIONARY.wordCount);
   assert.equal(reference.handle.prepare('SELECT count(*) AS n FROM definitions').get().n, DICTIONARY.definitionCount);
   assert.equal(reference.handle.prepare('SELECT count(*) AS n FROM word_definitions').get().n, DICTIONARY.linkCount);
+  const updateLessons = new Map(basicManifest.lessons.map(lesson => [lesson.id, lesson]));
+  assert.equal(exampleUpdates.DICTIONARY_EXAMPLE_UPDATES.length, 36);
+  for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
+    const lesson = updateLessons.get(update.lessonId);
+    const manifestWord = lesson?.words.find(word => word.entryId === update.entryId && word.senseId === update.senseId);
+    assert.equal(manifestWord?.term, update.term, `Từ điển cần trỏ đúng nghĩa của ${update.term}.`);
+    assert.equal(familyExamples[update.lessonId][update.term], update.example);
+    const source = reference.handle.prepare(`
+      SELECT w.word AS term FROM words w
+      JOIN word_definitions wd ON wd.word_id = w.id
+      WHERE wd.id = ? AND wd.word_id = ?
+    `).get(update.senseId, update.entryId);
+    assert.equal(source?.term, update.term, `Không tìm thấy đúng mục gốc cho ${update.term}.`);
+  }
   const result = await queries.searchInDictionary(reference, '  HELLO ');
   const hello = result.items.find(row => row.term === 'hello');
   assert.ok(hello);
@@ -145,7 +164,7 @@ function adapter(filename, readOnly = false) {
       assert.equal(data[19], 1, 'Memory import must not retain a WAL read-format header');
       const filename = join(root, 'import-source.db');
       writeFileSync(filename, data);
-      return adapter(filename, true);
+      return adapter(filename);
     },
     backupDatabaseAsync: async ({ sourceDatabase, destDatabase }) => backup(sourceDatabase.handle, destDatabase.filename),
     deleteDatabaseAsync: async filename => {
@@ -161,6 +180,7 @@ function adapter(filename, readOnly = false) {
       '../domain/dictionary': domain,
       '../domain/dictionary-download': download,
       '../domain/dictionary-import': importer,
+      '../domain/dictionary-example-updates': exampleUpdates,
       './dictionary-queries': queries,
       './sqlite-connection': sqliteConnection,
     }, {
@@ -189,6 +209,14 @@ function adapter(filename, readOnly = false) {
   const loaded = await repo.openDictionary(stage => stages.push(stage), { allowDownload: true });
   assert.deepEqual(stages, ['checking', 'downloading', 'verifying', 'importing', 'ready']);
   assert.equal(downloads, 1);
+  for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
+    const stored = await loaded.getFirstAsync(
+      'SELECT example FROM word_definitions WHERE id = ? AND word_id = ?',
+      update.senseId,
+      update.entryId,
+    );
+    assert.equal(stored?.example, update.example, `Ví dụ ${update.term} phải được lưu trong từ điển offline.`);
+  }
   for (const [typo, expected] of [['sincth', 'since'], ['helo', 'hello'], ['recieve', 'receive'], ['langauge', 'language'], ['xello', 'hello']]) {
     let reads = 0;
     const results = await queries.suggestInDictionary({
@@ -207,17 +235,46 @@ function adapter(filename, readOnly = false) {
   await assert.rejects(loaded.runAsync("DELETE FROM words"), /readonly/);
   await loaded.closeAsync();
 
+  // Simulate a dictionary cache created by the previous app version: examples
+  // are still upstream, and its metadata has no example revision column.
+  const name = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
+  const cachePath = join(root, name);
+  const oldCache = new DatabaseSync(cachePath);
+  oldCache.exec('DROP TABLE vocabflow_dictionary_meta; CREATE TABLE vocabflow_dictionary_meta (source_hash TEXT NOT NULL);');
+  oldCache.prepare('INSERT INTO vocabflow_dictionary_meta (source_hash) VALUES (?)').run(DICTIONARY.sha256);
+  const restoreOriginal = oldCache.prepare('UPDATE word_definitions SET example = ? WHERE id = ? AND word_id = ?');
+  for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
+    const sourceExample = reference.handle.prepare(
+      'SELECT example FROM word_definitions WHERE id = ? AND word_id = ?',
+    ).get(update.senseId, update.entryId);
+    restoreOriginal.run(sourceExample.example, update.senseId, update.entryId);
+  }
+  oldCache.close();
+
   repo = repository(async () => { throw new Error('Offline: no network allowed'); });
   const offlineStages = [];
   const reopened = await repo.openDictionary(stage => offlineStages.push(stage));
-  assert.deepEqual(offlineStages, ['checking', 'ready'], 'Reopening cached dictionary is fully offline');
+  assert.deepEqual(offlineStages, ['checking', 'ready'], 'Upgrading the cached dictionary stays offline');
+  assert.equal(downloads, 1, 'Applying local example updates must not download the 44 MB source again');
+  for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
+    const stored = await reopened.getFirstAsync(
+      'SELECT example FROM word_definitions WHERE id = ? AND word_id = ?',
+      update.senseId,
+      update.entryId,
+    );
+    assert.equal(stored?.example, update.example, `Đã nâng cấp ví dụ ${update.term} trong từ điển cũ.`);
+    assert.equal((await repo.getDictionaryDraft(update.entryId, update.senseId)).example, update.example);
+  }
+  const revision = await reopened.getFirstAsync(
+    'SELECT example_revision FROM vocabflow_dictionary_meta LIMIT 1',
+  );
+  assert.equal(revision.example_revision, exampleUpdates.DICTIONARY_EXAMPLE_REVISION);
   assert.ok((await repo.searchDictionary('hello')).items.some(row => row.id === hello.id));
   assert.ok((await repo.suggestDictionary('helo')).some(row => row.id === hello.id), 'Spelling suggestions must work without a network');
   assert.equal((await repo.getDictionaryDraft(hello.id, sense.id)).meaning, draft.meaning);
   await reopened.closeAsync();
 
   // Remove ONLY the disposable reference cache to emulate first use without a network.
-  const name = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
   rmSync(join(root, name));
   let online = false;
   repo = repository(async () => {
