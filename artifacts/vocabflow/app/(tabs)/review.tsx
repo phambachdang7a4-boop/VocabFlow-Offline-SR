@@ -20,6 +20,7 @@ import { createReviewSessionSummary, formatReviewDuration, getReviewGrade, type 
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
 import { soundCueFor } from '@/domain/sound-cues';
 import { recordReviewSessionStart } from '@/data/vocabulary';
+import { ReviewMistakeMatchGame } from '@/components/ReviewMistakeMatchGame';
 
 type Session = {
   token: number;
@@ -27,6 +28,7 @@ type Session = {
   processed: number[];
   answered: number[];
   correct: number[];
+  mistakes: VocabularyWord[];
   startedAt: number;
   index: number;
   formatOffset: number;
@@ -46,6 +48,8 @@ export default function ReviewScreen() {
   const day = localDay(new Date(now));
   const [session, setSession] = useState<Session | null>(null);
   const [summary, setSummary] = useState<ReviewSessionSummary | null>(null);
+  const [pendingSummary, setPendingSummary] = useState<ReviewSessionSummary | null>(null);
+  const [gameWords, setGameWords] = useState<VocabularyWord[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -56,7 +60,7 @@ export default function ReviewScreen() {
   sessionRef.current = session;
   const overview = useMemo(() => reviewOverview(words, day), [words, day]);
   const card = overview.dueWords[0];
-  const inSession = !!session;
+  const inSession = !!session || !!gameWords;
 
   useEffect(() => {
     navigation.setOptions({
@@ -68,6 +72,8 @@ export default function ReviewScreen() {
   useFocusEffect(
     useCallback(() => {
       setSession(null);
+      setGameWords(null);
+      setPendingSummary(null);
       busyRef.current = false;
       setBusy(false);
       void reload();
@@ -100,12 +106,15 @@ export default function ReviewScreen() {
       await recordReviewSessionStart();
       sound.play(soundCueFor('reviewStarted'));
       setSummary(null);
+      setPendingSummary(null);
+      setGameWords(null);
       setSession({
         token: ++sequence.current,
         queue: overview.dueWords.map((w) => w.id),
         processed: [],
         answered: [],
         correct: [],
+        mistakes: [],
         startedAt: Date.now(),
         index: 0,
         formatOffset: first.reviewCount,
@@ -121,9 +130,18 @@ export default function ReviewScreen() {
   };
   const finishSession = (current: Session, completed: boolean) => {
     if (completed) sound.play(soundCueFor('reviewCompleted'));
-    setSummary(createReviewSessionSummary(current, Date.now(), completed));
+    const result = createReviewSessionSummary(current, Date.now(), completed);
     sessionRef.current = null;
     setSession(null);
+    if (current.mistakes.length) {
+      setPendingSummary(result);
+      setSummary(null);
+      setGameWords(current.mistakes);
+    } else {
+      setPendingSummary(null);
+      setSummary(result);
+      setGameWords(null);
+    }
   };
   const exitSession = () => {
     const current = sessionRef.current;
@@ -133,11 +151,15 @@ export default function ReviewScreen() {
   const committed = (token: number, id: number, correct: boolean | null = null) =>
     setSession((s) => {
       if (!s || s.token !== token || s.word.id !== id || s.processed.includes(id)) return s;
+      const mistakes = correct === false && !s.mistakes.some(word => word.id === id)
+        ? [...s.mistakes, s.word]
+        : s.mistakes;
       return {
         ...s,
         processed: [...s.processed, id],
         answered: correct === null ? s.answered : [...s.answered, id],
         correct: correct === true ? [...s.correct, id] : s.correct,
+        mistakes,
       };
     });
   const changeBusy = (token: number, index: number, value: boolean) => {
@@ -249,7 +271,7 @@ export default function ReviewScreen() {
           </View>
           <Text style={[styles.sessionTitle, { color: c.foreground }]}>{session.exercise.kind === 'multiple-choice' ? 'Chọn từ đúng' : 'Điền từ'}</Text>
         </View>
-      ) : (
+      ) : gameWords ? null : (
         <ScreenHeader
           kicker="Học ngắt quãng"
           title="Ôn tập"
@@ -273,6 +295,16 @@ export default function ReviewScreen() {
           }
         />
       )}
+      {gameWords ? (
+        <ReviewMistakeMatchGame
+          words={gameWords}
+          onReturnToReview={() => {
+            setGameWords(null);
+            setSummary(pendingSummary);
+            setPendingSummary(null);
+          }}
+        />
+      ) : (
       <KeyboardAwareScrollViewCompat
         bottomOffset={24}
         keyboardShouldPersistTaps="handled"
@@ -379,6 +411,7 @@ export default function ReviewScreen() {
           </>
         )}
       </KeyboardAwareScrollViewCompat>
+      )}
     </View>
   );
 }

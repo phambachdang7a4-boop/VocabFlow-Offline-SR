@@ -9,7 +9,7 @@ const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
 const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput', 'Modal'].map(type => [type, type]));
-native.StyleSheet = { create: value => value };
+native.StyleSheet = { create: value => value, hairlineWidth: 1 };
 native.Platform = { OS: 'android' };
 native.Keyboard = { dismiss() {} };
 native.useWindowDimensions = () => ({ width: 400, height: 800, scale: 1, fontScale: 1 });
@@ -75,9 +75,11 @@ function mount(file, properties = {}, initial = {}) {
     '@/components/ui': { Button: 'Button', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },
     '@/components/ReviewCard': { ReviewCard: 'ReviewCard', calendarLabel },
+    '@/components/ReviewMistakeMatchGame': { ReviewMistakeMatchGame: 'ReviewMistakeMatchGame' },
     '@/components/ReviewOverview': { SavedTotal: 'SavedTotal', LevelDistributionChart: 'LevelDistributionChart', ReviewStatusBar: 'ReviewStatusBar' },
+    '@/data/vocabulary': { recordReviewSessionStart: async () => {} },
   });
-  const Component = loaded.default ?? loaded.ReviewCard ?? loaded.LevelDistributionChart;
+  const Component = loaded.default ?? loaded.ReviewCard ?? loaded.ReviewMistakeMatchGame ?? loaded.LevelDistributionChart;
   function render() {
     for (let limit = 0; dirty; limit++) {
       assert.ok(limit < 30, 'Render/effects must settle');
@@ -101,6 +103,10 @@ function mount(file, properties = {}, initial = {}) {
 }
 const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', note: '',
   ...srs.initialProgress('2026-11-07') };
+async function startReview(screen) {
+  screen.byId('review-start').props.onPress();
+  await screen.settle();
+}
 
 (async () => {
   const screen = mount('../app/(tabs)/review.tsx');
@@ -121,7 +127,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   screen.time('2026-11-08T00:00:00');
   assert.ok(screen.byId('review-start'), 'Midnight expiry must expose the start button without refresh');
   assert.equal(screen.byType('ReviewCard'), undefined, 'Never auto-start a review at expiry');
-  screen.byId('review-start').props.onPress();
+  await startReview(screen);
   assert.equal(screen.byType('ReviewCard').props.word.id, 1);
   assert.equal(screen.byId('review-open-settings'), undefined, 'Hide settings while a review is in progress');
   assert.equal(screen.tabOptions.at(-1).tabBarStyle.display, 'none', 'Hide the tab bar during the full-screen review');
@@ -138,7 +144,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.ok(screen.byId('review-start'));
   assert.ok(settingsButton(), 'Settings return on the overview');
   assert.equal(screen.tabOptions.at(-1).tabBarStyle, undefined, 'Restore the tab bar after leaving the session');
-  screen.byId('review-start').props.onPress();
+  await startReview(screen);
   screen.byType('ReviewCard').props.onCommitted(1, true);
   screen.byId('review-back-overview').props.onPress();
   assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 1 từ!');
@@ -146,7 +152,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S',
     'An interrupted session ranks only the words answered before exiting.');
   screen.byId('review-summary-close').props.onPress();
-  screen.byId('review-start').props.onPress();
+  await startReview(screen);
   const question = screen.byType('ReviewCard').props;
   const reviewed = { ...tomorrowWord, ...srs.applyReview(tomorrowWord, true, '2026-11-08') };
   screen.update({ words: [reviewed] });
@@ -169,7 +175,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   screen.time(`${reviewed.nextReviewOn}T00:00:00`);
   assert.equal(screen.byType('ReviewCard'), undefined, 'Finishing must clear session state: a later deadline must not auto-open a card');
   assert.ok(screen.byId('review-start'));
-  screen.byId('review-start').props.onPress();
+  await startReview(screen);
   screen.focus();
   assert.ok(screen.byId('review-start'), 'Re-entering the tab opens the overview');
   screen.update({ words: [{ ...word, frozen: true, nextReviewOn: null }] });
@@ -181,6 +187,42 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   screen.update({ loading: false, error: 'SQLite error' });
   assert.ok(screen.byType('ErrorBanner'));
   assert.equal(screen.byType('SavedTotal'), undefined, 'Never present error-state zeros as real statistics');
+
+  const earlyWords = [{ ...word, id: 11, term: 'missed', meaning: 'bỏ lỡ', nextReviewOn: '2026-11-07' }];
+  const early = mount('../app/(tabs)/review.tsx', {}, { words: earlyWords });
+  await startReview(early);
+  early.byType('ReviewCard').props.onCommitted(11, false);
+  early.byType('ReviewCard');
+  early.byId('review-back-overview').props.onPress();
+  assert.deepEqual(early.byType('ReviewMistakeMatchGame').props.words.map(item => item.id), [11],
+    'An incorrect saved answer is offered even when the review ends early');
+  assert.equal(early.byId('review-summary-title'), undefined);
+  early.byType('ReviewMistakeMatchGame').props.onReturnToReview();
+  assert.equal(early.byId('review-summary-reviewed').props.children.join(''), '1/1');
+
+  const sevenWords = Array.from({ length: 7 }, (_, index) => ({
+    ...word,
+    id: index + 20,
+    term: `term-${index + 20}`,
+    meaning: `meaning-${index + 20}`,
+    nextReviewOn: '2026-11-07',
+  }));
+  const sevenMistakes = mount('../app/(tabs)/review.tsx', {}, { words: sevenWords });
+  await startReview(sevenMistakes);
+  for (const [index, item] of sevenWords.entries()) {
+    const cardProps = sevenMistakes.byType('ReviewCard').props;
+    cardProps.onCommitted(item.id, false);
+    if (index === 0) cardProps.onCommitted(item.id, false);
+    sevenMistakes.byType('ReviewCard');
+    sevenMistakes.byType('ReviewCard').props.onNext();
+    sevenMistakes.byType('ReviewCard');
+  }
+  const sevenGame = sevenMistakes.byType('ReviewMistakeMatchGame');
+  assert.equal(sevenGame.props.words.length, 7, 'The handoff retains all mistakes from sessions longer than five words');
+  assert.equal(new Set(sevenGame.props.words.map(item => item.id)).size, 7, 'A repeated failed callback does not duplicate a word');
+  assert.equal(sevenMistakes.byId('review-summary-title'), undefined);
+  sevenGame.props.onReturnToReview();
+  assert.equal(sevenMistakes.byId('review-summary-reviewed').props.children.join(''), '7/7');
 
   const levels = [0, 2, 4, 0, 0, 10].map((count, index) => ({ level: index + 1, count }));
   const chart = mount('../components/ReviewOverview.tsx', { levels });
@@ -201,7 +243,7 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
     { ...word, id: 2, reviewCount: 1, term: 'test', meaning: 'kiểm thử', example: 'They test it.' },
     ...sentenceDistractors,
   ], speechAutoRead: true });
-  both.byId('review-start').props.onPress();
+  await startReview(both);
   let current = both.byType('ReviewCard').props;
   assert.deepEqual(both.speechCalls, ['test'], 'Auto-pronunciation remains enabled for non-quiz review cards.');
   assert.equal(current.exercise.kind, 'meaning');
@@ -220,6 +262,10 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
   both.byType('ReviewCard').props.onNext();
   assert.equal(both.byType('ReviewCard'), undefined, 'Original queue only, and processed IDs never regrade even if cached due data is stale');
+  const mistakeGame = both.byType('ReviewMistakeMatchGame');
+  assert.deepEqual(mistakeGame.props.words.map(item => item.id), [2]);
+  assert.equal(both.byId('review-summary-title'), undefined, 'The match game appears before the review result');
+  mistakeGame.props.onReturnToReview();
   assert.equal(both.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 2 từ!');
   assert.equal(both.byId('review-summary-grade').props.children.join(''), 'B-');
   assert.equal(both.byId('review-summary-reviewed').props.children.join(''), '2/2');
@@ -227,11 +273,11 @@ const word = { id: 1, term: 'test', meaning: 'test only', ipa: '', example: '', 
   assert.equal(both.byId('review-summary-accuracy').props.children.join(''), '50%');
   both.byId('review-summary-close').props.onPress();
   assert.ok(both.byId('review-start'));
-  both.byId('review-start').props.onPress();
+  await startReview(both);
   const abandoned = both.byType('ReviewCard').props;
   both.byId('review-back-overview').props.onPress();
   both.byId('review-summary-close').props.onPress();
-  both.byId('review-start').props.onPress();
+  await startReview(both);
   const fresh = both.byType('ReviewCard').props;
   fresh.onBusyChange(true);
   abandoned.onBusyChange(false);
