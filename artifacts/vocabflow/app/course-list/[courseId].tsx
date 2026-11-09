@@ -83,16 +83,6 @@ export default function CourseListScreen() {
               { width: `${(completedCount / course.lessons.length) * 100}%`, backgroundColor: allComplete ? c.success : c.accent },
             ]} />
           </View>
-          {course.missingCount || course.skippedDuplicateCount ? (
-            <Text style={[styles.note, { color: c.mutedForeground }]}>
-              Danh sách tham khảo có {course.sourceCount} mục; {course.missingCount} từ không có nghĩa Việt trong kho offline và {course.skippedDuplicateCount} mục trùng với khóa trước được bỏ qua.
-            </Text>
-          ) : null}
-          {course.id === 'collocation-1-v1' ? (
-            <Text testID="collocation-frequency-context" style={[styles.note, { color: c.mutedForeground }]}>
-              Số đếm là số lần xuất hiện chính xác của cụm trong nguồn tương ứng. OpenSubtitles v2018 và WikiText-103 Raw v1 là hai corpus riêng, nên không so sánh trực tiếp thứ hạng giữa chúng. Cụm không có số đếm trực tiếp sẽ được ghi rõ là chưa có.
-            </Text>
-          ) : null}
           <Text style={[styles.attribution, { color: c.mutedForeground }]}>{course.attribution}</Text>
         </View>
 
@@ -155,7 +145,6 @@ const styles = StyleSheet.create({
   progressText: { fontFamily: F.b, fontSize: 13 },
   track: { height: 8, borderRadius: 6, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 6 },
-  note: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
   attribution: { fontFamily: F.r, fontSize: 10, lineHeight: 15 },
   sectionTitle: { fontFamily: F.b, fontSize: 18, marginTop: 6 },
   loading: { padding: 24, alignItems: 'center', gap: 10 },

@@ -133,7 +133,12 @@ let second;
     /course-frequency|course-select-frequency|displayCollocationFrequency/,
     'The learning card, answer prompt and final selection list hide collocation counts and corpus names.',
   );
-  assert.match(courseListScreen, /testID="collocation-frequency-context"/, 'Course attribution remains available on the overview page.');
+  assert.doesNotMatch(
+    courseListScreen,
+    /sourceCount|missingCount|skippedDuplicateCount|collocation-frequency-context/,
+    'The course overview hides source statistics and corpus explanations.',
+  );
+  assert.match(courseListScreen, /course\.attribution/, 'Course source attribution remains available on the overview page.');
   assert.match(lessonScreen, /testID="course-flip-example"/, 'Bài học cần có nút lật thẻ xem ví dụ.');
   assert.match(lessonScreen, /testID="course-add-all"/, 'Bài học cần có nút thêm tất cả mục từ.');
   console.log(
