@@ -121,7 +121,7 @@ let second;
   );
   const manualWord = afterMigration.find((word) => word.dictionarySenseId === manualSource.dictionarySenseId);
   assert.equal(manualWord.example, '', 'Migration không ghi đè mục người dùng tự quản lý.');
-  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 10);
+  assert.equal(second.db.prepare('PRAGMA user_version').get().user_version, 11);
   const lessonScreen = readFileSync(join(__dirname, '../app/course/[lessonId].tsx'), 'utf8');
   const rootLayout = readFileSync(join(__dirname, '../app/_layout.tsx'), 'utf8');
   const courseListScreen = readFileSync(join(__dirname, '../app/course-list/[courseId].tsx'), 'utf8');

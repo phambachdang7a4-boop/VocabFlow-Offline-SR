@@ -87,6 +87,8 @@ export const mergeUserSyncDataBodyReviewSessionsMax = 10000;
 export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const mergeUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
 
+
+export const mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
 export const mergeUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncDataBodyMissionAwardsMax = 10000;
@@ -152,7 +154,7 @@ export const MergeUserSyncDataBody = zod.object({
 })).max(mergeUserSyncDataBodyReviewSessionsMax).optional(),
   "missionAwards": zod.array(zod.object({
   "day": zod.string().regex(mergeUserSyncDataBodyMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionAwardsItemMissionIdMax),
+  "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionAwardsItemMissionIdMax).regex(mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
 })).max(mergeUserSyncDataBodyMissionAwardsMax).optional()
@@ -224,6 +226,8 @@ export const mergeUserSyncData200ResponseReviewSessionsMax = 10000;
 export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
 
+
+export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
 export const mergeUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncData200ResponseMissionAwardsMax = 10000;
@@ -289,7 +293,7 @@ export const MergeUserSyncData200Response = zod.object({
 })).max(mergeUserSyncData200ResponseReviewSessionsMax).optional(),
   "missionAwards": zod.array(zod.object({
   "day": zod.string().regex(mergeUserSyncData200ResponseMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax),
+  "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax).regex(mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
 })).max(mergeUserSyncData200ResponseMissionAwardsMax).optional()
@@ -377,6 +381,8 @@ export const replaceUserSyncDataBodyReviewSessionsMax = 10000;
 export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const replaceUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
 
+
+export const replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
 export const replaceUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncDataBodyMissionAwardsMax = 10000;
@@ -442,7 +448,7 @@ export const ReplaceUserSyncDataBody = zod.object({
 })).max(replaceUserSyncDataBodyReviewSessionsMax).optional(),
   "missionAwards": zod.array(zod.object({
   "day": zod.string().regex(replaceUserSyncDataBodyMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionAwardsItemMissionIdMax),
+  "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionAwardsItemMissionIdMax).regex(replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
 })).max(replaceUserSyncDataBodyMissionAwardsMax).optional()
@@ -514,6 +520,8 @@ export const replaceUserSyncData200ResponseReviewSessionsMax = 10000;
 export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
 
+
+export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
 export const replaceUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncData200ResponseMissionAwardsMax = 10000;
@@ -579,7 +587,7 @@ export const ReplaceUserSyncData200Response = zod.object({
 })).max(replaceUserSyncData200ResponseReviewSessionsMax).optional(),
   "missionAwards": zod.array(zod.object({
   "day": zod.string().regex(replaceUserSyncData200ResponseMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax),
+  "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax).regex(replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
 })).max(replaceUserSyncData200ResponseMissionAwardsMax).optional()

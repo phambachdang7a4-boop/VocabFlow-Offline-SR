@@ -633,7 +633,14 @@ function hasInvalidMissionData(
         session.correctCount < 0 ||
         session.correctCount > session.reviewedCount,
     ) ||
-    awards.some((award) => !Number.isSafeInteger(award.stone) || award.stone < 1 || award.stone > 20 || !award.missionId.trim())
+    awards.some((award) => {
+      const match = /^(review|add-words|lesson|grade)-([1-3])$/.exec(award.missionId);
+      if (!match || !Number.isSafeInteger(award.stone)) return true;
+      const level = Number(match[2]);
+      const ranges: Record<number, readonly [number, number]> = { 1: [1, 5], 2: [5, 10], 3: [10, 20] };
+      const [minimum, maximum] = ranges[level];
+      return award.stone < minimum || award.stone > maximum;
+    })
   );
 }
 

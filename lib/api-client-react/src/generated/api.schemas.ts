@@ -160,6 +160,7 @@ export interface SyncMissionAward {
   /**
      * @minLength 1
      * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade)-[1-3]$
      */
   missionId: string;
   /**

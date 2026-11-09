@@ -104,7 +104,7 @@ let harness = createRepository(root);
   assert.equal(migrated.reviewCount, saved.reviewCount);
   assert.equal(migrated.nextReviewOn, saved.nextReviewOn);
   assert.equal(migrated.meaning, saved.meaning);
-  assert.equal(harness.db.prepare('PRAGMA user_version').get().user_version, 10);
+  assert.equal(harness.db.prepare('PRAGMA user_version').get().user_version, 11);
   await assert.rejects(repo.setWordFrozen(999, true), /không còn tồn tại/);
   await assert.rejects(repo.setWordFrozen(-1, true), /không hợp lệ/);
   await repo.setWordFrozen(word.id, true);

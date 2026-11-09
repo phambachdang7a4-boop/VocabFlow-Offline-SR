@@ -84,7 +84,7 @@ export function evaluateDailyMissions(
   const ordinal = dayOrdinal(day);
   const omittedIndex = ordinal % MISSION_TYPES.length;
   const includedTypes = MISSION_TYPES.filter((_, index) => index !== omittedIndex);
-  const rotation = ordinal % includedTypes.length;
+  const rotation = omittedIndex % includedTypes.length;
   const todayTypes = [...includedTypes.slice(rotation), ...includedTypes.slice(0, rotation)];
   const awardedIds = new Set(awards.filter((award) => award.missionDay === day).map((award) => award.missionId));
 

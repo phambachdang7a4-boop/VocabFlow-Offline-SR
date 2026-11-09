@@ -129,7 +129,7 @@ let upgradedHarness;
   assert.equal(migrated.updatedAt, '2025-12-02T12:00:00Z');
   assert.equal(migrated.learnedOn, '2025-12-01');
   assert.equal(migrated.nextReviewOn, '2025-12-01');
-  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 10);
+  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 11);
   assert.equal((await legacyHarness.repo.listWords()).length, 1);
   // Restore a previous-schedule (v2) fixture with real history, then reopen.
   await legacyHarness.repo.saveWord({ ...input, term: 'finished' });
@@ -173,7 +173,7 @@ let upgradedHarness;
   assert.equal(stillFinished.completed, true);
   assert.equal(stillFinished.nextReviewOn, null);
   assert.equal(stillFinished.reviewCount, 6);
-  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 10);
+  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 11);
   console.log('PASS: CRUD, immediate new learning, persistent SRS, atomic grading, unchanged edit progress, completion, non-destructive old database and schedule migrations.');
 })()
   .catch((error) => {

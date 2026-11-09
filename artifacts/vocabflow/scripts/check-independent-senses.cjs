@@ -176,7 +176,7 @@ function legacy(root, empty = false) {
     const current = upgraded.db.prepare('SELECT * FROM words WHERE id=?').get(previous.id);
     for (const key of Object.keys(previous)) assert.equal(current[key], previous[key], `Preserve legacy ${key}`);
   }
-  assert.equal(upgraded.db.prepare('PRAGMA user_version').get().user_version, 10);
+  assert.equal(upgraded.db.prepare('PRAGMA user_version').get().user_version, 11);
   assert.deepEqual(upgraded.db.prepare('PRAGMA foreign_key_check').all(), []);
   await assert.rejects(upgraded.repo.saveWord(drafts[0]), /đã có/, 'Exact legacy meaning is already saved');
   await upgraded.repo.saveWord(drafts[1]);
