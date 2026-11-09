@@ -7,6 +7,9 @@ const { loadTs } = require('./test-support.cjs');
 const root = resolve(__dirname, '..');
 const dictionaryPath = resolve(root, '../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const manifest = JSON.parse(fs.readFileSync(join(root, 'data/basic-course-manifest.json'), 'utf8'));
+const familyExampleOverrides = JSON.parse(
+  fs.readFileSync(join(root, 'data/basic-family-example-overrides.json'), 'utf8'),
+);
 const { BASIC_COURSE_ID, BASIC_COURSE_TITLE, BASIC_COURSE_ATTRIBUTION, BASIC_COURSE_LESSONS, BASIC_COURSE_WORD_COUNT } =
   loadTs(join(root, 'data/basic-course.ts'));
 const sourceBytes = fs.readFileSync(dictionaryPath);
@@ -17,12 +20,12 @@ assert.equal(
   'Kho từ điển không khớp SHA-256 trong manifest.',
 );
 assert.equal(BASIC_COURSE_ID, 'basic-965-v2');
-assert.equal(BASIC_COURSE_TITLE, '978 từ cơ bản');
+assert.equal(BASIC_COURSE_TITLE, '976 từ cơ bản');
 assert.match(BASIC_COURSE_ATTRIBUTION, /CC BY-SA 4\.0/);
 assert.equal(manifest.courseId, BASIC_COURSE_ID);
 assert.equal(manifest.lessons.length, 49);
 assert.equal(BASIC_COURSE_LESSONS.length, 49, 'Khóa cơ bản cần đúng 49 bài.');
-assert.equal(BASIC_COURSE_WORD_COUNT, 978, `Cần đúng 978 mục từ-nghĩa, hiện có ${BASIC_COURSE_WORD_COUNT}.`);
+assert.equal(BASIC_COURSE_WORD_COUNT, 976, `Cần đúng 976 mục từ-nghĩa, hiện có ${BASIC_COURSE_WORD_COUNT}.`);
 
 const titleGroups = new Map();
 for (const lesson of BASIC_COURSE_LESSONS.filter(lesson => lesson.id !== 'basic-965-v2-colors-1')) {
@@ -41,6 +44,17 @@ assert.deepEqual(colorLesson.words.map(word => word.term), [
   'silver', 'maroon', 'turquoise', 'cyan', 'magenta', 'indigo',
 ]);
 assert.ok(BASIC_COURSE_LESSONS.every(lesson => lesson.words.length > 0 && lesson.words.length <= 25));
+const firstLesson = BASIC_COURSE_LESSONS.find(lesson => lesson.id === 'basic-965-v2-family-1');
+assert.ok(firstLesson, 'Thiếu bài Gia đình 1.');
+assert.ok(!firstLesson.words.some(word => ['dad', 'mom'].includes(word.term.toLocaleLowerCase('en'))));
+for (const lessonId of ['basic-965-v2-family-1', 'basic-965-v2-family-2']) {
+  const lesson = BASIC_COURSE_LESSONS.find(item => item.id === lessonId);
+  assert.equal(
+    Object.keys(familyExampleOverrides[lessonId] ?? {}).length,
+    lesson.words.length,
+    `Mỗi từ trong ${lesson.title} cần có ví dụ gợi ý riêng.`,
+  );
+}
 assert.equal(new Set(BASIC_COURSE_LESSONS.map(lesson => lesson.id)).size, 49, 'ID bài học bị trùng.');
 
 const byId = new Map(manifest.lessons.map(lesson => [lesson.id, lesson]));
@@ -74,8 +88,15 @@ try {
       assert.equal(word.pos, source.pos);
       assert.equal(word.subPos, source.subPos);
       assert.equal(word.ipa, source.ipa);
-      assert.ok(source.example?.trim(), `Thiếu ví dụ trong từ điển offline: ${word.term}.`);
-      assert.equal(word.example, source.example, `Ví dụ không trùng từ điển offline: ${word.term}.`);
+      const customExample = familyExampleOverrides[lesson.id]?.[normalize(word.term)];
+      assert.equal(word.example, customExample ?? source.example, `Ví dụ không khớp nguồn mong đợi: ${word.term}.`);
+      assert.ok(word.example?.trim(), `Thiếu ví dụ: ${word.term}.`);
+      if (customExample) {
+        assert.ok(
+          new RegExp(`\\b${word.term}\\b`, 'i').test(word.example),
+          `Ví dụ phải có chứa từ đích để tạo chỗ trống: ${word.term}.`,
+        );
+      }
       const senseKey = `${word.dictionaryEntryId}:${word.dictionarySenseId}`;
       const meaningKey = `${normalize(word.term)}|${normalize(word.definition)}`;
       assert.ok(!usedSenses.has(senseKey), `Nghĩa bị lặp: ${word.term}.`);

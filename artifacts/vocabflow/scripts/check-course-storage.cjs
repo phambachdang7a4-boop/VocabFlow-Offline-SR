@@ -41,7 +41,7 @@ let second;
     const saved = personalWords.find((word) => word.term === source.term);
     assert.equal(saved.dictionaryEntryId, source.dictionaryEntryId);
     assert.equal(saved.dictionarySenseId, source.dictionarySenseId);
-    assert.ok(source.example.trim(), `Ví dụ khóa học phải lấy từ từ điển offline: ${source.term}`);
+    assert.ok(source.example.trim(), `Ví dụ khóa học bị trống: ${source.term}`);
     assert.equal(saved.example, source.example);
     assert.ok(saved.note.includes(BASIC_COURSE_ATTRIBUTION), 'Nguồn từ điển phải được giữ khi lưu khóa học.');
   }

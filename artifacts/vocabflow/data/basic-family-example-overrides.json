@@ -1,0 +1,42 @@
+{
+  "basic-965-v2-family-1": {
+    "family": "A family is a group of people related to one another, such as parents and children.",
+    "parent": "A parent is a mother or father who raises and cares for a child.",
+    "mother": "A mother is the woman who gives birth to a child or raises one.",
+    "father": "A father is the man who has a child and helps care for them.",
+    "child": "A child is a young person who has not yet become an adult.",
+    "kid": "A kid is a child who is still growing up.",
+    "son": "A son is a person's male child.",
+    "daughter": "A daughter is a person's female child.",
+    "brother": "A brother is a boy or man who has the same parent as you.",
+    "sister": "A sister is a girl or woman who has the same parent as you.",
+    "sibling": "A sibling is a brother or sister in the same family.",
+    "husband": "A husband is a man who is married to someone.",
+    "wife": "A wife is a woman who is married to someone.",
+    "grandson": "A grandson is the son of someone's son or daughter.",
+    "grandmother": "A grandmother is the mother of someone's mother or father.",
+    "grandfather": "A grandfather is the father of someone's mother or father.",
+    "grandma": "Grandma is an informal word for a grandmother."
+  },
+  "basic-965-v2-family-2": {
+    "granddaughter": "A granddaughter is the daughter of someone's son or daughter.",
+    "uncle": "An uncle is the brother of your mother or father, or the husband of your aunt.",
+    "aunt": "An aunt is the sister of your mother or father, or the wife of your uncle.",
+    "cousin": "A cousin is the child of your aunt or uncle.",
+    "nephew": "A nephew is the son of your brother or sister.",
+    "niece": "A niece is the daughter of your brother or sister.",
+    "relative": "A relative is a person who belongs to your family.",
+    "baby": "A baby is a very young child who cannot walk or talk yet.",
+    "adult": "An adult is a fully grown person, not a child.",
+    "teenager": "A teenager is someone between the ages of 13 and 19.",
+    "people": "The word people means more than one person.",
+    "person": "A person is one human being.",
+    "man": "A man is an adult male person.",
+    "woman": "A woman is an adult female person.",
+    "boy": "A boy is a male child.",
+    "girl": "A girl is a female child.",
+    "marry": "When two people marry, they become spouses.",
+    "wedding": "A wedding is a ceremony where two people get married.",
+    "generation": "A generation is a group of people born around the same time, such as parents and children."
+  }
+}

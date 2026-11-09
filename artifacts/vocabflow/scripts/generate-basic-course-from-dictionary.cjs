@@ -9,6 +9,9 @@ const appRoot = resolve(__dirname, '..');
 const dataDir = join(appRoot, 'data');
 const coursePath = join(dataDir, 'basic-course.ts');
 const manifestPath = join(dataDir, 'basic-course-manifest.json');
+const familyExampleOverrides = JSON.parse(
+  fs.readFileSync(join(dataDir, 'basic-family-example-overrides.json'), 'utf8'),
+);
 const dictionaryPath = resolve(appRoot, '../../generated-artifacts/dictionary/dictionary_en_vi.db');
 const source = {
   commit: '388adc0826300912e5b0311c089e0e70494b065f',
@@ -236,10 +239,13 @@ function createManifest(db) {
 
     const middle = Math.ceil(words.length / 2);
     for (const [part, partWords] of [[1, words.slice(0, middle)], [2, words.slice(middle)]]) {
+      const lessonWords = legacy.id === 'family' && part === 1
+        ? partWords.filter(({ term }) => !['dad', 'mom'].includes(normalize(term)))
+        : partWords;
       manifestLessons.push({
         id: `basic-965-v2-${legacy.id}-${part}`,
         title: `${baseTitle} ${part}`,
-        words: partWords.map(({ entryId, senseId, term }) => ({ entryId, senseId, term })),
+        words: lessonWords.map(({ entryId, senseId, term }) => ({ entryId, senseId, term })),
       });
     }
   }
@@ -267,7 +273,7 @@ function createManifest(db) {
   assert.equal(Object.keys(replacements).length, 53, 'Số mục thay thế không đúng dự kiến.');
   assert.equal(replacementKeysUsed.size, Object.keys(replacements).length, 'Có quy tắc thay thế không dùng hoặc bị bỏ quên.');
   assert.equal(manifestLessons.length, 49);
-  assert.equal(manifestLessons.reduce((sum, lesson) => sum + lesson.words.length, 0), 978);
+  assert.equal(manifestLessons.reduce((sum, lesson) => sum + lesson.words.length, 0), 976);
   return {
     courseId: 'basic-965-v2',
     sourceCommit: source.commit,
@@ -296,7 +302,7 @@ function buildCourseData(db, manifest) {
         pos: sense.pos,
         subPos: sense.subPos,
         ipa: sense.ipa,
-        example: sense.example,
+        example: familyExampleOverrides[lesson.id]?.[normalize(sense.term)] ?? sense.example,
       };
     }),
   }));
@@ -316,6 +322,7 @@ function renderTypeScript(lessons) {
   term: string;
   definition: string;
   collocationType?: CollocationType;
+  frequency?: CollocationFrequency;
   pos: string | null;
   subPos: string | null;
   ipa: string;
@@ -323,6 +330,22 @@ function renderTypeScript(lessons) {
 }
 
 export type CollocationType = 'VERB+ADP' | 'ADJ+NOUN' | 'VERB+NOUN';
+export type CollocationFrequencySource = 'opensubs-v2018' | 'wikitext-103-raw-v1';
+
+export interface CollocationFrequency {
+  count: number | null;
+  source: CollocationFrequencySource;
+}
+
+export function displayCollocationFrequency(frequency?: CollocationFrequency): string | null {
+  if (!frequency) return null;
+  const sourceName = frequency.source === 'opensubs-v2018'
+    ? 'OpenSubtitles v2018'
+    : 'WikiText-103 Raw v1 (tập huấn luyện)';
+  return frequency.count === null
+    ? \`Số đếm trực tiếp: Chưa có · \${sourceName}\`
+    : \`Số lần xuất hiện: \${frequency.count.toLocaleString('vi-VN')} · \${sourceName}\`;
+}
 
 export interface BasicCourseLesson {
   id: string;
@@ -335,7 +358,7 @@ const courseRows: [string, string, number, number, string, string, string | null
   ${JSON.stringify(rows)};
 
 export const BASIC_COURSE_ID = 'basic-965-v2';
-export const BASIC_COURSE_TITLE = '978 từ cơ bản';
+export const BASIC_COURSE_TITLE = '976 từ cơ bản';
 export const BASIC_COURSE_SOURCE_COMMIT = '${source.commit}';
 export const BASIC_COURSE_ATTRIBUTION = 'Nguồn: Skypedia / MinhQND, CC BY-SA 4.0. https://github.com/skypediacode/english-vietnamese-dictionary/tree/${source.commit}';
 
@@ -376,7 +399,7 @@ function main() {
       : createManifest(db);
     const lessons = buildCourseData(db, manifest);
     assert.equal(lessons.length, 49);
-    assert.equal(lessons.reduce((sum, lesson) => sum + lesson.words.length, 0), 978);
+    assert.equal(lessons.reduce((sum, lesson) => sum + lesson.words.length, 0), 976);
     if (refreshManifest || !fs.existsSync(manifestPath)) {
       fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     }
