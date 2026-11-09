@@ -5,10 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SyncCollectionCraft } from './syncCollectionCraft';
 import type { SyncCourseProgress } from './syncCourseProgress';
 import type { SyncCourseSelection } from './syncCourseSelection';
 import type { SyncDeletedWord } from './syncDeletedWord';
 import type { SyncMissionAward } from './syncMissionAward';
+import type { SyncMissionChest } from './syncMissionChest';
 import type { SyncReviewSession } from './syncReviewSession';
 import type { SyncReviewStat } from './syncReviewStat';
 import type { SyncWord } from './syncWord';
@@ -33,4 +35,8 @@ export interface UserSyncSnapshot {
   reviewSessions?: SyncReviewSession[];
   /** @maxItems 10000 */
   missionAwards?: SyncMissionAward[];
+  /** @maxItems 10000 */
+  missionChests?: SyncMissionChest[];
+  /** @maxItems 10000 */
+  collectionCrafts?: SyncCollectionCraft[];
 }

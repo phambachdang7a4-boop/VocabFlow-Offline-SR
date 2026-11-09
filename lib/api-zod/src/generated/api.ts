@@ -93,6 +93,29 @@ export const mergeUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncDataBodyMissionAwardsMax = 10000;
 
+export const mergeUserSyncDataBodyMissionChestsItemChestIdMax = 160;
+
+export const mergeUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyMissionChestsItemMissionIdMax = 40;
+
+
+export const mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const mergeUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
+
+export const mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
+export const mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax = 4;
+
+export const mergeUserSyncDataBodyMissionChestsItemFinalStoneMax = 40;
+
+export const mergeUserSyncDataBodyMissionChestsMax = 10000;
+
+export const mergeUserSyncDataBodyCollectionCraftsItemCraftIdMax = 120;
+
+
+export const mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax = 80;
+
+export const mergeUserSyncDataBodyCollectionCraftsMax = 10000;
+
 
 
 export const MergeUserSyncDataBody = zod.object({
@@ -157,7 +180,28 @@ export const MergeUserSyncDataBody = zod.object({
   "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionAwardsItemMissionIdMax).regex(mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyMissionAwardsMax).optional()
+})).max(mergeUserSyncDataBodyMissionAwardsMax).optional(),
+  "missionChests": zod.array(zod.object({
+  "chestId": zod.string().min(1).max(mergeUserSyncDataBodyMissionChestsItemChestIdMax),
+  "day": zod.string().regex(mergeUserSyncDataBodyMissionChestsItemDayRegExp),
+  "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionChestsItemMissionIdMax).regex(mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp),
+  "baseStone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionChestsItemBaseStoneMax),
+  "upgradeAttempts": zod.number().int().min(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin).max(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
+  "opened": zod.boolean(),
+  "finalStone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionChestsItemFinalStoneMax).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyMissionChestsMax).optional(),
+  "collectionCrafts": zod.array(zod.object({
+  "craftId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionCraftsItemCraftIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "craftIndex": zod.number().int().min(1),
+  "artworkId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
+  "craftedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyCollectionCraftsMax).optional()
 })
 
 export const mergeUserSyncData200ResponseRevisionMin = 0;
@@ -232,6 +276,29 @@ export const mergeUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncData200ResponseMissionAwardsMax = 10000;
 
+export const mergeUserSyncData200ResponseMissionChestsItemChestIdMax = 160;
+
+export const mergeUserSyncData200ResponseMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseMissionChestsItemMissionIdMax = 40;
+
+
+export const mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
+
+export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
+export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax = 4;
+
+export const mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax = 40;
+
+export const mergeUserSyncData200ResponseMissionChestsMax = 10000;
+
+export const mergeUserSyncData200ResponseCollectionCraftsItemCraftIdMax = 120;
+
+
+export const mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax = 80;
+
+export const mergeUserSyncData200ResponseCollectionCraftsMax = 10000;
+
 
 
 export const MergeUserSyncData200Response = zod.object({
@@ -296,7 +363,28 @@ export const MergeUserSyncData200Response = zod.object({
   "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax).regex(mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseMissionAwardsMax).optional()
+})).max(mergeUserSyncData200ResponseMissionAwardsMax).optional(),
+  "missionChests": zod.array(zod.object({
+  "chestId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionChestsItemChestIdMax),
+  "day": zod.string().regex(mergeUserSyncData200ResponseMissionChestsItemDayRegExp),
+  "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionChestsItemMissionIdMax).regex(mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp),
+  "baseStone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax),
+  "upgradeAttempts": zod.number().int().min(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin).max(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
+  "opened": zod.boolean(),
+  "finalStone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseMissionChestsMax).optional(),
+  "collectionCrafts": zod.array(zod.object({
+  "craftId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionCraftsItemCraftIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "craftIndex": zod.number().int().min(1),
+  "artworkId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
+  "craftedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseCollectionCraftsMax).optional()
 })
 
 export const MergeUserSyncData400Response = zod.object({
@@ -387,6 +475,29 @@ export const replaceUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncDataBodyMissionAwardsMax = 10000;
 
+export const replaceUserSyncDataBodyMissionChestsItemChestIdMax = 160;
+
+export const replaceUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyMissionChestsItemMissionIdMax = 40;
+
+
+export const replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const replaceUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
+
+export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
+export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax = 4;
+
+export const replaceUserSyncDataBodyMissionChestsItemFinalStoneMax = 40;
+
+export const replaceUserSyncDataBodyMissionChestsMax = 10000;
+
+export const replaceUserSyncDataBodyCollectionCraftsItemCraftIdMax = 120;
+
+
+export const replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax = 80;
+
+export const replaceUserSyncDataBodyCollectionCraftsMax = 10000;
+
 
 
 export const ReplaceUserSyncDataBody = zod.object({
@@ -451,7 +562,28 @@ export const ReplaceUserSyncDataBody = zod.object({
   "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionAwardsItemMissionIdMax).regex(replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyMissionAwardsMax).optional()
+})).max(replaceUserSyncDataBodyMissionAwardsMax).optional(),
+  "missionChests": zod.array(zod.object({
+  "chestId": zod.string().min(1).max(replaceUserSyncDataBodyMissionChestsItemChestIdMax),
+  "day": zod.string().regex(replaceUserSyncDataBodyMissionChestsItemDayRegExp),
+  "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionChestsItemMissionIdMax).regex(replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp),
+  "baseStone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionChestsItemBaseStoneMax),
+  "upgradeAttempts": zod.number().int().min(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin).max(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
+  "opened": zod.boolean(),
+  "finalStone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionChestsItemFinalStoneMax).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyMissionChestsMax).optional(),
+  "collectionCrafts": zod.array(zod.object({
+  "craftId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionCraftsItemCraftIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "craftIndex": zod.number().int().min(1),
+  "artworkId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
+  "craftedAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyCollectionCraftsMax).optional()
 })
 
 export const replaceUserSyncData200ResponseRevisionMin = 0;
@@ -526,6 +658,29 @@ export const replaceUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncData200ResponseMissionAwardsMax = 10000;
 
+export const replaceUserSyncData200ResponseMissionChestsItemChestIdMax = 160;
+
+export const replaceUserSyncData200ResponseMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseMissionChestsItemMissionIdMax = 40;
+
+
+export const replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
+
+export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
+export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax = 4;
+
+export const replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax = 40;
+
+export const replaceUserSyncData200ResponseMissionChestsMax = 10000;
+
+export const replaceUserSyncData200ResponseCollectionCraftsItemCraftIdMax = 120;
+
+
+export const replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax = 80;
+
+export const replaceUserSyncData200ResponseCollectionCraftsMax = 10000;
+
 
 
 export const ReplaceUserSyncData200Response = zod.object({
@@ -590,7 +745,28 @@ export const ReplaceUserSyncData200Response = zod.object({
   "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax).regex(replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
   "stone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemStoneMax),
   "completedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseMissionAwardsMax).optional()
+})).max(replaceUserSyncData200ResponseMissionAwardsMax).optional(),
+  "missionChests": zod.array(zod.object({
+  "chestId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionChestsItemChestIdMax),
+  "day": zod.string().regex(replaceUserSyncData200ResponseMissionChestsItemDayRegExp),
+  "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionChestsItemMissionIdMax).regex(replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp),
+  "baseStone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax),
+  "upgradeAttempts": zod.number().int().min(replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin).max(replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
+  "opened": zod.boolean(),
+  "finalStone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseMissionChestsMax).optional(),
+  "collectionCrafts": zod.array(zod.object({
+  "craftId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionCraftsItemCraftIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "craftIndex": zod.number().int().min(1),
+  "artworkId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
+  "craftedAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseCollectionCraftsMax).optional()
 })
 
 export const ReplaceUserSyncData400Response = zod.object({

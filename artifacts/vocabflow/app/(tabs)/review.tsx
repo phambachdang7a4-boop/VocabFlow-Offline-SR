@@ -266,9 +266,6 @@ export default function ReviewScreen() {
             >
               <Feather name="x" size={24} color={c.mutedForeground} />
             </Pressable>
-            <View style={[styles.sessionMark, { backgroundColor: c.accent }]}>
-              <Feather name="book-open" size={15} color={c.primaryForeground} />
-            </View>
             <View style={{ flex: 1 }}>
               <View accessibilityLabel={`Tiến độ ${session.processed.length} trên ${session.queue.length} từ`} style={[styles.track, { backgroundColor: c.reviewTrack }]}>
                 <View
@@ -496,13 +493,6 @@ const styles = StyleSheet.create({
   sessionClose: {
     width: 32,
     height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sessionMark: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },

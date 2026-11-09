@@ -13,6 +13,17 @@ import {
   type DailyMissionAward,
   type DailyReviewGrade,
 } from '../domain/daily-missions';
+import {
+  chestStoneReward,
+  hasSuperUpgradeChance,
+  isValidMissionChest,
+  maxChestUpgradeAttempts,
+  resolveChestUpgrade,
+  startingRarityForMission,
+  type ChestRarity,
+  type MissionChest,
+} from '../domain/mission-chests';
+import { artworkForCraft, type CollectionCraft } from '../domain/collection-artworks';
 import { displayCourseMeaning } from './basic-course';
 import { ALL_COURSE_LESSONS, courseForLesson } from './course-catalog';
 
@@ -36,6 +47,19 @@ export interface DailyMissionOverview {
   day: string;
   stoneBalance: number;
   missions: DailyMission[];
+  chests: MissionChest[];
+}
+
+export interface MissionCollectionOverview {
+  fragments: Record<ChestRarity, number>;
+  crafts: CollectionCraft[];
+}
+
+export interface MissionChestUpgradeResult {
+  chest: MissionChest;
+  succeeded: boolean;
+  finished: boolean;
+  awardedStone: number | null;
 }
 
 export interface ReviewSessionResultInput {
@@ -151,7 +175,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 11) {
+    if ((version?.user_version ?? 0) > 13) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -393,6 +417,79 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 12) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS mission_chests (
+            chest_id TEXT PRIMARY KEY NOT NULL,
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            base_stone INTEGER NOT NULL CHECK (base_stone BETWEEN 1 AND 20),
+            upgrade_attempts INTEGER NOT NULL DEFAULT 0 CHECK (upgrade_attempts BETWEEN 0 AND 3),
+            rarity TEXT NOT NULL DEFAULT 'common'
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            opened INTEGER NOT NULL DEFAULT 0 CHECK (opened IN (0, 1)),
+            final_stone INTEGER,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (mission_day, mission_id),
+            CHECK (
+              (opened = 0 AND final_stone IS NULL) OR
+              (opened = 1 AND final_stone BETWEEN 1 AND 40)
+            )
+          );
+          CREATE INDEX IF NOT EXISTS idx_mission_chests_opened
+            ON mission_chests(opened, mission_day);
+          CREATE TABLE IF NOT EXISTS collection_crafts (
+            craft_id TEXT PRIMARY KEY NOT NULL,
+            rarity TEXT NOT NULL
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            craft_index INTEGER NOT NULL CHECK (craft_index >= 1),
+            artwork_id TEXT NOT NULL,
+            crafted_at TEXT NOT NULL,
+            UNIQUE (rarity, craft_index)
+          );
+          PRAGMA user_version = 12;
+        `);
+      });
+    }
+    if ((version?.user_version ?? 0) < 13) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE mission_chests_v13 (
+            chest_id TEXT PRIMARY KEY NOT NULL,
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            base_stone INTEGER NOT NULL CHECK (base_stone BETWEEN 1 AND 20),
+            upgrade_attempts INTEGER NOT NULL DEFAULT 0 CHECK (upgrade_attempts BETWEEN 0 AND 4),
+            rarity TEXT NOT NULL DEFAULT 'common'
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            rule_set INTEGER NOT NULL DEFAULT 1 CHECK (rule_set IN (1, 2)),
+            super_upgrade INTEGER NOT NULL DEFAULT 0 CHECK (super_upgrade IN (0, 1)),
+            opened INTEGER NOT NULL DEFAULT 0 CHECK (opened IN (0, 1)),
+            final_stone INTEGER,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (mission_day, mission_id),
+            CHECK (
+              (opened = 0 AND final_stone IS NULL) OR
+              (opened = 1 AND final_stone BETWEEN 1 AND 40)
+            )
+          );
+          INSERT INTO mission_chests_v13
+            (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+              rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+          SELECT chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+            1, 0, opened, final_stone, created_at, updated_at
+          FROM mission_chests;
+          DROP TABLE mission_chests;
+          ALTER TABLE mission_chests_v13 RENAME TO mission_chests;
+          CREATE INDEX idx_mission_chests_opened
+            ON mission_chests(opened, mission_day);
+          PRAGMA user_version = 13;
+        `);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -451,23 +548,38 @@ async function readDailyMissionActivity(db: SQLiteDatabase, day: string): Promis
   };
 }
 
-async function grantDailyMissionAwards(db: SQLiteDatabase, day: string): Promise<boolean> {
-  const [activity, awards] = await Promise.all([
+async function grantDailyMissionChests(db: SQLiteDatabase, day: string): Promise<boolean> {
+  const [activity, awards, chests] = await Promise.all([
     readDailyMissionActivity(db, day),
     db.getAllAsync<DailyMissionAward>(
       'SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?',
       day,
     ),
+    db.getAllAsync<{ missionId: string; baseStone: number; createdAt: string }>(
+      'SELECT mission_id AS missionId, base_stone AS baseStone, created_at AS createdAt FROM mission_chests WHERE mission_day = ?',
+      day,
+    ),
   ]);
   let changed = false;
   const now = new Date().toISOString();
-  for (const mission of evaluateDailyMissions(day, activity, awards)) {
+  const missionRewards = [
+    ...awards,
+    ...chests.map((chest) => ({ missionDay: day, missionId: chest.missionId, stone: chest.baseStone, completedAt: chest.createdAt })),
+  ];
+  for (const mission of evaluateDailyMissions(day, activity, missionRewards)) {
     if (!missionAwardIsEarned(mission)) continue;
+    const chestId = `mission-${day}-${mission.id}`;
     const result = await db.runAsync(
-      'INSERT OR IGNORE INTO daily_mission_awards (mission_day, mission_id, stone, completed_at) VALUES (?, ?, ?, ?)',
+      `INSERT OR IGNORE INTO mission_chests
+        (chest_id, mission_day, mission_id, base_stone, rarity, rule_set, super_upgrade, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 2, ?, ?, ?)`,
+      chestId,
       day,
       mission.id,
       mission.stoneReward,
+      startingRarityForMission(mission.id),
+      hasSuperUpgradeChance(chestId) ? 1 : 0,
+      now,
       now,
     );
     changed ||= result.changes === 1;
@@ -478,27 +590,207 @@ async function grantDailyMissionAwards(db: SQLiteDatabase, day: string): Promise
 export function getDailyMissionOverview(day = localDay(new Date())): Promise<DailyMissionOverview> {
   return serialize(async () => {
     const db = await database();
-    let awardsChanged = false;
+    let chestsChanged = false;
     let overview: DailyMissionOverview | undefined;
     await db.withTransactionAsync(async () => {
-      awardsChanged = await grantDailyMissionAwards(db, day);
-      if (awardsChanged) await markSyncDirty(db);
-      const [activity, awards, balance] = await Promise.all([
+      chestsChanged = await grantDailyMissionChests(db, day);
+      if (chestsChanged) await markSyncDirty(db);
+      const [activity, legacyAwards, chestAwards, legacyBalance, chestBalance, chests] = await Promise.all([
         readDailyMissionActivity(db, day),
         db.getAllAsync<DailyMissionAward>(
           'SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?',
           day,
         ),
+        db.getAllAsync<DailyMissionAward>(
+          `SELECT mission_day AS missionDay, mission_id AS missionId, base_stone AS stone,
+            created_at AS completedAt FROM mission_chests WHERE mission_day = ?`,
+          day,
+        ),
         db.getFirstAsync<{ total: number | null }>('SELECT SUM(stone) AS total FROM daily_mission_awards'),
+        db.getFirstAsync<{ total: number | null }>('SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1'),
+        readUnopenedMissionChests(db),
       ]);
+      const missionRewards = [...legacyAwards, ...chestAwards];
       overview = {
         day,
-        stoneBalance: balance?.total ?? 0,
-        missions: evaluateDailyMissions(day, activity, awards),
+        stoneBalance: (legacyBalance?.total ?? 0) + (chestBalance?.total ?? 0),
+        missions: evaluateDailyMissions(day, activity, missionRewards),
+        chests,
       };
     });
-    if (awardsChanged) notifySyncListeners();
+    if (chestsChanged) notifySyncListeners();
     return overview!;
+  });
+}
+
+async function readUnopenedMissionChests(db: SQLiteDatabase): Promise<MissionChest[]> {
+  const rows = await db.getAllAsync<Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number }>(
+    `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
+      base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
+      rule_set AS ruleSet, super_upgrade AS superUpgrade,
+      opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
+     FROM mission_chests WHERE opened = 0 ORDER BY mission_day DESC, created_at DESC`,
+  );
+  return rows.map(missionChestFromRow);
+}
+
+function missionChestFromRow(
+  row: Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number },
+): MissionChest {
+  return {
+    ...row,
+    ruleSet: row.ruleSet === 2 ? 2 : 1,
+    superUpgrade: Boolean(row.superUpgrade),
+    opened: Boolean(row.opened),
+  };
+}
+
+export function getMissionChest(chestId: string): Promise<MissionChest | null> {
+  return serialize(async () => {
+    const db = await database();
+    const row = await db.getFirstAsync<Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number }>(
+      `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
+        base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
+        rule_set AS ruleSet, super_upgrade AS superUpgrade,
+        opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
+       FROM mission_chests WHERE chest_id = ?`,
+      chestId,
+    );
+    return row ? missionChestFromRow(row) : null;
+  });
+}
+
+export function attemptMissionChestUpgrade(chestId: string): Promise<MissionChestUpgradeResult> {
+  return serialize(async () => {
+    const db = await database();
+    let result: MissionChestUpgradeResult | undefined;
+    await db.withTransactionAsync(async () => {
+      const row = await db.getFirstAsync<Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number }>(
+        `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
+          base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
+          rule_set AS ruleSet, super_upgrade AS superUpgrade,
+          opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
+         FROM mission_chests WHERE chest_id = ?`,
+        chestId,
+      );
+      if (!row) throw new Error('Không tìm thấy rương này.');
+      const current = missionChestFromRow(row);
+      if (current.opened) throw new Error('Rương này đã được mở.');
+      const nextAttempt = current.upgradeAttempts + 1;
+      const ruleSet = current.ruleSet ?? 1;
+      const superUpgrade = current.superUpgrade ?? false;
+      const upgrade = resolveChestUpgrade(chestId, nextAttempt, current.rarity, ruleSet, superUpgrade);
+      const rarity = upgrade.success ? upgrade.rarity : current.rarity;
+      const finished = !upgrade.success ||
+        nextAttempt === maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
+        rarity === 'legendary';
+      const awardedStone = finished ? chestStoneReward(current.baseStone, rarity) : null;
+      const next: MissionChest = {
+        ...current,
+        upgradeAttempts: nextAttempt,
+        rarity,
+        opened: finished,
+        finalStone: awardedStone,
+        updatedAt: new Date().toISOString(),
+      };
+      if (!isValidMissionChest(next)) throw new Error('Trạng thái rương không hợp lệ.');
+      const update = await db.runAsync(
+        `UPDATE mission_chests SET upgrade_attempts = ?, rarity = ?, opened = ?,
+          final_stone = ?, updated_at = ? WHERE chest_id = ? AND opened = 0`,
+        next.upgradeAttempts,
+        next.rarity,
+        next.opened ? 1 : 0,
+        next.finalStone,
+        next.updatedAt,
+        chestId,
+      );
+      if (update.changes !== 1) throw new Error('Rương đã được cập nhật trên thiết bị.');
+      await markSyncDirty(db);
+      result = { chest: next, succeeded: upgrade.success, finished, awardedStone };
+    });
+    notifySyncListeners();
+    return result!;
+  });
+}
+
+export function getMissionCollectionOverview(): Promise<MissionCollectionOverview> {
+  return serialize(async () => {
+    const db = await database();
+    const [earnedRows, crafts] = await Promise.all([
+      db.getAllAsync<{ rarity: ChestRarity; count: number }>(
+        'SELECT rarity, COUNT(*) AS count FROM mission_chests WHERE opened = 1 GROUP BY rarity',
+      ),
+      db.getAllAsync<CollectionCraft>(
+        `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
+          artwork_id AS artworkId, crafted_at AS craftedAt
+         FROM collection_crafts ORDER BY crafted_at DESC, craft_id DESC`,
+      ),
+    ]);
+    const fragments: Record<ChestRarity, number> = {
+      common: 0,
+      uncommon: 0,
+      rare: 0,
+      epic: 0,
+      legendary: 0,
+    };
+    const earnedByRarity = new Map(earnedRows.map((row) => [row.rarity, row.count]));
+    const craftedByRarity = new Map<ChestRarity, number>();
+    for (const craft of crafts) craftedByRarity.set(craft.rarity, (craftedByRarity.get(craft.rarity) ?? 0) + 1);
+    for (const rarity of Object.keys(fragments) as ChestRarity[]) {
+      fragments[rarity] = Math.max(0, (earnedByRarity.get(rarity) ?? 0) - (craftedByRarity.get(rarity) ?? 0) * 20);
+    }
+    return { fragments, crafts };
+  });
+}
+
+export function craftCollectionArtwork(rarity: ChestRarity): Promise<CollectionCraft> {
+  return serialize(async () => {
+    const db = await database();
+    let craft: CollectionCraft | undefined;
+    await db.withTransactionAsync(async () => {
+      const [earned, previous] = await Promise.all([
+        db.getFirstAsync<{ count: number }>(
+          'SELECT COUNT(*) AS count FROM mission_chests WHERE opened = 1 AND rarity = ?',
+          rarity,
+        ),
+        db.getFirstAsync<{ count: number; nextIndex: number | null }>(
+          'SELECT COUNT(*) AS count, MAX(craft_index) + 1 AS nextIndex FROM collection_crafts WHERE rarity = ?',
+          rarity,
+        ),
+      ]);
+      const craftIndex = previous?.nextIndex ?? 1;
+      if ((earned?.count ?? 0) - (previous?.count ?? 0) * 20 < 20) {
+        throw new Error('Cần đủ 20 mảnh cùng phẩm chất để ghép tranh.');
+      }
+      const artwork = artworkForCraft(rarity, craftIndex);
+      const next: CollectionCraft = {
+        craftId: `craft-${rarity}-${craftIndex}`,
+        rarity,
+        craftIndex,
+        artworkId: artwork.id,
+        craftedAt: new Date().toISOString(),
+      };
+      await db.runAsync(
+        `INSERT OR IGNORE INTO collection_crafts (craft_id, rarity, craft_index, artwork_id, crafted_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        next.craftId,
+        next.rarity,
+        next.craftIndex,
+        next.artworkId,
+        next.craftedAt,
+      );
+      const savedCraft = await db.getFirstAsync<CollectionCraft>(
+        `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
+          artwork_id AS artworkId, crafted_at AS craftedAt
+         FROM collection_crafts WHERE craft_id = ?`,
+        next.craftId,
+      );
+      if (!savedCraft) throw new Error('Không thể lưu bức tranh đã ghép.');
+      craft = savedCraft;
+      await markSyncDirty(db);
+    });
+    notifySyncListeners();
+    return craft!;
   });
 }
 
@@ -701,8 +993,8 @@ export function recordReviewSessionResult(input: ReviewSessionResultInput): Prom
         input.completed ? 1 : 0,
         now,
       );
-      const awardsChanged = await grantDailyMissionAwards(db, day);
-      changed = result.changes === 1 || awardsChanged;
+      const chestsChanged = await grantDailyMissionChests(db, day);
+      changed = result.changes === 1 || chestsChanged;
       if (changed) await markSyncDirty(db);
     });
     if (changed) notifySyncListeners();
@@ -948,7 +1240,7 @@ export function finishCourseLesson(lessonId: string, selectedWordIds: string[]):
         now,
         now,
       );
-      await grantDailyMissionAwards(db, localDay(new Date(now)));
+      await grantDailyMissionChests(db, localDay(new Date(now)));
       await markSyncDirty(db);
     });
     notifySyncListeners();
@@ -1043,7 +1335,7 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
         );
       }
       if (id === undefined) {
-        await grantDailyMissionAwards(db, localDay(new Date(now)));
+        await grantDailyMissionChests(db, localDay(new Date(now)));
       }
       await markSyncDirty(db);
     });
@@ -1120,7 +1412,7 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
         correct ? 1 : 0,
         now,
       );
-      await grantDailyMissionAwards(db, reviewedOn);
+      await grantDailyMissionChests(db, reviewedOn);
       await markSyncDirty(db);
     });
     notifySyncListeners();

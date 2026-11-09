@@ -3,7 +3,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { mkdtempSync, readFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
-const { createRepository, loadTs, courseCatalog } = require('./test-support.cjs');
+const { createRepository, loadTs, courseCatalog, collectionArtworks } = require('./test-support.cjs');
 
 const root = mkdtempSync(join(tmpdir(), 'vocabflow-auth-sync-'));
 const harness = createRepository(root);
@@ -59,6 +59,28 @@ const sync = loadTs(join(__dirname, '../data/vocabulary-sync.ts'), {
   assert.equal(snapshot.payload.reviewSessions.length, 1, 'Review grades sync with account data for daily missions.');
   assert.equal(Object.hasOwn(snapshot.payload, 'userId'), false, 'Client payload never chooses its owner.');
   assert.equal(snapshot.pending, true, 'Local writes stay queued until the server acknowledges them.');
+
+  const syncedChest = {
+    chestId: 'mission-2026-11-08-grade-1',
+    day: '2026-11-08',
+    missionId: 'grade-1',
+    baseStone: 3,
+    upgradeAttempts: 0,
+    rarity: 'common',
+    opened: false,
+    finalStone: null,
+    createdAt: '2026-11-08T10:00:00.000Z',
+    updatedAt: '2026-11-08T10:00:00.000Z',
+  };
+  const chestPayload = {
+    ...snapshot.payload,
+    missionChests: [syncedChest],
+    collectionCrafts: [],
+  };
+  await sync.mergeSyncSnapshot(chestPayload);
+  await sync.mergeSyncSnapshot(chestPayload);
+  snapshot = await sync.exportSyncSnapshot();
+  assert.equal(snapshot.payload.missionChests.length, 1, 'Repeating an offline chest sync cannot duplicate the chest.');
 
   const generationBeforeEdit = snapshot.generation;
   await repo.saveWord({
@@ -123,6 +145,7 @@ const sync = loadTs(join(__dirname, '../data/vocabulary-sync.ts'), {
 
   const beforeRestore = await sync.exportSyncSnapshot();
   const restoredWord = beforeRestore.payload.words[0];
+  const artwork = collectionArtworks.artworkForCraft('common', 1);
   const backupPayload = {
     revision: beforeRestore.payload.revision,
     words: [restoredWord],
@@ -154,6 +177,17 @@ const sync = loadTs(join(__dirname, '../data/vocabulary-sync.ts'), {
         updatedAt: '2026-11-08T10:00:00.000Z',
       },
     ],
+    missionAwards: [],
+    missionChests: [syncedChest],
+    collectionCrafts: [
+      {
+        craftId: 'craft-common-1',
+        rarity: 'common',
+        craftIndex: 1,
+        artworkId: artwork.id,
+        craftedAt: '2026-11-08T10:00:00.000Z',
+      },
+    ],
   };
   await sync.replaceAccountSyncSnapshot(backupPayload);
   let restoredSnapshot = await sync.exportSyncSnapshot();
@@ -166,6 +200,8 @@ const sync = loadTs(join(__dirname, '../data/vocabulary-sync.ts'), {
   assert.equal(restoredSnapshot.payload.courseSelections[0].selected, true);
   assert.equal(restoredSnapshot.payload.reviewStats[0].reviewedCount, 3);
   assert.equal(restoredSnapshot.payload.reviewStats[0].sessionCount, 2);
+  assert.equal(restoredSnapshot.payload.missionChests.length, 1, 'Account replacement restores unopened chests.');
+  assert.equal(restoredSnapshot.payload.collectionCrafts.length, 1, 'Account replacement restores crafted artwork.');
   assert.equal(await sync.hasPendingAccountReplacement(), true, 'An offline restore queues full replacement of the signed-in account.');
   assert.equal(await sync.clearPendingAccountReplacement(restoredSnapshot.generation + 1), false, 'A stale sync response cannot clear a newer restore request.');
   assert.equal(await sync.clearPendingAccountReplacement(restoredSnapshot.generation), true);

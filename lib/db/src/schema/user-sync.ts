@@ -1,4 +1,4 @@
-import { boolean, date, integer, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, date, integer, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 const timestampColumn = (name: string) => timestamp(name, { withTimezone: true, mode: 'string' });
 
@@ -103,6 +103,45 @@ export const userDailyMissionAwards = pgTable(
     completedAt: timestampColumn('completed_at').notNull(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.day, table.missionId] })],
+);
+
+export const userMissionChests = pgTable(
+  'user_mission_chests',
+  {
+    userId: text('user_id').notNull(),
+    chestId: text('chest_id').notNull(),
+    day: date('mission_day', { mode: 'string' }).notNull(),
+    missionId: text('mission_id').notNull(),
+    baseStone: integer('base_stone').notNull(),
+    upgradeAttempts: integer('upgrade_attempts').notNull(),
+    rarity: text('rarity').notNull(),
+    ruleSet: integer('rule_set').notNull().default(1),
+    superUpgrade: boolean('super_upgrade').notNull().default(false),
+    opened: boolean('opened').notNull(),
+    finalStone: integer('final_stone'),
+    createdAt: timestampColumn('created_at').notNull(),
+    updatedAt: timestampColumn('updated_at').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.chestId] }),
+    uniqueIndex('user_mission_chests_mission_idx').on(table.userId, table.day, table.missionId),
+  ],
+);
+
+export const userCollectionCrafts = pgTable(
+  'user_collection_crafts',
+  {
+    userId: text('user_id').notNull(),
+    craftId: text('craft_id').notNull(),
+    rarity: text('rarity').notNull(),
+    craftIndex: integer('craft_index').notNull(),
+    artworkId: text('artwork_id').notNull(),
+    craftedAt: timestampColumn('crafted_at').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.craftId] }),
+    uniqueIndex('user_collection_crafts_rarity_idx').on(table.userId, table.rarity, table.craftIndex),
+  ],
 );
 
 export const userSyncRevisions = pgTable('user_sync_revisions', {

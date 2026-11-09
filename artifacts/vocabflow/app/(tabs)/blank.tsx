@@ -1,11 +1,18 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { ErrorBanner, F } from '@/components/ui';
 import { getDailyMissionOverview, type DailyMissionOverview } from '@/data/vocabulary';
+import {
+  CHEST_RARITY_COLORS,
+  CHEST_RARITY_ICON_COLORS,
+  CHEST_RARITY_LABELS,
+  maxChestUpgradeAttempts,
+  type MissionChest,
+} from '@/domain/mission-chests';
 
 export default function BlankScreen() {
   const c = useColors();
@@ -55,6 +62,23 @@ export default function BlankScreen() {
           <Text style={[styles.walletDate, { color: c.mutedForeground }]}>Hôm nay</Text>
         </View>
 
+        <Pressable
+          testID="open-collection"
+          accessibilityRole="button"
+          accessibilityLabel="Mở Bộ Sưu Tập mảnh ghép và tranh"
+          onPress={() => router.push('/collection')}
+          style={[styles.collectionButton, { backgroundColor: c.vocabCardAccent }]}
+        >
+          <View style={[styles.collectionIcon, { backgroundColor: c.accent }]}>
+            <Feather name="image" size={20} color={c.buttonForeground} />
+          </View>
+          <View style={styles.collectionCopy}>
+            <Text style={[styles.collectionTitle, { color: c.foreground }]}>Bộ Sưu Tập</Text>
+            <Text style={[styles.collectionDescription, { color: c.mutedForeground }]}>Mảnh ghép và tranh đã mở</Text>
+          </View>
+          <Feather name="chevron-right" size={21} color={c.primary} />
+        </Pressable>
+
         <View style={styles.sectionHeading}>
           <Text style={[styles.sectionTitle, { color: c.foreground }]}>Ba nhiệm vụ hôm nay</Text>
           <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>Mỗi ngày có nhiệm vụ mới</Text>
@@ -79,7 +103,7 @@ export default function BlankScreen() {
             <View
               key={mission.id}
               testID={`daily-mission-${mission.id}`}
-              accessibilityLabel={`${mission.title}. ${mission.progress} trên ${mission.target}. Phần thưởng ${mission.stoneReward} Stone${finished ? ', đã nhận' : ''}.`}
+              accessibilityLabel={`${mission.title}. ${mission.progress} trên ${mission.target}. ${finished ? 'Đã nhận phần thưởng.' : 'Phần thưởng sắp nhận.'}`}
               style={[
                 styles.missionCard,
                 {
@@ -98,10 +122,11 @@ export default function BlankScreen() {
                   <Text style={[styles.missionDescription, { color: c.mutedForeground }]}>{mission.description}</Text>
                 </View>
                 <View style={[styles.rewardPill, { backgroundColor: finished ? c.success : c.accent }]}>
-                  <Text style={[styles.rewardText, { color: finished ? '#FFFFFF' : c.buttonForeground }]}>
-                    {finished ? 'Đã nhận' : `+${mission.stoneReward}`}
-                  </Text>
-                  {!finished ? <Text style={[styles.rewardUnit, { color: c.buttonForeground }]}>Stone</Text> : null}
+                  <Feather
+                    name={finished ? 'check' : 'gift'}
+                    size={finished ? 21 : 27}
+                    color={finished ? '#FFFFFF' : c.buttonForeground}
+                  />
                 </View>
               </View>
               <View style={styles.progressRow}>
@@ -120,10 +145,60 @@ export default function BlankScreen() {
             </View>
           );
         })}
+        {overview?.chests.length ? (
+          <>
+            <View style={styles.sectionHeading}>
+              <Text style={[styles.sectionTitle, { color: c.foreground }]}>Rương chờ mở</Text>
+              <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>Mỗi rương có tối đa 3 lượt nâng cấp</Text>
+            </View>
+            {overview.chests.map((chest) => (
+              <ChestCard key={chest.chestId} chest={chest} colors={c} />
+            ))}
+          </>
+        ) : null}
         <Text style={[styles.footerNote, { color: c.mutedForeground }]}>
-          Stone và tiến độ nhiệm vụ được lưu offline, rồi đồng bộ cùng dữ liệu tài khoản.
+          Stone, rương và tiến độ nhiệm vụ được lưu offline, rồi đồng bộ cùng dữ liệu tài khoản.
         </Text>
       </ScrollView>
+    </View>
+  );
+
+}
+
+function ChestCard({ chest, colors }: { chest: MissionChest; colors: ReturnType<typeof useColors> }) {
+  const rarityLabel = chest.rarity === 'legendary'
+    ? 'Corvi · Hắc Diệu Thạch'
+    : CHEST_RARITY_LABELS[chest.rarity];
+  const attemptLimit = maxChestUpgradeAttempts(chest.ruleSet ?? 1, chest.superUpgrade ?? false);
+  return (
+    <View style={[
+      styles.chestCard,
+      {
+        backgroundColor: colors.card,
+        borderColor: chest.rarity === 'legendary' ? colors.mutedForeground : colors.border,
+      },
+    ]}>
+      <View style={[
+        styles.chestIcon,
+        { backgroundColor: CHEST_RARITY_COLORS[chest.rarity] },
+      ]}>
+        <Feather name="gift" size={28} color={CHEST_RARITY_ICON_COLORS[chest.rarity]} />
+      </View>
+      <View style={styles.chestCopy}>
+        <Text style={[styles.chestTitle, { color: colors.foreground }]}>Rương {rarityLabel}</Text>
+        <Text style={[styles.chestDescription, { color: colors.mutedForeground }]}>
+          {chest.baseStone} Stone cơ bản · {chest.upgradeAttempts}/{attemptLimit} lượt đã dùng
+        </Text>
+      </View>
+      <Pressable
+        testID={`open-chest-${chest.chestId}`}
+        accessibilityRole="button"
+        accessibilityLabel={`Mở rương ${rarityLabel}, ${chest.baseStone} Stone cơ bản`}
+        onPress={() => router.push({ pathname: '/chest/[chestId]', params: { chestId: chest.chestId } })}
+        style={[styles.openChestButton, { backgroundColor: colors.accent }]}
+      >
+        <Text style={[styles.openChestText, { color: colors.buttonForeground }]}>Mở</Text>
+      </Pressable>
     </View>
   );
 }
@@ -137,6 +212,11 @@ const styles = StyleSheet.create({
   walletLabel: { fontFamily: F.s, fontSize: 10, letterSpacing: 1.2 },
   walletValue: { fontFamily: F.b, fontSize: 20 },
   walletDate: { fontFamily: F.m, fontSize: 12 },
+  collectionButton: { borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  collectionIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  collectionCopy: { flex: 1, gap: 2 },
+  collectionTitle: { fontFamily: F.b, fontSize: 15 },
+  collectionDescription: { fontFamily: F.r, fontSize: 12 },
   sectionHeading: { gap: 2, marginTop: 6, marginBottom: 2 },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
   sectionHint: { fontFamily: F.r, fontSize: 13 },
@@ -149,9 +229,14 @@ const styles = StyleSheet.create({
   level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },
   missionTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   missionDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
-  rewardPill: { minWidth: 52, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 12, alignItems: 'center' },
-  rewardText: { fontFamily: F.b, fontSize: 13 },
-  rewardUnit: { fontFamily: F.m, fontSize: 9 },
+  rewardPill: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  chestCard: { borderWidth: 1, borderRadius: 17, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  chestIcon: { width: 50, height: 50, borderWidth: 1, borderColor: '#FFFFFF55', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  chestCopy: { flex: 1, gap: 3 },
+  chestTitle: { fontFamily: F.b, fontSize: 14 },
+  chestDescription: { fontFamily: F.r, fontSize: 11, lineHeight: 16 },
+  openChestButton: { borderRadius: 12, minWidth: 52, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
+  openChestText: { fontFamily: F.b, fontSize: 13 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   track: { flex: 1, height: 8, borderRadius: 5, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 5 },

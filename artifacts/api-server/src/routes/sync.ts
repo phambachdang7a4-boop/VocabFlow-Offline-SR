@@ -5,7 +5,9 @@ import {
   db,
   userCourseProgress,
   userCourseSelections,
+  userCollectionCrafts,
   userDailyMissionAwards,
+  userMissionChests,
   userReviewSessionResults,
   userReviewStatistics,
   userSyncRevisions,
@@ -46,7 +48,9 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
   }
   const reviewSessions = parsed.data.reviewSessions ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
-  if (hasInvalidMissionData(reviewSessions, missionAwards)) {
+  const missionChests = parsed.data.missionChests ?? [];
+  const collectionCrafts = parsed.data.collectionCrafts ?? [];
+  if (hasInvalidMissionData(reviewSessions, missionAwards, missionChests, collectionCrafts)) {
     res.status(400).json({ error: 'Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ.' });
     return;
   }
@@ -58,6 +62,10 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
     hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
     hasDuplicates(reviewSessions, (item) => item.sessionId) ||
     hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(missionChests, (item) => item.chestId) ||
+    hasDuplicates(missionChests, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(collectionCrafts, (item) => item.craftId) ||
+    hasDuplicates(collectionCrafts, (item) => `${item.rarity}\u0000${item.craftIndex}`) ||
     parsed.data.deletedWords.some((deleted) => parsed.data.words.some((word) => word.syncId === deleted.syncId))
   ) {
     res.status(400).json({ error: 'Gói sao lưu có mục trùng hoặc mâu thuẫn.' });
@@ -98,6 +106,15 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
         ...award,
         completedAt: toTimestamp(award.completedAt),
       })),
+      missionChests: missionChests.map((chest) => ({
+        ...chest,
+        createdAt: toTimestamp(chest.createdAt),
+        updatedAt: toTimestamp(chest.updatedAt),
+      })),
+      collectionCrafts: collectionCrafts.map((craft) => ({
+        ...craft,
+        craftedAt: toTimestamp(craft.craftedAt),
+      })),
     };
 
     const result = await db.transaction(async (tx) => {
@@ -112,6 +129,8 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
       await tx.delete(userReviewStatistics).where(eq(userReviewStatistics.userId, userId));
       await tx.delete(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId));
       await tx.delete(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId));
+      await tx.delete(userMissionChests).where(eq(userMissionChests.userId, userId));
+      await tx.delete(userCollectionCrafts).where(eq(userCollectionCrafts.userId, userId));
 
       if (snapshot.words.length) {
         await tx.insert(userVocabulary).values(
@@ -209,6 +228,37 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
           })),
         );
       }
+      if (snapshot.missionChests.length) {
+        await tx.insert(userMissionChests).values(
+          snapshot.missionChests.map((chest) => ({
+            userId,
+            chestId: chest.chestId,
+            day: chest.day,
+            missionId: chest.missionId,
+            baseStone: chest.baseStone,
+            upgradeAttempts: chest.upgradeAttempts,
+            rarity: chest.rarity,
+            ruleSet: chest.ruleSet ?? 1,
+            superUpgrade: chest.superUpgrade ?? false,
+            opened: chest.opened,
+            finalStone: chest.finalStone,
+            createdAt: chest.createdAt,
+            updatedAt: chest.updatedAt,
+          })),
+        );
+      }
+      if (snapshot.collectionCrafts.length) {
+        await tx.insert(userCollectionCrafts).values(
+          snapshot.collectionCrafts.map((craft) => ({
+            userId,
+            craftId: craft.craftId,
+            rarity: craft.rarity,
+            craftIndex: craft.craftIndex,
+            artworkId: craft.artworkId,
+            craftedAt: craft.craftedAt,
+          })),
+        );
+      }
       await tx.insert(userSyncRevisions).values({ userId, revision }).onConflictDoUpdate({
         target: userSyncRevisions.userId,
         set: { revision },
@@ -236,7 +286,9 @@ router.post('/sync', requireAuth, async (req, res) => {
   }
   const reviewSessions = parsed.data.reviewSessions ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
-  if (hasInvalidMissionData(reviewSessions, missionAwards)) {
+  const missionChests = parsed.data.missionChests ?? [];
+  const collectionCrafts = parsed.data.collectionCrafts ?? [];
+  if (hasInvalidMissionData(reviewSessions, missionAwards, missionChests, collectionCrafts)) {
     res.status(400).json({ error: 'Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ.' });
     return;
   }
@@ -247,7 +299,11 @@ router.post('/sync', requireAuth, async (req, res) => {
     hasDuplicates(parsed.data.courseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
     hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
     hasDuplicates(reviewSessions, (item) => item.sessionId) ||
-    hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`)
+    hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(missionChests, (item) => item.chestId) ||
+    hasDuplicates(missionChests, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(collectionCrafts, (item) => item.craftId) ||
+    hasDuplicates(collectionCrafts, (item) => `${item.rarity}\u0000${item.craftIndex}`)
   ) {
     res.status(400).json({ error: 'Danh sách đồng bộ có mục trùng lặp.' });
     return;
@@ -301,6 +357,15 @@ router.post('/sync', requireAuth, async (req, res) => {
         missionAwards: missionAwards.map((award) => ({
           ...award,
           completedAt: toTimestamp(award.completedAt),
+        })),
+        missionChests: missionChests.map((chest) => ({
+          ...chest,
+          createdAt: toTimestamp(chest.createdAt),
+          updatedAt: toTimestamp(chest.updatedAt),
+        })),
+        collectionCrafts: collectionCrafts.map((craft) => ({
+          ...craft,
+          craftedAt: toTimestamp(craft.craftedAt),
         })),
       };
 
@@ -504,8 +569,79 @@ router.post('/sync', requireAuth, async (req, res) => {
           )
           .onConflictDoNothing();
       }
+      for (const chest of snapshot.missionChests) {
+        const normalizedChest = {
+          ...chest,
+          ruleSet: chest.ruleSet ?? 1,
+          superUpgrade: chest.superUpgrade ?? false,
+        };
+        const [current] = await tx
+          .select()
+          .from(userMissionChests)
+          .where(and(eq(userMissionChests.userId, userId), eq(userMissionChests.chestId, normalizedChest.chestId)));
+        const selected = !current
+          ? normalizedChest
+          : current.opened
+            ? current
+            : normalizedChest.ruleSet < current.ruleSet
+              ? current
+              : normalizedChest.ruleSet > current.ruleSet
+                ? current.upgradeAttempts === 0
+                  ? normalizedChest
+                  : current
+                : normalizedChest.opened
+                  ? normalizedChest
+                  : normalizedChest.upgradeAttempts > current.upgradeAttempts ||
+                      (normalizedChest.upgradeAttempts === current.upgradeAttempts && normalizedChest.updatedAt > current.updatedAt)
+                    ? normalizedChest
+                    : current;
+        await tx
+          .insert(userMissionChests)
+          .values({
+            userId,
+            chestId: selected.chestId,
+            day: selected.day,
+            missionId: selected.missionId,
+            baseStone: selected.baseStone,
+            upgradeAttempts: selected.upgradeAttempts,
+            rarity: selected.rarity,
+            ruleSet: selected.ruleSet,
+            superUpgrade: selected.superUpgrade,
+            opened: selected.opened,
+            finalStone: selected.finalStone,
+            createdAt: selected.createdAt,
+            updatedAt: selected.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: [userMissionChests.userId, userMissionChests.chestId],
+            set: {
+              upgradeAttempts: selected.upgradeAttempts,
+              rarity: selected.rarity,
+              ruleSet: selected.ruleSet,
+              superUpgrade: selected.superUpgrade,
+              opened: selected.opened,
+              finalStone: selected.finalStone,
+              updatedAt: selected.updatedAt,
+            },
+          });
+      }
+      if (snapshot.collectionCrafts.length) {
+        await tx
+          .insert(userCollectionCrafts)
+          .values(
+            snapshot.collectionCrafts.map((craft) => ({
+              userId,
+              craftId: craft.craftId,
+              rarity: craft.rarity,
+              craftIndex: craft.craftIndex,
+              artworkId: craft.artworkId,
+              craftedAt: craft.craftedAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
 
-      const [allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards] = await Promise.all([
+      const [allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards, allChests, allCrafts] = await Promise.all([
         tx.select().from(userVocabulary).where(eq(userVocabulary.userId, userId)),
         tx.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId)),
         tx.select().from(userCourseProgress).where(eq(userCourseProgress.userId, userId)),
@@ -513,6 +649,8 @@ router.post('/sync', requireAuth, async (req, res) => {
         tx.select().from(userReviewStatistics).where(eq(userReviewStatistics.userId, userId)),
         tx.select().from(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId)),
         tx.select().from(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId)),
+        tx.select().from(userMissionChests).where(eq(userMissionChests.userId, userId)),
+        tx.select().from(userCollectionCrafts).where(eq(userCollectionCrafts.userId, userId)),
       ]);
       const tombstonesById = new Map(allTombstones.map((item) => [item.syncId, item.deletedAt]));
       const wordsByIdForResponse = new Map(allWords.map((word) => [word.syncId, word]));
@@ -555,6 +693,11 @@ router.post('/sync', requireAuth, async (req, res) => {
             ...award,
             day: award.day,
           })),
+          missionChests: allChests.map(({ userId: _owner, ...chest }) => ({
+            ...chest,
+            day: chest.day,
+          })),
+          collectionCrafts: allCrafts.map(({ userId: _owner, ...craft }) => craft),
         },
       };
     });
@@ -579,7 +722,7 @@ router.post('/sync', requireAuth, async (req, res) => {
 });
 
 async function readUserSyncSnapshot(userId: string) {
-  const [revisionRows, allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards] = await Promise.all([
+  const [revisionRows, allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards, allChests, allCrafts] = await Promise.all([
     db.select({ revision: userSyncRevisions.revision }).from(userSyncRevisions).where(eq(userSyncRevisions.userId, userId)),
     db.select().from(userVocabulary).where(eq(userVocabulary.userId, userId)),
     db.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId)),
@@ -588,6 +731,8 @@ async function readUserSyncSnapshot(userId: string) {
     db.select().from(userReviewStatistics).where(eq(userReviewStatistics.userId, userId)),
     db.select().from(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId)),
     db.select().from(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId)),
+    db.select().from(userMissionChests).where(eq(userMissionChests.userId, userId)),
+    db.select().from(userCollectionCrafts).where(eq(userCollectionCrafts.userId, userId)),
   ]);
   const tombstonesById = new Map(allTombstones.map((item) => [item.syncId, item.deletedAt]));
   const wordsById = new Map(allWords.map((word) => [word.syncId, word]));
@@ -613,6 +758,8 @@ async function readUserSyncSnapshot(userId: string) {
     reviewStats: allStats.map(({ userId: _owner, ...stat }) => stat),
     reviewSessions: allSessions.map(({ userId: _owner, ...session }) => ({ ...session, day: session.day })),
     missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({ ...award, day: award.day })),
+    missionChests: allChests.map(({ userId: _owner, ...chest }) => ({ ...chest, day: chest.day })),
+    collectionCrafts: allCrafts.map(({ userId: _owner, ...craft }) => craft),
   };
 }
 
@@ -623,6 +770,19 @@ function maxTimestamp(left: string, right: string): string {
 function hasInvalidMissionData(
   sessions: Array<{ reviewedCount: number; correctCount: number }>,
   awards: Array<{ stone: number; missionId: string }>,
+  chests: Array<{
+    chestId: string;
+    day: string;
+    missionId: string;
+    baseStone: number;
+    upgradeAttempts: number;
+    rarity: string;
+    opened: boolean;
+    finalStone: number | null;
+    createdAt: string | Date;
+    updatedAt: string | Date;
+  }>,
+  crafts: Array<{ craftId: string; rarity: string; craftIndex: number; artworkId: string; craftedAt: string | Date }>,
 ): boolean {
   return (
     sessions.some(
@@ -640,8 +800,133 @@ function hasInvalidMissionData(
       const ranges: Record<number, readonly [number, number]> = { 1: [1, 5], 2: [5, 10], 3: [10, 20] };
       const [minimum, maximum] = ranges[level];
       return award.stone < minimum || award.stone > maximum;
+    }) ||
+    chests.some((chest) => !isValidMissionChestRecord(chest)) ||
+    crafts.some((craft) => {
+      const rarity = isChestRarity(craft.rarity);
+      return (
+        !rarity ||
+        !Number.isSafeInteger(craft.craftIndex) ||
+        craft.craftIndex < 1 ||
+        craft.craftId !== `craft-${craft.rarity}-${craft.craftIndex}` ||
+        !craft.artworkId.trim() ||
+        !Number.isFinite(Date.parse(toTimestamp(craft.craftedAt)))
+      );
     })
   );
+}
+
+function isValidMissionChestRecord(chest: {
+  chestId: string;
+  day: string;
+  missionId: string;
+  baseStone: number;
+  upgradeAttempts: number;
+  rarity: string;
+  ruleSet?: number;
+  superUpgrade?: boolean;
+  opened: boolean;
+  finalStone: number | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}): boolean {
+  const ruleSet = chest.ruleSet ?? 1;
+  const superUpgrade = chest.superUpgrade ?? false;
+  const attemptLimit = ruleSet === 2 && superUpgrade ? 4 : 3;
+  if (
+    !chest.chestId.trim() ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(chest.day) ||
+    !/^(review|add-words|lesson|grade)-[1-3]$/.test(chest.missionId) ||
+    !Number.isSafeInteger(chest.baseStone) ||
+    chest.baseStone < 1 ||
+    chest.baseStone > 20 ||
+    !Number.isSafeInteger(chest.upgradeAttempts) ||
+    chest.upgradeAttempts < 0 ||
+    chest.upgradeAttempts > attemptLimit ||
+    (ruleSet !== 1 && ruleSet !== 2) ||
+    (ruleSet === 1 && superUpgrade) ||
+    (ruleSet === 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
+    !isChestRarity(chest.rarity)
+  ) {
+    return false;
+  }
+  let rarity = ruleSet === 1 ? 'common' : serverStartingChestRarity(chest.missionId);
+  let opened = false;
+  let resolvedAttempts = 0;
+  for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
+    if (opened) return false;
+    const outcome = serverChestUpgrade(chest.chestId, attempt, rarity, ruleSet, superUpgrade);
+    resolvedAttempts = attempt;
+    if (outcome.success) {
+      rarity = outcome.rarity;
+      opened = attempt === attemptLimit || rarity === 'legendary';
+    } else {
+      opened = true;
+    }
+  }
+  if (
+    resolvedAttempts !== chest.upgradeAttempts ||
+    rarity !== chest.rarity ||
+    opened !== chest.opened ||
+    !Number.isFinite(Date.parse(toTimestamp(chest.createdAt))) ||
+    !Number.isFinite(Date.parse(toTimestamp(chest.updatedAt)))
+  ) return false;
+  if (!opened) return chest.finalStone === null;
+  const bonuses: Record<string, number> = { common: 0, uncommon: 2, rare: 5, epic: 10, legendary: 20 };
+  return chest.finalStone === chest.baseStone + bonuses[rarity];
+}
+
+function serverChestUpgrade(
+  chestId: string,
+  attempt: number,
+  currentRarity: string,
+  ruleSet: number,
+  superUpgrade: boolean,
+): { success: boolean; rarity: string } {
+  if (ruleSet === 1) return serverLegacyChestUpgrade(chestId, attempt);
+  const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+  const currentIndex = rarities.indexOf(currentRarity);
+  if (currentIndex < 0 || currentIndex >= rarities.length - 1) return { success: false, rarity: currentRarity };
+  const nextRarity = rarities[currentIndex + 1]!;
+  if (attempt === 4 && superUpgrade) return { success: true, rarity: nextRarity };
+  const chances = [70, 50, 25, 10];
+  const chance = chances[currentIndex];
+  if (chance === undefined) return { success: false, rarity: currentRarity };
+  const roll = serverHash(`rarity-upgrade-v2:${chestId}:${attempt}:${currentRarity}`) % 100;
+  return roll < chance
+    ? { success: true, rarity: nextRarity }
+    : { success: false, rarity: currentRarity };
+}
+
+function serverLegacyChestUpgrade(chestId: string, attempt: number): { success: boolean; rarity: string } {
+  const roll = serverHash(`${chestId}:${attempt}`) % 100;
+  if (attempt === 1) return roll < 55 ? { success: true, rarity: 'uncommon' } : { success: false, rarity: 'common' };
+  if (attempt === 2) return roll < 40 ? { success: true, rarity: 'rare' } : { success: false, rarity: 'uncommon' };
+  if (roll < 5) return { success: true, rarity: 'legendary' };
+  if (roll < 25) return { success: true, rarity: 'epic' };
+  return { success: false, rarity: 'rare' };
+}
+
+function serverStartingChestRarity(missionId: string): string {
+  const slot = missionId.slice(missionId.lastIndexOf('-') + 1);
+  return slot === '1' ? 'common' : slot === '2' ? 'uncommon' : 'rare';
+}
+
+function serverHasSuperUpgrade(chestId: string): boolean {
+  return serverHash(`super-upgrade:${chestId}`) % 100 < 2;
+}
+
+function serverHash(value: string): number {
+  let hash = 2_166_136_261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16_777_619);
+  }
+  return (hash >>> 0);
+}
+
+function isChestRarity(value: string): boolean {
+  return ['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(value);
 }
 
 function hasDuplicates<T>(items: T[], keyFor: (item: T) => string): boolean {

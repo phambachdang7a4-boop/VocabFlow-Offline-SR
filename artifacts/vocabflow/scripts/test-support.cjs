@@ -42,6 +42,10 @@ const courseCatalog = loadTs(join(__dirname, '../data/course-catalog.ts'), {
   './advanced-courses': advancedCourses,
   './collocation-courses': collocationCourses,
 });
+const missionChests = loadTs(join(__dirname, '../domain/mission-chests.ts'));
+const collectionArtworks = loadTs(join(__dirname, '../domain/collection-artworks.ts'), {
+  './mission-chests': missionChests,
+});
 
 function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
   let clock = today;
@@ -57,6 +61,8 @@ function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
       '../domain/srs': srs,
       '../domain/daily-missions': dailyMissions,
       '../domain/review-statistics': reviewStatistics,
+      '../domain/mission-chests': missionChests,
+      '../domain/collection-artworks': collectionArtworks,
       './sqlite-connection': sqliteConnection,
       './basic-course': basicCourse,
       './course-catalog': courseCatalog,
@@ -119,4 +125,6 @@ module.exports = {
   advancedCourses,
   collocationCourses,
   courseCatalog,
+  missionChests,
+  collectionArtworks,
 };

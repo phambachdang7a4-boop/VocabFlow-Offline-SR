@@ -171,6 +171,96 @@ export interface SyncMissionAward {
   completedAt: string;
 }
 
+export type SyncMissionChestRarity = typeof SyncMissionChestRarity[keyof typeof SyncMissionChestRarity];
+
+
+export const SyncMissionChestRarity = {
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
+} as const;
+
+/**
+ * Optional for legacy clients; omitted values use the legacy chest rules.
+ */
+export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
+
+
+export const SyncMissionChestRuleSet = {
+  NUMBER_1: 1,
+  NUMBER_2: 2,
+} as const;
+
+export interface SyncMissionChest {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  chestId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade)-[1-3]$
+     */
+  missionId: string;
+  /**
+     * @minimum 1
+     * @maximum 20
+     */
+  baseStone: number;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  upgradeAttempts: number;
+  rarity: SyncMissionChestRarity;
+  /** Optional for legacy clients; omitted values use the legacy chest rules. */
+  ruleSet?: SyncMissionChestRuleSet;
+  /** Whether this ruleset 2 chest has its guaranteed fourth upgrade. */
+  superUpgrade?: boolean;
+  opened: boolean;
+  /**
+     * @minimum 1
+     * @maximum 40
+     * @nullable
+     */
+  finalStone: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SyncCollectionCraftRarity = typeof SyncCollectionCraftRarity[keyof typeof SyncCollectionCraftRarity];
+
+
+export const SyncCollectionCraftRarity = {
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
+} as const;
+
+export interface SyncCollectionCraft {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  craftId: string;
+  rarity: SyncCollectionCraftRarity;
+  /** @minimum 1 */
+  craftIndex: number;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  artworkId: string;
+  craftedAt: string;
+}
+
 export interface UserSyncSnapshot {
   /**
      * Account data generation used to prevent stale devices from restoring older data.
@@ -191,6 +281,10 @@ export interface UserSyncSnapshot {
   reviewSessions?: SyncReviewSession[];
   /** @maxItems 10000 */
   missionAwards?: SyncMissionAward[];
+  /** @maxItems 10000 */
+  missionChests?: SyncMissionChest[];
+  /** @maxItems 10000 */
+  collectionCrafts?: SyncCollectionCraft[];
 }
 
 export interface DictionaryAssetError {

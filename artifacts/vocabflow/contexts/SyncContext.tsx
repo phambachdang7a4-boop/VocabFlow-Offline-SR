@@ -58,6 +58,8 @@ export function SyncProvider({ userId, children }: React.PropsWithChildren<{ use
           completed: Boolean(session.completed),
         })),
         missionAwards: remote.missionAwards ?? [],
+        missionChests: remote.missionChests ?? [],
+        collectionCrafts: remote.collectionCrafts ?? [],
       };
       const [current, replacementPending] = await Promise.all([getLocalSyncState(), hasPendingAccountReplacement()]);
       const replacementChangedDuringSync = (!replacing && replacementPending) || (replacing && current.generation !== local.generation);

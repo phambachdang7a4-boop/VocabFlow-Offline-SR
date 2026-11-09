@@ -1,13 +1,17 @@
 import type {
   SyncCourseProgress,
   SyncCourseSelection,
+  SyncCollectionCraft,
   SyncDeletedWord,
   SyncMissionAward,
+  SyncMissionChest,
   SyncPayload,
   SyncReviewSession,
   SyncReviewStat,
   SyncWord,
 } from './vocabulary-sync';
+import { isValidMissionChest } from '../domain/mission-chests';
+import { artworkForCraft, isCollectionArtwork } from '../domain/collection-artworks';
 
 export const ACCOUNT_BACKUP_FORMAT = 'vocabflow.account-backup';
 export const ACCOUNT_BACKUP_VERSION = 1;
@@ -91,6 +95,8 @@ function validatePayload(value: unknown): SyncPayload {
   const reviewStats = value.reviewStats.map(parseReviewStat);
   const reviewSessions = optionalRecordArray(value, 'reviewSessions').map(parseReviewSession);
   const missionAwards = optionalRecordArray(value, 'missionAwards').map(parseMissionAward);
+  const missionChests = optionalRecordArray(value, 'missionChests').map(parseMissionChest);
+  const collectionCrafts = optionalRecordArray(value, 'collectionCrafts').map(parseCollectionCraft);
   if (
     words.some((item) => item === null) ||
     deletedWords.some((item) => item === null) ||
@@ -98,7 +104,9 @@ function validatePayload(value: unknown): SyncPayload {
     courseSelections.some((item) => item === null) ||
     reviewStats.some((item) => item === null) ||
     reviewSessions.some((item) => item === null) ||
-    missionAwards.some((item) => item === null)
+    missionAwards.some((item) => item === null) ||
+    missionChests.some((item) => item === null) ||
+    collectionCrafts.some((item) => item === null)
   ) {
     throw new Error('Gói sao lưu có mục dữ liệu không hợp lệ.');
   }
@@ -110,6 +118,8 @@ function validatePayload(value: unknown): SyncPayload {
   const validReviewStats = reviewStats as SyncReviewStat[];
   const validReviewSessions = reviewSessions as SyncReviewSession[];
   const validMissionAwards = missionAwards as SyncMissionAward[];
+  const validMissionChests = missionChests as SyncMissionChest[];
+  const validCollectionCrafts = collectionCrafts as SyncCollectionCraft[];
   if (
     hasDuplicates(validWords, (word) => word.syncId) ||
     hasDuplicates(validDeletedWords, (word) => word.syncId) ||
@@ -117,7 +127,11 @@ function validatePayload(value: unknown): SyncPayload {
     hasDuplicates(validCourseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
     hasDuplicates(validReviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
     hasDuplicates(validReviewSessions, (item) => item.sessionId) ||
-    hasDuplicates(validMissionAwards, (item) => `${item.day}\u0000${item.missionId}`)
+    hasDuplicates(validMissionAwards, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(validMissionChests, (item) => item.chestId) ||
+    hasDuplicates(validMissionChests, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(validCollectionCrafts, (item) => item.craftId) ||
+    hasDuplicates(validCollectionCrafts, (item) => `${item.rarity}\u0000${item.craftIndex}`)
   ) {
     throw new Error('Gói sao lưu có mục bị lặp.');
   }
@@ -140,6 +154,68 @@ function validatePayload(value: unknown): SyncPayload {
     reviewStats: validReviewStats,
     reviewSessions: validReviewSessions,
     missionAwards: validMissionAwards,
+    missionChests: validMissionChests,
+    collectionCrafts: validCollectionCrafts,
+  };
+}
+
+function parseMissionChest(value: unknown): SyncMissionChest | null {
+  if (
+    !isRecord(value) ||
+    !isString(value.chestId, 160, false) ||
+    !isDay(value.day) ||
+    !isString(value.missionId, 40, false) ||
+    !isPositiveInteger(value.baseStone) ||
+    value.baseStone > 20 ||
+    !isNonNegativeInteger(value.upgradeAttempts) ||
+    value.upgradeAttempts > 4 ||
+    (value.ruleSet !== undefined && value.ruleSet !== 1 && value.ruleSet !== 2) ||
+    (value.superUpgrade !== undefined && typeof value.superUpgrade !== 'boolean') ||
+    !isChestRarity(value.rarity) ||
+    typeof value.opened !== 'boolean' ||
+    (value.finalStone !== null && (!isPositiveInteger(value.finalStone) || value.finalStone > 40)) ||
+    !isTimestamp(value.createdAt) ||
+    !isTimestamp(value.updatedAt)
+  ) {
+    return null;
+  }
+  const chest: SyncMissionChest = {
+    chestId: value.chestId,
+    day: value.day,
+    missionId: value.missionId,
+    baseStone: value.baseStone as number,
+    upgradeAttempts: value.upgradeAttempts,
+    rarity: value.rarity,
+    ruleSet: value.ruleSet === 2 ? 2 : 1,
+    superUpgrade: value.superUpgrade === true,
+    opened: value.opened,
+    finalStone: value.finalStone as number | null,
+    createdAt: value.createdAt,
+    updatedAt: value.updatedAt,
+  };
+  return isValidMissionChest(chest) ? chest : null;
+}
+
+function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
+  if (
+    !isRecord(value) ||
+    !isString(value.craftId, 120, false) ||
+    !isChestRarity(value.rarity) ||
+    !isPositiveInteger(value.craftIndex) ||
+    !isString(value.artworkId, 80, false) ||
+    !isTimestamp(value.craftedAt) ||
+    value.craftId !== `craft-${value.rarity}-${value.craftIndex}` ||
+    !isCollectionArtwork(value.rarity, value.artworkId) ||
+    artworkForCraft(value.rarity, value.craftIndex as number).id !== value.artworkId
+  ) {
+    return null;
+  }
+  return {
+    craftId: value.craftId,
+    rarity: value.rarity,
+    craftIndex: value.craftIndex as number,
+    artworkId: value.artworkId,
+    craftedAt: value.craftedAt,
   };
 }
 
@@ -328,6 +404,14 @@ function isDay(value: unknown): value is string {
   if (!isString(value, 10, false) || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function isChestRarity(value: unknown): value is SyncMissionChest['rarity'] {
+  return value === 'common' || value === 'uncommon' || value === 'rare' || value === 'epic' || value === 'legendary';
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value > 0;
 }
 
 function isNonNegativeInteger(value: unknown): value is number {

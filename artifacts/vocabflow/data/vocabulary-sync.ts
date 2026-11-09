@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDatabaseScope, getSyncQueueState, markSyncPending, notifySyncApplied, subscribeSyncChanges, switchDatabaseScope, withSyncDatabase } from './vocabulary';
 import type { DailyReviewGrade } from '../domain/daily-missions';
+import type { MissionChest } from '../domain/mission-chests';
+import type { CollectionCraft } from '../domain/collection-artworks';
 
 export interface SyncWord {
   syncId: string;
@@ -71,6 +73,10 @@ export interface SyncMissionAward {
   completedAt: string;
 }
 
+export interface SyncMissionChest extends MissionChest {}
+
+export interface SyncCollectionCraft extends CollectionCraft {}
+
 export interface SyncPayload {
   revision: number;
   words: SyncWord[];
@@ -80,6 +86,8 @@ export interface SyncPayload {
   reviewStats: SyncReviewStat[];
   reviewSessions: SyncReviewSession[];
   missionAwards: SyncMissionAward[];
+  missionChests: SyncMissionChest[];
+  collectionCrafts: SyncCollectionCraft[];
 }
 
 export interface LocalSyncSnapshot {
@@ -105,7 +113,7 @@ export function getLocalSyncState(): Promise<{
 
 export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
   return withSyncDatabase(async (db) => {
-    const [words, deletedWords, courseProgress, courseSelections, reviewStats, reviewSessions, missionAwards, state] = await Promise.all([
+    const [words, deletedWords, courseProgress, courseSelections, reviewStats, reviewSessions, missionAwards, missionChests, collectionCrafts, state] = await Promise.all([
       db.getAllAsync<SyncWord>(`
         SELECT w.sync_id AS syncId, w.term, w.meaning, w.ipa, w.example, w.note,
           w.dictionary_entry_id AS dictionaryEntryId, w.dictionary_sense_id AS dictionarySenseId,
@@ -146,6 +154,22 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           completed_at AS completedAt
         FROM daily_mission_awards ORDER BY mission_day, mission_id
       `),
+      db.getAllAsync<Omit<SyncMissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & {
+        opened: number;
+        superUpgrade: number;
+        ruleSet: number;
+      }>(`
+        SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
+          base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
+          rule_set AS ruleSet, super_upgrade AS superUpgrade,
+          opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
+        FROM mission_chests ORDER BY mission_day, mission_id
+      `),
+      db.getAllAsync<SyncCollectionCraft>(`
+        SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
+          artwork_id AS artworkId, crafted_at AS craftedAt
+        FROM collection_crafts ORDER BY rarity, craft_index
+      `),
       getSyncQueueStateFromDatabase(db),
     ]);
     return {
@@ -168,6 +192,13 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           completed: Boolean(session.completed),
         })),
         missionAwards,
+        missionChests: missionChests.map((chest) => ({
+          ...chest,
+          ruleSet: chest.ruleSet === 2 ? 2 : 1,
+          superUpgrade: Boolean(chest.superUpgrade),
+          opened: Boolean(chest.opened),
+        })),
+        collectionCrafts,
       },
       generation: state.generation,
       pending: state.pending,
@@ -249,6 +280,8 @@ async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Pro
     DELETE FROM device_review_day_statistics;
     DELETE FROM review_session_results;
     DELETE FROM daily_mission_awards;
+    DELETE FROM mission_chests;
+    DELETE FROM collection_crafts;
   `);
 
   for (const word of payload.words) {
@@ -362,6 +395,37 @@ async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Pro
       award.missionId,
       award.stone,
       award.completedAt,
+    );
+  }
+  for (const chest of payload.missionChests ?? []) {
+    await db.runAsync(
+      `INSERT INTO mission_chests
+        (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity, rule_set, super_upgrade,
+          opened, final_stone, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      chest.chestId,
+      chest.day,
+      chest.missionId,
+      chest.baseStone,
+      chest.upgradeAttempts,
+      chest.rarity,
+      chest.ruleSet ?? 1,
+      chest.superUpgrade ? 1 : 0,
+      chest.opened ? 1 : 0,
+      chest.finalStone,
+      chest.createdAt,
+      chest.updatedAt,
+    );
+  }
+  for (const craft of payload.collectionCrafts ?? []) {
+    await db.runAsync(
+      `INSERT INTO collection_crafts (craft_id, rarity, craft_index, artwork_id, crafted_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      craft.craftId,
+      craft.rarity,
+      craft.craftIndex,
+      craft.artworkId,
+      craft.craftedAt,
     );
   }
   await db.runAsync(`
@@ -631,6 +695,83 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
         award.missionId,
         award.stone,
         award.completedAt,
+      );
+    }
+    for (const incoming of payload.missionChests ?? []) {
+      const currentRow = await db.getFirstAsync<Omit<SyncMissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & {
+        opened: number;
+        superUpgrade: number;
+        ruleSet: number;
+      }>(
+        `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
+          base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
+          rule_set AS ruleSet, super_upgrade AS superUpgrade,
+          opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
+         FROM mission_chests WHERE chest_id = ?`,
+        incoming.chestId,
+      );
+      const normalizedIncoming = {
+        ...incoming,
+        ruleSet: incoming.ruleSet ?? 1,
+        superUpgrade: incoming.superUpgrade ?? false,
+      };
+      const current = currentRow
+        ? {
+            ...currentRow,
+            ruleSet: currentRow.ruleSet === 2 ? 2 as const : 1 as const,
+            superUpgrade: Boolean(currentRow.superUpgrade),
+            opened: Boolean(currentRow.opened),
+          }
+        : null;
+      const selected = !current
+        ? normalizedIncoming
+        : current.opened
+          ? current
+          : normalizedIncoming.ruleSet < (current.ruleSet ?? 1)
+            ? current
+            : normalizedIncoming.ruleSet > (current.ruleSet ?? 1)
+              ? current.upgradeAttempts === 0
+                ? normalizedIncoming
+                : current
+              : normalizedIncoming.opened
+                ? normalizedIncoming
+                : normalizedIncoming.upgradeAttempts > current.upgradeAttempts ||
+                    (normalizedIncoming.upgradeAttempts === current.upgradeAttempts && normalizedIncoming.updatedAt > current.updatedAt)
+                  ? normalizedIncoming
+                  : current;
+      await db.runAsync(
+        `INSERT INTO mission_chests
+          (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity, rule_set, super_upgrade,
+            opened, final_stone, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(chest_id) DO UPDATE SET
+          upgrade_attempts = excluded.upgrade_attempts, rarity = excluded.rarity,
+          rule_set = excluded.rule_set, super_upgrade = excluded.super_upgrade,
+          opened = excluded.opened, final_stone = excluded.final_stone,
+          updated_at = excluded.updated_at`,
+        selected.chestId,
+        selected.day,
+        selected.missionId,
+        selected.baseStone,
+        selected.upgradeAttempts,
+        selected.rarity,
+        selected.ruleSet ?? 1,
+        selected.superUpgrade ? 1 : 0,
+        selected.opened ? 1 : 0,
+        selected.finalStone,
+        selected.createdAt,
+        selected.updatedAt,
+      );
+    }
+    for (const craft of payload.collectionCrafts ?? []) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO collection_crafts (craft_id, rarity, craft_index, artwork_id, crafted_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        craft.craftId,
+        craft.rarity,
+        craft.craftIndex,
+        craft.artworkId,
+        craft.craftedAt,
       );
     }
 
