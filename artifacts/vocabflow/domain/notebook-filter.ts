@@ -9,8 +9,8 @@ export function filterNotebookWords(
   const foldedQuery = fold(query);
   return words.filter(
     (word) =>
-      (selectedLevel === null ||
-        (!word.frozen && word.level === selectedLevel)) &&
+      !word.frozen &&
+      (selectedLevel === null || word.level === selectedLevel) &&
       (!foldedQuery ||
         [word.term, word.meaning, word.example].some((text) =>
           fold(text ?? "").includes(foldedQuery),

@@ -46,8 +46,8 @@ const words = [
 
 assert.deepEqual(
   filterNotebookWords(words, "", null).map((word) => word.id),
-  [1, 2, 3],
-  "The unfiltered notebook still includes frozen words.",
+  [2, 3],
+  "The main notebook list hides frozen words.",
 );
 assert.deepEqual(
   filterNotebookWords(words, "", 1).map((word) => word.id),
@@ -61,14 +61,15 @@ assert.deepEqual(
 );
 assert.deepEqual(
   filterNotebookWords(words, "ba", null).map((word) => word.id),
-  [1],
-  "Search without a level filter can still find a frozen word.",
+  [],
+  "Search without a level filter also hides frozen words.",
 );
 
 const screen = readFileSync(join(__dirname, "../app/(tabs)/index.tsx"), "utf8");
 assert.match(screen, /kicker=\{`\$\{words\.length\} từ trong sổ`\}/);
-assert.match(screen, /NotebookStatistics totalWords=\{words\.length\}/);
+assert.match(screen, /data=\{filtered\}/);
+assert.equal(words.length, 3, "Filtering the visible list does not change the saved-word total.");
 
 console.log(
-  "PASS: frozen words stay searchable and counted but are hidden from level-filtered results.",
+  "PASS: frozen words are hidden from all notebook lists and search while total counts stay unchanged.",
 );
