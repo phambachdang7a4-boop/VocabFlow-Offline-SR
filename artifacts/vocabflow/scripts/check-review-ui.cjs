@@ -62,6 +62,7 @@ function mount(file, properties = {}, initial = {}) {
     react: { ...react, default: react }, 'react-native': native,
     '@expo/vector-icons': { Feather: 'Feather', MaterialCommunityIcons: 'MaterialCommunityIcons' },
     'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; }, useNavigation: () => navigation },
+    'expo-crypto': { randomUUID: () => 'review-session-test' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
     '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => speechContext },
@@ -77,7 +78,7 @@ function mount(file, properties = {}, initial = {}) {
     '@/components/ReviewCard': { ReviewCard: 'ReviewCard', calendarLabel },
     '@/components/ReviewMistakeMatchGame': { ReviewMistakeMatchGame: 'ReviewMistakeMatchGame' },
     '@/components/ReviewOverview': { SavedTotal: 'SavedTotal', LevelDistributionChart: 'LevelDistributionChart', ReviewStatusBar: 'ReviewStatusBar' },
-    '@/data/vocabulary': { recordReviewSessionStart: async () => {} },
+    '@/data/vocabulary': { recordReviewSessionStart: async () => {}, recordReviewSessionResult: async () => {} },
   });
   const Component = loaded.default ?? loaded.ReviewCard ?? loaded.ReviewMistakeMatchGame ?? loaded.LevelDistributionChart;
   function render() {

@@ -30,8 +30,8 @@ function NativeTabLayout() {
         <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="blank">
-        <NativeTabs.Trigger.Icon sf={{ default: 'square', selected: 'square.fill' }} />
-        <NativeTabs.Trigger.Label>Trống</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'checklist', selected: 'checklist' }} />
+        <NativeTabs.Trigger.Label>Nhiệm Vụ</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -42,7 +42,7 @@ const ICONS = {
   dictionary: { sf: 'character.book.closed', fe: 'search' },
   review: { sf: 'rectangle.on.rectangle', fe: 'layers' },
   courses: { sf: 'square.grid.2x2', fe: 'grid' },
-  blank: { sf: 'square', fe: 'square' },
+  blank: { sf: 'checklist', fe: 'check-square' },
 } as const;
 
 function ClassicTabLayout() {
@@ -84,7 +84,7 @@ function ClassicTabLayout() {
       <Tabs.Screen name="courses" options={{ title: 'Khóa Học', tabBarIcon: icon('courses') }} />
       <Tabs.Screen name="review" options={{ title: 'Ôn tập', tabBarIcon: icon('review') }} />
       <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
-      <Tabs.Screen name="blank" options={{ title: 'Trống', tabBarIcon: icon('blank') }} />
+      <Tabs.Screen name="blank" options={{ title: 'Nhiệm Vụ', tabBarIcon: icon('blank') }} />
     </Tabs>
   );
 }

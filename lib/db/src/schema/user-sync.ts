@@ -77,6 +77,34 @@ export const userReviewStatistics = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.deviceId, table.day] })],
 );
 
+export const userReviewSessionResults = pgTable(
+  'user_review_session_results',
+  {
+    userId: text('user_id').notNull(),
+    sessionId: text('session_id').notNull(),
+    deviceId: text('device_id').notNull(),
+    day: date('review_day', { mode: 'string' }).notNull(),
+    reviewedCount: integer('reviewed_count').notNull(),
+    correctCount: integer('correct_count').notNull(),
+    grade: text('grade').notNull(),
+    completed: boolean('completed').notNull(),
+    createdAt: timestampColumn('created_at').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.sessionId] })],
+);
+
+export const userDailyMissionAwards = pgTable(
+  'user_daily_mission_awards',
+  {
+    userId: text('user_id').notNull(),
+    day: date('mission_day', { mode: 'string' }).notNull(),
+    missionId: text('mission_id').notNull(),
+    stone: integer('stone').notNull(),
+    completedAt: timestampColumn('completed_at').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.day, table.missionId] })],
+);
+
 export const userSyncRevisions = pgTable('user_sync_revisions', {
   userId: text('user_id').primaryKey(),
   revision: integer('revision').notNull().default(0),

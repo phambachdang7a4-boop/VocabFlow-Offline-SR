@@ -8,6 +8,8 @@
 import type { SyncCourseProgress } from './syncCourseProgress';
 import type { SyncCourseSelection } from './syncCourseSelection';
 import type { SyncDeletedWord } from './syncDeletedWord';
+import type { SyncMissionAward } from './syncMissionAward';
+import type { SyncReviewSession } from './syncReviewSession';
 import type { SyncReviewStat } from './syncReviewStat';
 import type { SyncWord } from './syncWord';
 
@@ -27,4 +29,8 @@ export interface UserSyncSnapshot {
   courseSelections: SyncCourseSelection[];
   /** @maxItems 10000 */
   reviewStats: SyncReviewStat[];
+  /** @maxItems 10000 */
+  reviewSessions?: SyncReviewSession[];
+  /** @maxItems 10000 */
+  missionAwards?: SyncMissionAward[];
 }

@@ -63,6 +63,26 @@ const payload = {
       updatedAt: '2026-11-08T10:00:00.000Z',
     },
   ],
+  reviewSessions: [
+    {
+      sessionId: 'session-1',
+      deviceId: 'device-test',
+      day: '2026-11-08',
+      reviewedCount: 30,
+      correctCount: 27,
+      grade: 'A',
+      completed: true,
+      createdAt: '2026-11-08T10:00:00.000Z',
+    },
+  ],
+  missionAwards: [
+    {
+      day: '2026-11-08',
+      missionId: 'review-1',
+      stone: 3,
+      completedAt: '2026-11-08T10:00:00.000Z',
+    },
+  ],
 };
 
 const serialized = serializeAccountBackup(payload);
@@ -74,6 +94,9 @@ assert.equal(Object.hasOwn(restored, 'userId'), false);
 const olderBackup = JSON.parse(serialized);
 delete olderBackup.payload.reviewStats[0].sessionCount;
 assert.equal(parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewStats[0].sessionCount, 0, 'Backups without session history start at zero instead of fabricating data.');
+delete olderBackup.payload.reviewSessions;
+delete olderBackup.payload.missionAwards;
+assert.deepEqual(parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewSessions, [], 'Older backups restore without daily mission data.');
 
 const preview = summarizeAccountBackup({
   ...restored,

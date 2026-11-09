@@ -117,6 +117,59 @@ export interface SyncReviewStat {
   updatedAt: string;
 }
 
+export type SyncReviewSessionGrade = typeof SyncReviewSessionGrade[keyof typeof SyncReviewSessionGrade];
+
+
+export const SyncReviewSessionGrade = {
+  'S+': 'S+',
+  S: 'S',
+  'A+': 'A+',
+  A: 'A',
+  'A-': 'A-',
+  'B+': 'B+',
+  B: 'B',
+  'B-': 'B-',
+  C: 'C',
+} as const;
+
+export interface SyncReviewSession {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  sessionId: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  deviceId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /** @minimum 0 */
+  reviewedCount: number;
+  /** @minimum 0 */
+  correctCount: number;
+  grade: SyncReviewSessionGrade;
+  completed: boolean;
+  createdAt: string;
+}
+
+export interface SyncMissionAward {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  missionId: string;
+  /**
+     * @minimum 1
+     * @maximum 20
+     */
+  stone: number;
+  completedAt: string;
+}
+
 export interface UserSyncSnapshot {
   /**
      * Account data generation used to prevent stale devices from restoring older data.
@@ -133,6 +186,10 @@ export interface UserSyncSnapshot {
   courseSelections: SyncCourseSelection[];
   /** @maxItems 10000 */
   reviewStats: SyncReviewStat[];
+  /** @maxItems 10000 */
+  reviewSessions?: SyncReviewSession[];
+  /** @maxItems 10000 */
+  missionAwards?: SyncMissionAward[];
 }
 
 export interface DictionaryAssetError {

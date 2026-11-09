@@ -166,6 +166,16 @@ components:
           maxItems: 10000
           items:
             $ref: "#/components/schemas/SyncReviewStat"
+        reviewSessions:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncReviewSession"
+        missionAwards:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncMissionAward"
     SyncWord:
       type: object
       required:
@@ -310,6 +320,53 @@ components:
           minimum: 0
           description: Number of times the learner started a review session on this device and day.
         updatedAt:
+          type: string
+          format: date-time
+    SyncReviewSession:
+      type: object
+      required: [sessionId, deviceId, day, reviewedCount, correctCount, grade, completed, createdAt]
+      properties:
+        sessionId:
+          type: string
+          minLength: 1
+          maxLength: 120
+        deviceId:
+          type: string
+          minLength: 1
+          maxLength: 80
+        day:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        reviewedCount:
+          type: integer
+          minimum: 0
+        correctCount:
+          type: integer
+          minimum: 0
+        grade:
+          type: string
+          enum: ["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    SyncMissionAward:
+      type: object
+      required: [day, missionId, stone, completedAt]
+      properties:
+        day:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        missionId:
+          type: string
+          minLength: 1
+          maxLength: 40
+        stone:
+          type: integer
+          minimum: 1
+          maximum: 20
+        completedAt:
           type: string
           format: date-time
     DictionaryAssetError:

@@ -26,6 +26,7 @@ function loadTs(filePath, dependencies = {}, globals = {}) {
 }
 
 const srs = loadTs(join(__dirname, '../domain/srs.ts'));
+const dailyMissions = loadTs(join(__dirname, '../domain/daily-missions.ts'));
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const reviewStatistics = loadTs(join(__dirname, '../domain/review-statistics.ts'), {
   './review-session': reviewSession,
@@ -54,6 +55,7 @@ function createRepository(root, today = '2026-01-01T12:00:00', options = {}) {
     join(__dirname, '../data/vocabulary.ts'),
     {
       '../domain/srs': srs,
+      '../domain/daily-missions': dailyMissions,
       '../domain/review-statistics': reviewStatistics,
       './sqlite-connection': sqliteConnection,
       './basic-course': basicCourse,

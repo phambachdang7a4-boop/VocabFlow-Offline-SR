@@ -73,6 +73,24 @@ export const mergeUserSyncDataBodyReviewStatsItemSessionCountMin = 0;
 
 export const mergeUserSyncDataBodyReviewStatsMax = 10000;
 
+export const mergeUserSyncDataBodyReviewSessionsItemSessionIdMax = 120;
+
+export const mergeUserSyncDataBodyReviewSessionsItemDeviceIdMax = 80;
+
+export const mergeUserSyncDataBodyReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyReviewSessionsItemReviewedCountMin = 0;
+
+export const mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin = 0;
+
+export const mergeUserSyncDataBodyReviewSessionsMax = 10000;
+
+export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
+
+export const mergeUserSyncDataBodyMissionAwardsItemStoneMax = 20;
+
+export const mergeUserSyncDataBodyMissionAwardsMax = 10000;
+
 
 
 export const MergeUserSyncDataBody = zod.object({
@@ -121,7 +139,23 @@ export const MergeUserSyncDataBody = zod.object({
   "correctCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemCorrectCountMin),
   "sessionCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyReviewStatsMax)
+})).max(mergeUserSyncDataBodyReviewStatsMax),
+  "reviewSessions": zod.array(zod.object({
+  "sessionId": zod.string().min(1).max(mergeUserSyncDataBodyReviewSessionsItemSessionIdMax),
+  "deviceId": zod.string().min(1).max(mergeUserSyncDataBodyReviewSessionsItemDeviceIdMax),
+  "day": zod.string().regex(mergeUserSyncDataBodyReviewSessionsItemDayRegExp),
+  "reviewedCount": zod.number().int().min(mergeUserSyncDataBodyReviewSessionsItemReviewedCountMin),
+  "correctCount": zod.number().int().min(mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin),
+  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
+  "completed": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyReviewSessionsMax).optional(),
+  "missionAwards": zod.array(zod.object({
+  "day": zod.string().regex(mergeUserSyncDataBodyMissionAwardsItemDayRegExp),
+  "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionAwardsItemMissionIdMax),
+  "stone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionAwardsItemStoneMax),
+  "completedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyMissionAwardsMax).optional()
 })
 
 export const mergeUserSyncData200ResponseRevisionMin = 0;
@@ -176,6 +210,24 @@ export const mergeUserSyncData200ResponseReviewStatsItemSessionCountMin = 0;
 
 export const mergeUserSyncData200ResponseReviewStatsMax = 10000;
 
+export const mergeUserSyncData200ResponseReviewSessionsItemSessionIdMax = 120;
+
+export const mergeUserSyncData200ResponseReviewSessionsItemDeviceIdMax = 80;
+
+export const mergeUserSyncData200ResponseReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseReviewSessionsItemReviewedCountMin = 0;
+
+export const mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin = 0;
+
+export const mergeUserSyncData200ResponseReviewSessionsMax = 10000;
+
+export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
+
+export const mergeUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
+
+export const mergeUserSyncData200ResponseMissionAwardsMax = 10000;
+
 
 
 export const MergeUserSyncData200Response = zod.object({
@@ -224,7 +276,23 @@ export const MergeUserSyncData200Response = zod.object({
   "correctCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin),
   "sessionCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseReviewStatsMax)
+})).max(mergeUserSyncData200ResponseReviewStatsMax),
+  "reviewSessions": zod.array(zod.object({
+  "sessionId": zod.string().min(1).max(mergeUserSyncData200ResponseReviewSessionsItemSessionIdMax),
+  "deviceId": zod.string().min(1).max(mergeUserSyncData200ResponseReviewSessionsItemDeviceIdMax),
+  "day": zod.string().regex(mergeUserSyncData200ResponseReviewSessionsItemDayRegExp),
+  "reviewedCount": zod.number().int().min(mergeUserSyncData200ResponseReviewSessionsItemReviewedCountMin),
+  "correctCount": zod.number().int().min(mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
+  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
+  "completed": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseReviewSessionsMax).optional(),
+  "missionAwards": zod.array(zod.object({
+  "day": zod.string().regex(mergeUserSyncData200ResponseMissionAwardsItemDayRegExp),
+  "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax),
+  "stone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemStoneMax),
+  "completedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseMissionAwardsMax).optional()
 })
 
 export const MergeUserSyncData400Response = zod.object({
@@ -295,6 +363,24 @@ export const replaceUserSyncDataBodyReviewStatsItemSessionCountMin = 0;
 
 export const replaceUserSyncDataBodyReviewStatsMax = 10000;
 
+export const replaceUserSyncDataBodyReviewSessionsItemSessionIdMax = 120;
+
+export const replaceUserSyncDataBodyReviewSessionsItemDeviceIdMax = 80;
+
+export const replaceUserSyncDataBodyReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyReviewSessionsItemReviewedCountMin = 0;
+
+export const replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin = 0;
+
+export const replaceUserSyncDataBodyReviewSessionsMax = 10000;
+
+export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
+
+export const replaceUserSyncDataBodyMissionAwardsItemStoneMax = 20;
+
+export const replaceUserSyncDataBodyMissionAwardsMax = 10000;
+
 
 
 export const ReplaceUserSyncDataBody = zod.object({
@@ -343,7 +429,23 @@ export const ReplaceUserSyncDataBody = zod.object({
   "correctCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemCorrectCountMin),
   "sessionCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyReviewStatsMax)
+})).max(replaceUserSyncDataBodyReviewStatsMax),
+  "reviewSessions": zod.array(zod.object({
+  "sessionId": zod.string().min(1).max(replaceUserSyncDataBodyReviewSessionsItemSessionIdMax),
+  "deviceId": zod.string().min(1).max(replaceUserSyncDataBodyReviewSessionsItemDeviceIdMax),
+  "day": zod.string().regex(replaceUserSyncDataBodyReviewSessionsItemDayRegExp),
+  "reviewedCount": zod.number().int().min(replaceUserSyncDataBodyReviewSessionsItemReviewedCountMin),
+  "correctCount": zod.number().int().min(replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin),
+  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
+  "completed": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyReviewSessionsMax).optional(),
+  "missionAwards": zod.array(zod.object({
+  "day": zod.string().regex(replaceUserSyncDataBodyMissionAwardsItemDayRegExp),
+  "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionAwardsItemMissionIdMax),
+  "stone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionAwardsItemStoneMax),
+  "completedAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyMissionAwardsMax).optional()
 })
 
 export const replaceUserSyncData200ResponseRevisionMin = 0;
@@ -398,6 +500,24 @@ export const replaceUserSyncData200ResponseReviewStatsItemSessionCountMin = 0;
 
 export const replaceUserSyncData200ResponseReviewStatsMax = 10000;
 
+export const replaceUserSyncData200ResponseReviewSessionsItemSessionIdMax = 120;
+
+export const replaceUserSyncData200ResponseReviewSessionsItemDeviceIdMax = 80;
+
+export const replaceUserSyncData200ResponseReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseReviewSessionsItemReviewedCountMin = 0;
+
+export const replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin = 0;
+
+export const replaceUserSyncData200ResponseReviewSessionsMax = 10000;
+
+export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
+
+export const replaceUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
+
+export const replaceUserSyncData200ResponseMissionAwardsMax = 10000;
+
 
 
 export const ReplaceUserSyncData200Response = zod.object({
@@ -446,7 +566,23 @@ export const ReplaceUserSyncData200Response = zod.object({
   "correctCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemCorrectCountMin),
   "sessionCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
   "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseReviewStatsMax)
+})).max(replaceUserSyncData200ResponseReviewStatsMax),
+  "reviewSessions": zod.array(zod.object({
+  "sessionId": zod.string().min(1).max(replaceUserSyncData200ResponseReviewSessionsItemSessionIdMax),
+  "deviceId": zod.string().min(1).max(replaceUserSyncData200ResponseReviewSessionsItemDeviceIdMax),
+  "day": zod.string().regex(replaceUserSyncData200ResponseReviewSessionsItemDayRegExp),
+  "reviewedCount": zod.number().int().min(replaceUserSyncData200ResponseReviewSessionsItemReviewedCountMin),
+  "correctCount": zod.number().int().min(replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
+  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
+  "completed": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseReviewSessionsMax).optional(),
+  "missionAwards": zod.array(zod.object({
+  "day": zod.string().regex(replaceUserSyncData200ResponseMissionAwardsItemDayRegExp),
+  "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax),
+  "stone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemStoneMax),
+  "completedAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseMissionAwardsMax).optional()
 })
 
 export const ReplaceUserSyncData400Response = zod.object({

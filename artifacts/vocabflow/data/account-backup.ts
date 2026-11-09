@@ -1,4 +1,13 @@
-import type { SyncCourseProgress, SyncCourseSelection, SyncDeletedWord, SyncPayload, SyncReviewStat, SyncWord } from './vocabulary-sync';
+import type {
+  SyncCourseProgress,
+  SyncCourseSelection,
+  SyncDeletedWord,
+  SyncMissionAward,
+  SyncPayload,
+  SyncReviewSession,
+  SyncReviewStat,
+  SyncWord,
+} from './vocabulary-sync';
 
 export const ACCOUNT_BACKUP_FORMAT = 'vocabflow.account-backup';
 export const ACCOUNT_BACKUP_VERSION = 1;
@@ -80,12 +89,16 @@ function validatePayload(value: unknown): SyncPayload {
   const courseProgress = value.courseProgress.map(parseCourseProgress);
   const courseSelections = value.courseSelections.map(parseCourseSelection);
   const reviewStats = value.reviewStats.map(parseReviewStat);
+  const reviewSessions = optionalRecordArray(value, 'reviewSessions').map(parseReviewSession);
+  const missionAwards = optionalRecordArray(value, 'missionAwards').map(parseMissionAward);
   if (
     words.some((item) => item === null) ||
     deletedWords.some((item) => item === null) ||
     courseProgress.some((item) => item === null) ||
     courseSelections.some((item) => item === null) ||
-    reviewStats.some((item) => item === null)
+    reviewStats.some((item) => item === null) ||
+    reviewSessions.some((item) => item === null) ||
+    missionAwards.some((item) => item === null)
   ) {
     throw new Error('Gói sao lưu có mục dữ liệu không hợp lệ.');
   }
@@ -95,18 +108,26 @@ function validatePayload(value: unknown): SyncPayload {
   const validCourseProgress = courseProgress as SyncCourseProgress[];
   const validCourseSelections = courseSelections as SyncCourseSelection[];
   const validReviewStats = reviewStats as SyncReviewStat[];
+  const validReviewSessions = reviewSessions as SyncReviewSession[];
+  const validMissionAwards = missionAwards as SyncMissionAward[];
   if (
     hasDuplicates(validWords, (word) => word.syncId) ||
     hasDuplicates(validDeletedWords, (word) => word.syncId) ||
     hasDuplicates(validCourseProgress, (item) => item.lessonId) ||
     hasDuplicates(validCourseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
-    hasDuplicates(validReviewStats, (item) => `${item.deviceId}\u0000${item.day}`)
+    hasDuplicates(validReviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
+    hasDuplicates(validReviewSessions, (item) => item.sessionId) ||
+    hasDuplicates(validMissionAwards, (item) => `${item.day}\u0000${item.missionId}`)
   ) {
     throw new Error('Gói sao lưu có mục bị lặp.');
   }
 
   const wordIds = new Set(validWords.map((word) => word.syncId));
-  if (validDeletedWords.some((word) => wordIds.has(word.syncId)) || validReviewStats.some((stat) => stat.correctCount > stat.reviewedCount)) {
+  if (
+    validDeletedWords.some((word) => wordIds.has(word.syncId)) ||
+    validReviewStats.some((stat) => stat.correctCount > stat.reviewedCount) ||
+    validReviewSessions.some((session) => session.correctCount > session.reviewedCount)
+  ) {
     throw new Error('Gói sao lưu có trạng thái dữ liệu mâu thuẫn.');
   }
 
@@ -117,6 +138,55 @@ function validatePayload(value: unknown): SyncPayload {
     courseProgress: validCourseProgress,
     courseSelections: validCourseSelections,
     reviewStats: validReviewStats,
+    reviewSessions: validReviewSessions,
+    missionAwards: validMissionAwards,
+  };
+}
+
+function parseReviewSession(value: unknown): SyncReviewSession | null {
+  const grades = ['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C'];
+  if (
+    !isRecord(value) ||
+    !isString(value.sessionId, 120, false) ||
+    !isString(value.deviceId, 80, false) ||
+    !isDay(value.day) ||
+    !isNonNegativeInteger(value.reviewedCount) ||
+    !isNonNegativeInteger(value.correctCount) ||
+    value.correctCount > value.reviewedCount ||
+    typeof value.grade !== 'string' ||
+    !grades.includes(value.grade) ||
+    typeof value.completed !== 'boolean' ||
+    !isTimestamp(value.createdAt)
+  ) {
+    return null;
+  }
+  return {
+    sessionId: value.sessionId,
+    deviceId: value.deviceId,
+    day: value.day,
+    reviewedCount: value.reviewedCount,
+    correctCount: value.correctCount,
+    grade: value.grade as SyncReviewSession['grade'],
+    completed: value.completed,
+    createdAt: value.createdAt,
+  };
+}
+
+function parseMissionAward(value: unknown): SyncMissionAward | null {
+  if (
+    !isRecord(value) ||
+    !isDay(value.day) ||
+    !isString(value.missionId, 40, false) ||
+    !isIntegerInRange(value.stone, 1, 20) ||
+    !isTimestamp(value.completedAt)
+  ) {
+    return null;
+  }
+  return {
+    day: value.day,
+    missionId: value.missionId,
+    stone: value.stone,
+    completedAt: value.completedAt,
   };
 }
 
@@ -235,6 +305,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isRecordArrays(value: Record<string, unknown>, keys: string[]): value is Record<string, unknown[]> {
   return keys.every((key) => Array.isArray(value[key]) && value[key].length <= MAX_RECORDS);
+}
+
+function optionalRecordArray(value: Record<string, unknown>, key: string): unknown[] {
+  const items = value[key];
+  if (items === undefined) return [];
+  if (!Array.isArray(items) || items.length > MAX_RECORDS) {
+    throw new Error('Gói sao lưu có danh sách dữ liệu không hợp lệ.');
+  }
+  return items;
 }
 
 function isString(value: unknown, maxLength: number, allowEmpty = true): value is string {

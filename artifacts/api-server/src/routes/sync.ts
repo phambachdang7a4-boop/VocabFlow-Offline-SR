@@ -1,7 +1,17 @@
 import { getAuth } from '@clerk/express';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { Router, type IRouter, type RequestHandler } from 'express';
-import { db, userCourseProgress, userCourseSelections, userReviewStatistics, userSyncRevisions, userVocabulary, userWordTombstones } from '@workspace/db';
+import {
+  db,
+  userCourseProgress,
+  userCourseSelections,
+  userDailyMissionAwards,
+  userReviewSessionResults,
+  userReviewStatistics,
+  userSyncRevisions,
+  userVocabulary,
+  userWordTombstones,
+} from '@workspace/db';
 import { MergeUserSyncData200Response, MergeUserSyncDataBody, ReplaceUserSyncData200Response, ReplaceUserSyncDataBody } from '@workspace/api-zod';
 
 declare global {
@@ -34,12 +44,20 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
     res.status(400).json({ error: 'Số liệu ôn tập không hợp lệ.' });
     return;
   }
+  const reviewSessions = parsed.data.reviewSessions ?? [];
+  const missionAwards = parsed.data.missionAwards ?? [];
+  if (hasInvalidMissionData(reviewSessions, missionAwards)) {
+    res.status(400).json({ error: 'Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ.' });
+    return;
+  }
   if (
     hasDuplicates(parsed.data.words, (word) => word.syncId) ||
     hasDuplicates(parsed.data.deletedWords, (word) => word.syncId) ||
     hasDuplicates(parsed.data.courseProgress, (item) => item.lessonId) ||
     hasDuplicates(parsed.data.courseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
     hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
+    hasDuplicates(reviewSessions, (item) => item.sessionId) ||
+    hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`) ||
     parsed.data.deletedWords.some((deleted) => parsed.data.words.some((word) => word.syncId === deleted.syncId))
   ) {
     res.status(400).json({ error: 'Gói sao lưu có mục trùng hoặc mâu thuẫn.' });
@@ -72,6 +90,14 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
         sessionCount: stat.sessionCount ?? 0,
         updatedAt: toTimestamp(stat.updatedAt),
       })),
+      reviewSessions: reviewSessions.map((session) => ({
+        ...session,
+        createdAt: toTimestamp(session.createdAt),
+      })),
+      missionAwards: missionAwards.map((award) => ({
+        ...award,
+        completedAt: toTimestamp(award.completedAt),
+      })),
     };
 
     const result = await db.transaction(async (tx) => {
@@ -84,6 +110,8 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
       await tx.delete(userCourseProgress).where(eq(userCourseProgress.userId, userId));
       await tx.delete(userCourseSelections).where(eq(userCourseSelections.userId, userId));
       await tx.delete(userReviewStatistics).where(eq(userReviewStatistics.userId, userId));
+      await tx.delete(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId));
+      await tx.delete(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId));
 
       if (snapshot.words.length) {
         await tx.insert(userVocabulary).values(
@@ -155,6 +183,32 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
           })),
         );
       }
+      if (snapshot.reviewSessions.length) {
+        await tx.insert(userReviewSessionResults).values(
+          snapshot.reviewSessions.map((session) => ({
+            userId,
+            sessionId: session.sessionId,
+            deviceId: session.deviceId,
+            day: session.day,
+            reviewedCount: session.reviewedCount,
+            correctCount: session.correctCount,
+            grade: session.grade,
+            completed: session.completed,
+            createdAt: session.createdAt,
+          })),
+        );
+      }
+      if (snapshot.missionAwards.length) {
+        await tx.insert(userDailyMissionAwards).values(
+          snapshot.missionAwards.map((award) => ({
+            userId,
+            day: award.day,
+            missionId: award.missionId,
+            stone: award.stone,
+            completedAt: award.completedAt,
+          })),
+        );
+      }
       await tx.insert(userSyncRevisions).values({ userId, revision }).onConflictDoUpdate({
         target: userSyncRevisions.userId,
         set: { revision },
@@ -180,12 +234,20 @@ router.post('/sync', requireAuth, async (req, res) => {
     res.status(400).json({ error: 'Số liệu ôn tập không hợp lệ.' });
     return;
   }
+  const reviewSessions = parsed.data.reviewSessions ?? [];
+  const missionAwards = parsed.data.missionAwards ?? [];
+  if (hasInvalidMissionData(reviewSessions, missionAwards)) {
+    res.status(400).json({ error: 'Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ.' });
+    return;
+  }
   if (
     hasDuplicates(parsed.data.words, (word) => word.syncId) ||
     hasDuplicates(parsed.data.deletedWords, (word) => word.syncId) ||
     hasDuplicates(parsed.data.courseProgress, (item) => item.lessonId) ||
     hasDuplicates(parsed.data.courseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
-    hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`)
+    hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
+    hasDuplicates(reviewSessions, (item) => item.sessionId) ||
+    hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`)
   ) {
     res.status(400).json({ error: 'Danh sách đồng bộ có mục trùng lặp.' });
     return;
@@ -231,6 +293,14 @@ router.post('/sync', requireAuth, async (req, res) => {
           ...stat,
           sessionCount: stat.sessionCount ?? 0,
           updatedAt: toTimestamp(stat.updatedAt),
+        })),
+        reviewSessions: reviewSessions.map((session) => ({
+          ...session,
+          createdAt: toTimestamp(session.createdAt),
+        })),
+        missionAwards: missionAwards.map((award) => ({
+          ...award,
+          completedAt: toTimestamp(award.completedAt),
         })),
       };
 
@@ -402,12 +472,47 @@ router.post('/sync', requireAuth, async (req, res) => {
           });
       }
 
-      const [allWords, allTombstones, allProgress, allSelections, allStats] = await Promise.all([
+      if (snapshot.reviewSessions.length) {
+        await tx
+          .insert(userReviewSessionResults)
+          .values(
+            snapshot.reviewSessions.map((session) => ({
+              userId,
+              sessionId: session.sessionId,
+              deviceId: session.deviceId,
+              day: session.day,
+              reviewedCount: session.reviewedCount,
+              correctCount: session.correctCount,
+              grade: session.grade,
+              completed: session.completed,
+              createdAt: session.createdAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+      if (snapshot.missionAwards.length) {
+        await tx
+          .insert(userDailyMissionAwards)
+          .values(
+            snapshot.missionAwards.map((award) => ({
+              userId,
+              day: award.day,
+              missionId: award.missionId,
+              stone: award.stone,
+              completedAt: award.completedAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+
+      const [allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards] = await Promise.all([
         tx.select().from(userVocabulary).where(eq(userVocabulary.userId, userId)),
         tx.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId)),
         tx.select().from(userCourseProgress).where(eq(userCourseProgress.userId, userId)),
         tx.select().from(userCourseSelections).where(eq(userCourseSelections.userId, userId)),
         tx.select().from(userReviewStatistics).where(eq(userReviewStatistics.userId, userId)),
+        tx.select().from(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId)),
+        tx.select().from(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId)),
       ]);
       const tombstonesById = new Map(allTombstones.map((item) => [item.syncId, item.deletedAt]));
       const wordsByIdForResponse = new Map(allWords.map((word) => [word.syncId, word]));
@@ -442,6 +547,14 @@ router.post('/sync', requireAuth, async (req, res) => {
           courseProgress: allProgress.map(({ userId: _owner, ...progress }) => progress),
           courseSelections: allSelections.map(({ userId: _owner, ...selection }) => selection),
           reviewStats: allStats.map(({ userId: _owner, ...stat }) => stat),
+          reviewSessions: allSessions.map(({ userId: _owner, ...session }) => ({
+            ...session,
+            day: session.day,
+          })),
+          missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({
+            ...award,
+            day: award.day,
+          })),
         },
       };
     });
@@ -466,13 +579,15 @@ router.post('/sync', requireAuth, async (req, res) => {
 });
 
 async function readUserSyncSnapshot(userId: string) {
-  const [revisionRows, allWords, allTombstones, allProgress, allSelections, allStats] = await Promise.all([
+  const [revisionRows, allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards] = await Promise.all([
     db.select({ revision: userSyncRevisions.revision }).from(userSyncRevisions).where(eq(userSyncRevisions.userId, userId)),
     db.select().from(userVocabulary).where(eq(userVocabulary.userId, userId)),
     db.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId)),
     db.select().from(userCourseProgress).where(eq(userCourseProgress.userId, userId)),
     db.select().from(userCourseSelections).where(eq(userCourseSelections.userId, userId)),
     db.select().from(userReviewStatistics).where(eq(userReviewStatistics.userId, userId)),
+    db.select().from(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId)),
+    db.select().from(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId)),
   ]);
   const tombstonesById = new Map(allTombstones.map((item) => [item.syncId, item.deletedAt]));
   const wordsById = new Map(allWords.map((word) => [word.syncId, word]));
@@ -496,11 +611,30 @@ async function readUserSyncSnapshot(userId: string) {
     courseProgress: allProgress.map(({ userId: _owner, ...progress }) => progress),
     courseSelections: allSelections.map(({ userId: _owner, ...selection }) => selection),
     reviewStats: allStats.map(({ userId: _owner, ...stat }) => stat),
+    reviewSessions: allSessions.map(({ userId: _owner, ...session }) => ({ ...session, day: session.day })),
+    missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({ ...award, day: award.day })),
   };
 }
 
 function maxTimestamp(left: string, right: string): string {
   return Date.parse(left) >= Date.parse(right) ? left : right;
+}
+
+function hasInvalidMissionData(
+  sessions: Array<{ reviewedCount: number; correctCount: number }>,
+  awards: Array<{ stone: number; missionId: string }>,
+): boolean {
+  return (
+    sessions.some(
+      (session) =>
+        !Number.isSafeInteger(session.reviewedCount) ||
+        !Number.isSafeInteger(session.correctCount) ||
+        session.reviewedCount < 0 ||
+        session.correctCount < 0 ||
+        session.correctCount > session.reviewedCount,
+    ) ||
+    awards.some((award) => !Number.isSafeInteger(award.stone) || award.stone < 1 || award.stone > 20 || !award.missionId.trim())
+  );
 }
 
 function hasDuplicates<T>(items: T[], keyFor: (item: T) => string): boolean {

@@ -53,6 +53,11 @@ export function SyncProvider({ userId, children }: React.PropsWithChildren<{ use
           ...stat,
           sessionCount: stat.sessionCount ?? 0,
         })),
+        reviewSessions: (remote.reviewSessions ?? []).map((session) => ({
+          ...session,
+          completed: Boolean(session.completed),
+        })),
+        missionAwards: remote.missionAwards ?? [],
       };
       const [current, replacementPending] = await Promise.all([getLocalSyncState(), hasPendingAccountReplacement()]);
       const replacementChangedDuringSync = (!replacing && replacementPending) || (replacing && current.generation !== local.generation);

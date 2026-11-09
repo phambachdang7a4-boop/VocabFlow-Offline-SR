@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDatabaseScope, getSyncQueueState, markSyncPending, notifySyncApplied, subscribeSyncChanges, switchDatabaseScope, withSyncDatabase } from './vocabulary';
+import type { DailyReviewGrade } from '../domain/daily-missions';
 
 export interface SyncWord {
   syncId: string;
@@ -52,6 +53,24 @@ export interface SyncReviewStat {
   updatedAt: string;
 }
 
+export interface SyncReviewSession {
+  sessionId: string;
+  deviceId: string;
+  day: string;
+  reviewedCount: number;
+  correctCount: number;
+  grade: DailyReviewGrade;
+  completed: boolean;
+  createdAt: string;
+}
+
+export interface SyncMissionAward {
+  day: string;
+  missionId: string;
+  stone: number;
+  completedAt: string;
+}
+
 export interface SyncPayload {
   revision: number;
   words: SyncWord[];
@@ -59,6 +78,8 @@ export interface SyncPayload {
   courseProgress: SyncCourseProgress[];
   courseSelections: SyncCourseSelection[];
   reviewStats: SyncReviewStat[];
+  reviewSessions: SyncReviewSession[];
+  missionAwards: SyncMissionAward[];
 }
 
 export interface LocalSyncSnapshot {
@@ -84,7 +105,7 @@ export function getLocalSyncState(): Promise<{
 
 export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
   return withSyncDatabase(async (db) => {
-    const [words, deletedWords, courseProgress, courseSelections, reviewStats, state] = await Promise.all([
+    const [words, deletedWords, courseProgress, courseSelections, reviewStats, reviewSessions, missionAwards, state] = await Promise.all([
       db.getAllAsync<SyncWord>(`
         SELECT w.sync_id AS syncId, w.term, w.meaning, w.ipa, w.example, w.note,
           w.dictionary_entry_id AS dictionaryEntryId, w.dictionary_sense_id AS dictionarySenseId,
@@ -114,6 +135,17 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           correct_count AS correctCount, session_count AS sessionCount, updated_at AS updatedAt
         FROM device_review_day_statistics ORDER BY review_day, device_id
       `),
+      db.getAllAsync<SyncReviewSession>(`
+        SELECT session_id AS sessionId, device_id AS deviceId, review_day AS day,
+          reviewed_count AS reviewedCount, correct_count AS correctCount, grade,
+          completed, created_at AS createdAt
+        FROM review_session_results ORDER BY review_day, session_id
+      `),
+      db.getAllAsync<SyncMissionAward>(`
+        SELECT mission_day AS day, mission_id AS missionId, stone,
+          completed_at AS completedAt
+        FROM daily_mission_awards ORDER BY mission_day, mission_id
+      `),
       getSyncQueueStateFromDatabase(db),
     ]);
     return {
@@ -131,6 +163,11 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           selected: Boolean(selection.selected),
         })),
         reviewStats,
+        reviewSessions: reviewSessions.map((session) => ({
+          ...session,
+          completed: Boolean(session.completed),
+        })),
+        missionAwards,
       },
       generation: state.generation,
       pending: state.pending,
@@ -210,6 +247,8 @@ async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Pro
     DELETE FROM course_word_selection;
     DELETE FROM review_day_statistics;
     DELETE FROM device_review_day_statistics;
+    DELETE FROM review_session_results;
+    DELETE FROM daily_mission_awards;
   `);
 
   for (const word of payload.words) {
@@ -294,6 +333,35 @@ async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Pro
       stat.correctCount,
       stat.sessionCount ?? 0,
       stat.updatedAt,
+    );
+  }
+  for (const session of payload.reviewSessions ?? []) {
+    await db.runAsync(
+      `
+      INSERT OR IGNORE INTO review_session_results
+        (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+      session.sessionId,
+      session.deviceId,
+      session.day,
+      session.reviewedCount,
+      session.correctCount,
+      session.grade,
+      session.completed ? 1 : 0,
+      session.createdAt,
+    );
+  }
+  for (const award of payload.missionAwards ?? []) {
+    await db.runAsync(
+      `
+      INSERT OR IGNORE INTO daily_mission_awards (mission_day, mission_id, stone, completed_at)
+      VALUES (?, ?, ?, ?)
+    `,
+      award.day,
+      award.missionId,
+      award.stone,
+      award.completedAt,
     );
   }
   await db.runAsync(`
@@ -534,6 +602,35 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
         incoming.correctCount,
         incoming.sessionCount ?? 0,
         incoming.updatedAt,
+      );
+    }
+    for (const session of payload.reviewSessions ?? []) {
+      await db.runAsync(
+        `
+        INSERT OR IGNORE INTO review_session_results
+          (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+        session.sessionId,
+        session.deviceId,
+        session.day,
+        session.reviewedCount,
+        session.correctCount,
+        session.grade,
+        session.completed ? 1 : 0,
+        session.createdAt,
+      );
+    }
+    for (const award of payload.missionAwards ?? []) {
+      await db.runAsync(
+        `
+        INSERT OR IGNORE INTO daily_mission_awards (mission_day, mission_id, stone, completed_at)
+        VALUES (?, ?, ?, ?)
+      `,
+        award.day,
+        award.missionId,
+        award.stone,
+        award.completedAt,
       );
     }
 

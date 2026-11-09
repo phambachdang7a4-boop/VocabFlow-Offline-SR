@@ -4,6 +4,15 @@ import type { VocabularyWord, WordInput } from './types';
 import { openDatabaseSafely } from './sqlite-connection';
 import { applyReview, freezeProgress, initialProgress, localDay, rescheduleProgress, unfreezeProgress, type SrsProgress } from '../domain/srs';
 import { buildReviewStatistics, reviewMonthRange, reviewWeekRange, type ReviewStatistics } from '../domain/review-statistics';
+import {
+  evaluateDailyMissions,
+  isDailyReviewGradeQualified,
+  missionAwardIsEarned,
+  type DailyMission,
+  type DailyMissionActivity,
+  type DailyMissionAward,
+  type DailyReviewGrade,
+} from '../domain/daily-missions';
 import { displayCourseMeaning } from './basic-course';
 import { ALL_COURSE_LESSONS, courseForLesson } from './course-catalog';
 
@@ -21,6 +30,21 @@ export interface CourseLessonProgress {
   stage: CourseLessonStage;
   completedAt: string | null;
   updatedAt: string;
+}
+
+export interface DailyMissionOverview {
+  day: string;
+  stoneBalance: number;
+  missions: DailyMission[];
+}
+
+export interface ReviewSessionResultInput {
+  sessionId: string;
+  startedAt: number;
+  reviewedCount: number;
+  correctCount: number;
+  grade: DailyReviewGrade;
+  completed: boolean;
 }
 
 function courseLesson(lessonId: string) {
@@ -127,7 +151,7 @@ async function initialize(): Promise<SQLiteDatabase> {
   try {
     await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 10) {
+    if ((version?.user_version ?? 0) > 11) {
       throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
     }
     if ((version?.user_version ?? 0) < 1) {
@@ -344,6 +368,31 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 11) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS review_session_results (
+            session_id TEXT PRIMARY KEY NOT NULL,
+            device_id TEXT NOT NULL,
+            review_day TEXT NOT NULL,
+            reviewed_count INTEGER NOT NULL CHECK (reviewed_count >= 0),
+            correct_count INTEGER NOT NULL CHECK (correct_count >= 0 AND correct_count <= reviewed_count),
+            grade TEXT NOT NULL CHECK (grade IN ('S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C')),
+            completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
+            created_at TEXT NOT NULL
+          );
+          CREATE INDEX IF NOT EXISTS idx_review_session_results_day ON review_session_results(review_day);
+          CREATE TABLE IF NOT EXISTS daily_mission_awards (
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            stone INTEGER NOT NULL CHECK (stone BETWEEN 1 AND 20),
+            completed_at TEXT NOT NULL,
+            PRIMARY KEY (mission_day, mission_id)
+          );
+          PRAGMA user_version = 11;
+        `);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -359,6 +408,98 @@ function database(): Promise<SQLiteDatabase> {
     });
   }
   return connection;
+}
+
+function localDayBounds(day: string): [string, string] {
+  const start = new Date(`${day}T00:00:00`);
+  if (!Number.isFinite(start.getTime()) || localDay(start) !== day) {
+    throw new Error('Ngày nhiệm vụ không hợp lệ.');
+  }
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return [start.toISOString(), end.toISOString()];
+}
+
+async function readDailyMissionActivity(db: SQLiteDatabase, day: string): Promise<DailyMissionActivity> {
+  const [dayStart, nextDayStart] = localDayBounds(day);
+  const [reviewed, added, lessons, sessions] = await Promise.all([
+    db.getFirstAsync<{ count: number | null }>(
+      'SELECT SUM(reviewed_count) AS count FROM device_review_day_statistics WHERE review_day = ?',
+      day,
+    ),
+    db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM words WHERE created_at >= ? AND created_at < ?',
+      dayStart,
+      nextDayStart,
+    ),
+    db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM course_lesson_progress WHERE stage = ? AND completed_at >= ? AND completed_at < ?',
+      'completed',
+      dayStart,
+      nextDayStart,
+    ),
+    db.getAllAsync<{ grade: DailyReviewGrade; reviewedCount: number }>(
+      'SELECT grade, reviewed_count AS reviewedCount FROM review_session_results WHERE review_day = ?',
+      day,
+    ),
+  ]);
+  return {
+    reviewedCount: reviewed?.count ?? 0,
+    addedWordCount: added?.count ?? 0,
+    completedLessonCount: lessons?.count ?? 0,
+    qualifiedGradeCount: sessions.filter((session) => isDailyReviewGradeQualified(session.grade, session.reviewedCount)).length,
+  };
+}
+
+async function grantDailyMissionAwards(db: SQLiteDatabase, day: string): Promise<boolean> {
+  const [activity, awards] = await Promise.all([
+    readDailyMissionActivity(db, day),
+    db.getAllAsync<DailyMissionAward>(
+      'SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?',
+      day,
+    ),
+  ]);
+  let changed = false;
+  const now = new Date().toISOString();
+  for (const mission of evaluateDailyMissions(day, activity, awards)) {
+    if (!missionAwardIsEarned(mission)) continue;
+    const result = await db.runAsync(
+      'INSERT OR IGNORE INTO daily_mission_awards (mission_day, mission_id, stone, completed_at) VALUES (?, ?, ?, ?)',
+      day,
+      mission.id,
+      mission.stoneReward,
+      now,
+    );
+    changed ||= result.changes === 1;
+  }
+  return changed;
+}
+
+export function getDailyMissionOverview(day = localDay(new Date())): Promise<DailyMissionOverview> {
+  return serialize(async () => {
+    const db = await database();
+    let awardsChanged = false;
+    let overview: DailyMissionOverview | undefined;
+    await db.withTransactionAsync(async () => {
+      awardsChanged = await grantDailyMissionAwards(db, day);
+      if (awardsChanged) await markSyncDirty(db);
+      const [activity, awards, balance] = await Promise.all([
+        readDailyMissionActivity(db, day),
+        db.getAllAsync<DailyMissionAward>(
+          'SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?',
+          day,
+        ),
+        db.getFirstAsync<{ total: number | null }>('SELECT SUM(stone) AS total FROM daily_mission_awards'),
+      ]);
+      overview = {
+        day,
+        stoneBalance: balance?.total ?? 0,
+        missions: evaluateDailyMissions(day, activity, awards),
+      };
+    });
+    if (awardsChanged) notifySyncListeners();
+    return overview!;
+  });
 }
 
 // Serialize operations so reads cannot observe a partially applied write.
@@ -518,6 +659,53 @@ export function getReviewStatistics(today = localDay(new Date()), selectedMonth 
       ),
     ]);
     return buildReviewStatistics(today, totals ?? { totalSessions: 0, totalReviewed: 0, totalCorrect: 0 }, weeklyRows, monthlyRows, selectedMonth);
+  });
+}
+
+export function recordReviewSessionResult(input: ReviewSessionResultInput): Promise<void> {
+  return serialize(async () => {
+    const grades: DailyReviewGrade[] = ['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C'];
+    if (
+      typeof input.sessionId !== 'string' ||
+      !input.sessionId.trim() ||
+      input.sessionId.length > 120 ||
+      !Number.isFinite(input.startedAt) ||
+      !Number.isSafeInteger(input.reviewedCount) ||
+      input.reviewedCount < 0 ||
+      !Number.isSafeInteger(input.correctCount) ||
+      input.correctCount < 0 ||
+      input.correctCount > input.reviewedCount ||
+      !grades.includes(input.grade) ||
+      typeof input.completed !== 'boolean'
+    ) {
+      throw new Error('Kết quả phiên ôn không hợp lệ.');
+    }
+    const db = await database();
+    const day = localDay(new Date(input.startedAt));
+    const deviceId = await getDeviceId(db);
+    const now = new Date().toISOString();
+    let changed = false;
+    await db.withTransactionAsync(async () => {
+      const result = await db.runAsync(
+        `
+        INSERT OR IGNORE INTO review_session_results
+          (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+        input.sessionId,
+        deviceId,
+        day,
+        input.reviewedCount,
+        input.correctCount,
+        input.grade,
+        input.completed ? 1 : 0,
+        now,
+      );
+      const awardsChanged = await grantDailyMissionAwards(db, day);
+      changed = result.changes === 1 || awardsChanged;
+      if (changed) await markSyncDirty(db);
+    });
+    if (changed) notifySyncListeners();
   });
 }
 
@@ -760,6 +948,7 @@ export function finishCourseLesson(lessonId: string, selectedWordIds: string[]):
         now,
         now,
       );
+      await grantDailyMissionAwards(db, localDay(new Date(now)));
       await markSyncDirty(db);
     });
     notifySyncListeners();
@@ -853,6 +1042,9 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
           now,
         );
       }
+      if (id === undefined) {
+        await grantDailyMissionAwards(db, localDay(new Date(now)));
+      }
       await markSyncDirty(db);
     });
     notifySyncListeners();
@@ -928,6 +1120,7 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
         correct ? 1 : 0,
         now,
       );
+      await grantDailyMissionAwards(db, reviewedOn);
       await markSyncDirty(db);
     });
     notifySyncListeners();

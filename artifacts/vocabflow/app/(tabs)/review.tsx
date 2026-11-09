@@ -19,11 +19,13 @@ import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 import { createReviewSessionSummary, formatReviewDuration, getReviewGrade, type ReviewSessionSummary } from '@/domain/review-session';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
 import { soundCueFor } from '@/domain/sound-cues';
-import { recordReviewSessionStart } from '@/data/vocabulary';
+import { recordReviewSessionResult, recordReviewSessionStart } from '@/data/vocabulary';
 import { ReviewMistakeMatchGame } from '@/components/ReviewMistakeMatchGame';
+import * as Crypto from 'expo-crypto';
 
 type Session = {
   token: number;
+  sessionId: string;
   queue: number[];
   processed: number[];
   answered: number[];
@@ -53,6 +55,7 @@ export default function ReviewScreen() {
   const [busy, setBusy] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [sessionSaveError, setSessionSaveError] = useState<string | null>(null);
   const busyRef = useRef(false);
   const startingRef = useRef(false);
   const sequence = useRef(0);
@@ -108,14 +111,17 @@ export default function ReviewScreen() {
       setSummary(null);
       setPendingSummary(null);
       setGameWords(null);
+      setSessionSaveError(null);
+      const startedAt = Date.now();
       setSession({
         token: ++sequence.current,
+        sessionId: Crypto.randomUUID(),
         queue: overview.dueWords.map((w) => w.id),
         processed: [],
         answered: [],
         correct: [],
         mistakes: [],
-        startedAt: Date.now(),
+        startedAt,
         index: 0,
         formatOffset: first.reviewCount,
         word: first,
@@ -133,6 +139,17 @@ export default function ReviewScreen() {
     const result = createReviewSessionSummary(current, Date.now(), completed);
     sessionRef.current = null;
     setSession(null);
+    setSessionSaveError(null);
+    void recordReviewSessionResult({
+      sessionId: current.sessionId,
+      startedAt: current.startedAt,
+      reviewedCount: result.reviewedCount,
+      correctCount: result.correctCount,
+      grade: getReviewGrade(result.correctCount, result.reviewedCount, result.completed),
+      completed: result.completed,
+    }).catch(() => {
+      setSessionSaveError('Chưa lưu được kết quả phiên ôn vào Nhiệm Vụ. Hãy đồng bộ lại khi có thể.');
+    });
     if (current.mistakes.length) {
       setPendingSummary(result);
       setSummary(null);
@@ -346,6 +363,7 @@ export default function ReviewScreen() {
             <Text testID="review-summary-status" style={[styles.summarySubtitle, { color: c.mutedForeground }]}>
               {summary.completed ? 'Hoàn thành lượt ôn' : summary.reviewedCount ? 'Kết quả tính đến lúc bạn thoát' : 'Chưa có câu trả lời để tính tỉ lệ'}
             </Text>
+            {sessionSaveError ? <ErrorBanner message={sessionSaveError} /> : null}
             <View style={styles.summaryGradeArea}>
               <Text
                 testID="review-summary-grade"

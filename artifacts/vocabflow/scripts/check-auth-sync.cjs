@@ -42,12 +42,21 @@ const sync = loadTs(join(__dirname, '../data/vocabulary-sync.ts'), {
   });
 
   await repo.recordReviewSessionStart();
+  await repo.recordReviewSessionResult({
+    sessionId: 'session-account-a',
+    startedAt: Date.parse('2026-11-08T08:00:00.000Z'),
+    reviewedCount: 30,
+    correctCount: 27,
+    grade: 'A',
+    completed: true,
+  });
   const reviewTotals = await repo.getReviewStatistics('2026-01-01');
   assert.equal(reviewTotals.totalSessions, 1);
   assert.equal(reviewTotals.totalReviewed, 0);
   let snapshot = await sync.exportSyncSnapshot();
   assert.equal(snapshot.payload.words.length, 2);
   assert.equal(snapshot.payload.reviewStats[0].sessionCount, 1);
+  assert.equal(snapshot.payload.reviewSessions.length, 1, 'Review grades sync with account data for daily missions.');
   assert.equal(Object.hasOwn(snapshot.payload, 'userId'), false, 'Client payload never chooses its owner.');
   assert.equal(snapshot.pending, true, 'Local writes stay queued until the server acknowledges them.');
 
