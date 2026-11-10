@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, type ColorValue } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { Feather } from '@expo/vector-icons';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
@@ -51,13 +51,42 @@ function ClassicTabLayout() {
   const isIOS = Platform.OS === 'ios';
   const isWeb = Platform.OS === 'web';
 
-  const icon = (key: keyof typeof ICONS) =>
-    ({ color }: { color: any }) =>
-      isIOS ? (
-        <SymbolView name={ICONS[key].sf} tintColor={color} size={24} />
-      ) : (
-        <Feather name={ICONS[key].fe} size={22} color={color} />
-      );
+  const icon = (key: keyof typeof ICONS, hasDivider = true) =>
+    ({ color, focused }: { color: ColorValue; focused: boolean }) => (
+      <View
+        style={[
+          styles.tabIcon,
+          { backgroundColor: focused ? colors.button : 'transparent' },
+        ]}
+      >
+        {hasDivider ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.tabDivider,
+              { backgroundColor: colors.navigationBorder },
+            ]}
+          />
+        ) : null}
+        {isIOS ? (
+          <SymbolView
+            name={ICONS[key].sf}
+            tintColor={focused ? colors.buttonForeground : color}
+            size={focused ? 20 : 22}
+          />
+        ) : (
+          <Feather
+            name={ICONS[key].fe}
+            size={focused ? 20 : 22}
+            color={focused
+              ? colors.buttonForeground
+              : typeof color === 'string'
+                ? color
+                : colors.navigationInactive}
+          />
+        )}
+      </View>
+    );
 
   return (
     <Tabs
@@ -88,7 +117,7 @@ function ClassicTabLayout() {
         ),
       }}
     >
-      <Tabs.Screen name="dictionary" options={{ title: 'Tra Từ', tabBarIcon: icon('dictionary') }} />
+      <Tabs.Screen name="dictionary" options={{ title: 'Tra Từ', tabBarIcon: icon('dictionary', false) }} />
       <Tabs.Screen name="courses" options={{ title: 'Khóa Học', tabBarIcon: icon('courses') }} />
       <Tabs.Screen name="review" options={{ title: 'Ôn tập', tabBarIcon: icon('review') }} />
       <Tabs.Screen name="index" options={{ title: 'Sổ từ', tabBarIcon: icon('index') }} />
@@ -96,6 +125,24 @@ function ClassicTabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIcon: {
+    width: 42,
+    height: 30,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  tabDivider: {
+    position: 'absolute',
+    left: -18,
+    width: 1,
+    height: 24,
+    borderRadius: 1,
+  },
+});
 
 export default function TabLayout() {
   if (isLiquidGlassAvailable()) return <NativeTabLayout />;
