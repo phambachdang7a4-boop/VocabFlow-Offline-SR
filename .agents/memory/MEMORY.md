@@ -6,3 +6,4 @@
 - [Tab Expo Router](expo-router-tabs.md) — SDK hiện tại dùng anchor và backBehavior, không nhận initialRouteName trực tiếp trên Tabs như ví dụ cũ.
 - [Lịch sử thống kê ôn tập](review-statistics-history.md) — Không thể khôi phục chính xác lượt ôn cũ; không giả lập dữ liệu lịch sử.
 - [Tần suất cụm từ](collocation-frequency.md) — Chỉ xếp theo số đếm cụm chính xác; không suy ra tần suất từ thành tố.
+- [Gói audio offline](offline-audio-packaging.md) — Từ điển âm thanh lớn được tải riêng từ App Storage, không nhúng vào APK.

@@ -1,6 +1,6 @@
-import { getAuth } from '@clerk/express';
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import { Router, type IRouter, type RequestHandler } from 'express';
+import { getAuth } from "@clerk/express";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { Router, type IRouter, type RequestHandler } from "express";
 import {
   db,
   userCourseProgress,
@@ -13,8 +13,13 @@ import {
   userSyncRevisions,
   userVocabulary,
   userWordTombstones,
-} from '@workspace/db';
-import { MergeUserSyncData200Response, MergeUserSyncDataBody, ReplaceUserSyncData200Response, ReplaceUserSyncDataBody } from '@workspace/api-zod';
+} from "@workspace/db";
+import {
+  MergeUserSyncData200Response,
+  MergeUserSyncDataBody,
+  ReplaceUserSyncData200Response,
+  ReplaceUserSyncDataBody,
+} from "@workspace/api-zod";
 
 declare global {
   namespace Express {
@@ -25,74 +30,104 @@ declare global {
 }
 
 const router: IRouter = Router();
+const COURSE_SOURCE_MARKER = "Khóa học:";
+
+function isCourseGeneratedWord(word: { note: string }) {
+  return word.note.includes(COURSE_SOURCE_MARKER);
+}
 
 const requireAuth: RequestHandler = (req, res, next) => {
   const { userId } = getAuth(req);
   if (!userId) {
-    res.status(401).json({ error: 'Đăng nhập để đồng bộ dữ liệu.' });
+    res.status(401).json({ error: "Đăng nhập để đồng bộ dữ liệu." });
     return;
   }
   res.locals.userId = userId;
   next();
 };
 
-router.post('/sync/replace', requireAuth, async (req, res) => {
+router.post("/sync/replace", requireAuth, async (req, res) => {
   const parsed = ReplaceUserSyncDataBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Tệp sao lưu không hợp lệ.' });
+    res.status(400).json({ error: "Tệp sao lưu không hợp lệ." });
     return;
   }
-  if (parsed.data.reviewStats.some((stat) => stat.correctCount > stat.reviewedCount)) {
-    res.status(400).json({ error: 'Số liệu ôn tập không hợp lệ.' });
+  if (
+    parsed.data.reviewStats.some(
+      (stat) => stat.correctCount > stat.reviewedCount,
+    )
+  ) {
+    res.status(400).json({ error: "Số liệu ôn tập không hợp lệ." });
     return;
   }
   const reviewSessions = parsed.data.reviewSessions ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
   const collectionCrafts = parsed.data.collectionCrafts ?? [];
-  if (hasInvalidMissionData(reviewSessions, missionAwards, missionChests, collectionCrafts)) {
-    res.status(400).json({ error: 'Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ.' });
+  if (
+    hasInvalidMissionData(
+      reviewSessions,
+      missionAwards,
+      missionChests,
+      collectionCrafts,
+    )
+  ) {
+    res
+      .status(400)
+      .json({ error: "Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ." });
     return;
   }
   if (
     hasDuplicates(parsed.data.words, (word) => word.syncId) ||
     hasDuplicates(parsed.data.deletedWords, (word) => word.syncId) ||
     hasDuplicates(parsed.data.courseProgress, (item) => item.lessonId) ||
-    hasDuplicates(parsed.data.courseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
-    hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
+    hasDuplicates(
+      parsed.data.courseSelections,
+      (item) => `${item.lessonId}\u0000${item.wordId}`,
+    ) ||
+    hasDuplicates(
+      parsed.data.reviewStats,
+      (item) => `${item.deviceId}\u0000${item.day}`,
+    ) ||
     hasDuplicates(reviewSessions, (item) => item.sessionId) ||
-    hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(
+      missionAwards,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
     hasDuplicates(missionChests, (item) => item.chestId) ||
-    hasDuplicates(missionChests, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(
+      missionChests,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
     hasDuplicates(collectionCrafts, (item) => item.craftId) ||
-    hasDuplicates(collectionCrafts, (item) => `${item.rarity}\u0000${item.craftIndex}`) ||
-    parsed.data.deletedWords.some((deleted) => parsed.data.words.some((word) => word.syncId === deleted.syncId))
+    hasDuplicates(
+      collectionCrafts,
+      (item) => `${item.rarity}\u0000${item.craftIndex}`,
+    ) ||
+    parsed.data.deletedWords.some((deleted) =>
+      parsed.data.words.some((word) => word.syncId === deleted.syncId),
+    )
   ) {
-    res.status(400).json({ error: 'Gói sao lưu có mục trùng hoặc mâu thuẫn.' });
+    res.status(400).json({ error: "Gói sao lưu có mục trùng hoặc mâu thuẫn." });
     return;
   }
 
   try {
     const snapshot = {
-      words: parsed.data.words.map((word) => ({
-        ...word,
-        createdAt: toTimestamp(word.createdAt),
-        contentUpdatedAt: toTimestamp(word.contentUpdatedAt),
-        progressUpdatedAt: toTimestamp(word.progressUpdatedAt),
-      })),
+      words: parsed.data.words
+        .filter((word) => !isCourseGeneratedWord(word))
+        .map((word) => ({
+          ...word,
+          createdAt: toTimestamp(word.createdAt),
+          contentUpdatedAt: toTimestamp(word.contentUpdatedAt),
+          progressUpdatedAt: toTimestamp(word.progressUpdatedAt),
+        })),
       deletedWords: parsed.data.deletedWords.map((word) => ({
         ...word,
         deletedAt: toTimestamp(word.deletedAt),
       })),
-      courseProgress: parsed.data.courseProgress.map((progress) => ({
-        ...progress,
-        completedAt: progress.completedAt ? toTimestamp(progress.completedAt) : null,
-        updatedAt: toTimestamp(progress.updatedAt),
-      })),
-      courseSelections: parsed.data.courseSelections.map((selection) => ({
-        ...selection,
-        updatedAt: toTimestamp(selection.updatedAt),
-      })),
+      courseProgress: [],
+      courseSelections: [],
       reviewStats: parsed.data.reviewStats.map((stat) => ({
         ...stat,
         sessionCount: stat.sessionCount ?? 0,
@@ -119,18 +154,40 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
 
     const result = await db.transaction(async (tx) => {
       const userId = res.locals.userId;
-      await tx.insert(userSyncRevisions).values({ userId, revision: 0 }).onConflictDoNothing();
-      const [storedRevision] = await tx.select({ revision: userSyncRevisions.revision }).from(userSyncRevisions).where(eq(userSyncRevisions.userId, userId));
+      await tx
+        .insert(userSyncRevisions)
+        .values({ userId, revision: 0 })
+        .onConflictDoNothing();
+      const [storedRevision] = await tx
+        .select({ revision: userSyncRevisions.revision })
+        .from(userSyncRevisions)
+        .where(eq(userSyncRevisions.userId, userId));
       const revision = (storedRevision?.revision ?? 0) + 1;
       await tx.delete(userVocabulary).where(eq(userVocabulary.userId, userId));
-      await tx.delete(userWordTombstones).where(eq(userWordTombstones.userId, userId));
-      await tx.delete(userCourseProgress).where(eq(userCourseProgress.userId, userId));
-      await tx.delete(userCourseSelections).where(eq(userCourseSelections.userId, userId));
-      await tx.delete(userReviewStatistics).where(eq(userReviewStatistics.userId, userId));
-      await tx.delete(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId));
-      await tx.delete(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId));
-      await tx.delete(userMissionChests).where(eq(userMissionChests.userId, userId));
-      await tx.delete(userCollectionCrafts).where(eq(userCollectionCrafts.userId, userId));
+      await tx
+        .delete(userWordTombstones)
+        .where(eq(userWordTombstones.userId, userId));
+      await tx
+        .delete(userCourseProgress)
+        .where(eq(userCourseProgress.userId, userId));
+      await tx
+        .delete(userCourseSelections)
+        .where(eq(userCourseSelections.userId, userId));
+      await tx
+        .delete(userReviewStatistics)
+        .where(eq(userReviewStatistics.userId, userId));
+      await tx
+        .delete(userReviewSessionResults)
+        .where(eq(userReviewSessionResults.userId, userId));
+      await tx
+        .delete(userDailyMissionAwards)
+        .where(eq(userDailyMissionAwards.userId, userId));
+      await tx
+        .delete(userMissionChests)
+        .where(eq(userMissionChests.userId, userId));
+      await tx
+        .delete(userCollectionCrafts)
+        .where(eq(userCollectionCrafts.userId, userId));
 
       if (snapshot.words.length) {
         await tx.insert(userVocabulary).values(
@@ -163,29 +220,6 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
             userId,
             syncId: word.syncId,
             deletedAt: word.deletedAt,
-          })),
-        );
-      }
-      if (snapshot.courseProgress.length) {
-        await tx.insert(userCourseProgress).values(
-          snapshot.courseProgress.map((progress) => ({
-            userId,
-            lessonId: progress.lessonId,
-            currentIndex: progress.currentIndex,
-            stage: progress.stage,
-            completedAt: progress.completedAt,
-            updatedAt: progress.updatedAt,
-          })),
-        );
-      }
-      if (snapshot.courseSelections.length) {
-        await tx.insert(userCourseSelections).values(
-          snapshot.courseSelections.map((selection) => ({
-            userId,
-            lessonId: selection.lessonId,
-            wordId: selection.wordId,
-            selected: selection.selected,
-            updatedAt: selection.updatedAt,
           })),
         );
       }
@@ -259,92 +293,142 @@ router.post('/sync/replace', requireAuth, async (req, res) => {
           })),
         );
       }
-      await tx.insert(userSyncRevisions).values({ userId, revision }).onConflictDoUpdate({
-        target: userSyncRevisions.userId,
-        set: { revision },
-      });
+      await tx
+        .insert(userSyncRevisions)
+        .values({ userId, revision })
+        .onConflictDoUpdate({
+          target: userSyncRevisions.userId,
+          set: { revision },
+        });
       return { ...snapshot, revision };
     });
     res.json(ReplaceUserSyncData200Response.parse(result));
   } catch (error) {
-    req.log.error({ errName: error instanceof Error ? error.name : 'UnknownError' }, 'User account restore failed');
+    req.log.error(
+      { errName: error instanceof Error ? error.name : "UnknownError" },
+      "User account restore failed",
+    );
     res.status(503).json({
-      error: 'Chưa thể khôi phục tài khoản lúc này. Dữ liệu trên thiết bị vẫn được giữ.',
+      error:
+        "Chưa thể khôi phục tài khoản lúc này. Dữ liệu trên thiết bị vẫn được giữ.",
     });
   }
 });
 
-router.post('/sync', requireAuth, async (req, res) => {
+router.post("/sync", requireAuth, async (req, res) => {
   const parsed = MergeUserSyncDataBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Dữ liệu đồng bộ không hợp lệ.' });
+    res.status(400).json({ error: "Dữ liệu đồng bộ không hợp lệ." });
     return;
   }
-  if (parsed.data.reviewStats.some((stat) => stat.correctCount > stat.reviewedCount)) {
-    res.status(400).json({ error: 'Số liệu ôn tập không hợp lệ.' });
+  if (
+    parsed.data.reviewStats.some(
+      (stat) => stat.correctCount > stat.reviewedCount,
+    )
+  ) {
+    res.status(400).json({ error: "Số liệu ôn tập không hợp lệ." });
     return;
   }
   const reviewSessions = parsed.data.reviewSessions ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
   const collectionCrafts = parsed.data.collectionCrafts ?? [];
-  if (hasInvalidMissionData(reviewSessions, missionAwards, missionChests, collectionCrafts)) {
-    res.status(400).json({ error: 'Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ.' });
+  if (
+    hasInvalidMissionData(
+      reviewSessions,
+      missionAwards,
+      missionChests,
+      collectionCrafts,
+    )
+  ) {
+    res
+      .status(400)
+      .json({ error: "Dữ liệu nhiệm vụ hoặc phiên ôn không hợp lệ." });
     return;
   }
   if (
     hasDuplicates(parsed.data.words, (word) => word.syncId) ||
     hasDuplicates(parsed.data.deletedWords, (word) => word.syncId) ||
     hasDuplicates(parsed.data.courseProgress, (item) => item.lessonId) ||
-    hasDuplicates(parsed.data.courseSelections, (item) => `${item.lessonId}\u0000${item.wordId}`) ||
-    hasDuplicates(parsed.data.reviewStats, (item) => `${item.deviceId}\u0000${item.day}`) ||
+    hasDuplicates(
+      parsed.data.courseSelections,
+      (item) => `${item.lessonId}\u0000${item.wordId}`,
+    ) ||
+    hasDuplicates(
+      parsed.data.reviewStats,
+      (item) => `${item.deviceId}\u0000${item.day}`,
+    ) ||
     hasDuplicates(reviewSessions, (item) => item.sessionId) ||
-    hasDuplicates(missionAwards, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(
+      missionAwards,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
     hasDuplicates(missionChests, (item) => item.chestId) ||
-    hasDuplicates(missionChests, (item) => `${item.day}\u0000${item.missionId}`) ||
+    hasDuplicates(
+      missionChests,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
     hasDuplicates(collectionCrafts, (item) => item.craftId) ||
-    hasDuplicates(collectionCrafts, (item) => `${item.rarity}\u0000${item.craftIndex}`)
+    hasDuplicates(
+      collectionCrafts,
+      (item) => `${item.rarity}\u0000${item.craftIndex}`,
+    )
   ) {
-    res.status(400).json({ error: 'Danh sách đồng bộ có mục trùng lặp.' });
+    res.status(400).json({ error: "Danh sách đồng bộ có mục trùng lặp." });
     return;
   }
 
   try {
     const result = await db.transaction(async (tx) => {
       const userId = res.locals.userId;
-      await tx.insert(userSyncRevisions).values({ userId, revision: 0 }).onConflictDoNothing();
-      const [storedRevision] = await tx.select({ revision: userSyncRevisions.revision }).from(userSyncRevisions).where(eq(userSyncRevisions.userId, userId));
+      await tx
+        .insert(userSyncRevisions)
+        .values({ userId, revision: 0 })
+        .onConflictDoNothing();
+      const [storedRevision] = await tx
+        .select({ revision: userSyncRevisions.revision })
+        .from(userSyncRevisions)
+        .where(eq(userSyncRevisions.userId, userId));
       const accountRevision = storedRevision?.revision ?? 0;
       const incomingRevision = parsed.data.revision;
       if (incomingRevision === undefined && accountRevision > 0) {
-        return { status: 'client-update' as const };
+        return { status: "client-update" as const };
       }
       if ((incomingRevision ?? 0) < accountRevision) {
-        return { status: 'stale' as const };
+        return { status: "stale" as const };
       }
       if ((incomingRevision ?? 0) > accountRevision) {
-        return { status: 'future' as const };
+        return { status: "future" as const };
       }
+      await tx
+        .delete(userCourseProgress)
+        .where(eq(userCourseProgress.userId, userId));
+      await tx
+        .delete(userCourseSelections)
+        .where(eq(userCourseSelections.userId, userId));
+      await tx
+        .delete(userVocabulary)
+        .where(
+          and(
+            eq(userVocabulary.userId, userId),
+            sql`${userVocabulary.note} LIKE ${`%${COURSE_SOURCE_MARKER}%`}`,
+          ),
+        );
       const snapshot = {
-        words: parsed.data.words.map((word) => ({
-          ...word,
-          createdAt: toTimestamp(word.createdAt),
-          contentUpdatedAt: toTimestamp(word.contentUpdatedAt),
-          progressUpdatedAt: toTimestamp(word.progressUpdatedAt),
-        })),
+        words: parsed.data.words
+          .filter((word) => !isCourseGeneratedWord(word))
+          .map((word) => ({
+            ...word,
+            createdAt: toTimestamp(word.createdAt),
+            contentUpdatedAt: toTimestamp(word.contentUpdatedAt),
+            progressUpdatedAt: toTimestamp(word.progressUpdatedAt),
+          })),
         deletedWords: parsed.data.deletedWords.map((word) => ({
           ...word,
           deletedAt: toTimestamp(word.deletedAt),
         })),
-        courseProgress: parsed.data.courseProgress.map((progress) => ({
-          ...progress,
-          completedAt: progress.completedAt ? toTimestamp(progress.completedAt) : null,
-          updatedAt: toTimestamp(progress.updatedAt),
-        })),
-        courseSelections: parsed.data.courseSelections.map((selection) => ({
-          ...selection,
-          updatedAt: toTimestamp(selection.updatedAt),
-        })),
+        courseProgress: [],
+        courseSelections: [],
         reviewStats: parsed.data.reviewStats.map((stat) => ({
           ...stat,
           sessionCount: stat.sessionCount ?? 0,
@@ -427,21 +511,43 @@ router.post('/sync', requireAuth, async (req, res) => {
         })
         .from(userVocabulary)
         .where(eq(userVocabulary.userId, userId));
-      const tombstonesBeforeMerge = await tx.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId));
-      const wordsById = new Map(wordsAfterUpsert.map((word) => [word.syncId, word]));
+      const tombstonesBeforeMerge = await tx
+        .select()
+        .from(userWordTombstones)
+        .where(eq(userWordTombstones.userId, userId));
+      const wordsById = new Map(
+        wordsAfterUpsert.map((word) => [word.syncId, word]),
+      );
       const staleTombstoneIds = tombstonesBeforeMerge
         .filter((tombstone) => {
           const word = wordsById.get(tombstone.syncId);
-          return word && maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt) > tombstone.deletedAt;
+          return (
+            word &&
+            maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt) >
+              tombstone.deletedAt
+          );
         })
         .map((tombstone) => tombstone.syncId);
       if (staleTombstoneIds.length) {
-        await tx.delete(userWordTombstones).where(and(eq(userWordTombstones.userId, userId), inArray(userWordTombstones.syncId, staleTombstoneIds)));
+        await tx
+          .delete(userWordTombstones)
+          .where(
+            and(
+              eq(userWordTombstones.userId, userId),
+              inArray(userWordTombstones.syncId, staleTombstoneIds),
+            ),
+          );
       }
 
       const tombstonesToMerge = snapshot.deletedWords.filter((deleted) => {
         const activeWord = wordsById.get(deleted.syncId);
-        return !activeWord || maxTimestamp(activeWord.contentUpdatedAt, activeWord.progressUpdatedAt) <= deleted.deletedAt;
+        return (
+          !activeWord ||
+          maxTimestamp(
+            activeWord.contentUpdatedAt,
+            activeWord.progressUpdatedAt,
+          ) <= deleted.deletedAt
+        );
       });
       if (tombstonesToMerge.length) {
         await tx
@@ -461,57 +567,6 @@ router.post('/sync', requireAuth, async (req, res) => {
           });
       }
 
-      if (snapshot.courseProgress.length) {
-        await tx
-          .insert(userCourseProgress)
-          .values(
-            snapshot.courseProgress.map((progress) => ({
-              userId,
-              lessonId: progress.lessonId,
-              currentIndex: progress.currentIndex,
-              stage: progress.stage,
-              completedAt: progress.completedAt,
-              updatedAt: progress.updatedAt,
-            })),
-          )
-          .onConflictDoUpdate({
-            target: [userCourseProgress.userId, userCourseProgress.lessonId],
-            set: {
-              currentIndex: sql`GREATEST(${userCourseProgress.currentIndex}, EXCLUDED.current_index)`,
-              stage: sql`CASE
-              WHEN ${userCourseProgress.stage} = 'completed' OR EXCLUDED.stage = 'completed' THEN 'completed'
-              WHEN EXCLUDED.current_index > ${userCourseProgress.currentIndex} THEN EXCLUDED.stage
-              WHEN EXCLUDED.current_index < ${userCourseProgress.currentIndex} THEN ${userCourseProgress.stage}
-              WHEN EXCLUDED.updated_at >= ${userCourseProgress.updatedAt} THEN EXCLUDED.stage
-              ELSE ${userCourseProgress.stage}
-            END`,
-              completedAt: sql`COALESCE(${userCourseProgress.completedAt}, EXCLUDED.completed_at)`,
-              updatedAt: sql`GREATEST(${userCourseProgress.updatedAt}, EXCLUDED.updated_at)`,
-            },
-          });
-      }
-
-      if (snapshot.courseSelections.length) {
-        await tx
-          .insert(userCourseSelections)
-          .values(
-            snapshot.courseSelections.map((selection) => ({
-              userId,
-              lessonId: selection.lessonId,
-              wordId: selection.wordId,
-              selected: selection.selected,
-              updatedAt: selection.updatedAt,
-            })),
-          )
-          .onConflictDoUpdate({
-            target: [userCourseSelections.userId, userCourseSelections.lessonId, userCourseSelections.wordId],
-            set: {
-              selected: sql`CASE WHEN EXCLUDED.updated_at >= ${userCourseSelections.updatedAt} THEN EXCLUDED.selected ELSE ${userCourseSelections.selected} END`,
-              updatedAt: sql`GREATEST(${userCourseSelections.updatedAt}, EXCLUDED.updated_at)`,
-            },
-          });
-      }
-
       if (snapshot.reviewStats.length) {
         await tx
           .insert(userReviewStatistics)
@@ -527,7 +582,11 @@ router.post('/sync', requireAuth, async (req, res) => {
             })),
           )
           .onConflictDoUpdate({
-            target: [userReviewStatistics.userId, userReviewStatistics.deviceId, userReviewStatistics.day],
+            target: [
+              userReviewStatistics.userId,
+              userReviewStatistics.deviceId,
+              userReviewStatistics.day,
+            ],
             set: {
               reviewedCount: sql`GREATEST(${userReviewStatistics.reviewedCount}, EXCLUDED.reviewed_count)`,
               correctCount: sql`GREATEST(${userReviewStatistics.correctCount}, EXCLUDED.correct_count)`,
@@ -578,7 +637,12 @@ router.post('/sync', requireAuth, async (req, res) => {
         const [current] = await tx
           .select()
           .from(userMissionChests)
-          .where(and(eq(userMissionChests.userId, userId), eq(userMissionChests.chestId, normalizedChest.chestId)));
+          .where(
+            and(
+              eq(userMissionChests.userId, userId),
+              eq(userMissionChests.chestId, normalizedChest.chestId),
+            ),
+          );
         const selected = !current
           ? normalizedChest
           : current.opened
@@ -592,7 +656,9 @@ router.post('/sync', requireAuth, async (req, res) => {
                 : normalizedChest.opened
                   ? normalizedChest
                   : normalizedChest.upgradeAttempts > current.upgradeAttempts ||
-                      (normalizedChest.upgradeAttempts === current.upgradeAttempts && normalizedChest.updatedAt > current.updatedAt)
+                      (normalizedChest.upgradeAttempts ===
+                        current.upgradeAttempts &&
+                        normalizedChest.updatedAt > current.updatedAt)
                     ? normalizedChest
                     : current;
         await tx
@@ -641,49 +707,99 @@ router.post('/sync', requireAuth, async (req, res) => {
           .onConflictDoNothing();
       }
 
-      const [allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards, allChests, allCrafts] = await Promise.all([
-        tx.select().from(userVocabulary).where(eq(userVocabulary.userId, userId)),
-        tx.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId)),
-        tx.select().from(userCourseProgress).where(eq(userCourseProgress.userId, userId)),
-        tx.select().from(userCourseSelections).where(eq(userCourseSelections.userId, userId)),
-        tx.select().from(userReviewStatistics).where(eq(userReviewStatistics.userId, userId)),
-        tx.select().from(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId)),
-        tx.select().from(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId)),
-        tx.select().from(userMissionChests).where(eq(userMissionChests.userId, userId)),
-        tx.select().from(userCollectionCrafts).where(eq(userCollectionCrafts.userId, userId)),
+      const [
+        allWords,
+        allTombstones,
+        allStats,
+        allSessions,
+        allAwards,
+        allChests,
+        allCrafts,
+      ] = await Promise.all([
+        tx
+          .select()
+          .from(userVocabulary)
+          .where(eq(userVocabulary.userId, userId)),
+        tx
+          .select()
+          .from(userWordTombstones)
+          .where(eq(userWordTombstones.userId, userId)),
+        tx
+          .select()
+          .from(userReviewStatistics)
+          .where(eq(userReviewStatistics.userId, userId)),
+        tx
+          .select()
+          .from(userReviewSessionResults)
+          .where(eq(userReviewSessionResults.userId, userId)),
+        tx
+          .select()
+          .from(userDailyMissionAwards)
+          .where(eq(userDailyMissionAwards.userId, userId)),
+        tx
+          .select()
+          .from(userMissionChests)
+          .where(eq(userMissionChests.userId, userId)),
+        tx
+          .select()
+          .from(userCollectionCrafts)
+          .where(eq(userCollectionCrafts.userId, userId)),
       ]);
-      const tombstonesById = new Map(allTombstones.map((item) => [item.syncId, item.deletedAt]));
-      const wordsByIdForResponse = new Map(allWords.map((word) => [word.syncId, word]));
+      const tombstonesById = new Map(
+        allTombstones.map((item) => [item.syncId, item.deletedAt]),
+      );
+      const wordsByIdForResponse = new Map(
+        allWords.map((word) => [word.syncId, word]),
+      );
       const activeWords = allWords
         .filter((word) => {
           const deletedAt = tombstonesById.get(word.syncId);
-          return !deletedAt || maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt) > deletedAt;
+          return (
+            !deletedAt ||
+            maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt) >
+              deletedAt
+          );
         })
         .map(({ userId: _owner, ...word }) => word);
       const activeTombstones = allTombstones
         .filter((item) => {
           const word = wordsByIdForResponse.get(item.syncId);
-          return !word || item.deletedAt >= maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt);
+          return (
+            !word ||
+            item.deletedAt >=
+              maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt)
+          );
         })
         .map(({ userId: _owner, ...deleted }) => deleted);
       const deletedIds = allTombstones
         .filter((item) => {
           const word = wordsByIdForResponse.get(item.syncId);
-          return word && item.deletedAt >= maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt);
+          return (
+            word &&
+            item.deletedAt >=
+              maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt)
+          );
         })
         .map((item) => item.syncId);
       if (deletedIds.length) {
-        await tx.delete(userVocabulary).where(and(eq(userVocabulary.userId, userId), inArray(userVocabulary.syncId, deletedIds)));
+        await tx
+          .delete(userVocabulary)
+          .where(
+            and(
+              eq(userVocabulary.userId, userId),
+              inArray(userVocabulary.syncId, deletedIds),
+            ),
+          );
       }
 
       return {
-        status: 'merged' as const,
+        status: "merged" as const,
         snapshot: {
           revision: accountRevision,
           words: activeWords,
           deletedWords: activeTombstones,
-          courseProgress: allProgress.map(({ userId: _owner, ...progress }) => progress),
-          courseSelections: allSelections.map(({ userId: _owner, ...selection }) => selection),
+          courseProgress: [],
+          courseSelections: [],
           reviewStats: allStats.map(({ userId: _owner, ...stat }) => stat),
           reviewSessions: allSessions.map(({ userId: _owner, ...session }) => ({
             ...session,
@@ -697,55 +813,102 @@ router.post('/sync', requireAuth, async (req, res) => {
             ...chest,
             day: chest.day,
           })),
-          collectionCrafts: allCrafts.map(({ userId: _owner, ...craft }) => craft),
+          collectionCrafts: allCrafts.map(
+            ({ userId: _owner, ...craft }) => craft,
+          ),
         },
       };
     });
 
-    if (result.status === 'client-update' || result.status === 'future') {
+    if (result.status === "client-update" || result.status === "future") {
       res.status(409).json({
-        error: 'Tài khoản đã đổi phiên bản dữ liệu. Cập nhật VocabFlow để tiếp tục đồng bộ.',
+        error:
+          "Tài khoản đã đổi phiên bản dữ liệu. Cập nhật VocabFlow để tiếp tục đồng bộ.",
       });
       return;
     }
-    if (result.status === 'stale') {
-      res.json(MergeUserSyncData200Response.parse(await readUserSyncSnapshot(res.locals.userId)));
+    if (result.status === "stale") {
+      res.json(
+        MergeUserSyncData200Response.parse(
+          await readUserSyncSnapshot(res.locals.userId),
+        ),
+      );
       return;
     }
     res.json(MergeUserSyncData200Response.parse(result.snapshot));
   } catch (error) {
-    req.log.error({ errName: error instanceof Error ? error.name : 'UnknownError' }, 'User sync failed');
+    req.log.error(
+      { errName: error instanceof Error ? error.name : "UnknownError" },
+      "User sync failed",
+    );
     res.status(503).json({
-      error: 'Chưa thể đồng bộ lúc này. Dữ liệu vẫn được giữ trên thiết bị.',
+      error: "Chưa thể đồng bộ lúc này. Dữ liệu vẫn được giữ trên thiết bị.",
     });
   }
 });
 
 async function readUserSyncSnapshot(userId: string) {
-  const [revisionRows, allWords, allTombstones, allProgress, allSelections, allStats, allSessions, allAwards, allChests, allCrafts] = await Promise.all([
-    db.select({ revision: userSyncRevisions.revision }).from(userSyncRevisions).where(eq(userSyncRevisions.userId, userId)),
+  const [
+    revisionRows,
+    allWords,
+    allTombstones,
+    allStats,
+    allSessions,
+    allAwards,
+    allChests,
+    allCrafts,
+  ] = await Promise.all([
+    db
+      .select({ revision: userSyncRevisions.revision })
+      .from(userSyncRevisions)
+      .where(eq(userSyncRevisions.userId, userId)),
     db.select().from(userVocabulary).where(eq(userVocabulary.userId, userId)),
-    db.select().from(userWordTombstones).where(eq(userWordTombstones.userId, userId)),
-    db.select().from(userCourseProgress).where(eq(userCourseProgress.userId, userId)),
-    db.select().from(userCourseSelections).where(eq(userCourseSelections.userId, userId)),
-    db.select().from(userReviewStatistics).where(eq(userReviewStatistics.userId, userId)),
-    db.select().from(userReviewSessionResults).where(eq(userReviewSessionResults.userId, userId)),
-    db.select().from(userDailyMissionAwards).where(eq(userDailyMissionAwards.userId, userId)),
-    db.select().from(userMissionChests).where(eq(userMissionChests.userId, userId)),
-    db.select().from(userCollectionCrafts).where(eq(userCollectionCrafts.userId, userId)),
+    db
+      .select()
+      .from(userWordTombstones)
+      .where(eq(userWordTombstones.userId, userId)),
+    db
+      .select()
+      .from(userReviewStatistics)
+      .where(eq(userReviewStatistics.userId, userId)),
+    db
+      .select()
+      .from(userReviewSessionResults)
+      .where(eq(userReviewSessionResults.userId, userId)),
+    db
+      .select()
+      .from(userDailyMissionAwards)
+      .where(eq(userDailyMissionAwards.userId, userId)),
+    db
+      .select()
+      .from(userMissionChests)
+      .where(eq(userMissionChests.userId, userId)),
+    db
+      .select()
+      .from(userCollectionCrafts)
+      .where(eq(userCollectionCrafts.userId, userId)),
   ]);
-  const tombstonesById = new Map(allTombstones.map((item) => [item.syncId, item.deletedAt]));
+  const tombstonesById = new Map(
+    allTombstones.map((item) => [item.syncId, item.deletedAt]),
+  );
   const wordsById = new Map(allWords.map((word) => [word.syncId, word]));
   const words = allWords
     .filter((word) => {
       const deletedAt = tombstonesById.get(word.syncId);
-      return !deletedAt || maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt) > deletedAt;
+      return (
+        !deletedAt ||
+        maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt) > deletedAt
+      );
     })
     .map(({ userId: _owner, ...word }) => word);
   const deletedWords = allTombstones
     .filter((item) => {
       const word = wordsById.get(item.syncId);
-      return !word || item.deletedAt >= maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt);
+      return (
+        !word ||
+        item.deletedAt >=
+          maxTimestamp(word.contentUpdatedAt, word.progressUpdatedAt)
+      );
     })
     .map(({ userId: _owner, ...deleted }) => deleted);
 
@@ -753,12 +916,21 @@ async function readUserSyncSnapshot(userId: string) {
     revision: revisionRows[0]?.revision ?? 0,
     words,
     deletedWords,
-    courseProgress: allProgress.map(({ userId: _owner, ...progress }) => progress),
-    courseSelections: allSelections.map(({ userId: _owner, ...selection }) => selection),
+    courseProgress: [],
+    courseSelections: [],
     reviewStats: allStats.map(({ userId: _owner, ...stat }) => stat),
-    reviewSessions: allSessions.map(({ userId: _owner, ...session }) => ({ ...session, day: session.day })),
-    missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({ ...award, day: award.day })),
-    missionChests: allChests.map(({ userId: _owner, ...chest }) => ({ ...chest, day: chest.day })),
+    reviewSessions: allSessions.map(({ userId: _owner, ...session }) => ({
+      ...session,
+      day: session.day,
+    })),
+    missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({
+      ...award,
+      day: award.day,
+    })),
+    missionChests: allChests.map(({ userId: _owner, ...chest }) => ({
+      ...chest,
+      day: chest.day,
+    })),
     collectionCrafts: allCrafts.map(({ userId: _owner, ...craft }) => craft),
   };
 }
@@ -782,7 +954,13 @@ function hasInvalidMissionData(
     createdAt: string | Date;
     updatedAt: string | Date;
   }>,
-  crafts: Array<{ craftId: string; rarity: string; craftIndex: number; artworkId: string; craftedAt: string | Date }>,
+  crafts: Array<{
+    craftId: string;
+    rarity: string;
+    craftIndex: number;
+    artworkId: string;
+    craftedAt: string | Date;
+  }>,
 ): boolean {
   return (
     sessions.some(
@@ -794,10 +972,16 @@ function hasInvalidMissionData(
         session.correctCount > session.reviewedCount,
     ) ||
     awards.some((award) => {
-      const match = /^(review|add-words|lesson|grade)-([1-3])$/.exec(award.missionId);
+      const match = /^(review|add-words|lesson|grade)-([1-3])$/.exec(
+        award.missionId,
+      );
       if (!match || !Number.isSafeInteger(award.stone)) return true;
       const level = Number(match[2]);
-      const ranges: Record<number, readonly [number, number]> = { 1: [1, 5], 2: [5, 10], 3: [10, 20] };
+      const ranges: Record<number, readonly [number, number]> = {
+        1: [1, 5],
+        2: [5, 10],
+        3: [10, 20],
+      };
       const [minimum, maximum] = ranges[level];
       return award.stone < minimum || award.stone > maximum;
     }) ||
@@ -850,16 +1034,23 @@ function isValidMissionChestRecord(chest: {
   ) {
     return false;
   }
-  let rarity = ruleSet === 1 ? 'common' : serverStartingChestRarity(chest.missionId);
+  let rarity =
+    ruleSet === 1 ? "common" : serverStartingChestRarity(chest.missionId);
   let opened = false;
   let resolvedAttempts = 0;
   for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
     if (opened) return false;
-    const outcome = serverChestUpgrade(chest.chestId, attempt, rarity, ruleSet, superUpgrade);
+    const outcome = serverChestUpgrade(
+      chest.chestId,
+      attempt,
+      rarity,
+      ruleSet,
+      superUpgrade,
+    );
     resolvedAttempts = attempt;
     if (outcome.success) {
       rarity = outcome.rarity;
-      opened = attempt === attemptLimit || rarity === 'legendary';
+      opened = attempt === attemptLimit || rarity === "legendary";
     } else {
       opened = true;
     }
@@ -870,9 +1061,16 @@ function isValidMissionChestRecord(chest: {
     opened !== chest.opened ||
     !Number.isFinite(Date.parse(toTimestamp(chest.createdAt))) ||
     !Number.isFinite(Date.parse(toTimestamp(chest.updatedAt)))
-  ) return false;
+  )
+    return false;
   if (!opened) return chest.finalStone === null;
-  const bonuses: Record<string, number> = { common: 0, uncommon: 2, rare: 5, epic: 10, legendary: 20 };
+  const bonuses: Record<string, number> = {
+    common: 0,
+    uncommon: 2,
+    rare: 5,
+    epic: 10,
+    legendary: 20,
+  };
   return chest.finalStone === chest.baseStone + bonuses[rarity];
 }
 
@@ -884,32 +1082,45 @@ function serverChestUpgrade(
   superUpgrade: boolean,
 ): { success: boolean; rarity: string } {
   if (ruleSet === 1) return serverLegacyChestUpgrade(chestId, attempt);
-  const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+  const rarities = ["common", "uncommon", "rare", "epic", "legendary"];
   const currentIndex = rarities.indexOf(currentRarity);
-  if (currentIndex < 0 || currentIndex >= rarities.length - 1) return { success: false, rarity: currentRarity };
+  if (currentIndex < 0 || currentIndex >= rarities.length - 1)
+    return { success: false, rarity: currentRarity };
   const nextRarity = rarities[currentIndex + 1]!;
-  if (attempt === 4 && superUpgrade) return { success: true, rarity: nextRarity };
+  if (attempt === 4 && superUpgrade)
+    return { success: true, rarity: nextRarity };
   const chances = [70, 50, 25, 10];
   const chance = chances[currentIndex];
   if (chance === undefined) return { success: false, rarity: currentRarity };
-  const roll = serverHash(`rarity-upgrade-v2:${chestId}:${attempt}:${currentRarity}`) % 100;
+  const roll =
+    serverHash(`rarity-upgrade-v2:${chestId}:${attempt}:${currentRarity}`) %
+    100;
   return roll < chance
     ? { success: true, rarity: nextRarity }
     : { success: false, rarity: currentRarity };
 }
 
-function serverLegacyChestUpgrade(chestId: string, attempt: number): { success: boolean; rarity: string } {
+function serverLegacyChestUpgrade(
+  chestId: string,
+  attempt: number,
+): { success: boolean; rarity: string } {
   const roll = serverHash(`${chestId}:${attempt}`) % 100;
-  if (attempt === 1) return roll < 55 ? { success: true, rarity: 'uncommon' } : { success: false, rarity: 'common' };
-  if (attempt === 2) return roll < 40 ? { success: true, rarity: 'rare' } : { success: false, rarity: 'uncommon' };
-  if (roll < 5) return { success: true, rarity: 'legendary' };
-  if (roll < 25) return { success: true, rarity: 'epic' };
-  return { success: false, rarity: 'rare' };
+  if (attempt === 1)
+    return roll < 55
+      ? { success: true, rarity: "uncommon" }
+      : { success: false, rarity: "common" };
+  if (attempt === 2)
+    return roll < 40
+      ? { success: true, rarity: "rare" }
+      : { success: false, rarity: "uncommon" };
+  if (roll < 5) return { success: true, rarity: "legendary" };
+  if (roll < 25) return { success: true, rarity: "epic" };
+  return { success: false, rarity: "rare" };
 }
 
 function serverStartingChestRarity(missionId: string): string {
-  const slot = missionId.slice(missionId.lastIndexOf('-') + 1);
-  return slot === '1' ? 'common' : slot === '2' ? 'uncommon' : 'rare';
+  const slot = missionId.slice(missionId.lastIndexOf("-") + 1);
+  return slot === "1" ? "common" : slot === "2" ? "uncommon" : "rare";
 }
 
 function serverHasSuperUpgrade(chestId: string): boolean {
@@ -922,11 +1133,11 @@ function serverHash(value: string): number {
     hash ^= value.charCodeAt(index);
     hash = Math.imul(hash, 16_777_619);
   }
-  return (hash >>> 0);
+  return hash >>> 0;
 }
 
 function isChestRarity(value: string): boolean {
-  return ['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(value);
+  return ["common", "uncommon", "rare", "epic", "legendary"].includes(value);
 }
 
 function hasDuplicates<T>(items: T[], keyFor: (item: T) => string): boolean {

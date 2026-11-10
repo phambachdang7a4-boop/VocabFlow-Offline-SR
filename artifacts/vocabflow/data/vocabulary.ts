@@ -1,9 +1,22 @@
-import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
-import * as Crypto from 'expo-crypto';
-import type { VocabularyWord, WordInput } from './types';
-import { openDatabaseSafely } from './sqlite-connection';
-import { applyReview, freezeProgress, initialProgress, localDay, rescheduleProgress, unfreezeProgress, type SrsProgress } from '../domain/srs';
-import { buildReviewStatistics, reviewMonthRange, reviewWeekRange, type ReviewStatistics } from '../domain/review-statistics';
+import { openDatabaseAsync, type SQLiteDatabase } from "expo-sqlite";
+import * as Crypto from "expo-crypto";
+import type { VocabularyWord, WordInput } from "./types";
+import { openDatabaseSafely } from "./sqlite-connection";
+import {
+  applyReview,
+  freezeProgress,
+  initialProgress,
+  localDay,
+  rescheduleProgress,
+  unfreezeProgress,
+  type SrsProgress,
+} from "../domain/srs";
+import {
+  buildReviewStatistics,
+  reviewMonthRange,
+  reviewWeekRange,
+  type ReviewStatistics,
+} from "../domain/review-statistics";
 import {
   evaluateDailyMissions,
   isDailyReviewGradeQualified,
@@ -12,7 +25,7 @@ import {
   type DailyMissionActivity,
   type DailyMissionAward,
   type DailyReviewGrade,
-} from '../domain/daily-missions';
+} from "../domain/daily-missions";
 import {
   chestStoneReward,
   hasSuperUpgradeChance,
@@ -22,26 +35,16 @@ import {
   startingRarityForMission,
   type ChestRarity,
   type MissionChest,
-} from '../domain/mission-chests';
-import { artworkForCraft, type CollectionCraft } from '../domain/collection-artworks';
-import { displayCourseMeaning } from './basic-course';
-import { ALL_COURSE_LESSONS, courseForLesson } from './course-catalog';
+} from "../domain/mission-chests";
+import {
+  artworkForCraft,
+  type CollectionCraft,
+} from "../domain/collection-artworks";
 
 let connection: Promise<SQLiteDatabase> | undefined;
 let databaseScope: string | null = null;
 const syncListeners = new Set<() => void>();
 const syncAppliedListeners = new Set<() => void>();
-const COURSE_EXAMPLES = new Map(ALL_COURSE_LESSONS.flatMap((lesson) => lesson.words.map((word) => [`${word.dictionaryEntryId}:${word.dictionarySenseId}`, word.example] as const)));
-
-export type CourseLessonStage = 'flashcard' | 'answer' | 'selection' | 'completed';
-
-export interface CourseLessonProgress {
-  lessonId: string;
-  currentIndex: number;
-  stage: CourseLessonStage;
-  completedAt: string | null;
-  updatedAt: string;
-}
 
 export interface DailyMissionOverview {
   day: string;
@@ -71,30 +74,40 @@ export interface ReviewSessionResultInput {
   completed: boolean;
 }
 
-function courseLesson(lessonId: string) {
-  return ALL_COURSE_LESSONS.find((lesson) => lesson.id === lessonId);
-}
-
 export function normalizeTerm(value: string): string {
-  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
+  return value
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("en");
 }
 
-function syncIdForWord(term: string, meaning: string, entryId: number | null, senseId: number | null): string {
+function syncIdForWord(
+  term: string,
+  meaning: string,
+  entryId: number | null,
+  senseId: number | null,
+): string {
   if (entryId !== null && senseId !== null) return `dict:${entryId}:${senseId}`;
   return `manual:${encodeURIComponent(normalizeTerm(term))}:${encodeURIComponent(normalizeTerm(meaning))}`;
 }
 
 function databaseFilename(): string {
-  if (!databaseScope) return 'vocabflow.db';
-  const scope = encodeURIComponent(databaseScope).replace(/%/g, '_');
+  if (!databaseScope) return "vocabflow.db";
+  const scope = encodeURIComponent(databaseScope).replace(/%/g, "_");
   return `vocabflow-account-${scope}.db`;
 }
 
 function getDeviceId(db: SQLiteDatabase): Promise<string> {
-  return db.getFirstAsync<{ value: string }>("SELECT value FROM sync_state WHERE key = 'device_id'").then((row) => {
-    if (!row?.value) throw new Error('Không thể khởi tạo mã thiết bị để đồng bộ.');
-    return row.value;
-  });
+  return db
+    .getFirstAsync<{ value: string }>(
+      "SELECT value FROM sync_state WHERE key = 'device_id'",
+    )
+    .then((row) => {
+      if (!row?.value)
+        throw new Error("Không thể khởi tạo mã thiết bị để đồng bộ.");
+      return row.value;
+    });
 }
 
 async function markSyncDirty(db: SQLiteDatabase): Promise<void> {
@@ -116,8 +129,12 @@ function notifySyncListeners(): void {
  * headword constraint without cascading away anyone's progress. */
 async function migrateIndependentSenses(db: SQLiteDatabase): Promise<void> {
   await db.withTransactionAsync(async () => {
-    const sequence = await db.getFirstAsync<{ seq: number }>("SELECT seq FROM sqlite_sequence WHERE name = 'words'");
-    const meanings = await db.getAllAsync<{ id: number; meaning: string }>('SELECT id, meaning FROM words');
+    const sequence = await db.getFirstAsync<{ seq: number }>(
+      "SELECT seq FROM sqlite_sequence WHERE name = 'words'",
+    );
+    const meanings = await db.getAllAsync<{ id: number; meaning: string }>(
+      "SELECT id, meaning FROM words",
+    );
     await db.execAsync(`
       CREATE TABLE words_next (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,11 +167,21 @@ async function migrateIndependentSenses(db: SQLiteDatabase): Promise<void> {
       ALTER TABLE word_progress_next RENAME TO word_progress;
     `);
     for (const word of meanings) {
-      await db.runAsync('UPDATE words SET normalized_meaning = ? WHERE id = ?', normalizeTerm(word.meaning), word.id);
+      await db.runAsync(
+        "UPDATE words SET normalized_meaning = ? WHERE id = ?",
+        normalizeTerm(word.meaning),
+        word.id,
+      );
     }
     if (sequence) {
-      await db.runAsync("INSERT INTO sqlite_sequence(name, seq) SELECT 'words', ? WHERE NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'words')", sequence.seq);
-      await db.runAsync("UPDATE sqlite_sequence SET seq = MAX(seq, ?) WHERE name = 'words'", sequence.seq);
+      await db.runAsync(
+        "INSERT INTO sqlite_sequence(name, seq) SELECT 'words', ? WHERE NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'words')",
+        sequence.seq,
+      );
+      await db.runAsync(
+        "UPDATE sqlite_sequence SET seq = MAX(seq, ?) WHERE name = 'words'",
+        sequence.seq,
+      );
     }
     await db.execAsync(`
       CREATE UNIQUE INDEX idx_words_manual_sense ON words(normalized_term, normalized_meaning)
@@ -165,18 +192,27 @@ async function migrateIndependentSenses(db: SQLiteDatabase): Promise<void> {
       CREATE INDEX idx_progress_due ON word_progress(completed, next_review_on);
       PRAGMA user_version = 5;
     `);
-    const invalid = await db.getFirstAsync('PRAGMA foreign_key_check');
-    if (invalid) throw new Error('Không thể chuyển dữ liệu an toàn. Dữ liệu cũ được giữ nguyên.');
+    const invalid = await db.getFirstAsync("PRAGMA foreign_key_check");
+    if (invalid)
+      throw new Error(
+        "Không thể chuyển dữ liệu an toàn. Dữ liệu cũ được giữ nguyên.",
+      );
   });
 }
 
 async function initialize(): Promise<SQLiteDatabase> {
-  const db = await openDatabaseSafely(() => openDatabaseAsync(databaseFilename()));
+  const db = await openDatabaseSafely(() =>
+    openDatabaseAsync(databaseFilename()),
+  );
   try {
-    await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
-    const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    if ((version?.user_version ?? 0) > 13) {
-      throw new Error('Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.');
+    await db.execAsync("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;");
+    const version = await db.getFirstAsync<{ user_version: number }>(
+      "PRAGMA user_version",
+    );
+    if ((version?.user_version ?? 0) > 14) {
+      throw new Error(
+        "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
+      );
     }
     if ((version?.user_version ?? 0) < 1) {
       await db.withTransactionAsync(async () => {
@@ -213,17 +249,26 @@ async function initialize(): Promise<SQLiteDatabase> {
         const existing = await db.getAllAsync<{
           id: number;
           createdAt: string;
-        }>('SELECT id, created_at AS createdAt FROM words');
+        }>("SELECT id, created_at AS createdAt FROM words");
         for (const word of existing) {
           const progress = initialProgress(localDay(new Date(word.createdAt)));
-          await db.runAsync('UPDATE word_progress SET learned_on = ?, next_review_on = ? WHERE word_id = ?', progress.learnedOn, progress.nextReviewOn, word.id);
+          await db.runAsync(
+            "UPDATE word_progress SET learned_on = ?, next_review_on = ? WHERE word_id = ?",
+            progress.learnedOn,
+            progress.nextReviewOn,
+            word.id,
+          );
         }
-        await db.execAsync('CREATE INDEX idx_progress_due ON word_progress(completed, next_review_on); PRAGMA user_version = 2;');
+        await db.execAsync(
+          "CREATE INDEX idx_progress_due ON word_progress(completed, next_review_on); PRAGMA user_version = 2;",
+        );
       });
     }
     if ((version?.user_version ?? 0) < 3) {
       await db.withTransactionAsync(async () => {
-        const rows = await db.getAllAsync<Omit<SrsProgress, 'completed'> & { wordId: number; completed: number }>(
+        const rows = await db.getAllAsync<
+          Omit<SrsProgress, "completed"> & { wordId: number; completed: number }
+        >(
           `SELECT word_id AS wordId, level, learned_on AS learnedOn, next_review_on AS nextReviewOn, 0 AS frozen,
              completed, review_count AS reviewCount, last_reviewed_on AS lastReviewedOn FROM word_progress`,
         );
@@ -232,9 +277,13 @@ async function initialize(): Promise<SQLiteDatabase> {
             ...row,
             completed: row.completed === 1,
           });
-          await db.runAsync('UPDATE word_progress SET next_review_on = ? WHERE word_id = ?', progress.nextReviewOn, row.wordId);
+          await db.runAsync(
+            "UPDATE word_progress SET next_review_on = ? WHERE word_id = ?",
+            progress.nextReviewOn,
+            row.wordId,
+          );
         }
-        await db.execAsync('PRAGMA user_version = 3;');
+        await db.execAsync("PRAGMA user_version = 3;");
       });
     }
     if ((version?.user_version ?? 0) < 4) {
@@ -283,26 +332,7 @@ async function initialize(): Promise<SQLiteDatabase> {
       });
     }
     if ((version?.user_version ?? 0) < 8) {
-      await db.withTransactionAsync(async () => {
-        const savedCourseWords = await db.getAllAsync<{
-          id: number;
-          dictionaryEntryId: number;
-          dictionarySenseId: number;
-        }>(`
-          SELECT id, dictionary_entry_id AS dictionaryEntryId,
-            dictionary_sense_id AS dictionarySenseId
-          FROM words
-          WHERE TRIM(example) = '' AND note LIKE '%Khóa học:%'
-            AND dictionary_entry_id IS NOT NULL AND dictionary_sense_id IS NOT NULL
-        `);
-        for (const word of savedCourseWords) {
-          const example = COURSE_EXAMPLES.get(`${word.dictionaryEntryId}:${word.dictionarySenseId}`);
-          if (example?.trim()) {
-            await db.runAsync("UPDATE words SET example = ? WHERE id = ? AND TRIM(example) = ''", example, word.id);
-          }
-        }
-        await db.execAsync('PRAGMA user_version = 8;');
-      });
+      await db.execAsync("PRAGMA user_version = 8;");
     }
     if ((version?.user_version ?? 0) < 9) {
       await db.withTransactionAsync(async () => {
@@ -329,9 +359,16 @@ async function initialize(): Promise<SQLiteDatabase> {
           );
         `);
         const deviceId = Crypto.randomUUID();
-        await db.runAsync("INSERT OR REPLACE INTO sync_state (key, value) VALUES ('device_id', ?)", deviceId);
-        await db.runAsync("INSERT OR IGNORE INTO sync_state (key, value) VALUES ('generation', '0')");
-        await db.runAsync("INSERT OR IGNORE INTO sync_state (key, value) VALUES ('pending', '0')");
+        await db.runAsync(
+          "INSERT OR REPLACE INTO sync_state (key, value) VALUES ('device_id', ?)",
+          deviceId,
+        );
+        await db.runAsync(
+          "INSERT OR IGNORE INTO sync_state (key, value) VALUES ('generation', '0')",
+        );
+        await db.runAsync(
+          "INSERT OR IGNORE INTO sync_state (key, value) VALUES ('pending', '0')",
+        );
         const words = await db.getAllAsync<{
           id: number;
           term: string;
@@ -346,10 +383,21 @@ async function initialize(): Promise<SQLiteDatabase> {
           FROM words
         `);
         for (const word of words) {
-          await db.runAsync('UPDATE words SET sync_id = ? WHERE id = ?', syncIdForWord(word.term, word.meaning, word.entryId, word.senseId), word.id);
-          await db.runAsync('UPDATE word_progress SET sync_updated_at = ? WHERE word_id = ?', word.updatedAt || word.createdAt || new Date().toISOString(), word.id);
+          await db.runAsync(
+            "UPDATE words SET sync_id = ? WHERE id = ?",
+            syncIdForWord(word.term, word.meaning, word.entryId, word.senseId),
+            word.id,
+          );
+          await db.runAsync(
+            "UPDATE word_progress SET sync_updated_at = ? WHERE word_id = ?",
+            word.updatedAt || word.createdAt || new Date().toISOString(),
+            word.id,
+          );
         }
-        await db.runAsync("UPDATE course_word_selection SET updated_at = ? WHERE updated_at = ''", new Date().toISOString());
+        await db.runAsync(
+          "UPDATE course_word_selection SET updated_at = ? WHERE updated_at = ''",
+          new Date().toISOString(),
+        );
         const legacyStats = await db.getAllAsync<{
           day: string;
           reviewed: number;
@@ -490,6 +538,25 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 14) {
+      await db.withTransactionAsync(async () => {
+        const now = new Date().toISOString();
+        await db.runAsync(
+          `INSERT INTO sync_word_tombstones (sync_id, deleted_at)
+           SELECT sync_id, ? FROM words WHERE instr(note, 'Khóa học:') > 0
+           ON CONFLICT(sync_id) DO UPDATE SET
+             deleted_at = MAX(sync_word_tombstones.deleted_at, excluded.deleted_at)`,
+          now,
+        );
+        await db.execAsync(`
+          DELETE FROM words WHERE instr(note, 'Khóa học:') > 0;
+          DELETE FROM course_lesson_progress;
+          DELETE FROM course_word_selection;
+          PRAGMA user_version = 14;
+        `);
+        await markSyncDirty(db);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -510,53 +577,54 @@ function database(): Promise<SQLiteDatabase> {
 function localDayBounds(day: string): [string, string] {
   const start = new Date(`${day}T00:00:00`);
   if (!Number.isFinite(start.getTime()) || localDay(start) !== day) {
-    throw new Error('Ngày nhiệm vụ không hợp lệ.');
+    throw new Error("Ngày nhiệm vụ không hợp lệ.");
   }
   const end = new Date(start);
   end.setDate(end.getDate() + 1);
   return [start.toISOString(), end.toISOString()];
 }
 
-async function readDailyMissionActivity(db: SQLiteDatabase, day: string): Promise<DailyMissionActivity> {
+async function readDailyMissionActivity(
+  db: SQLiteDatabase,
+  day: string,
+): Promise<DailyMissionActivity> {
   const [dayStart, nextDayStart] = localDayBounds(day);
-  const [reviewed, added, lessons, sessions] = await Promise.all([
+  const [reviewed, added, sessions] = await Promise.all([
     db.getFirstAsync<{ count: number | null }>(
-      'SELECT SUM(reviewed_count) AS count FROM device_review_day_statistics WHERE review_day = ?',
+      "SELECT SUM(reviewed_count) AS count FROM device_review_day_statistics WHERE review_day = ?",
       day,
     ),
     db.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) AS count FROM words WHERE created_at >= ? AND created_at < ?',
-      dayStart,
-      nextDayStart,
-    ),
-    db.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) AS count FROM course_lesson_progress WHERE stage = ? AND completed_at >= ? AND completed_at < ?',
-      'completed',
+      "SELECT COUNT(*) AS count FROM words WHERE created_at >= ? AND created_at < ?",
       dayStart,
       nextDayStart,
     ),
     db.getAllAsync<{ grade: DailyReviewGrade; reviewedCount: number }>(
-      'SELECT grade, reviewed_count AS reviewedCount FROM review_session_results WHERE review_day = ?',
+      "SELECT grade, reviewed_count AS reviewedCount FROM review_session_results WHERE review_day = ?",
       day,
     ),
   ]);
   return {
     reviewedCount: reviewed?.count ?? 0,
     addedWordCount: added?.count ?? 0,
-    completedLessonCount: lessons?.count ?? 0,
-    qualifiedGradeCount: sessions.filter((session) => isDailyReviewGradeQualified(session.grade, session.reviewedCount)).length,
+    qualifiedGradeCount: sessions.filter((session) =>
+      isDailyReviewGradeQualified(session.grade, session.reviewedCount),
+    ).length,
   };
 }
 
-async function grantDailyMissionChests(db: SQLiteDatabase, day: string): Promise<boolean> {
+async function grantDailyMissionChests(
+  db: SQLiteDatabase,
+  day: string,
+): Promise<boolean> {
   const [activity, awards, chests] = await Promise.all([
     readDailyMissionActivity(db, day),
     db.getAllAsync<DailyMissionAward>(
-      'SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?',
+      "SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?",
       day,
     ),
     db.getAllAsync<{ missionId: string; baseStone: number; createdAt: string }>(
-      'SELECT mission_id AS missionId, base_stone AS baseStone, created_at AS createdAt FROM mission_chests WHERE mission_day = ?',
+      "SELECT mission_id AS missionId, base_stone AS baseStone, created_at AS createdAt FROM mission_chests WHERE mission_day = ?",
       day,
     ),
   ]);
@@ -564,7 +632,12 @@ async function grantDailyMissionChests(db: SQLiteDatabase, day: string): Promise
   const now = new Date().toISOString();
   const missionRewards = [
     ...awards,
-    ...chests.map((chest) => ({ missionDay: day, missionId: chest.missionId, stone: chest.baseStone, completedAt: chest.createdAt })),
+    ...chests.map((chest) => ({
+      missionDay: day,
+      missionId: chest.missionId,
+      stone: chest.baseStone,
+      completedAt: chest.createdAt,
+    })),
   ];
   for (const mission of evaluateDailyMissions(day, activity, missionRewards)) {
     if (!missionAwardIsEarned(mission)) continue;
@@ -587,7 +660,9 @@ async function grantDailyMissionChests(db: SQLiteDatabase, day: string): Promise
   return changed;
 }
 
-export function getDailyMissionOverview(day = localDay(new Date())): Promise<DailyMissionOverview> {
+export function getDailyMissionOverview(
+  day = localDay(new Date()),
+): Promise<DailyMissionOverview> {
   return serialize(async () => {
     const db = await database();
     let chestsChanged = false;
@@ -595,10 +670,17 @@ export function getDailyMissionOverview(day = localDay(new Date())): Promise<Dai
     await db.withTransactionAsync(async () => {
       chestsChanged = await grantDailyMissionChests(db, day);
       if (chestsChanged) await markSyncDirty(db);
-      const [activity, legacyAwards, chestAwards, legacyBalance, chestBalance, chests] = await Promise.all([
+      const [
+        activity,
+        legacyAwards,
+        chestAwards,
+        legacyBalance,
+        chestBalance,
+        chests,
+      ] = await Promise.all([
         readDailyMissionActivity(db, day),
         db.getAllAsync<DailyMissionAward>(
-          'SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?',
+          "SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?",
           day,
         ),
         db.getAllAsync<DailyMissionAward>(
@@ -606,8 +688,12 @@ export function getDailyMissionOverview(day = localDay(new Date())): Promise<Dai
             created_at AS completedAt FROM mission_chests WHERE mission_day = ?`,
           day,
         ),
-        db.getFirstAsync<{ total: number | null }>('SELECT SUM(stone) AS total FROM daily_mission_awards'),
-        db.getFirstAsync<{ total: number | null }>('SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1'),
+        db.getFirstAsync<{ total: number | null }>(
+          "SELECT SUM(stone) AS total FROM daily_mission_awards",
+        ),
+        db.getFirstAsync<{ total: number | null }>(
+          "SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1",
+        ),
         readUnopenedMissionChests(db),
       ]);
       const missionRewards = [...legacyAwards, ...chestAwards];
@@ -623,8 +709,16 @@ export function getDailyMissionOverview(day = localDay(new Date())): Promise<Dai
   });
 }
 
-async function readUnopenedMissionChests(db: SQLiteDatabase): Promise<MissionChest[]> {
-  const rows = await db.getAllAsync<Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number }>(
+async function readUnopenedMissionChests(
+  db: SQLiteDatabase,
+): Promise<MissionChest[]> {
+  const rows = await db.getAllAsync<
+    Omit<MissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+      opened: number;
+      superUpgrade: number;
+      ruleSet: number;
+    }
+  >(
     `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
       base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
       rule_set AS ruleSet, super_upgrade AS superUpgrade,
@@ -635,7 +729,11 @@ async function readUnopenedMissionChests(db: SQLiteDatabase): Promise<MissionChe
 }
 
 function missionChestFromRow(
-  row: Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number },
+  row: Omit<MissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+    opened: number;
+    superUpgrade: number;
+    ruleSet: number;
+  },
 ): MissionChest {
   return {
     ...row,
@@ -648,7 +746,13 @@ function missionChestFromRow(
 export function getMissionChest(chestId: string): Promise<MissionChest | null> {
   return serialize(async () => {
     const db = await database();
-    const row = await db.getFirstAsync<Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number }>(
+    const row = await db.getFirstAsync<
+      Omit<MissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+        opened: number;
+        superUpgrade: number;
+        ruleSet: number;
+      }
+    >(
       `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
         base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
         rule_set AS ruleSet, super_upgrade AS superUpgrade,
@@ -660,12 +764,20 @@ export function getMissionChest(chestId: string): Promise<MissionChest | null> {
   });
 }
 
-export function attemptMissionChestUpgrade(chestId: string): Promise<MissionChestUpgradeResult> {
+export function attemptMissionChestUpgrade(
+  chestId: string,
+): Promise<MissionChestUpgradeResult> {
   return serialize(async () => {
     const db = await database();
     let result: MissionChestUpgradeResult | undefined;
     await db.withTransactionAsync(async () => {
-      const row = await db.getFirstAsync<Omit<MissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & { opened: number; superUpgrade: number; ruleSet: number }>(
+      const row = await db.getFirstAsync<
+        Omit<MissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+          opened: number;
+          superUpgrade: number;
+          ruleSet: number;
+        }
+      >(
         `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
           base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
           rule_set AS ruleSet, super_upgrade AS superUpgrade,
@@ -673,18 +785,27 @@ export function attemptMissionChestUpgrade(chestId: string): Promise<MissionChes
          FROM mission_chests WHERE chest_id = ?`,
         chestId,
       );
-      if (!row) throw new Error('Không tìm thấy rương này.');
+      if (!row) throw new Error("Không tìm thấy rương này.");
       const current = missionChestFromRow(row);
-      if (current.opened) throw new Error('Rương này đã được mở.');
+      if (current.opened) throw new Error("Rương này đã được mở.");
       const nextAttempt = current.upgradeAttempts + 1;
       const ruleSet = current.ruleSet ?? 1;
       const superUpgrade = current.superUpgrade ?? false;
-      const upgrade = resolveChestUpgrade(chestId, nextAttempt, current.rarity, ruleSet, superUpgrade);
+      const upgrade = resolveChestUpgrade(
+        chestId,
+        nextAttempt,
+        current.rarity,
+        ruleSet,
+        superUpgrade,
+      );
       const rarity = upgrade.success ? upgrade.rarity : current.rarity;
-      const finished = !upgrade.success ||
+      const finished =
+        !upgrade.success ||
         nextAttempt === maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
-        rarity === 'legendary';
-      const awardedStone = finished ? chestStoneReward(current.baseStone, rarity) : null;
+        rarity === "legendary";
+      const awardedStone = finished
+        ? chestStoneReward(current.baseStone, rarity)
+        : null;
       const next: MissionChest = {
         ...current,
         upgradeAttempts: nextAttempt,
@@ -693,7 +814,8 @@ export function attemptMissionChestUpgrade(chestId: string): Promise<MissionChes
         finalStone: awardedStone,
         updatedAt: new Date().toISOString(),
       };
-      if (!isValidMissionChest(next)) throw new Error('Trạng thái rương không hợp lệ.');
+      if (!isValidMissionChest(next))
+        throw new Error("Trạng thái rương không hợp lệ.");
       const update = await db.runAsync(
         `UPDATE mission_chests SET upgrade_attempts = ?, rarity = ?, opened = ?,
           final_stone = ?, updated_at = ? WHERE chest_id = ? AND opened = 0`,
@@ -704,9 +826,15 @@ export function attemptMissionChestUpgrade(chestId: string): Promise<MissionChes
         next.updatedAt,
         chestId,
       );
-      if (update.changes !== 1) throw new Error('Rương đã được cập nhật trên thiết bị.');
+      if (update.changes !== 1)
+        throw new Error("Rương đã được cập nhật trên thiết bị.");
       await markSyncDirty(db);
-      result = { chest: next, succeeded: upgrade.success, finished, awardedStone };
+      result = {
+        chest: next,
+        succeeded: upgrade.success,
+        finished,
+        awardedStone,
+      };
     });
     notifySyncListeners();
     return result!;
@@ -718,7 +846,7 @@ export function getMissionCollectionOverview(): Promise<MissionCollectionOvervie
     const db = await database();
     const [earnedRows, crafts] = await Promise.all([
       db.getAllAsync<{ rarity: ChestRarity; count: number }>(
-        'SELECT rarity, COUNT(*) AS count FROM mission_chests WHERE opened = 1 GROUP BY rarity',
+        "SELECT rarity, COUNT(*) AS count FROM mission_chests WHERE opened = 1 GROUP BY rarity",
       ),
       db.getAllAsync<CollectionCraft>(
         `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
@@ -733,34 +861,46 @@ export function getMissionCollectionOverview(): Promise<MissionCollectionOvervie
       epic: 0,
       legendary: 0,
     };
-    const earnedByRarity = new Map(earnedRows.map((row) => [row.rarity, row.count]));
+    const earnedByRarity = new Map(
+      earnedRows.map((row) => [row.rarity, row.count]),
+    );
     const craftedByRarity = new Map<ChestRarity, number>();
-    for (const craft of crafts) craftedByRarity.set(craft.rarity, (craftedByRarity.get(craft.rarity) ?? 0) + 1);
+    for (const craft of crafts)
+      craftedByRarity.set(
+        craft.rarity,
+        (craftedByRarity.get(craft.rarity) ?? 0) + 1,
+      );
     for (const rarity of Object.keys(fragments) as ChestRarity[]) {
-      fragments[rarity] = Math.max(0, (earnedByRarity.get(rarity) ?? 0) - (craftedByRarity.get(rarity) ?? 0) * 20);
+      fragments[rarity] = Math.max(
+        0,
+        (earnedByRarity.get(rarity) ?? 0) -
+          (craftedByRarity.get(rarity) ?? 0) * 20,
+      );
     }
     return { fragments, crafts };
   });
 }
 
-export function craftCollectionArtwork(rarity: ChestRarity): Promise<CollectionCraft> {
+export function craftCollectionArtwork(
+  rarity: ChestRarity,
+): Promise<CollectionCraft> {
   return serialize(async () => {
     const db = await database();
     let craft: CollectionCraft | undefined;
     await db.withTransactionAsync(async () => {
       const [earned, previous] = await Promise.all([
         db.getFirstAsync<{ count: number }>(
-          'SELECT COUNT(*) AS count FROM mission_chests WHERE opened = 1 AND rarity = ?',
+          "SELECT COUNT(*) AS count FROM mission_chests WHERE opened = 1 AND rarity = ?",
           rarity,
         ),
         db.getFirstAsync<{ count: number; nextIndex: number | null }>(
-          'SELECT COUNT(*) AS count, MAX(craft_index) + 1 AS nextIndex FROM collection_crafts WHERE rarity = ?',
+          "SELECT COUNT(*) AS count, MAX(craft_index) + 1 AS nextIndex FROM collection_crafts WHERE rarity = ?",
           rarity,
         ),
       ]);
       const craftIndex = previous?.nextIndex ?? 1;
       if ((earned?.count ?? 0) - (previous?.count ?? 0) * 20 < 20) {
-        throw new Error('Cần đủ 20 mảnh cùng phẩm chất để ghép tranh.');
+        throw new Error("Cần đủ 20 mảnh cùng phẩm chất để ghép tranh.");
       }
       const artwork = artworkForCraft(rarity, craftIndex);
       const next: CollectionCraft = {
@@ -785,7 +925,7 @@ export function craftCollectionArtwork(rarity: ChestRarity): Promise<CollectionC
          FROM collection_crafts WHERE craft_id = ?`,
         next.craftId,
       );
-      if (!savedCraft) throw new Error('Không thể lưu bức tranh đã ghép.');
+      if (!savedCraft) throw new Error("Không thể lưu bức tranh đã ghép.");
       craft = savedCraft;
       await markSyncDirty(db);
     });
@@ -803,7 +943,9 @@ function serialize<T>(operation: () => Promise<T>): Promise<T> {
 }
 
 /** Internal database bridge for the isolated, serialized sync repository. */
-export function withSyncDatabase<T>(operation: (db: SQLiteDatabase) => Promise<T>): Promise<T> {
+export function withSyncDatabase<T>(
+  operation: (db: SQLiteDatabase) => Promise<T>,
+): Promise<T> {
   return serialize(async () => operation(await database()));
 }
 
@@ -847,11 +989,13 @@ export function getSyncQueueState(): Promise<{
   pending: boolean;
 }> {
   return withSyncDatabase(async (db) => {
-    const rows = await db.getAllAsync<{ key: string; value: string }>("SELECT key, value FROM sync_state WHERE key IN ('generation', 'pending')");
+    const rows = await db.getAllAsync<{ key: string; value: string }>(
+      "SELECT key, value FROM sync_state WHERE key IN ('generation', 'pending')",
+    );
     const values = new Map(rows.map((row) => [row.key, row.value]));
     return {
-      generation: Number(values.get('generation') ?? 0),
-      pending: values.get('pending') === '1',
+      generation: Number(values.get("generation") ?? 0),
+      pending: values.get("pending") === "1",
     };
   });
 }
@@ -865,9 +1009,13 @@ export function markSyncPending(): Promise<void> {
 
 export function markSyncClean(generation: number): Promise<boolean> {
   return withSyncDatabase(async (db) => {
-    const rows = await db.getAllAsync<{ key: string; value: string }>("SELECT key, value FROM sync_state WHERE key IN ('generation', 'pending')");
+    const rows = await db.getAllAsync<{ key: string; value: string }>(
+      "SELECT key, value FROM sync_state WHERE key IN ('generation', 'pending')",
+    );
     const state = {
-      generation: Number(new Map(rows.map((row) => [row.key, row.value])).get('generation') ?? 0),
+      generation: Number(
+        new Map(rows.map((row) => [row.key, row.value])).get("generation") ?? 0,
+      ),
     };
     if (state.generation !== generation) return false;
     await db.runAsync(`
@@ -882,7 +1030,7 @@ export function listWords(): Promise<VocabularyWord[]> {
   return serialize(async () => {
     const db = await database();
     const rows = await db.getAllAsync<
-      Omit<VocabularyWord, 'completed' | 'frozen'> & {
+      Omit<VocabularyWord, "completed" | "frozen"> & {
         completed: number;
         frozen: number;
       }
@@ -903,7 +1051,10 @@ export function listWords(): Promise<VocabularyWord[]> {
   });
 }
 
-export function getReviewStatistics(today = localDay(new Date()), selectedMonth = `${today.slice(0, 7)}-01`): Promise<ReviewStatistics> {
+export function getReviewStatistics(
+  today = localDay(new Date()),
+  selectedMonth = `${today.slice(0, 7)}-01`,
+): Promise<ReviewStatistics> {
   return serialize(async () => {
     const { weekStart, weekEnd } = reviewWeekRange(today);
     const { monthStart, monthEnd } = reviewMonthRange(selectedMonth);
@@ -950,15 +1101,33 @@ export function getReviewStatistics(today = localDay(new Date()), selectedMonth 
         monthEnd,
       ),
     ]);
-    return buildReviewStatistics(today, totals ?? { totalSessions: 0, totalReviewed: 0, totalCorrect: 0 }, weeklyRows, monthlyRows, selectedMonth);
+    return buildReviewStatistics(
+      today,
+      totals ?? { totalSessions: 0, totalReviewed: 0, totalCorrect: 0 },
+      weeklyRows,
+      monthlyRows,
+      selectedMonth,
+    );
   });
 }
 
-export function recordReviewSessionResult(input: ReviewSessionResultInput): Promise<void> {
+export function recordReviewSessionResult(
+  input: ReviewSessionResultInput,
+): Promise<void> {
   return serialize(async () => {
-    const grades: DailyReviewGrade[] = ['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C'];
+    const grades: DailyReviewGrade[] = [
+      "S+",
+      "S",
+      "A+",
+      "A",
+      "A-",
+      "B+",
+      "B",
+      "B-",
+      "C",
+    ];
     if (
-      typeof input.sessionId !== 'string' ||
+      typeof input.sessionId !== "string" ||
       !input.sessionId.trim() ||
       input.sessionId.length > 120 ||
       !Number.isFinite(input.startedAt) ||
@@ -968,9 +1137,9 @@ export function recordReviewSessionResult(input: ReviewSessionResultInput): Prom
       input.correctCount < 0 ||
       input.correctCount > input.reviewedCount ||
       !grades.includes(input.grade) ||
-      typeof input.completed !== 'boolean'
+      typeof input.completed !== "boolean"
     ) {
-      throw new Error('Kết quả phiên ôn không hợp lệ.');
+      throw new Error("Kết quả phiên ôn không hợp lệ.");
     }
     const db = await database();
     const day = localDay(new Date(input.startedAt));
@@ -1037,234 +1206,31 @@ export function recordReviewSessionStart(): Promise<void> {
   });
 }
 
-export function listCourseProgress(): Promise<CourseLessonProgress[]> {
-  return serialize(async () => {
-    const db = await database();
-    return db.getAllAsync<CourseLessonProgress>(`
-      SELECT lesson_id AS lessonId, current_index AS currentIndex, stage,
-        completed_at AS completedAt, updated_at AS updatedAt
-      FROM course_lesson_progress
-    `);
-  });
-}
-
-export function getCourseProgress(lessonId: string): Promise<CourseLessonProgress> {
-  return serialize(async () => {
-    const lesson = courseLesson(lessonId);
-    if (!lesson) throw new Error('Không tìm thấy bài học.');
-    const catalog = courseForLesson(lessonId);
-    if (!catalog) throw new Error('Không tìm thấy nguồn khóa học.');
-    const db = await database();
-    const saved = await db.getFirstAsync<CourseLessonProgress>(
-      `
-      SELECT lesson_id AS lessonId, current_index AS currentIndex, stage,
-        completed_at AS completedAt, updated_at AS updatedAt
-      FROM course_lesson_progress WHERE lesson_id = ?
-    `,
-      lessonId,
-    );
-    return (
-      saved ?? {
-        lessonId,
-        currentIndex: 0,
-        stage: 'flashcard',
-        completedAt: null,
-        updatedAt: '',
-      }
-    );
-  });
-}
-
-export function getCourseSelections(lessonId: string): Promise<string[]> {
-  return serialize(async () => {
-    const lesson = courseLesson(lessonId);
-    if (!lesson) throw new Error('Không tìm thấy bài học.');
-    const db = await database();
-    const rows = await db.getAllAsync<{ wordId: string }>('SELECT word_id AS wordId FROM course_word_selection WHERE lesson_id = ? AND selected = 1', lessonId);
-    const availableIds = new Set(lesson.words.map((word) => word.id));
-    return rows.map((row) => row.wordId).filter((id) => availableIds.has(id));
-  });
-}
-
-export function saveCourseProgress(lessonId: string, currentIndex: number, stage: Exclude<CourseLessonStage, 'completed'>): Promise<void> {
-  return serialize(async () => {
-    const lesson = courseLesson(lessonId);
-    if (!lesson) throw new Error('Không tìm thấy bài học.');
-    if (!Number.isSafeInteger(currentIndex) || currentIndex < 0 || currentIndex >= lesson.words.length) {
-      throw new Error('Vị trí trong bài học không hợp lệ.');
-    }
-    const db = await database();
-    const now = new Date().toISOString();
-    await db.withTransactionAsync(async () => {
-      const existing = await db.getFirstAsync<{ completedAt: string | null }>('SELECT completed_at AS completedAt FROM course_lesson_progress WHERE lesson_id = ?', lessonId);
-      if (existing?.completedAt) throw new Error('Bài học này đã hoàn thành.');
-      await db.runAsync(
-        `
-        INSERT INTO course_lesson_progress (lesson_id, current_index, stage, updated_at)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT(lesson_id) DO UPDATE SET
-          current_index = excluded.current_index, stage = excluded.stage, updated_at = excluded.updated_at
-      `,
-        lessonId,
-        currentIndex,
-        stage,
-        now,
-      );
-      await markSyncDirty(db);
-    });
-    notifySyncListeners();
-  });
-}
-
-export function saveCourseSelection(lessonId: string, wordId: string, selected: boolean): Promise<void> {
-  return serialize(async () => {
-    const lesson = courseLesson(lessonId);
-    if (!lesson || !lesson.words.some((word) => word.id === wordId) || typeof selected !== 'boolean') {
-      throw new Error('Lựa chọn từ trong bài học không hợp lệ.');
-    }
-    const db = await database();
-    const progress = await db.getFirstAsync<{ completedAt: string | null }>('SELECT completed_at AS completedAt FROM course_lesson_progress WHERE lesson_id = ?', lessonId);
-    if (progress?.completedAt) throw new Error('Bài học này đã hoàn thành.');
-    const now = new Date().toISOString();
-    await db.withTransactionAsync(async () => {
-      await db.runAsync(
-        `
-        INSERT INTO course_word_selection (lesson_id, word_id, selected, updated_at) VALUES (?, ?, ?, ?)
-        ON CONFLICT(lesson_id, word_id) DO UPDATE SET
-          selected = excluded.selected, updated_at = excluded.updated_at
-      `,
-        lessonId,
-        wordId,
-        selected ? 1 : 0,
-        now,
-      );
-      await markSyncDirty(db);
-    });
-    notifySyncListeners();
-  });
-}
-
-export function finishCourseLesson(lessonId: string, selectedWordIds: string[]): Promise<number> {
-  return serialize(async () => {
-    const lesson = courseLesson(lessonId);
-    if (!lesson) throw new Error('Không tìm thấy bài học.');
-    const catalog = courseForLesson(lessonId);
-    if (!catalog) throw new Error('Không tìm thấy nguồn khóa học.');
-    if (!Array.isArray(selectedWordIds) || selectedWordIds.some((id) => typeof id !== 'string')) {
-      throw new Error('Danh sách từ muốn lưu không hợp lệ.');
-    }
-    const selected = new Set(selectedWordIds);
-    const wordsById = new Map(lesson.words.map((word) => [word.id, word]));
-    if (selected.size !== selectedWordIds.length || [...selected].some((id) => !wordsById.has(id))) {
-      throw new Error('Danh sách từ muốn lưu không hợp lệ.');
-    }
-
-    const db = await database();
-    const now = new Date().toISOString();
-    const learned = initialProgress(localDay(new Date(now)));
-    let added = 0;
-    await db.withTransactionAsync(async () => {
-      for (const word of lesson.words) {
-        const isSelected = selected.has(word.id);
-        await db.runAsync(
-          `
-          INSERT INTO course_word_selection (lesson_id, word_id, selected, updated_at) VALUES (?, ?, ?, ?)
-          ON CONFLICT(lesson_id, word_id) DO UPDATE SET
-            selected = excluded.selected, updated_at = excluded.updated_at
-        `,
-          lessonId,
-          word.id,
-          isSelected ? 1 : 0,
-          now,
-        );
-        if (!isSelected) continue;
-
-        const meaning = displayCourseMeaning(word);
-        const duplicate = await db.getFirstAsync<{ id: number }>(
-          `
-          SELECT id FROM words
-          WHERE (dictionary_entry_id = ? AND dictionary_sense_id = ?)
-             OR (normalized_term = ? AND normalized_meaning = ?)
-          LIMIT 1
-        `,
-          word.dictionaryEntryId,
-          word.dictionarySenseId,
-          normalizeTerm(word.term),
-          normalizeTerm(meaning),
-        );
-        if (duplicate) continue;
-
-        const result = await db.runAsync(
-          `
-          INSERT OR IGNORE INTO words
-            (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
-              dictionary_entry_id, dictionary_sense_id, sync_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-          word.term,
-          normalizeTerm(word.term),
-          meaning,
-          normalizeTerm(meaning),
-          word.ipa,
-          word.example,
-          `${catalog.attribution} · Khóa học: ${lesson.title}`,
-          now,
-          now,
-          word.dictionaryEntryId,
-          word.dictionarySenseId,
-          syncIdForWord(word.term, meaning, word.dictionaryEntryId, word.dictionarySenseId),
-        );
-        if (result.changes === 1) {
-          await db.runAsync(
-            'INSERT INTO word_progress (word_id, learned_on, next_review_on, sync_updated_at) VALUES (?, ?, ?, ?)',
-            result.lastInsertRowId,
-            learned.learnedOn,
-            learned.nextReviewOn,
-            now,
-          );
-          added += 1;
-        }
-      }
-
-      await db.runAsync(
-        `
-        INSERT INTO course_lesson_progress
-          (lesson_id, current_index, stage, completed_at, updated_at)
-        VALUES (?, ?, 'completed', ?, ?)
-        ON CONFLICT(lesson_id) DO UPDATE SET
-          current_index = excluded.current_index, stage = 'completed',
-          completed_at = excluded.completed_at, updated_at = excluded.updated_at
-      `,
-        lessonId,
-        lesson.words.length - 1,
-        now,
-        now,
-      );
-      await grantDailyMissionChests(db, localDay(new Date(now)));
-      await markSyncDirty(db);
-    });
-    notifySyncListeners();
-    return added;
-  });
-}
-
 export function saveWord(input: WordInput, id?: number): Promise<void> {
   return serialize(async () => {
     const clean: WordInput = {
-      term: input.term.normalize('NFKC').trim().replace(/\s+/g, ' '),
+      term: input.term.normalize("NFKC").trim().replace(/\s+/g, " "),
       meaning: input.meaning.trim(),
       ipa: input.ipa.trim(),
       example: input.example.trim(),
       note: input.note.trim(),
     };
     if (!clean.term || !clean.meaning) {
-      throw new Error('Vui lòng nhập từ tiếng Anh và nghĩa tiếng Việt.');
+      throw new Error("Vui lòng nhập từ tiếng Anh và nghĩa tiếng Việt.");
     }
-    if (clean.term.length > 200 || clean.meaning.length > 2000 || clean.ipa.length > 200 || clean.example.length > 4000 || clean.note.length > 4000) {
-      throw new Error('Nội dung quá dài. Từ và IPA tối đa 200 ký tự, nghĩa 2.000, ví dụ và ghi chú 4.000.');
+    if (
+      clean.term.length > 200 ||
+      clean.meaning.length > 2000 ||
+      clean.ipa.length > 200 ||
+      clean.example.length > 4000 ||
+      clean.note.length > 4000
+    ) {
+      throw new Error(
+        "Nội dung quá dài. Từ và IPA tối đa 200 ký tự, nghĩa 2.000, ví dụ và ghi chú 4.000.",
+      );
     }
     if (id !== undefined && (!Number.isSafeInteger(id) || id < 1)) {
-      throw new Error('Mã từ không hợp lệ.');
+      throw new Error("Mã từ không hợp lệ.");
     }
     const db = await database();
     const key = normalizeTerm(clean.term);
@@ -1275,22 +1241,42 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
         : await db.getFirstAsync<{
             dictionaryEntryId: number | null;
             dictionarySenseId: number | null;
-          }>('SELECT dictionary_entry_id AS dictionaryEntryId, dictionary_sense_id AS dictionarySenseId FROM words WHERE id = ?', id);
-    if (id !== undefined && !previous) throw new Error('Từ này không còn tồn tại.');
+          }>(
+            "SELECT dictionary_entry_id AS dictionaryEntryId, dictionary_sense_id AS dictionarySenseId FROM words WHERE id = ?",
+            id,
+          );
+    if (id !== undefined && !previous)
+      throw new Error("Từ này không còn tồn tại.");
     // Edits retain the original sense association, even if the form omits metadata.
-    const entryId = previous?.dictionaryEntryId ?? (id === undefined ? (input.dictionaryEntryId ?? null) : null);
-    const senseId = previous?.dictionarySenseId ?? (id === undefined ? (input.dictionarySenseId ?? null) : null);
-    if ((entryId === null) !== (senseId === null) || (entryId !== null && (!Number.isSafeInteger(entryId) || entryId < 1 || !Number.isSafeInteger(senseId) || senseId! < 1))) {
-      throw new Error('Vui lòng chọn một nghĩa từ điển hợp lệ.');
+    const entryId =
+      previous?.dictionaryEntryId ??
+      (id === undefined ? (input.dictionaryEntryId ?? null) : null);
+    const senseId =
+      previous?.dictionarySenseId ??
+      (id === undefined ? (input.dictionarySenseId ?? null) : null);
+    if (
+      (entryId === null) !== (senseId === null) ||
+      (entryId !== null &&
+        (!Number.isSafeInteger(entryId) ||
+          entryId < 1 ||
+          !Number.isSafeInteger(senseId) ||
+          senseId! < 1))
+    ) {
+      throw new Error("Vui lòng chọn một nghĩa từ điển hợp lệ.");
     }
     const duplicate = await db.getFirstAsync<{ id: number }>(
       entryId === null
-        ? 'SELECT id FROM words WHERE normalized_term = ? AND normalized_meaning = ? AND id != ?'
+        ? "SELECT id FROM words WHERE normalized_term = ? AND normalized_meaning = ? AND id != ?"
         : `SELECT id FROM words WHERE ((dictionary_entry_id = ? AND dictionary_sense_id = ?) OR
             (dictionary_entry_id IS NULL AND normalized_term = ? AND normalized_meaning = ?)) AND id != ?`,
-      ...(entryId === null ? [key, meaningKey, id ?? -1] : [entryId, senseId, key, meaningKey, id ?? -1]),
+      ...(entryId === null
+        ? [key, meaningKey, id ?? -1]
+        : [entryId, senseId, key, meaningKey, id ?? -1]),
     );
-    if (duplicate) throw new Error('Từ này với nghĩa đã chọn đã có trong danh sách. Hãy sửa mục đã lưu.');
+    if (duplicate)
+      throw new Error(
+        "Từ này với nghĩa đã chọn đã có trong danh sách. Hãy sửa mục đã lưu.",
+      );
     const now = new Date().toISOString();
     await db.withTransactionAsync(async () => {
       if (id !== undefined) {
@@ -1307,7 +1293,7 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
           now,
           id,
         );
-        if (result.changes === 0) throw new Error('Từ này không còn tồn tại.');
+        if (result.changes === 0) throw new Error("Từ này không còn tồn tại.");
       } else {
         const result = await db.runAsync(
           `INSERT INTO words (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
@@ -1327,7 +1313,7 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
         );
         const progress = initialProgress(localDay(new Date(now)));
         await db.runAsync(
-          'INSERT INTO word_progress (word_id, learned_on, next_review_on, sync_updated_at) VALUES (?, ?, ?, ?)',
+          "INSERT INTO word_progress (word_id, learned_on, next_review_on, sync_updated_at) VALUES (?, ?, ?, ?)",
           result.lastInsertRowId,
           progress.learnedOn,
           progress.nextReviewOn,
@@ -1344,15 +1330,25 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
 }
 
 /** Atomically validate the displayed revision and persist a single answer. */
-export function recordReview(id: number, correct: boolean, expectedReviewCount: number): Promise<void> {
+export function recordReview(
+  id: number,
+  correct: boolean,
+  expectedReviewCount: number,
+): Promise<void> {
   return serialize(async () => {
-    if (!Number.isSafeInteger(id) || id < 1 || typeof correct !== 'boolean' || !Number.isSafeInteger(expectedReviewCount) || expectedReviewCount < 0) {
-      throw new Error('Câu trả lời không hợp lệ.');
+    if (
+      !Number.isSafeInteger(id) ||
+      id < 1 ||
+      typeof correct !== "boolean" ||
+      !Number.isSafeInteger(expectedReviewCount) ||
+      expectedReviewCount < 0
+    ) {
+      throw new Error("Câu trả lời không hợp lệ.");
     }
     const db = await database();
     await db.withTransactionAsync(async () => {
       const row = await db.getFirstAsync<
-        Omit<VocabularyWord, 'completed' | 'frozen'> & {
+        Omit<VocabularyWord, "completed" | "frozen"> & {
           completed: number;
           frozen: number;
         }
@@ -1362,13 +1358,18 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
          FROM word_progress WHERE word_id = ?`,
         id,
       );
-      if (!row) throw new Error('Từ này không còn tồn tại.');
-      if (row.frozen) throw new Error('Từ này đã đóng băng, không thể chấm điểm ôn tập.');
+      if (!row) throw new Error("Từ này không còn tồn tại.");
+      if (row.frozen)
+        throw new Error("Từ này đã đóng băng, không thể chấm điểm ôn tập.");
       if (row.reviewCount !== expectedReviewCount) {
-        throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
+        throw new Error("Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.");
       }
       const reviewedOn = localDay(new Date());
-      const next = applyReview({ ...row, completed: row.completed === 1, frozen: row.frozen === 1 }, correct, reviewedOn);
+      const next = applyReview(
+        { ...row, completed: row.completed === 1, frozen: row.frozen === 1 },
+        correct,
+        reviewedOn,
+      );
       const result = await db.runAsync(
         `UPDATE word_progress SET learned_on = ?, level = ?, next_review_on = ?, completed = ?,
             review_count = ?, last_reviewed_on = ?, sync_updated_at = ?
@@ -1383,7 +1384,8 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
         id,
         expectedReviewCount,
       );
-      if (result.changes !== 1) throw new Error('Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.');
+      if (result.changes !== 1)
+        throw new Error("Tiến độ từ đã thay đổi. Hãy tải lại danh sách ôn.");
       await db.runAsync(
         `
         INSERT INTO review_day_statistics (review_day, reviewed_count, correct_count)
@@ -1421,14 +1423,14 @@ export function recordReview(id: number, correct: boolean, expectedReviewCount: 
 
 export function setWordFrozen(id: number, frozen: boolean): Promise<void> {
   return serialize(async () => {
-    if (!Number.isSafeInteger(id) || id < 1 || typeof frozen !== 'boolean') {
-      throw new Error('Trạng thái đóng băng không hợp lệ.');
+    if (!Number.isSafeInteger(id) || id < 1 || typeof frozen !== "boolean") {
+      throw new Error("Trạng thái đóng băng không hợp lệ.");
     }
     const db = await database();
     let changed = false;
     await db.withTransactionAsync(async () => {
       const row = await db.getFirstAsync<
-        Omit<SrsProgress, 'completed' | 'frozen'> & {
+        Omit<SrsProgress, "completed" | "frozen"> & {
           completed: number;
           frozen: number;
         }
@@ -1438,16 +1440,18 @@ export function setWordFrozen(id: number, frozen: boolean): Promise<void> {
          FROM word_progress WHERE word_id = ?`,
         id,
       );
-      if (!row) throw new Error('Từ này không còn tồn tại.');
+      if (!row) throw new Error("Từ này không còn tồn tại.");
       if ((row.frozen === 1) === frozen) return;
       const state = {
         ...row,
         completed: row.completed === 1,
         frozen: row.frozen === 1,
       };
-      const next = frozen ? freezeProgress(state) : unfreezeProgress(state, localDay(new Date()));
+      const next = frozen
+        ? freezeProgress(state)
+        : unfreezeProgress(state, localDay(new Date()));
       await db.runAsync(
-        'UPDATE word_progress SET frozen = ?, level = ?, next_review_on = ?, completed = ?, sync_updated_at = ? WHERE word_id = ?',
+        "UPDATE word_progress SET frozen = ?, level = ?, next_review_on = ?, completed = ?, sync_updated_at = ? WHERE word_id = ?",
         frozen ? 1 : 0,
         next.level,
         next.nextReviewOn,
@@ -1464,12 +1468,16 @@ export function setWordFrozen(id: number, frozen: boolean): Promise<void> {
 
 export function deleteWord(id: number): Promise<void> {
   return serialize(async () => {
-    if (!Number.isSafeInteger(id) || id < 1) throw new Error('Mã từ không hợp lệ.');
+    if (!Number.isSafeInteger(id) || id < 1)
+      throw new Error("Mã từ không hợp lệ.");
     const db = await database();
     const now = new Date().toISOString();
     await db.withTransactionAsync(async () => {
-      const word = await db.getFirstAsync<{ syncId: string }>('SELECT sync_id AS syncId FROM words WHERE id = ?', id);
-      if (!word) throw new Error('Từ này không còn tồn tại.');
+      const word = await db.getFirstAsync<{ syncId: string }>(
+        "SELECT sync_id AS syncId FROM words WHERE id = ?",
+        id,
+      );
+      if (!word) throw new Error("Từ này không còn tồn tại.");
       await db.runAsync(
         `
         INSERT INTO sync_word_tombstones (sync_id, deleted_at) VALUES (?, ?)
@@ -1478,7 +1486,7 @@ export function deleteWord(id: number): Promise<void> {
         word.syncId,
         now,
       );
-      await db.runAsync('DELETE FROM words WHERE id = ?', id);
+      await db.runAsync("DELETE FROM words WHERE id = ?", id);
       await markSyncDirty(db);
     });
     notifySyncListeners();

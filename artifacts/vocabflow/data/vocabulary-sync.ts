@@ -1,9 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { SQLiteDatabase } from 'expo-sqlite';
-import { getDatabaseScope, getSyncQueueState, markSyncPending, notifySyncApplied, subscribeSyncChanges, switchDatabaseScope, withSyncDatabase } from './vocabulary';
-import type { DailyReviewGrade } from '../domain/daily-missions';
-import type { MissionChest } from '../domain/mission-chests';
-import type { CollectionCraft } from '../domain/collection-artworks';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { SQLiteDatabase } from "expo-sqlite";
+import {
+  getDatabaseScope,
+  getSyncQueueState,
+  markSyncPending,
+  notifySyncApplied,
+  subscribeSyncChanges,
+  switchDatabaseScope,
+  withSyncDatabase,
+} from "./vocabulary";
+import type { DailyReviewGrade } from "../domain/daily-missions";
+import type { MissionChest } from "../domain/mission-chests";
+import type { CollectionCraft } from "../domain/collection-artworks";
 
 export interface SyncWord {
   syncId: string;
@@ -34,7 +42,7 @@ export interface SyncDeletedWord {
 export interface SyncCourseProgress {
   lessonId: string;
   currentIndex: number;
-  stage: 'flashcard' | 'answer' | 'selection' | 'completed';
+  stage: "flashcard" | "answer" | "selection" | "completed";
   completedAt: string | null;
   updatedAt: string;
 }
@@ -96,7 +104,19 @@ export interface LocalSyncSnapshot {
   pending: boolean;
 }
 
-const LEGACY_IMPORT_KEY = 'vocabflow.sync.legacy-imported-account';
+const LEGACY_IMPORT_KEY = "vocabflow.sync.legacy-imported-account";
+const COURSE_SOURCE_MARKER = "Khóa học:";
+
+function discardRemovedCourseData(payload: SyncPayload): SyncPayload {
+  return {
+    ...payload,
+    words: payload.words.filter(
+      (word) => !word.note.includes(COURSE_SOURCE_MARKER),
+    ),
+    courseProgress: [],
+    courseSelections: [],
+  };
+}
 
 export { getDatabaseScope };
 
@@ -113,7 +133,16 @@ export function getLocalSyncState(): Promise<{
 
 export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
   return withSyncDatabase(async (db) => {
-    const [words, deletedWords, courseProgress, courseSelections, reviewStats, reviewSessions, missionAwards, missionChests, collectionCrafts, state] = await Promise.all([
+    const [
+      words,
+      deletedWords,
+      reviewStats,
+      reviewSessions,
+      missionAwards,
+      missionChests,
+      collectionCrafts,
+      state,
+    ] = await Promise.all([
       db.getAllAsync<SyncWord>(`
         SELECT w.sync_id AS syncId, w.term, w.meaning, w.ipa, w.example, w.note,
           w.dictionary_entry_id AS dictionaryEntryId, w.dictionary_sense_id AS dictionarySenseId,
@@ -128,15 +157,6 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       db.getAllAsync<SyncDeletedWord>(`
         SELECT sync_id AS syncId, deleted_at AS deletedAt
         FROM sync_word_tombstones ORDER BY sync_id
-      `),
-      db.getAllAsync<SyncCourseProgress>(`
-        SELECT lesson_id AS lessonId, current_index AS currentIndex, stage,
-          completed_at AS completedAt, updated_at AS updatedAt
-        FROM course_lesson_progress ORDER BY lesson_id
-      `),
-      db.getAllAsync<SyncCourseSelection>(`
-        SELECT lesson_id AS lessonId, word_id AS wordId, selected, updated_at AS updatedAt
-        FROM course_word_selection ORDER BY lesson_id, word_id
       `),
       db.getAllAsync<SyncReviewStat>(`
         SELECT device_id AS deviceId, review_day AS day, reviewed_count AS reviewedCount,
@@ -154,11 +174,13 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           completed_at AS completedAt
         FROM daily_mission_awards ORDER BY mission_day, mission_id
       `),
-      db.getAllAsync<Omit<SyncMissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & {
-        opened: number;
-        superUpgrade: number;
-        ruleSet: number;
-      }>(`
+      db.getAllAsync<
+        Omit<SyncMissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+          opened: number;
+          superUpgrade: number;
+          ruleSet: number;
+        }
+      >(`
         SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
           base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
           rule_set AS ruleSet, super_upgrade AS superUpgrade,
@@ -175,17 +197,16 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
     return {
       payload: {
         revision: state.revision,
-        words: words.map((word) => ({
-          ...word,
-          completed: Boolean(word.completed),
-          frozen: Boolean(word.frozen),
-        })),
+        words: words
+          .filter((word) => !word.note.includes(COURSE_SOURCE_MARKER))
+          .map((word) => ({
+            ...word,
+            completed: Boolean(word.completed),
+            frozen: Boolean(word.frozen),
+          })),
         deletedWords,
-        courseProgress,
-        courseSelections: courseSelections.map((selection) => ({
-          ...selection,
-          selected: Boolean(selection.selected),
-        })),
+        courseProgress: [],
+        courseSelections: [],
         reviewStats,
         reviewSessions: reviewSessions.map((session) => ({
           ...session,
@@ -206,28 +227,33 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
   });
 }
 
-async function getSyncQueueStateFromDatabase(db: SQLiteDatabase): Promise<{ generation: number; pending: boolean; revision: number }> {
-  const rows = await db.getAllAsync<{ key: string; value: string }>("SELECT key, value FROM sync_state WHERE key IN ('generation', 'pending', 'account_revision')");
+async function getSyncQueueStateFromDatabase(
+  db: SQLiteDatabase,
+): Promise<{ generation: number; pending: boolean; revision: number }> {
+  const rows = await db.getAllAsync<{ key: string; value: string }>(
+    "SELECT key, value FROM sync_state WHERE key IN ('generation', 'pending', 'account_revision')",
+  );
   const values = new Map(rows.map((row) => [row.key, row.value]));
   return {
-    generation: Number(values.get('generation') ?? 0),
-    pending: values.get('pending') === '1',
-    revision: Number(values.get('account_revision') ?? 0),
+    generation: Number(values.get("generation") ?? 0),
+    pending: values.get("pending") === "1",
+    revision: Number(values.get("account_revision") ?? 0),
   };
 }
 
 export async function mergeSyncSnapshot(payload: SyncPayload): Promise<void> {
+  const safePayload = discardRemovedCourseData(payload);
   await withSyncDatabase(async (db) => {
     const state = await getSyncQueueStateFromDatabase(db);
-    if (payload.revision > state.revision) {
+    if (safePayload.revision > state.revision) {
       await db.withTransactionAsync(async () => {
-        await replacePayloadData(db, payload);
+        await replacePayloadData(db, safePayload);
         await db.runAsync(
           `
           INSERT INTO sync_state (key, value) VALUES ('account_revision', ?)
           ON CONFLICT(key) DO UPDATE SET value = excluded.value
         `,
-          String(payload.revision),
+          String(safePayload.revision),
         );
         await db.runAsync(`
           INSERT INTO sync_state (key, value) VALUES ('replace_pending', '0')
@@ -236,8 +262,8 @@ export async function mergeSyncSnapshot(payload: SyncPayload): Promise<void> {
       });
       return;
     }
-    if (payload.revision < state.revision) return;
-    await mergeSnapshotIntoDatabase(db, payload);
+    if (safePayload.revision < state.revision) return;
+    await mergeSnapshotIntoDatabase(db, safePayload);
   });
   notifySyncApplied();
 }
@@ -247,10 +273,12 @@ export async function mergeSyncSnapshot(payload: SyncPayload): Promise<void> {
  * persisted with the new local snapshot so an offline restore replaces the
  * signed-in account on the next successful sync instead of merging old data.
  */
-export async function replaceAccountSyncSnapshot(payload: SyncPayload): Promise<void> {
+export async function replaceAccountSyncSnapshot(
+  payload: SyncPayload,
+): Promise<void> {
   await withSyncDatabase(async (db) => {
     await db.withTransactionAsync(async () => {
-      await replacePayloadData(db, payload);
+      await replacePayloadData(db, discardRemovedCourseData(payload));
       await db.runAsync(`
         INSERT INTO sync_state (key, value) VALUES ('replace_pending', '1')
         ON CONFLICT(key) DO UPDATE SET value = '1'
@@ -269,7 +297,51 @@ export async function replaceAccountSyncSnapshot(payload: SyncPayload): Promise<
   notifySyncApplied();
 }
 
-async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Promise<void> {
+export async function clearLocalAccountAfterCloudReset(
+  revision: number,
+): Promise<void> {
+  if (!Number.isSafeInteger(revision) || revision < 0) {
+    throw new Error("Phiên bản dữ liệu tài khoản không hợp lệ.");
+  }
+  await withSyncDatabase(async (db) => {
+    await db.withTransactionAsync(async () => {
+      const state = await getSyncQueueStateFromDatabase(db);
+      const emptyPayload: SyncPayload = {
+        revision,
+        words: [],
+        deletedWords: [],
+        courseProgress: [],
+        courseSelections: [],
+        reviewStats: [],
+        reviewSessions: [],
+        missionAwards: [],
+        missionChests: [],
+        collectionCrafts: [],
+      };
+      await replacePayloadData(db, emptyPayload);
+      for (const [key, value] of [
+        ["account_revision", String(revision)],
+        ["generation", String(state.generation + 1)],
+        ["pending", "0"],
+        ["replace_pending", "0"],
+      ]) {
+        await db.runAsync(
+          `INSERT INTO sync_state (key, value) VALUES (?, ?)
+           ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+          key,
+          value,
+        );
+      }
+    });
+  });
+  notifySyncApplied();
+}
+
+async function replacePayloadData(
+  db: SQLiteDatabase,
+  payload: SyncPayload,
+): Promise<void> {
+  payload = discardRemovedCourseData(payload);
   await db.execAsync(`
     DELETE FROM word_progress;
     DELETE FROM words;
@@ -325,7 +397,11 @@ async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Pro
   }
 
   for (const word of payload.deletedWords) {
-    await db.runAsync('INSERT INTO sync_word_tombstones (sync_id, deleted_at) VALUES (?, ?)', word.syncId, word.deletedAt);
+    await db.runAsync(
+      "INSERT INTO sync_word_tombstones (sync_id, deleted_at) VALUES (?, ?)",
+      word.syncId,
+      word.deletedAt,
+    );
   }
   for (const progress of payload.courseProgress) {
     await db.runAsync(
@@ -437,12 +513,16 @@ async function replacePayloadData(db: SQLiteDatabase, payload: SyncPayload): Pro
 
 export function hasPendingAccountReplacement(): Promise<boolean> {
   return withSyncDatabase(async (db) => {
-    const row = await db.getFirstAsync<{ value: string }>("SELECT value FROM sync_state WHERE key = 'replace_pending'");
-    return row?.value === '1';
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM sync_state WHERE key = 'replace_pending'",
+    );
+    return row?.value === "1";
   });
 }
 
-export function clearPendingAccountReplacement(expectedGeneration: number): Promise<boolean> {
+export function clearPendingAccountReplacement(
+  expectedGeneration: number,
+): Promise<boolean> {
   return withSyncDatabase(async (db) => {
     const state = await getSyncQueueStateFromDatabase(db);
     if (state.generation !== expectedGeneration) return false;
@@ -454,15 +534,27 @@ export function clearPendingAccountReplacement(expectedGeneration: number): Prom
   });
 }
 
-async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayload): Promise<void> {
+async function mergeSnapshotIntoDatabase(
+  db: SQLiteDatabase,
+  payload: SyncPayload,
+): Promise<void> {
   await db.withTransactionAsync(async () => {
     for (const incoming of payload.words) {
-      const tombstone = await db.getFirstAsync<{ deletedAt: string }>('SELECT deleted_at AS deletedAt FROM sync_word_tombstones WHERE sync_id = ?', incoming.syncId);
-      const incomingLatest = maxDate(incoming.contentUpdatedAt, incoming.progressUpdatedAt);
+      const tombstone = await db.getFirstAsync<{ deletedAt: string }>(
+        "SELECT deleted_at AS deletedAt FROM sync_word_tombstones WHERE sync_id = ?",
+        incoming.syncId,
+      );
+      const incomingLatest = maxDate(
+        incoming.contentUpdatedAt,
+        incoming.progressUpdatedAt,
+      );
       if (tombstone && tombstone.deletedAt >= incomingLatest) continue;
 
       if (tombstone) {
-        await db.runAsync('DELETE FROM sync_word_tombstones WHERE sync_id = ?', incoming.syncId);
+        await db.runAsync(
+          "DELETE FROM sync_word_tombstones WHERE sync_id = ?",
+          incoming.syncId,
+        );
       }
 
       const current = await db.getFirstAsync<{
@@ -574,11 +666,18 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
       `,
         incoming.syncId,
       );
-      const localTombstone = await db.getFirstAsync<{ deletedAt: string }>('SELECT deleted_at AS deletedAt FROM sync_word_tombstones WHERE sync_id = ?', incoming.syncId);
-      const currentLatest = current ? maxDate(current.contentUpdatedAt, current.progressUpdatedAt) : '';
+      const localTombstone = await db.getFirstAsync<{ deletedAt: string }>(
+        "SELECT deleted_at AS deletedAt FROM sync_word_tombstones WHERE sync_id = ?",
+        incoming.syncId,
+      );
+      const currentLatest = current
+        ? maxDate(current.contentUpdatedAt, current.progressUpdatedAt)
+        : "";
       if (current && currentLatest > incoming.deletedAt) continue;
-      if (localTombstone && localTombstone.deletedAt > incoming.deletedAt) continue;
-      if (current) await db.runAsync('DELETE FROM words WHERE id = ?', current.id);
+      if (localTombstone && localTombstone.deletedAt > incoming.deletedAt)
+        continue;
+      if (current)
+        await db.runAsync("DELETE FROM words WHERE id = ?", current.id);
       await db.runAsync(
         `
         INSERT INTO sync_word_tombstones (sync_id, deleted_at) VALUES (?, ?)
@@ -598,11 +697,20 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
       `,
         incoming.lessonId,
       );
-      const completed = current?.stage === 'completed' || incoming.stage === 'completed';
-      const currentIndex = Math.max(current?.currentIndex ?? 0, incoming.currentIndex);
+      const completed =
+        current?.stage === "completed" || incoming.stage === "completed";
+      const currentIndex = Math.max(
+        current?.currentIndex ?? 0,
+        incoming.currentIndex,
+      );
       const selectedState =
-        !current || incoming.currentIndex > current.currentIndex || (incoming.currentIndex === current.currentIndex && incoming.updatedAt >= current.updatedAt) ? incoming : current;
-      const updatedAt = maxDate(current?.updatedAt ?? '', incoming.updatedAt);
+        !current ||
+        incoming.currentIndex > current.currentIndex ||
+        (incoming.currentIndex === current.currentIndex &&
+          incoming.updatedAt >= current.updatedAt)
+          ? incoming
+          : current;
+      const updatedAt = maxDate(current?.updatedAt ?? "", incoming.updatedAt);
       const completedAt = current?.completedAt ?? incoming.completedAt;
       await db.runAsync(
         `
@@ -615,7 +723,7 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
       `,
         incoming.lessonId,
         currentIndex,
-        completed ? 'completed' : selectedState.stage,
+        completed ? "completed" : selectedState.stage,
         completedAt,
         updatedAt,
       );
@@ -698,11 +806,13 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
       );
     }
     for (const incoming of payload.missionChests ?? []) {
-      const currentRow = await db.getFirstAsync<Omit<SyncMissionChest, 'opened' | 'superUpgrade' | 'ruleSet'> & {
-        opened: number;
-        superUpgrade: number;
-        ruleSet: number;
-      }>(
+      const currentRow = await db.getFirstAsync<
+        Omit<SyncMissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+          opened: number;
+          superUpgrade: number;
+          ruleSet: number;
+        }
+      >(
         `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
           base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
           rule_set AS ruleSet, super_upgrade AS superUpgrade,
@@ -718,7 +828,7 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
       const current = currentRow
         ? {
             ...currentRow,
-            ruleSet: currentRow.ruleSet === 2 ? 2 as const : 1 as const,
+            ruleSet: currentRow.ruleSet === 2 ? (2 as const) : (1 as const),
             superUpgrade: Boolean(currentRow.superUpgrade),
             opened: Boolean(currentRow.opened),
           }
@@ -735,8 +845,11 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
                 : current
               : normalizedIncoming.opened
                 ? normalizedIncoming
-                : normalizedIncoming.upgradeAttempts > current.upgradeAttempts ||
-                    (normalizedIncoming.upgradeAttempts === current.upgradeAttempts && normalizedIncoming.updatedAt > current.updatedAt)
+                : normalizedIncoming.upgradeAttempts >
+                      current.upgradeAttempts ||
+                    (normalizedIncoming.upgradeAttempts ===
+                      current.upgradeAttempts &&
+                      normalizedIncoming.updatedAt > current.updatedAt)
                   ? normalizedIncoming
                   : current;
       await db.runAsync(
@@ -775,7 +888,7 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
       );
     }
 
-    await db.runAsync('DELETE FROM review_day_statistics');
+    await db.runAsync("DELETE FROM review_day_statistics");
     await db.runAsync(`
       INSERT INTO review_day_statistics (review_day, reviewed_count, correct_count, session_count)
       SELECT review_day, SUM(reviewed_count), SUM(correct_count), SUM(session_count)
@@ -785,14 +898,20 @@ async function mergeSnapshotIntoDatabase(db: SQLiteDatabase, payload: SyncPayloa
 }
 
 function normalize(value: string): string {
-  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en');
+  return value
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLocaleLowerCase("en");
 }
 
 function maxDate(left: string, right: string): string {
   return left >= right ? left : right;
 }
 
-export async function initializeAccountDatabase(accountId: string): Promise<void> {
+export async function initializeAccountDatabase(
+  accountId: string,
+): Promise<void> {
   const currentScope = getDatabaseScope();
   if (currentScope === accountId) return;
   const importedFor = await AsyncStorage.getItem(LEGACY_IMPORT_KEY);
@@ -802,7 +921,9 @@ export async function initializeAccountDatabase(accountId: string): Promise<void
     await switchDatabaseScope(accountId);
     try {
       await mergeSyncSnapshot(guestSnapshot.payload);
-      const hasLocalData = Object.values(guestSnapshot.payload).some((items) => items.length > 0);
+      const hasLocalData = Object.values(guestSnapshot.payload).some(
+        (items) => items.length > 0,
+      );
       if (hasLocalData) await markSyncPending();
       await AsyncStorage.setItem(LEGACY_IMPORT_KEY, accountId);
     } catch (error) {

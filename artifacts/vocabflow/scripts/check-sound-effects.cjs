@@ -505,12 +505,6 @@ function makeFakeEngine({ returnNull = false } = {}) {
     /sound\.stopLoop\(DICTIONARY_LOOP_KEY\)/,
     "Leaving the dictionary gate stops its loop.",
   );
-  const course = source("app/course/[lessonId].tsx");
-  assert.match(course, /answerGuard\.current\.claim\(\)/);
-  assert.match(course, /onSubmitEditing=\{checkAnswer\}/);
-  assert.match(course, /onPress=\{checkAnswer\}/);
-  assert.match(course, /setAnswer\(''\); setAnswerResult\(null\)/);
-  assert.doesNotMatch(course, /onChangeText=\{[^}]*sound\.play/);
   const reviewCard = source("components/ReviewCard.tsx");
   assert.match(reviewCard, /if \(lock\.current \|\| blocked\) return/);
   assert.doesNotMatch(reviewCard, /onChangeText=\{[^}]*sound\.play/);

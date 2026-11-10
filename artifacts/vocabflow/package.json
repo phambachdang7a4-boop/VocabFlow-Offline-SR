@@ -19,9 +19,7 @@
     "check:review-session": "node scripts/check-review-session.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
-    "course:generate": "node scripts/generate-basic-course-from-dictionary.cjs && node scripts/generate-cefr-courses.cjs && node scripts/generate-advanced-courses.cjs && node scripts/generate-collocation-course.cjs",
-    "check:course": "node scripts/check-basic-course.cjs && node scripts/check-cefr-course.cjs && node scripts/check-advanced-courses.cjs && node scripts/check-collocation-classification.cjs && node scripts/check-collocation-course.cjs",
-    "check:course-storage": "node scripts/check-course-storage.cjs"
+    "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

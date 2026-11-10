@@ -1,27 +1,58 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { createReviewExercise, type ReviewExercise } from '@/domain/review-exercises';
-import type { VocabularyWord } from '@/data/types';
-import { Feather } from '@expo/vector-icons';
-import { router, useFocusEffect, useNavigation } from 'expo-router';
-import { useVocabulary } from '@/contexts/VocabularyContext';
-import { useColors } from '@/hooks/useColors';
-import { useReviewClock } from '@/hooks/useReviewClock';
-import { localDay } from '@/domain/srs';
-import { formatReviewCountdown, reviewOverview, secondsUntilReview } from '@/domain/review-overview';
-import { Button, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
-import { useBottomPad } from '@/components/ScreenHeader';
-import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
-import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
-import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
-import { createReviewSessionSummary, formatReviewDuration, getReviewGrade, type ReviewSessionSummary } from '@/domain/review-session';
-import { useSoundEffects } from '@/contexts/SoundEffectsContext';
-import { soundCueFor } from '@/domain/sound-cues';
-import { recordReviewSessionResult, recordReviewSessionStart } from '@/data/vocabulary';
-import { ReviewMistakeMatchGame } from '@/components/ReviewMistakeMatchGame';
-import * as Crypto from 'expo-crypto';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
+import {
+  createReviewExercise,
+  type ReviewExercise,
+} from "@/domain/review-exercises";
+import type { VocabularyWord } from "@/data/types";
+import { Feather } from "@expo/vector-icons";
+import { router, useFocusEffect, useNavigation } from "expo-router";
+import { useVocabulary } from "@/contexts/VocabularyContext";
+import { useColors } from "@/hooks/useColors";
+import { useReviewClock } from "@/hooks/useReviewClock";
+import { localDay } from "@/domain/srs";
+import {
+  formatReviewCountdown,
+  reviewOverview,
+  secondsUntilReview,
+} from "@/domain/review-overview";
+import {
+  Button,
+  ErrorBanner,
+  F,
+  MaterialSheen,
+  Skeleton,
+} from "@/components/ui";
+import { useBottomPad } from "@/components/ScreenHeader";
+import { ReviewCard, calendarLabel } from "@/components/ReviewCard";
+import {
+  LevelDistributionChart,
+  ReviewStatusBar,
+  SavedTotal,
+} from "@/components/ReviewOverview";
+import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
+import {
+  createReviewSessionSummary,
+  formatReviewDuration,
+  getReviewGrade,
+  type ReviewSessionSummary,
+} from "@/domain/review-session";
+import { useSoundEffects } from "@/contexts/SoundEffectsContext";
+import { soundCueFor } from "@/domain/sound-cues";
+import {
+  recordReviewSessionResult,
+  recordReviewSessionStart,
+} from "@/data/vocabulary";
+import { ReviewMistakeMatchGame } from "@/components/ReviewMistakeMatchGame";
+import * as Crypto from "expo-crypto";
 
 type Session = {
   token: number;
@@ -50,7 +81,8 @@ export default function ReviewScreen() {
   const day = localDay(new Date(now));
   const [session, setSession] = useState<Session | null>(null);
   const [summary, setSummary] = useState<ReviewSessionSummary | null>(null);
-  const [pendingSummary, setPendingSummary] = useState<ReviewSessionSummary | null>(null);
+  const [pendingSummary, setPendingSummary] =
+    useState<ReviewSessionSummary | null>(null);
   const [gameWords, setGameWords] = useState<VocabularyWord[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -67,7 +99,7 @@ export default function ReviewScreen() {
 
   useEffect(() => {
     navigation.setOptions({
-      tabBarStyle: inSession ? { display: 'none' } : undefined,
+      tabBarStyle: inSession ? { display: "none" } : undefined,
     });
     return () => navigation.setOptions({ tabBarStyle: undefined });
   }, [navigation, inSession]);
@@ -90,13 +122,27 @@ export default function ReviewScreen() {
   );
 
   useEffect(() => {
-    if (session && session.exercise.kind !== 'multiple-choice' && speech.ready && speech.autoRead) {
-      void speech.speakWord(session.word.term);
+    if (
+      session &&
+      session.exercise.kind !== "multiple-choice" &&
+      speech.ready &&
+      speech.autoRead
+    ) {
+      void speech.speakWord(session.word.term, session.word.dictionaryEntryId);
     }
     return () => {
       void speech.stopSpeaking();
     };
-  }, [session?.token, session?.index, session?.word.id, session?.exercise.kind, speech.ready, speech.autoRead, speech.speakWord, speech.stopSpeaking]);
+  }, [
+    session?.token,
+    session?.index,
+    session?.word.id,
+    session?.exercise.kind,
+    speech.ready,
+    speech.autoRead,
+    speech.speakWord,
+    speech.stopSpeaking,
+  ]);
 
   const start = async () => {
     const first = overview.dueWords[0];
@@ -107,7 +153,7 @@ export default function ReviewScreen() {
     setStartError(null);
     try {
       await recordReviewSessionStart();
-      sound.play(soundCueFor('reviewStarted'));
+      sound.play(soundCueFor("reviewStarted"));
       setSummary(null);
       setPendingSummary(null);
       setGameWords(null);
@@ -128,14 +174,16 @@ export default function ReviewScreen() {
         exercise: createReviewExercise(first, 0, first.reviewCount, words),
       });
     } catch {
-      setStartError('Không thể ghi nhận lượt ôn. Hãy thử lại; dữ liệu học vẫn được giữ.');
+      setStartError(
+        "Không thể ghi nhận lượt ôn. Hãy thử lại; dữ liệu học vẫn được giữ.",
+      );
     } finally {
       startingRef.current = false;
       setStarting(false);
     }
   };
   const finishSession = (current: Session, completed: boolean) => {
-    if (completed) sound.play(soundCueFor('reviewCompleted'));
+    if (completed) sound.play(soundCueFor("reviewCompleted"));
     const result = createReviewSessionSummary(current, Date.now(), completed);
     sessionRef.current = null;
     setSession(null);
@@ -145,10 +193,16 @@ export default function ReviewScreen() {
       startedAt: current.startedAt,
       reviewedCount: result.reviewedCount,
       correctCount: result.correctCount,
-      grade: getReviewGrade(result.correctCount, result.reviewedCount, result.completed),
+      grade: getReviewGrade(
+        result.correctCount,
+        result.reviewedCount,
+        result.completed,
+      ),
       completed: result.completed,
     }).catch(() => {
-      setSessionSaveError('Chưa lưu được kết quả phiên ôn vào Nhiệm Vụ. Hãy đồng bộ lại khi có thể.');
+      setSessionSaveError(
+        "Chưa lưu được kết quả phiên ôn vào Nhiệm Vụ. Hãy đồng bộ lại khi có thể.",
+      );
     });
     if (current.mistakes.length) {
       setPendingSummary(result);
@@ -165,12 +219,23 @@ export default function ReviewScreen() {
     if (!current || busyRef.current) return;
     finishSession(current, false);
   };
-  const committed = (token: number, id: number, correct: boolean | null = null) =>
+  const committed = (
+    token: number,
+    id: number,
+    correct: boolean | null = null,
+  ) =>
     setSession((s) => {
-      if (!s || s.token !== token || s.word.id !== id || s.processed.includes(id)) return s;
-      const mistakes = correct === false && !s.mistakes.some(word => word.id === id)
-        ? [...s.mistakes, s.word]
-        : s.mistakes;
+      if (
+        !s ||
+        s.token !== token ||
+        s.word.id !== id ||
+        s.processed.includes(id)
+      )
+        return s;
+      const mistakes =
+        correct === false && !s.mistakes.some((word) => word.id === id)
+          ? [...s.mistakes, s.word]
+          : s.mistakes;
       return {
         ...s,
         processed: [...s.processed, id],
@@ -180,13 +245,24 @@ export default function ReviewScreen() {
       };
     });
   const changeBusy = (token: number, index: number, value: boolean) => {
-    if (sessionRef.current?.token !== token || sessionRef.current.index !== index) return;
+    if (
+      sessionRef.current?.token !== token ||
+      sessionRef.current.index !== index
+    )
+      return;
     busyRef.current = value;
     setBusy(value);
   };
   const next = (token: number) => {
     const s = sessionRef.current;
-    if (!s || s.token !== token || error || busyRef.current || !s.processed.includes(s.word.id)) return;
+    if (
+      !s ||
+      s.token !== token ||
+      error ||
+      busyRef.current ||
+      !s.processed.includes(s.word.id)
+    )
+      return;
     const due = new Map(overview.dueWords.map((w) => [w.id, w]));
     const id = s.queue.find((q) => !s.processed.includes(q) && due.has(q));
     if (id === undefined) {
@@ -205,9 +281,12 @@ export default function ReviewScreen() {
   let action: React.ReactNode;
   if (card) {
     action = (
-      <View style={{ gap: 14, alignItems: 'stretch' }}>
+      <View style={{ gap: 14, alignItems: "stretch" }}>
         <Text testID="due-count" style={[styles.due, { color: c.foreground }]}>
-          Đến giờ ôn tập: <Text style={{ color: c.primary }}>{overview.dueWords.length.toLocaleString('vi-VN')} từ</Text>
+          Đến giờ ôn tập:{" "}
+          <Text style={{ color: c.primary }}>
+            {overview.dueWords.length.toLocaleString("vi-VN")} từ
+          </Text>
         </Text>
         <Button
           testID="review-start"
@@ -224,7 +303,14 @@ export default function ReviewScreen() {
     );
   } else if (overview.nextReviewOn) {
     const secs = secondsUntilReview(overview.nextReviewOn, now);
-    action = <ReviewStatusBar testID="review-countdown" icon="clock" title={formatReviewCountdown(secs)} body={`Lượt ôn tiếp theo: ${calendarLabel(overview.nextReviewOn)}`} />;
+    action = (
+      <ReviewStatusBar
+        testID="review-countdown"
+        icon="clock"
+        title={formatReviewCountdown(secs)}
+        body={`Lượt ôn tiếp theo: ${calendarLabel(overview.nextReviewOn)}`}
+      />
+    );
   } else {
     action = (
       <View style={{ gap: 12 }}>
@@ -232,11 +318,30 @@ export default function ReviewScreen() {
           testID="review-no-schedule"
           icon="calendar"
           title="Chưa có lịch ôn"
-          body={overview.total ? 'Mọi từ đã hoàn tất hoặc đang đóng băng.' : 'Sổ từ đang trống. Thêm từ để bắt đầu ở cấp 1.'}
+          body={
+            overview.total
+              ? "Mọi từ đã hoàn tất hoặc đang đóng băng."
+              : "Sổ từ đang trống. Thêm từ để bắt đầu ở cấp 1."
+          }
         />
         <View style={styles.row}>
-          <Button testID="review-add-word" label="Thêm từ" icon="plus" onPress={() => router.push('/word')} style={{ flex: 1 }} />
-          {overview.frozen ? <Button testID="review-open-frozen" label="Từ đóng băng" icon="pause-circle" variant="ghost" onPress={() => router.push('/frozen')} style={{ flex: 1 }} /> : null}
+          <Button
+            testID="review-add-word"
+            label="Thêm từ"
+            icon="plus"
+            onPress={() => router.push("/word")}
+            style={{ flex: 1 }}
+          />
+          {overview.frozen ? (
+            <Button
+              testID="review-open-frozen"
+              label="Từ đóng băng"
+              icon="pause-circle"
+              variant="ghost"
+              onPress={() => router.push("/frozen")}
+              style={{ flex: 1 }}
+            />
+          ) : null}
         </View>
       </View>
     );
@@ -249,7 +354,7 @@ export default function ReviewScreen() {
           style={[
             styles.sessionHeader,
             {
-              paddingTop: (Platform.OS === 'web' ? 67 : insets.top) + 10,
+              paddingTop: (Platform.OS === "web" ? 67 : insets.top) + 10,
               backgroundColor: c.background,
             },
           ]}
@@ -262,12 +367,18 @@ export default function ReviewScreen() {
               onPress={exitSession}
               disabled={busy}
               hitSlop={10}
-              style={({ pressed }) => [styles.sessionClose, { opacity: busy ? 0.35 : pressed ? 0.55 : 1 }]}
+              style={({ pressed }) => [
+                styles.sessionClose,
+                { opacity: busy ? 0.35 : pressed ? 0.55 : 1 },
+              ]}
             >
               <Feather name="x" size={24} color={c.mutedForeground} />
             </Pressable>
             <View style={{ flex: 1 }}>
-              <View accessibilityLabel={`Tiến độ ${session.processed.length} trên ${session.queue.length} từ`} style={[styles.track, { backgroundColor: c.reviewTrack }]}>
+              <View
+                accessibilityLabel={`Tiến độ ${session.processed.length} trên ${session.queue.length} từ`}
+                style={[styles.track, { backgroundColor: c.reviewTrack }]}
+              >
                 <View
                   style={[
                     styles.fill,
@@ -279,11 +390,18 @@ export default function ReviewScreen() {
                 />
               </View>
             </View>
-            <Text testID="review-session-count" style={[styles.sessionCount, { color: c.mutedForeground }]}>
+            <Text
+              testID="review-session-count"
+              style={[styles.sessionCount, { color: c.mutedForeground }]}
+            >
               {session.processed.length}/{session.queue.length}
             </Text>
           </View>
-          <Text style={[styles.sessionTitle, { color: c.foreground }]}>{session.exercise.kind === 'multiple-choice' ? 'Chọn từ đúng' : 'Điền từ'}</Text>
+          <Text style={[styles.sessionTitle, { color: c.foreground }]}>
+            {session.exercise.kind === "multiple-choice"
+              ? "Chọn từ đúng"
+              : "Điền từ"}
+          </Text>
         </View>
       ) : null}
       {gameWords ? (
@@ -296,148 +414,243 @@ export default function ReviewScreen() {
           }}
         />
       ) : (
-      <KeyboardAwareScrollViewCompat
-        bottomOffset={24}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: session ? 8 : (Platform.OS === 'web' ? 67 : insets.top) + 12,
-          paddingBottom: session ? Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 16) + 8 : bottom,
-          flexGrow: 1,
-          gap: session ? 10 : 18,
-        }}
-      >
-        {!session ? (
-          <View style={styles.reviewToolbar}>
-            <Pressable
-              testID="review-open-settings"
-              accessibilityRole="button"
-              accessibilityLabel="Mở cài đặt"
-              onPress={() => router.push('/settings')}
-              style={({ pressed }) => [
-                styles.cog,
-                {
-                  backgroundColor: c.headerButton,
-                  borderColor: c.headerButton,
-                  opacity: pressed ? 0.6 : 1,
-                },
-              ]}
-            >
-              <Feather name="settings" size={20} color={c.headerForeground} />
-            </Pressable>
-          </View>
-        ) : null}
-        {error ? <ErrorBanner message={inSession ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.` : error} onRetry={reload} /> : null}
-        {session ? (
-          <ReviewCard
-            key={`${session.token}:${session.index}:${session.word.id}`}
-            word={session.word}
-            exercise={session.exercise}
-            blocked={!!error}
-            isLast={!session.queue.some((q) => q !== session.word.id && !session.processed.includes(q) && overview.dueWords.some((w) => w.id === q))}
-            onBusyChange={(value) => changeBusy(session.token, session.index, value)}
-            onCommitted={(id, correct) => committed(session.token, id, correct)}
-            onNext={() => next(session.token)}
-          />
-        ) : summary ? (
-          <View
-            testID="review-session-summary"
-            accessibilityLiveRegion="polite"
-            style={[
-              styles.summaryCard,
-              {
-                backgroundColor: c.card,
-                borderColor: c.border,
-                borderRadius: c.radius + 8,
-                position: 'relative',
-                shadowColor: c.shade,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.16,
-                shadowRadius: 8,
-                elevation: 4,
-              },
-            ]}
-          >
-            <MaterialSheen radius={c.radius + 8} />
-            <Text testID="review-summary-title" style={[styles.summaryTitle, { color: c.foreground }]}>
-              Bạn đã ôn được {summary.reviewedCount.toLocaleString('vi-VN')} từ!
-            </Text>
-            <Text testID="review-summary-status" style={[styles.summarySubtitle, { color: c.mutedForeground }]}>
-              {summary.completed ? 'Hoàn thành lượt ôn' : summary.reviewedCount ? 'Kết quả tính đến lúc bạn thoát' : 'Chưa có câu trả lời để tính tỉ lệ'}
-            </Text>
-            {sessionSaveError ? <ErrorBanner message={sessionSaveError} /> : null}
-            <View style={styles.summaryGradeArea}>
-              <Text
-                testID="review-summary-grade"
-                accessibilityLabel={`Hạng ${getReviewGrade(summary.correctCount, summary.reviewedCount, summary.completed)}`}
-                style={[styles.summaryGrade, { color: c.primary }]}
+        <KeyboardAwareScrollViewCompat
+          bottomOffset={24}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: session
+              ? 8
+              : (Platform.OS === "web" ? 67 : insets.top) + 12,
+            paddingBottom: session
+              ? Math.max(insets.bottom, Platform.OS === "web" ? 34 : 16) + 8
+              : bottom,
+            flexGrow: 1,
+            gap: session ? 10 : 18,
+          }}
+        >
+          {!session ? (
+            <View style={styles.reviewToolbar}>
+              <Pressable
+                testID="review-open-settings"
+                accessibilityRole="button"
+                accessibilityLabel="Mở cài đặt"
+                onPress={() => router.push("/settings")}
+                style={({ pressed }) => [
+                  styles.cog,
+                  {
+                    backgroundColor: c.headerButton,
+                    borderColor: c.headerButton,
+                    opacity: pressed ? 0.6 : 1,
+                  },
+                ]}
               >
-                {getReviewGrade(summary.correctCount, summary.reviewedCount, summary.completed)}
-              </Text>
+                <Feather name="settings" size={20} color={c.headerForeground} />
+              </Pressable>
             </View>
-            <View style={[styles.summaryMetrics, { borderColor: c.border }]}>
-              <View style={styles.summaryMetric}>
-                <Text testID="review-summary-reviewed" style={[styles.summaryValue, { color: c.foreground }]}>
-                  {summary.reviewedCount}/{summary.plannedCount}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>Đã ôn / tổng số từ</Text>
-              </View>
-              <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
-              <View style={styles.summaryMetric}>
-                <Text testID="review-summary-correct" style={[styles.summaryValue, { color: c.successText }]}>
-                  {summary.correctCount}/{summary.reviewedCount}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>Đúng / đã ôn</Text>
-              </View>
-              <View style={[styles.metricDivider, { backgroundColor: c.border }]} />
-              <View style={styles.summaryMetric}>
-                <Text testID="review-summary-accuracy" style={[styles.summaryValue, { color: c.primary }]}>
-                  {summary.reviewedCount ? `${Math.round((summary.correctCount / summary.reviewedCount) * 100)}%` : '—'}
-                </Text>
-                <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>Tỉ lệ chính xác</Text>
-              </View>
-            </View>
-            <View style={[styles.durationRow, { backgroundColor: c.secondary, borderRadius: c.radius }]}>
-              <Feather name="clock" size={18} color={c.primary} />
-              <Text style={[styles.durationLabel, { color: c.secondaryForeground }]}>Thời gian ôn</Text>
-              <Text testID="review-summary-duration" style={[styles.durationValue, { color: c.secondaryForeground }]}>
-                {formatReviewDuration(summary.elapsedMs)}
-              </Text>
-            </View>
-            <Button testID="review-summary-close" label="Về Ôn tập" icon="arrow-right" onPress={() => setSummary(null)} />
-          </View>
-        ) : loading ? (
-          <>
-            <Skeleton h={64} />
-            <Skeleton h={260} />
-            <Skeleton h={56} />
-          </>
-        ) : error ? null : (
-          <>
-            <SavedTotal total={overview.total} frozen={overview.frozen} completed={overview.completed} />
+          ) : null}
+          {error ? (
+            <ErrorBanner
+              message={
+                inSession
+                  ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.`
+                  : error
+              }
+              onRetry={reload}
+            />
+          ) : null}
+          {session ? (
+            <ReviewCard
+              key={`${session.token}:${session.index}:${session.word.id}`}
+              word={session.word}
+              exercise={session.exercise}
+              blocked={!!error}
+              isLast={
+                !session.queue.some(
+                  (q) =>
+                    q !== session.word.id &&
+                    !session.processed.includes(q) &&
+                    overview.dueWords.some((w) => w.id === q),
+                )
+              }
+              onBusyChange={(value) =>
+                changeBusy(session.token, session.index, value)
+              }
+              onCommitted={(id, correct) =>
+                committed(session.token, id, correct)
+              }
+              onNext={() => next(session.token)}
+            />
+          ) : summary ? (
             <View
+              testID="review-session-summary"
+              accessibilityLiveRegion="polite"
               style={[
-                styles.chartCard,
+                styles.summaryCard,
                 {
                   backgroundColor: c.card,
                   borderColor: c.border,
                   borderRadius: c.radius + 8,
-                  position: 'relative',
+                  position: "relative",
                   shadowColor: c.shade,
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.14,
-                  shadowRadius: 7,
-                  elevation: 3,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.16,
+                  shadowRadius: 8,
+                  elevation: 4,
                 },
               ]}
             >
               <MaterialSheen radius={c.radius + 8} />
-              <LevelDistributionChart levels={overview.levels} />
+              <Text
+                testID="review-summary-title"
+                style={[styles.summaryTitle, { color: c.foreground }]}
+              >
+                Bạn đã ôn được {summary.reviewedCount.toLocaleString("vi-VN")}{" "}
+                từ!
+              </Text>
+              <Text
+                testID="review-summary-status"
+                style={[styles.summarySubtitle, { color: c.mutedForeground }]}
+              >
+                {summary.completed
+                  ? "Hoàn thành lượt ôn"
+                  : summary.reviewedCount
+                    ? "Kết quả tính đến lúc bạn thoát"
+                    : "Chưa có câu trả lời để tính tỉ lệ"}
+              </Text>
+              {sessionSaveError ? (
+                <ErrorBanner message={sessionSaveError} />
+              ) : null}
+              <View style={styles.summaryGradeArea}>
+                <Text
+                  testID="review-summary-grade"
+                  accessibilityLabel={`Hạng ${getReviewGrade(summary.correctCount, summary.reviewedCount, summary.completed)}`}
+                  style={[styles.summaryGrade, { color: c.primary }]}
+                >
+                  {getReviewGrade(
+                    summary.correctCount,
+                    summary.reviewedCount,
+                    summary.completed,
+                  )}
+                </Text>
+              </View>
+              <View style={[styles.summaryMetrics, { borderColor: c.border }]}>
+                <View style={styles.summaryMetric}>
+                  <Text
+                    testID="review-summary-reviewed"
+                    style={[styles.summaryValue, { color: c.foreground }]}
+                  >
+                    {summary.reviewedCount}/{summary.plannedCount}
+                  </Text>
+                  <Text
+                    style={[styles.summaryLabel, { color: c.mutedForeground }]}
+                  >
+                    Đã ôn / tổng số từ
+                  </Text>
+                </View>
+                <View
+                  style={[styles.metricDivider, { backgroundColor: c.border }]}
+                />
+                <View style={styles.summaryMetric}>
+                  <Text
+                    testID="review-summary-correct"
+                    style={[styles.summaryValue, { color: c.successText }]}
+                  >
+                    {summary.correctCount}/{summary.reviewedCount}
+                  </Text>
+                  <Text
+                    style={[styles.summaryLabel, { color: c.mutedForeground }]}
+                  >
+                    Đúng / đã ôn
+                  </Text>
+                </View>
+                <View
+                  style={[styles.metricDivider, { backgroundColor: c.border }]}
+                />
+                <View style={styles.summaryMetric}>
+                  <Text
+                    testID="review-summary-accuracy"
+                    style={[styles.summaryValue, { color: c.primary }]}
+                  >
+                    {summary.reviewedCount
+                      ? `${Math.round((summary.correctCount / summary.reviewedCount) * 100)}%`
+                      : "—"}
+                  </Text>
+                  <Text
+                    style={[styles.summaryLabel, { color: c.mutedForeground }]}
+                  >
+                    Tỉ lệ chính xác
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.durationRow,
+                  { backgroundColor: c.secondary, borderRadius: c.radius },
+                ]}
+              >
+                <Feather name="clock" size={18} color={c.primary} />
+                <Text
+                  style={[
+                    styles.durationLabel,
+                    { color: c.secondaryForeground },
+                  ]}
+                >
+                  Thời gian ôn
+                </Text>
+                <Text
+                  testID="review-summary-duration"
+                  style={[
+                    styles.durationValue,
+                    { color: c.secondaryForeground },
+                  ]}
+                >
+                  {formatReviewDuration(summary.elapsedMs)}
+                </Text>
+              </View>
+              <Button
+                testID="review-summary-close"
+                label="Về Ôn tập"
+                icon="arrow-right"
+                onPress={() => setSummary(null)}
+              />
             </View>
-            {action}
-          </>
-        )}
-      </KeyboardAwareScrollViewCompat>
+          ) : loading ? (
+            <>
+              <Skeleton h={64} />
+              <Skeleton h={260} />
+              <Skeleton h={56} />
+            </>
+          ) : error ? null : (
+            <>
+              <SavedTotal
+                total={overview.total}
+                frozen={overview.frozen}
+                completed={overview.completed}
+              />
+              <View
+                style={[
+                  styles.chartCard,
+                  {
+                    backgroundColor: c.card,
+                    borderColor: c.border,
+                    borderRadius: c.radius + 8,
+                    position: "relative",
+                    shadowColor: c.shade,
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.14,
+                    shadowRadius: 7,
+                    elevation: 3,
+                  },
+                ]}
+              >
+                <MaterialSheen radius={c.radius + 8} />
+                <LevelDistributionChart levels={overview.levels} />
+              </View>
+              {action}
+            </>
+          )}
+        </KeyboardAwareScrollViewCompat>
       )}
     </View>
   );
@@ -445,52 +658,52 @@ export default function ReviewScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  due: { fontFamily: F.b, fontSize: 18, textAlign: 'center' },
-  row: { flexDirection: 'row', gap: 10 },
+  due: { fontFamily: F.b, fontSize: 18, textAlign: "center" },
+  row: { flexDirection: "row", gap: 10 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
   summaryCard: {
-    position: 'relative',
+    position: "relative",
     flex: 1,
     minHeight: 520,
-    justifyContent: 'center',
-    alignItems: 'stretch',
+    justifyContent: "center",
+    alignItems: "stretch",
     padding: 20,
     borderWidth: 1,
     gap: 14,
   },
-  summaryTitle: { fontFamily: F.b, fontSize: 24, textAlign: 'center' },
-  summarySubtitle: { fontFamily: F.r, fontSize: 14, textAlign: 'center' },
+  summaryTitle: { fontFamily: F.b, fontSize: 24, textAlign: "center" },
+  summarySubtitle: { fontFamily: F.r, fontSize: 14, textAlign: "center" },
   summaryGradeArea: {
     flexGrow: 1,
     minHeight: 170,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   summaryGrade: {
     fontFamily: F.b,
     fontSize: 100,
     lineHeight: 112,
-    textAlign: 'center',
+    textAlign: "center",
   },
   summaryMetrics: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderTopWidth: 1,
     borderBottomWidth: 1,
     paddingVertical: 16,
     marginTop: 8,
   },
-  summaryMetric: { flex: 1, alignItems: 'center', gap: 5 },
+  summaryMetric: { flex: 1, alignItems: "center", gap: 5 },
   summaryValue: {
     fontFamily: F.b,
     fontSize: 20,
-    fontVariant: ['tabular-nums'],
+    fontVariant: ["tabular-nums"],
   },
-  summaryLabel: { fontFamily: F.m, fontSize: 10, textAlign: 'center' },
+  summaryLabel: { fontFamily: F.m, fontSize: 10, textAlign: "center" },
   metricDivider: { width: 1, height: 36 },
   durationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 13,
     paddingHorizontal: 14,
@@ -499,32 +712,32 @@ const styles = StyleSheet.create({
   durationValue: {
     fontFamily: F.b,
     fontSize: 16,
-    fontVariant: ['tabular-nums'],
+    fontVariant: ["tabular-nums"],
   },
   sessionHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 16 },
-  sessionProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sessionProgressRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   sessionClose: {
     width: 32,
     height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   sessionCount: {
     fontFamily: F.s,
     fontSize: 12,
     minWidth: 28,
-    textAlign: 'right',
+    textAlign: "right",
   },
-  sessionTitle: { fontFamily: F.b, fontSize: 20, textAlign: 'center' },
-  track: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  sessionTitle: { fontFamily: F.b, fontSize: 20, textAlign: "center" },
+  track: { height: 8, borderRadius: 4, overflow: "hidden" },
   fill: { height: 8, borderRadius: 4 },
   cog: {
     width: 44,
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  reviewToolbar: { alignItems: 'flex-end', minHeight: 44 },
+  reviewToolbar: { alignItems: "flex-end", minHeight: 44 },
 });

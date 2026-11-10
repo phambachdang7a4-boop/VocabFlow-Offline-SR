@@ -15,7 +15,13 @@ import { useClerk, useUser } from "@clerk/expo";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useSyncStatus } from "@/contexts/SyncContext";
 import { useColors } from "@/hooks/useColors";
-import { Button, ConfirmDialog, ErrorBanner, F, MaterialSheen } from "@/components/ui";
+import {
+  Button,
+  ConfirmDialog,
+  ErrorBanner,
+  F,
+  MaterialSheen,
+} from "@/components/ui";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useAppearance,
@@ -37,6 +43,18 @@ import {
   exportSyncSnapshot,
   replaceAccountSyncSnapshot,
 } from "@/data/vocabulary-sync";
+import {
+  deleteOfflineDictionary,
+  getOfflineDictionaryStatus,
+  openDictionary,
+} from "@/data/dictionary";
+import {
+  deleteOfflineAudio,
+  downloadOfflineAudio,
+  getOfflineAudioStatus,
+} from "@/data/offline-audio";
+import { DICTIONARY } from "@/domain/dictionary";
+import { OFFLINE_AUDIO_DICTIONARY } from "@/domain/offline-audio";
 
 export default function SettingsScreen() {
   const c = useColors();
@@ -58,12 +76,178 @@ export default function SettingsScreen() {
   const [restoreError, setRestoreError] = React.useState<string | null>(null);
   const [restoreCandidate, setRestoreCandidate] =
     React.useState<AccountBackupFile | null>(null);
+  const [dictionaryStatus, setDictionaryStatus] = React.useState<
+    "checking" | "missing" | "installed" | "damaged"
+  >("checking");
+  const [audioStatus, setAudioStatus] = React.useState<
+    "checking" | "missing" | "installed" | "damaged" | "unavailable"
+  >("checking");
+  const [offlineAction, setOfflineAction] = React.useState<
+    | "dictionary-download"
+    | "dictionary-delete"
+    | "audio-download"
+    | "audio-delete"
+    | null
+  >(null);
+  const [offlineStage, setOfflineStage] = React.useState<string | null>(null);
+  const [offlineProgress, setOfflineProgress] = React.useState({
+    bytesWritten: 0,
+    totalBytes: 0,
+  });
+  const [offlineError, setOfflineError] = React.useState<string | null>(null);
+  const [resetDialog, setResetDialog] = React.useState(false);
+  const [resetBusy, setResetBusy] = React.useState(false);
+  const [resetError, setResetError] = React.useState<string | null>(null);
+  const [resetNotice, setResetNotice] = React.useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === "web" ? 34 : insets.bottom) + 24;
   const syncBusy = sync.state === "checking" || sync.state === "syncing";
   const restoreSummary = restoreCandidate
     ? summarizeAccountBackup(restoreCandidate)
     : null;
+  const refreshOfflineStatus = React.useCallback(async () => {
+    try {
+      const [dictionary, audio] = await Promise.all([
+        getOfflineDictionaryStatus(),
+        getOfflineAudioStatus(),
+      ]);
+      setDictionaryStatus(dictionary.state);
+      setAudioStatus(audio.state);
+    } catch {
+      setDictionaryStatus("damaged");
+      setAudioStatus("damaged");
+    }
+  }, []);
+  React.useEffect(() => {
+    void refreshOfflineStatus();
+  }, [refreshOfflineStatus]);
+  const sizeLabel = (bytes: number) =>
+    `${(bytes / (1024 * 1024)).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
+  const progressLabel =
+    offlineProgress.totalBytes > 0
+      ? `${Math.min(100, Math.round((offlineProgress.bytesWritten / offlineProgress.totalBytes) * 100))}% · ${sizeLabel(offlineProgress.bytesWritten)} / ${sizeLabel(offlineProgress.totalBytes)}`
+      : `${sizeLabel(offlineProgress.bytesWritten)} đã tải`;
+  const offlineProgressText = offlineAction
+    ? `${offlineStage ?? "Đang xử lý"}${offlineAction.endsWith("download") ? ` · ${progressLabel}` : "…"}`
+    : null;
+
+  const handleDownloadDictionary = async () => {
+    if (offlineAction || syncBusy) return;
+    setOfflineError(null);
+    setOfflineAction("dictionary-download");
+    setOfflineStage("Đang chuẩn bị từ điển");
+    setOfflineProgress({ bytesWritten: 0, totalBytes: DICTIONARY.bytes });
+    try {
+      await openDictionary(
+        (stage) => {
+          setOfflineStage(
+            {
+              checking: "Đang kiểm tra",
+              "awaiting-consent": "Chờ xác nhận",
+              downloading: "Đang tải từ điển",
+              verifying: "Đang xác minh tệp",
+              importing: "Đang cài từ điển",
+              ready: "Đã cài xong",
+            }[stage],
+          );
+        },
+        {
+          allowDownload: true,
+          onProgress: (bytesWritten, totalBytes) =>
+            setOfflineProgress({ bytesWritten, totalBytes }),
+        },
+      );
+      setOfflineStage("Đã cài xong");
+    } catch (cause) {
+      setOfflineError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể cài từ điển offline.",
+      );
+    } finally {
+      setOfflineAction(null);
+      await refreshOfflineStatus();
+    }
+  };
+
+  const handleDownloadAudio = async () => {
+    if (offlineAction || syncBusy) return;
+    setOfflineError(null);
+    setOfflineAction("audio-download");
+    setOfflineStage("Đang tải gói audio");
+    setOfflineProgress({
+      bytesWritten: 0,
+      totalBytes: OFFLINE_AUDIO_DICTIONARY.bytes,
+    });
+    try {
+      await downloadOfflineAudio((bytesWritten, totalBytes) =>
+        setOfflineProgress({ bytesWritten, totalBytes }),
+      );
+      setOfflineStage("Đã cài xong");
+    } catch (cause) {
+      setOfflineError(
+        cause instanceof Error ? cause.message : "Không thể cài audio offline.",
+      );
+    } finally {
+      setOfflineAction(null);
+      await refreshOfflineStatus();
+    }
+  };
+
+  const handleDeleteOfflineResource = async (
+    resource: "dictionary" | "audio",
+  ) => {
+    if (offlineAction || syncBusy) return;
+    setOfflineError(null);
+    setOfflineAction(
+      resource === "dictionary" ? "dictionary-delete" : "audio-delete",
+    );
+    setOfflineStage(
+      resource === "dictionary" ? "Đang xóa từ điển" : "Đang xóa audio",
+    );
+    try {
+      if (resource === "dictionary") await deleteOfflineDictionary();
+      else await deleteOfflineAudio();
+    } catch (cause) {
+      setOfflineError(
+        cause instanceof Error ? cause.message : "Không thể xóa gói offline.",
+      );
+    } finally {
+      setOfflineAction(null);
+      await refreshOfflineStatus();
+    }
+  };
+
+  const handleResetAppData = async () => {
+    if (resetBusy || offlineAction || transferState || syncBusy) return;
+    if (!sync.online) {
+      setResetError(
+        "Cần kết nối Internet để xóa dữ liệu cloud. Dữ liệu chưa bị thay đổi.",
+      );
+      return;
+    }
+    setResetError(null);
+    setResetNotice(null);
+    setResetBusy(true);
+    try {
+      await sync.resetAccountData(async () => {
+        await deleteOfflineAudio();
+        await deleteOfflineDictionary();
+      });
+      await reload();
+      await refreshOfflineStatus();
+      setResetDialog(false);
+      setResetNotice(
+        "Đã đặt lại dữ liệu tài khoản trên cloud và thiết bị này.",
+      );
+    } catch (cause) {
+      setResetError(
+        cause instanceof Error ? cause.message : "Không thể đặt lại dữ liệu.",
+      );
+    } finally {
+      setResetBusy(false);
+    }
+  };
 
   const facts: {
     icon: keyof typeof Feather.glyphMap;
@@ -283,8 +467,11 @@ export default function SettingsScreen() {
                       : appearance.loading || appearance.saving
                         ? 0.55
                         : 1,
-                    shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
-                    shadowOpacity: pressed ? 0.06 : 0.15, shadowRadius: 5, elevation: pressed ? 1 : 2,
+                    shadowColor: c.shade,
+                    shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                    shadowOpacity: pressed ? 0.06 : 0.15,
+                    shadowRadius: 5,
+                    elevation: pressed ? 1 : 2,
                   },
                 ]}
               >
@@ -355,8 +542,8 @@ export default function SettingsScreen() {
           PHÁT ÂM
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
-          Dùng giọng tiếng Anh có sẵn trên điện thoại. Không tải từ hoặc âm
-          thanh lên mạng.
+          Ưu tiên audio từ điển offline nếu đã cài; nếu chưa, dùng giọng tiếng
+          Anh có sẵn trên điện thoại. Dữ liệu không được tải lên mạng.
         </Text>
         <View
           style={[
@@ -377,7 +564,7 @@ export default function SettingsScreen() {
               <Text
                 style={[styles.appearanceDetail, { color: c.mutedForeground }]}
               >
-                Đọc từ bằng giọng tiếng Anh khi mở thẻ mới.
+                Tự phát âm khi mở thẻ mới.
               </Text>
             </View>
             <Switch
@@ -544,8 +731,8 @@ export default function SettingsScreen() {
           SAO LƯU & KHÔI PHỤC
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
-          Gói gồm sổ từ, tiến độ ôn và khóa học, thống kê; không gồm từ điển
-          offline hay thông tin đăng nhập.
+          Gói gồm sổ từ, tiến độ ôn, thống kê và phần thưởng; không gồm từ điển
+          offline, audio hay thông tin đăng nhập.
         </Text>
         <View
           style={[
@@ -597,12 +784,11 @@ export default function SettingsScreen() {
         <ConfirmDialog
           visible={restoreCandidate !== null}
           title="Thay thế dữ liệu hiện tại?"
-          message={`Sổ từ, tiến độ ôn, trạng thái đóng băng, tiến độ khóa học và thống kê trên thiết bị cùng tài khoản sẽ được thay bằng tệp này. Các thiết bị khác sẽ nhận dữ liệu mới khi đồng bộ; thay đổi chưa đồng bộ ở đó có thể bị thay thế. Nếu đang ngoại tuyến, tài khoản sẽ được cập nhật khi có mạng. Hãy xuất bản sao lưu trước nếu bạn muốn giữ dữ liệu hiện tại.
+          message={`Sổ từ, tiến độ ôn, trạng thái đóng băng, thống kê và phần thưởng trên thiết bị cùng tài khoản sẽ được thay bằng tệp này. Các thiết bị khác sẽ nhận dữ liệu mới khi đồng bộ; thay đổi chưa đồng bộ ở đó có thể bị thay thế. Nếu đang ngoại tuyến, tài khoản sẽ được cập nhật khi có mạng. Hãy xuất bản sao lưu trước nếu bạn muốn giữ dữ liệu hiện tại.
 
 Nội dung tệp:
 • Từ cá nhân: ${restoreSummary?.personalWordCount ?? 0}
 • Từ đã đóng băng: ${restoreSummary?.frozenWordCount ?? 0}
-• Bản ghi khóa học (tiến độ và lựa chọn): ${restoreSummary?.courseRecordCount ?? 0}
 • Ngày có thống kê ôn: ${restoreSummary?.reviewStatDayCount ?? 0}`}
           confirmLabel="Ghi đè"
           onCancel={() => {
@@ -614,6 +800,224 @@ Nội dung tệp:
           }}
           busy={transferState === "restoring"}
           error={restoreError}
+        />
+        <Text style={[styles.section, { color: c.mutedForeground }]}>
+          DỮ LIỆU OFFLINE
+        </Text>
+        <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
+          Từ điển và audio được tải riêng vào bộ nhớ ứng dụng, không nằm trong
+          APK. Audio chiếm khoảng 307 MB; nên tải bằng Wi-Fi.
+        </Text>
+        <View
+          style={[
+            styles.offlineCard,
+            {
+              backgroundColor: c.card,
+              borderColor: c.border,
+              borderRadius: c.radius,
+            },
+          ]}
+        >
+          <MaterialSheen radius={c.radius} />
+          <View style={styles.offlineResource}>
+            <View
+              style={[styles.offlineIcon, { backgroundColor: c.secondary }]}
+            >
+              <Feather name="book-open" size={19} color={c.primary} />
+            </View>
+            <View style={styles.offlineResourceText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Từ điển offline
+              </Text>
+              <Text
+                testID="offline-dictionary-status"
+                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+              >
+                {dictionaryStatus === "installed"
+                  ? `Đã cài · ${sizeLabel(DICTIONARY.bytes)}`
+                  : dictionaryStatus === "damaged"
+                    ? "Tệp bị thiếu hoặc lỗi · cần tải lại"
+                    : dictionaryStatus === "checking"
+                      ? "Đang kiểm tra…"
+                      : `Chưa cài · ${sizeLabel(DICTIONARY.bytes)}`}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.offlineActions}>
+            <Button
+              testID="offline-dictionary-download"
+              label={dictionaryStatus === "damaged" ? "Tải lại" : "Tải từ điển"}
+              icon="download"
+              onPress={() => {
+                void handleDownloadDictionary();
+              }}
+              loading={offlineAction === "dictionary-download"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                dictionaryStatus === "installed" ||
+                dictionaryStatus === "checking"
+              }
+              style={{ flex: 1 }}
+            />
+            <Button
+              testID="offline-dictionary-delete"
+              label="Xóa"
+              icon="trash-2"
+              variant="ghost"
+              onPress={() => {
+                void handleDeleteOfflineResource("dictionary");
+              }}
+              loading={offlineAction === "dictionary-delete"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                dictionaryStatus === "missing" ||
+                dictionaryStatus === "checking"
+              }
+              style={{ flex: 1 }}
+            />
+          </View>
+          <View style={[styles.offlineDivider, { borderColor: c.border }]} />
+          <View style={styles.offlineResource}>
+            <View
+              style={[styles.offlineIcon, { backgroundColor: c.secondary }]}
+            >
+              <Feather name="volume-2" size={19} color={c.primary} />
+            </View>
+            <View style={styles.offlineResourceText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Audio phát âm
+              </Text>
+              <Text
+                testID="offline-audio-status"
+                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+              >
+                {audioStatus === "installed"
+                  ? `Đã cài · ${sizeLabel(OFFLINE_AUDIO_DICTIONARY.bytes)} · ${OFFLINE_AUDIO_DICTIONARY.entryCount.toLocaleString("vi-VN")} từ`
+                  : audioStatus === "damaged"
+                    ? "Tệp bị thiếu hoặc lỗi · cần tải lại"
+                    : audioStatus === "unavailable"
+                      ? "Tải offline chỉ hỗ trợ trên ứng dụng Android"
+                      : audioStatus === "checking"
+                        ? "Đang kiểm tra…"
+                        : `Chưa cài · ${sizeLabel(OFFLINE_AUDIO_DICTIONARY.bytes)} · ${OFFLINE_AUDIO_DICTIONARY.entryCount.toLocaleString("vi-VN")} từ`}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.offlineActions}>
+            <Button
+              testID="offline-audio-download"
+              label={audioStatus === "damaged" ? "Tải lại" : "Tải audio"}
+              icon="download"
+              onPress={() => {
+                void handleDownloadAudio();
+              }}
+              loading={offlineAction === "audio-download"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                audioStatus === "installed" ||
+                audioStatus === "checking" ||
+                audioStatus === "unavailable"
+              }
+              style={{ flex: 1 }}
+            />
+            <Button
+              testID="offline-audio-delete"
+              label="Xóa"
+              icon="trash-2"
+              variant="ghost"
+              onPress={() => {
+                void handleDeleteOfflineResource("audio");
+              }}
+              loading={offlineAction === "audio-delete"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                audioStatus === "missing" ||
+                audioStatus === "checking" ||
+                audioStatus === "unavailable"
+              }
+              style={{ flex: 1 }}
+            />
+          </View>
+          {offlineProgressText ? (
+            <Text
+              testID="offline-progress"
+              accessibilityLiveRegion="polite"
+              style={[styles.appearanceDetail, { color: c.primary }]}
+            >
+              {offlineProgressText}
+            </Text>
+          ) : null}
+          {offlineError ? <ErrorBanner message={offlineError} /> : null}
+        </View>
+        <Text style={[styles.section, { color: c.mutedForeground }]}>
+          ĐẶT LẠI ỨNG DỤNG
+        </Text>
+        <View
+          style={[
+            styles.resetCard,
+            {
+              backgroundColor: c.card,
+              borderColor: c.border,
+              borderRadius: c.radius,
+            },
+          ]}
+        >
+          <MaterialSheen radius={c.radius} />
+          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+            Xóa sổ từ, tiến độ và thống kê trên thiết bị này và toàn bộ tài
+            khoản trên các thiết bị khác. Từ điển và audio offline cũng sẽ bị
+            xóa. Không thể hoàn tác; cần Internet để xác nhận xóa cloud.
+          </Text>
+          <Button
+            testID="reset-app-data"
+            label="Đặt lại mọi dữ liệu"
+            icon="trash-2"
+            variant="danger"
+            onPress={() => {
+              setResetError(null);
+              setResetDialog(true);
+            }}
+            disabled={
+              !user ||
+              !sync.online ||
+              syncBusy ||
+              Boolean(offlineAction) ||
+              transferState !== null ||
+              resetBusy
+            }
+          />
+          {resetNotice ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.transferNotice, { color: c.successText }]}
+            >
+              {resetNotice}
+            </Text>
+          ) : null}
+          {resetError ? <ErrorBanner message={resetError} /> : null}
+        </View>
+        <ConfirmDialog
+          visible={resetDialog}
+          title="Xóa mọi dữ liệu VocabFlow?"
+          message={
+            "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển và audio offline cũng sẽ bị xóa khỏi thiết bị này.\n\nCần Internet. Nếu máy chủ không xác nhận xóa cloud, dữ liệu trên thiết bị và tài nguyên offline sẽ được giữ nguyên. Không thể hoàn tác."
+          }
+          confirmLabel="Xóa cloud và thiết bị"
+          onCancel={() => {
+            if (!resetBusy) {
+              setResetDialog(false);
+              setResetError(null);
+            }
+          }}
+          onConfirm={() => {
+            void handleResetAppData();
+          }}
+          busy={resetBusy}
+          error={resetError}
         />
         <Text style={[styles.section, { color: c.mutedForeground }]}>
           HIỆU ỨNG GIAO DIỆN
@@ -743,8 +1147,14 @@ Nội dung tệp:
           style={[
             styles.stat,
             {
-              backgroundColor: c.vocabCard, borderRadius: c.radius + 6, position: "relative",
-              shadowColor: c.shade, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 9, elevation: 4,
+              backgroundColor: c.vocabCard,
+              borderRadius: c.radius + 6,
+              position: "relative",
+              shadowColor: c.shade,
+              shadowOffset: { width: 0, height: 5 },
+              shadowOpacity: 0.2,
+              shadowRadius: 9,
+              elevation: 4,
             },
           ]}
         >
@@ -829,6 +1239,19 @@ const styles = StyleSheet.create({
   appearanceTitle: { fontFamily: F.b, fontSize: 16 },
   appearanceDetail: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   speechGroup: { borderWidth: 1, overflow: "hidden" },
+  offlineCard: { borderWidth: 1, padding: 14, gap: 12, overflow: "hidden" },
+  offlineResource: { flexDirection: "row", alignItems: "center", gap: 12 },
+  offlineIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  offlineResourceText: { flex: 1, gap: 3 },
+  offlineActions: { flexDirection: "row", gap: 10 },
+  offlineDivider: { borderTopWidth: 1 },
+  resetCard: { borderWidth: 1, padding: 14, gap: 12, overflow: "hidden" },
   speechRow: {
     minHeight: 76,
     paddingHorizontal: 15,
