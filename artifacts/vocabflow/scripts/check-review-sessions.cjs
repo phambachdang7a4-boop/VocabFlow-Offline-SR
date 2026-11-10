@@ -62,7 +62,7 @@ let harness;
   const migrated = await harness.repo.getReviewStatistics("2026-11-08");
   assert.equal(
     harness.db.prepare("PRAGMA user_version").get().user_version,
-    18,
+    19,
   );
   assert.equal(migrated.totalSessions, 0);
   assert.equal(migrated.totalReviewed, 4);

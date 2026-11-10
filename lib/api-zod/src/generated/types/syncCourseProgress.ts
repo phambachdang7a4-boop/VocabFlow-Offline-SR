@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { SyncCourseProgressStage } from './syncCourseProgressStage';
+import type { SyncCourseProgressStage } from "./syncCourseProgressStage";
 
 export interface SyncCourseProgress {
   /** @maxLength 200 */

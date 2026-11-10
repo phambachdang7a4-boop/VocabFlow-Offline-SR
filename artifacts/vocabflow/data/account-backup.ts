@@ -6,6 +6,7 @@ import type {
   SyncMissionAward,
   SyncMissionChest,
   SyncPayload,
+  SyncReviewComboReward,
   SyncReviewSession,
   SyncReviewStat,
   SyncWord,
@@ -114,6 +115,10 @@ function validatePayload(value: unknown): SyncPayload {
   const reviewSessions = optionalRecordArray(value, "reviewSessions").map(
     parseReviewSession,
   );
+  const reviewComboRewards = optionalRecordArray(
+    value,
+    "reviewComboRewards",
+  ).map(parseReviewComboReward);
   const missionAwards = optionalRecordArray(value, "missionAwards").map(
     parseMissionAward,
   );
@@ -130,6 +135,7 @@ function validatePayload(value: unknown): SyncPayload {
     courseSelections.some((item) => item === null) ||
     reviewStats.some((item) => item === null) ||
     reviewSessions.some((item) => item === null) ||
+    reviewComboRewards.some((item) => item === null) ||
     missionAwards.some((item) => item === null) ||
     missionChests.some((item) => item === null) ||
     collectionCrafts.some((item) => item === null)
@@ -143,6 +149,7 @@ function validatePayload(value: unknown): SyncPayload {
   const validCourseSelections = courseSelections as SyncCourseSelection[];
   const validReviewStats = reviewStats as SyncReviewStat[];
   const validReviewSessions = reviewSessions as SyncReviewSession[];
+  const validReviewComboRewards = reviewComboRewards as SyncReviewComboReward[];
   const validMissionAwards = missionAwards as SyncMissionAward[];
   const validMissionChests = missionChests as SyncMissionChest[];
   const validCollectionCrafts = collectionCrafts as SyncCollectionCraft[];
@@ -159,6 +166,10 @@ function validatePayload(value: unknown): SyncPayload {
       (item) => `${item.deviceId}\u0000${item.day}`,
     ) ||
     hasDuplicates(validReviewSessions, (item) => item.sessionId) ||
+    hasDuplicates(
+      validReviewComboRewards,
+      (item) => `${item.sessionId}\u0000${item.comboIndex}`,
+    ) ||
     hasDuplicates(
       validMissionAwards,
       (item) => `${item.day}\u0000${item.missionId}`,
@@ -196,6 +207,7 @@ function validatePayload(value: unknown): SyncPayload {
     courseSelections: validCourseSelections,
     reviewStats: validReviewStats,
     reviewSessions: validReviewSessions,
+    reviewComboRewards: validReviewComboRewards,
     missionAwards: validMissionAwards,
     missionChests: validMissionChests,
     collectionCrafts: validCollectionCrafts,
@@ -316,6 +328,28 @@ function parseReviewSession(value: unknown): SyncReviewSession | null {
     maxCombo,
     grade: value.grade as SyncReviewSession["grade"],
     completed: value.completed,
+    createdAt: value.createdAt,
+  };
+}
+
+function parseReviewComboReward(value: unknown): SyncReviewComboReward | null {
+  if (
+    !isRecord(value) ||
+    !isString(value.sessionId, 120, false) ||
+    !isString(value.deviceId, 80, false) ||
+    !isDay(value.day) ||
+    !isPositiveInteger(value.comboIndex) ||
+    !isPositiveInteger(value.comboLength) ||
+    !isTimestamp(value.createdAt)
+  ) {
+    return null;
+  }
+  return {
+    sessionId: value.sessionId,
+    deviceId: value.deviceId,
+    day: value.day,
+    comboIndex: value.comboIndex,
+    comboLength: value.comboLength,
     createdAt: value.createdAt,
   };
 }

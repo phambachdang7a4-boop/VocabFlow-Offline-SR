@@ -9,8 +9,8 @@
 /**
  * Optional for older clients and backups; omitted values preserve the original 20-piece cost.
  */
-export type SyncCollectionCraftPieceCost = typeof SyncCollectionCraftPieceCost[keyof typeof SyncCollectionCraftPieceCost];
-
+export type SyncCollectionCraftPieceCost =
+  (typeof SyncCollectionCraftPieceCost)[keyof typeof SyncCollectionCraftPieceCost];
 
 export const SyncCollectionCraftPieceCost = {
   NUMBER_20: 20,

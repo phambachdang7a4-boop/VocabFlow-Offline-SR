@@ -76,6 +76,15 @@ export interface SyncReviewSession {
   createdAt: string;
 }
 
+export interface SyncReviewComboReward {
+  sessionId: string;
+  deviceId: string;
+  day: string;
+  comboIndex: number;
+  comboLength: number;
+  createdAt: string;
+}
+
 export interface SyncMissionAward {
   day: string;
   missionId: string;
@@ -95,6 +104,7 @@ export interface SyncPayload {
   courseSelections: SyncCourseSelection[];
   reviewStats: SyncReviewStat[];
   reviewSessions: SyncReviewSession[];
+  reviewComboRewards?: SyncReviewComboReward[];
   missionAwards: SyncMissionAward[];
   missionChests: SyncMissionChest[];
   collectionCrafts: SyncCollectionCraft[];
@@ -140,6 +150,7 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       deletedWords,
       reviewStats,
       reviewSessions,
+      reviewComboRewards,
       missionAwards,
       missionChests,
       collectionCrafts,
@@ -171,6 +182,12 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           active_duration_ms AS activeDurationMs, max_combo AS maxCombo,
           completed, created_at AS createdAt
         FROM review_session_results ORDER BY review_day, session_id
+      `),
+      db.getAllAsync<SyncReviewComboReward>(`
+        SELECT session_id AS sessionId, device_id AS deviceId,
+          review_day AS day, combo_index AS comboIndex,
+          combo_length AS comboLength, created_at AS createdAt
+        FROM review_combo_rewards ORDER BY review_day, session_id, combo_index
       `),
       db.getAllAsync<SyncMissionAward>(`
         SELECT mission_day AS day, mission_id AS missionId, stone,
@@ -215,6 +232,7 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           ...session,
           completed: Boolean(session.completed),
         })),
+        reviewComboRewards,
         missionAwards,
         missionChests: missionChests.map((chest) => ({
           ...chest,
@@ -324,6 +342,7 @@ export async function clearLocalAccountAfterCloudReset(
         courseSelections: [],
         reviewStats: [],
         reviewSessions: [],
+        reviewComboRewards: [],
         missionAwards: [],
         missionChests: [],
         collectionCrafts: [],
@@ -361,6 +380,7 @@ async function replacePayloadData(
     DELETE FROM review_day_statistics;
     DELETE FROM device_review_day_statistics;
     DELETE FROM review_session_results;
+    DELETE FROM review_combo_rewards;
     DELETE FROM daily_mission_awards;
     DELETE FROM mission_chests;
     DELETE FROM collection_crafts;
@@ -471,6 +491,21 @@ async function replacePayloadData(
       session.createdAt,
       session.activeDurationMs ?? 0,
       session.maxCombo ?? 0,
+    );
+  }
+  for (const reward of payload.reviewComboRewards ?? []) {
+    await db.runAsync(
+      `
+      INSERT OR IGNORE INTO review_combo_rewards
+        (session_id, device_id, review_day, combo_index, combo_length, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
+      reward.sessionId,
+      reward.deviceId,
+      reward.day,
+      reward.comboIndex,
+      reward.comboLength,
+      reward.createdAt,
     );
   }
   for (const award of payload.missionAwards ?? []) {
@@ -807,6 +842,21 @@ async function mergeSnapshotIntoDatabase(
         session.createdAt,
         session.activeDurationMs ?? 0,
         session.maxCombo ?? 0,
+      );
+    }
+    for (const reward of payload.reviewComboRewards ?? []) {
+      await db.runAsync(
+        `
+        INSERT OR IGNORE INTO review_combo_rewards
+          (session_id, device_id, review_day, combo_index, combo_length, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `,
+        reward.sessionId,
+        reward.deviceId,
+        reward.day,
+        reward.comboIndex,
+        reward.comboLength,
+        reward.createdAt,
       );
     }
     for (const award of payload.missionAwards ?? []) {

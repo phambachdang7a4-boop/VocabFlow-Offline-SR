@@ -157,6 +157,7 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.equal(cleared.payload.deletedWords.length, 0);
   assert.equal(cleared.payload.reviewStats.length, 0);
   assert.equal(cleared.payload.reviewSessions.length, 0);
+  assert.equal(cleared.payload.reviewComboRewards.length, 0);
   assert.equal(cleared.pending, false);
 
   const settings = readFileSync(join(__dirname, "../app/settings.tsx"), "utf8");

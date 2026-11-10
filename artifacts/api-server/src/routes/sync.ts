@@ -8,6 +8,7 @@ import {
   userCollectionCrafts,
   userDailyMissionAwards,
   userMissionChests,
+  userReviewComboRewards,
   userReviewSessionResults,
   userReviewStatistics,
   userSyncRevisions,
@@ -61,12 +62,14 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
     return;
   }
   const reviewSessions = parsed.data.reviewSessions ?? [];
+  const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
   const collectionCrafts = parsed.data.collectionCrafts ?? [];
   if (
     hasInvalidMissionData(
       reviewSessions,
+      reviewComboRewards,
       missionAwards,
       missionChests,
       collectionCrafts,
@@ -88,6 +91,10 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
     hasDuplicates(
       parsed.data.reviewStats,
       (item) => `${item.deviceId}\u0000${item.day}`,
+    ) ||
+    hasDuplicates(
+      reviewComboRewards,
+      (item) => `${item.sessionId}\u0000${item.comboIndex}`,
     ) ||
     hasDuplicates(reviewSessions, (item) => item.sessionId) ||
     hasDuplicates(
@@ -137,6 +144,10 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
         ...session,
         createdAt: toTimestamp(session.createdAt),
       })),
+      reviewComboRewards: reviewComboRewards.map((reward) => ({
+        ...reward,
+        createdAt: toTimestamp(reward.createdAt),
+      })),
       missionAwards: missionAwards.map((award) => ({
         ...award,
         completedAt: toTimestamp(award.completedAt),
@@ -179,6 +190,9 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       await tx
         .delete(userReviewSessionResults)
         .where(eq(userReviewSessionResults.userId, userId));
+      await tx
+        .delete(userReviewComboRewards)
+        .where(eq(userReviewComboRewards.userId, userId));
       await tx
         .delete(userDailyMissionAwards)
         .where(eq(userDailyMissionAwards.userId, userId));
@@ -250,6 +264,19 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
             grade: session.grade,
             completed: session.completed,
             createdAt: session.createdAt,
+          })),
+        );
+      }
+      if (snapshot.reviewComboRewards.length) {
+        await tx.insert(userReviewComboRewards).values(
+          snapshot.reviewComboRewards.map((reward) => ({
+            userId,
+            sessionId: reward.sessionId,
+            deviceId: reward.deviceId,
+            day: reward.day,
+            comboIndex: reward.comboIndex,
+            comboLength: reward.comboLength,
+            createdAt: reward.createdAt,
           })),
         );
       }
@@ -333,12 +360,14 @@ router.post("/sync", requireAuth, async (req, res) => {
     return;
   }
   const reviewSessions = parsed.data.reviewSessions ?? [];
+  const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
   const collectionCrafts = parsed.data.collectionCrafts ?? [];
   if (
     hasInvalidMissionData(
       reviewSessions,
+      reviewComboRewards,
       missionAwards,
       missionChests,
       collectionCrafts,
@@ -360,6 +389,10 @@ router.post("/sync", requireAuth, async (req, res) => {
     hasDuplicates(
       parsed.data.reviewStats,
       (item) => `${item.deviceId}\u0000${item.day}`,
+    ) ||
+    hasDuplicates(
+      reviewComboRewards,
+      (item) => `${item.sessionId}\u0000${item.comboIndex}`,
     ) ||
     hasDuplicates(reviewSessions, (item) => item.sessionId) ||
     hasDuplicates(
@@ -440,6 +473,10 @@ router.post("/sync", requireAuth, async (req, res) => {
         reviewSessions: reviewSessions.map((session) => ({
           ...session,
           createdAt: toTimestamp(session.createdAt),
+        })),
+        reviewComboRewards: reviewComboRewards.map((reward) => ({
+          ...reward,
+          createdAt: toTimestamp(reward.createdAt),
         })),
         missionAwards: missionAwards.map((award) => ({
           ...award,
@@ -619,6 +656,22 @@ router.post("/sync", requireAuth, async (req, res) => {
           )
           .onConflictDoNothing();
       }
+      if (snapshot.reviewComboRewards.length) {
+        await tx
+          .insert(userReviewComboRewards)
+          .values(
+            snapshot.reviewComboRewards.map((reward) => ({
+              userId,
+              sessionId: reward.sessionId,
+              deviceId: reward.deviceId,
+              day: reward.day,
+              comboIndex: reward.comboIndex,
+              comboLength: reward.comboLength,
+              createdAt: reward.createdAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
       if (snapshot.missionAwards.length) {
         await tx
           .insert(userDailyMissionAwards)
@@ -718,6 +771,7 @@ router.post("/sync", requireAuth, async (req, res) => {
         allTombstones,
         allStats,
         allSessions,
+        allComboRewards,
         allAwards,
         allChests,
         allCrafts,
@@ -738,6 +792,10 @@ router.post("/sync", requireAuth, async (req, res) => {
           .select()
           .from(userReviewSessionResults)
           .where(eq(userReviewSessionResults.userId, userId)),
+        tx
+          .select()
+          .from(userReviewComboRewards)
+          .where(eq(userReviewComboRewards.userId, userId)),
         tx
           .select()
           .from(userDailyMissionAwards)
@@ -811,6 +869,12 @@ router.post("/sync", requireAuth, async (req, res) => {
             ...session,
             day: session.day,
           })),
+          reviewComboRewards: allComboRewards.map(
+            ({ userId: _owner, ...reward }) => ({
+              ...reward,
+              day: reward.day,
+            }),
+          ),
           missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({
             ...award,
             day: award.day,
@@ -860,6 +924,7 @@ async function readUserSyncSnapshot(userId: string) {
     allTombstones,
     allStats,
     allSessions,
+    allComboRewards,
     allAwards,
     allChests,
     allCrafts,
@@ -881,6 +946,10 @@ async function readUserSyncSnapshot(userId: string) {
       .select()
       .from(userReviewSessionResults)
       .where(eq(userReviewSessionResults.userId, userId)),
+    db
+      .select()
+      .from(userReviewComboRewards)
+      .where(eq(userReviewComboRewards.userId, userId)),
     db
       .select()
       .from(userDailyMissionAwards)
@@ -929,6 +998,12 @@ async function readUserSyncSnapshot(userId: string) {
       ...session,
       day: session.day,
     })),
+    reviewComboRewards: allComboRewards.map(
+      ({ userId: _owner, ...reward }) => ({
+        ...reward,
+        day: reward.day,
+      }),
+    ),
     missionAwards: allAwards.map(({ userId: _owner, ...award }) => ({
       ...award,
       day: award.day,
@@ -950,6 +1025,14 @@ function hasInvalidMissionData(
     reviewedCount: number;
     correctCount: number;
     maxCombo?: number;
+  }>,
+  comboRewards: Array<{
+    sessionId: string;
+    deviceId: string;
+    day: string;
+    comboIndex: number;
+    comboLength: number;
+    createdAt: string | Date;
   }>,
   awards: Array<{ stone: number; missionId: string }>,
   chests: Array<{
@@ -985,6 +1068,25 @@ function hasInvalidMissionData(
         (session.maxCombo ?? 0) > session.correctCount ||
         session.correctCount > session.reviewedCount,
     ) ||
+    comboRewards.some((reward) => {
+      const createdAt =
+        reward.createdAt instanceof Date
+          ? reward.createdAt.getTime()
+          : Date.parse(reward.createdAt);
+      return (
+        !reward.sessionId.trim() ||
+        reward.sessionId.length > 120 ||
+        !reward.deviceId.trim() ||
+        reward.deviceId.length > 80 ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(reward.day) ||
+        !Number.isSafeInteger(reward.comboIndex) ||
+        reward.comboIndex < 1 ||
+        !Number.isSafeInteger(reward.comboLength) ||
+        reward.comboLength < 1 ||
+        !Number.isFinite(Date.parse(reward.day)) ||
+        !Number.isFinite(createdAt)
+      );
+    }) ||
     awards.some((award) => {
       const match = /^(review|add-words|lesson|grade|time|combo)-([1-3])$/.exec(
         award.missionId,

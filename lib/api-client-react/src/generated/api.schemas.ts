@@ -158,6 +158,26 @@ export interface SyncReviewSession {
   createdAt: string;
 }
 
+export interface SyncReviewComboReward {
+  /**
+   * @minLength 1
+   * @maxLength 120
+   */
+  sessionId: string;
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  deviceId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /** @minimum 1 */
+  comboIndex: number;
+  /** @minimum 1 */
+  comboLength: number;
+  createdAt: string;
+}
+
 export interface SyncMissionAward {
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
@@ -298,6 +318,8 @@ export interface UserSyncSnapshot {
   reviewStats: SyncReviewStat[];
   /** @maxItems 10000 */
   reviewSessions?: SyncReviewSession[];
+  /** @maxItems 10000 */
+  reviewComboRewards?: SyncReviewComboReward[];
   /** @maxItems 10000 */
   missionAwards?: SyncMissionAward[];
   /** @maxItems 10000 */

@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SyncCourseProgressStage = typeof SyncCourseProgressStage[keyof typeof SyncCourseProgressStage];
-
+export type SyncCourseProgressStage =
+  (typeof SyncCourseProgressStage)[keyof typeof SyncCourseProgressStage];
 
 export const SyncCourseProgressStage = {
-  flashcard: 'flashcard',
-  answer: 'answer',
-  selection: 'selection',
-  completed: 'completed',
+  flashcard: "flashcard",
+  answer: "answer",
+  selection: "selection",
+  completed: "completed",
 } as const;

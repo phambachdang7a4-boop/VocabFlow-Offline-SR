@@ -8,9 +8,9 @@
 
 export interface SyncWord {
   /**
-     * @minLength 1
-     * @maxLength 7000
-     */
+   * @minLength 1
+   * @maxLength 7000
+   */
   syncId: string;
   /** @maxLength 200 */
   term: string;
@@ -23,36 +23,36 @@ export interface SyncWord {
   /** @maxLength 4000 */
   note: string;
   /**
-     * @minimum 1
-     * @nullable
-     */
+   * @minimum 1
+   * @nullable
+   */
   dictionaryEntryId: number | null;
   /**
-     * @minimum 1
-     * @nullable
-     */
+   * @minimum 1
+   * @nullable
+   */
   dictionarySenseId: number | null;
   createdAt: Date;
   contentUpdatedAt: Date;
   /** @minimum 0 */
   reviewCount: number;
   /**
-     * @minimum 1
-     * @maximum 6
-     */
+   * @minimum 1
+   * @maximum 6
+   */
   level: number;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   learnedOn: string;
   /**
-     * @nullable
-     * @pattern ^\d{4}-\d{2}-\d{2}$
-     */
+   * @nullable
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
   nextReviewOn: string | null;
   completed: boolean;
   /**
-     * @nullable
-     * @pattern ^\d{4}-\d{2}-\d{2}$
-     */
+   * @nullable
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
   lastReviewedOn: string | null;
   frozen: boolean;
   progressUpdatedAt: Date;

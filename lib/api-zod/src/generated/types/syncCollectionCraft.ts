@@ -5,22 +5,22 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { SyncCollectionCraftPieceCost } from './syncCollectionCraftPieceCost';
-import type { SyncCollectionCraftRarity } from './syncCollectionCraftRarity';
+import type { SyncCollectionCraftPieceCost } from "./syncCollectionCraftPieceCost";
+import type { SyncCollectionCraftRarity } from "./syncCollectionCraftRarity";
 
 export interface SyncCollectionCraft {
   /**
-     * @minLength 1
-     * @maxLength 120
-     */
+   * @minLength 1
+   * @maxLength 120
+   */
   craftId: string;
   rarity: SyncCollectionCraftRarity;
   /** @minimum 1 */
   craftIndex: number;
   /**
-     * @minLength 1
-     * @maxLength 80
-     */
+   * @minLength 1
+   * @maxLength 80
+   */
   artworkId: string;
   craftedAt: Date;
   /** Optional for older clients and backups; omitted values preserve the original 20-piece cost. */

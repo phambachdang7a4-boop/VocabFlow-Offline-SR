@@ -28,6 +28,8 @@ function mount(file, properties = {}, initial = {}) {
   const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const speechCalls = [];
+  const comboRewardCalls = [];
+  const sessionResultCalls = [];
   const speechContext = {
     ready: true, autoRead: initial.speechAutoRead ?? false, slowRead: false, stopSpeaking: async () => {},
     speakWord: async word => { speechCalls.push(word); },
@@ -79,7 +81,21 @@ function mount(file, properties = {}, initial = {}) {
     '@/components/ReviewCard': { ReviewCard: 'ReviewCard', calendarLabel },
     '@/components/ReviewMistakeMatchGame': { ReviewMistakeMatchGame: 'ReviewMistakeMatchGame' },
     '@/components/ReviewOverview': { SavedTotal: 'SavedTotal', LevelDistributionChart: 'LevelDistributionChart', ReviewStatusBar: 'ReviewStatusBar' },
-    '@/data/vocabulary': { recordReviewSessionStart: async () => {}, recordReviewSessionResult: async () => {} },
+    '@/data/vocabulary': {
+      recordReviewSessionStart: async () => {},
+      recordReviewSessionResult: async result => { sessionResultCalls.push(result); },
+      getReviewSessionSummaryMetrics: async sessionId => ({
+        stoneEarned: comboRewardCalls
+          .filter(([input]) => input.sessionId === sessionId)
+          .reduce((total, [input]) => total + input.comboLength, 0),
+        personalComboRecord: Math.max(0, ...sessionResultCalls.map(result => result.maxCombo)),
+      }),
+      recordReviewComboReward: async (...args) => {
+        if (args[0].comboLength < 20) return false;
+        comboRewardCalls.push(args);
+        return true;
+      },
+    },
   });
   const Component = loaded.default ?? loaded.ReviewCard ?? loaded.ReviewMistakeMatchGame ?? loaded.LevelDistributionChart;
   function render() {
@@ -93,6 +109,8 @@ function mount(file, properties = {}, initial = {}) {
     routes,
     tabOptions,
     speechCalls,
+    comboRewardCalls,
+    sessionResultCalls,
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     update(next) { Object.assign(context, next); dirty = true; render(); },
@@ -135,6 +153,7 @@ async function startReview(screen) {
   assert.equal(screen.tabOptions.at(-1).tabBarStyle.display, 'none', 'Hide the tab bar during the full-screen review');
   assert.equal(screen.byId('review-session-count').props.children.join(''), '0/1');
   screen.byId('review-back-overview').props.onPress();
+  await screen.settle();
   assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 0 từ!');
   assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'C');
   assert.equal(screen.byId('review-summary-status').props.children.join(''), 'Chưa có câu trả lời để tính tỉ lệ');
@@ -142,6 +161,9 @@ async function startReview(screen) {
   assert.equal(screen.byId('review-summary-correct').props.children.join(''), '0/0');
   assert.equal(screen.byId('review-summary-accuracy').props.children.join(''), '—');
   assert.equal(screen.byId('review-summary-duration').props.children.join(''), '00:00');
+  assert.equal(screen.byId('review-summary-stone').props.children.join(''), '0 Stone');
+  assert.equal(screen.byId('review-summary-combo').props.children.join(''), '0');
+  assert.equal(screen.byId('review-summary-personal-record').props.children.join(''), '0');
   screen.byId('review-summary-close').props.onPress();
   assert.ok(screen.byId('review-start'));
   assert.ok(settingsButton(), 'Settings return on the overview');
@@ -149,10 +171,13 @@ async function startReview(screen) {
   await startReview(screen);
   screen.byType('ReviewCard').props.onCommitted(1, true);
   screen.byId('review-back-overview').props.onPress();
+  await screen.settle();
   assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 1 từ!');
   assert.equal(screen.byId('review-summary-status').props.children.join(''), 'Kết quả tính đến lúc bạn thoát');
   assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S',
     'An interrupted session ranks only the words answered before exiting.');
+  assert.equal(screen.byId('review-summary-combo').props.children.join(''), '1');
+  assert.equal(screen.byId('review-summary-personal-record').props.children.join(''), '1');
   screen.byId('review-summary-close').props.onPress();
   await startReview(screen);
   const question = screen.byType('ReviewCard').props;
@@ -167,6 +192,7 @@ async function startReview(screen) {
   assert.ok(screen.byType('ReviewCard'));
   screen.update({ error: null });
   screen.byType('ReviewCard').props.onNext();
+  await screen.settle();
   assert.equal(screen.byId('review-summary-title').props.children.join(''), 'Bạn đã ôn được 1 từ!');
   assert.equal(screen.byId('review-summary-grade').props.children.join(''), 'S+');
   assert.equal(screen.byId('review-summary-reviewed').props.children.join(''), '1/1');
@@ -196,11 +222,14 @@ async function startReview(screen) {
   early.byType('ReviewCard').props.onCommitted(11, false);
   early.byType('ReviewCard');
   early.byId('review-back-overview').props.onPress();
+  await early.settle();
   assert.deepEqual(early.byType('ReviewMistakeMatchGame').props.words.map(item => item.id), [11],
     'An incorrect saved answer is offered even when the review ends early');
   assert.equal(early.byId('review-summary-title'), undefined);
   early.byType('ReviewMistakeMatchGame').props.onReturnToReview();
   assert.equal(early.byId('review-summary-reviewed').props.children.join(''), '1/1');
+  assert.equal(early.byId('review-summary-stone').props.children.join(''), '0 Stone');
+  assert.equal(early.byId('review-summary-combo').props.children.join(''), '0');
 
   const sevenWords = Array.from({ length: 7 }, (_, index) => ({
     ...word,
@@ -219,6 +248,7 @@ async function startReview(screen) {
     sevenMistakes.byType('ReviewCard').props.onNext();
     sevenMistakes.byType('ReviewCard');
   }
+  await sevenMistakes.settle();
   const sevenGame = sevenMistakes.byType('ReviewMistakeMatchGame');
   assert.equal(sevenGame.props.words.length, 7, 'The handoff retains all mistakes from sessions longer than five words');
   assert.equal(new Set(sevenGame.props.words.map(item => item.id)).size, 7, 'A repeated failed callback does not duplicate a word');
@@ -261,8 +291,13 @@ async function startReview(screen) {
   assert.equal(current.exercise.prompt, 'They ________ it.', 'Same English word with a different meaning remains a separate question');
   assert.equal(current.exercise.choices.length, 3, 'Sentence blanks must have three or four choices from the notebook.');
   current.onCommitted(2, false);
+  await both.settle();
+  assert.equal(both.comboRewardCalls.length, 0,
+    'Ending a streak shorter than 20 does not award Stone.');
+  assert.equal(both.byId('review-combo-reward'), undefined);
   both.update({ words: [word, { ...word, id: 2 }, { ...word, id: 3 }] });
   both.byType('ReviewCard').props.onNext();
+  await both.settle();
   assert.equal(both.byType('ReviewCard'), undefined, 'Original queue only, and processed IDs never regrade even if cached due data is stale');
   const mistakeGame = both.byType('ReviewMistakeMatchGame');
   assert.deepEqual(mistakeGame.props.words.map(item => item.id), [2]);
@@ -273,11 +308,15 @@ async function startReview(screen) {
   assert.equal(both.byId('review-summary-reviewed').props.children.join(''), '2/2');
   assert.equal(both.byId('review-summary-correct').props.children.join(''), '1/2');
   assert.equal(both.byId('review-summary-accuracy').props.children.join(''), '50%');
+  assert.equal(both.byId('review-summary-stone').props.children.join(''), '0 Stone');
+  assert.equal(both.byId('review-summary-combo').props.children.join(''), '1');
+  assert.equal(both.byId('review-summary-personal-record').props.children.join(''), '1');
   both.byId('review-summary-close').props.onPress();
   assert.ok(both.byId('review-start'));
   await startReview(both);
   const abandoned = both.byType('ReviewCard').props;
   both.byId('review-back-overview').props.onPress();
+  await both.settle();
   both.byId('review-summary-close').props.onPress();
   await startReview(both);
   const fresh = both.byType('ReviewCard').props;
@@ -533,6 +572,16 @@ async function startReview(screen) {
       comboScreen.byType('ReviewCard').props.onNext();
     }
   }
+  comboScreen.byId('review-back-overview').props.onPress();
+  await comboScreen.settle();
+  assert.equal(comboScreen.comboRewardCalls.length, 1);
+  assert.equal(comboScreen.comboRewardCalls[0][0].comboLength, 25,
+    'A streak of at least 20 receives Stone when the session ends.');
+  assert.equal(comboScreen.byId('review-combo-reward').props.accessibilityLabel,
+    'Chuỗi 25 câu được thưởng 25 Stone');
+  assert.equal(comboScreen.byId('review-summary-stone').props.children.join(''), '25 Stone');
+  assert.equal(comboScreen.byId('review-summary-combo').props.children.join(''), '25');
+  assert.equal(comboScreen.byId('review-summary-personal-record').props.children.join(''), '25');
   comboScreen.unmount();
   console.log('PASS: mixed queue and stable snapshots; final feedback held; auto grading/check/dont-know/freeze locks; immutable retry and double-retry guard; no hints4–6; global read error retention; stale callbacks; dashboard/countdown/chart.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

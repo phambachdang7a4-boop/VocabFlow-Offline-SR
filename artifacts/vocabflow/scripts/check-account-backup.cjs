@@ -86,6 +86,16 @@ const payload = {
       createdAt: "2026-11-08T10:00:00.000Z",
     },
   ],
+  reviewComboRewards: [
+    {
+      sessionId: "session-1",
+      deviceId: "device-test",
+      day: "2026-11-08",
+      comboIndex: 1,
+      comboLength: 20,
+      createdAt: "2026-11-08T10:00:00.000Z",
+    },
+  ],
   missionAwards: [
     {
       day: "2026-11-08",
@@ -161,6 +171,7 @@ assert.equal(
   "Older session records default missing combo history to zero.",
 );
 delete olderBackup.payload.reviewSessions;
+delete olderBackup.payload.reviewComboRewards;
 delete olderBackup.payload.missionAwards;
 delete olderBackup.payload.missionChests[0].ruleSet;
 delete olderBackup.payload.missionChests[0].superUpgrade;
@@ -187,6 +198,11 @@ assert.deepEqual(
   parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewSessions,
   [],
   "Older backups restore without daily mission data.",
+);
+assert.deepEqual(
+  parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewComboRewards,
+  [],
+  "Older backups restore with no invented Combo Stone rewards.",
 );
 assert.deepEqual(
   parseAccountBackup(JSON.stringify(olderBackup)).payload.missionChests,

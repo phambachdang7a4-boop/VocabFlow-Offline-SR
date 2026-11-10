@@ -171,6 +171,11 @@ components:
           maxItems: 10000
           items:
             $ref: "#/components/schemas/SyncReviewSession"
+        reviewComboRewards:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncReviewComboReward"
         missionAwards:
           type: array
           maxItems: 10000
@@ -374,6 +379,30 @@ components:
           enum: ["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]
         completed:
           type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    SyncReviewComboReward:
+      type: object
+      required: [sessionId, deviceId, day, comboIndex, comboLength, createdAt]
+      properties:
+        sessionId:
+          type: string
+          minLength: 1
+          maxLength: 120
+        deviceId:
+          type: string
+          minLength: 1
+          maxLength: 80
+        day:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        comboIndex:
+          type: integer
+          minimum: 1
+        comboLength:
+          type: integer
+          minimum: 1
         createdAt:
           type: string
           format: date-time

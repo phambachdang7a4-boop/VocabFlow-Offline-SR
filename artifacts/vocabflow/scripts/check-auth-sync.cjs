@@ -61,6 +61,12 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     grade: "C",
     completed: true,
   });
+  await repo.recordReviewComboReward({
+    sessionId: "session-account-a",
+    startedAt: Date.parse("2026-11-08T08:00:00.000Z"),
+    comboIndex: 1,
+    comboLength: 12,
+  });
   const reviewTotals = await repo.getReviewStatistics("2026-01-01");
   assert.equal(reviewTotals.totalSessions, 1);
   assert.equal(reviewTotals.totalReviewed, 0);
@@ -78,6 +84,8 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     "Active review time is included in the sync snapshot.",
   );
   assert.equal(snapshot.payload.reviewSessions[0].maxCombo, 12);
+  assert.equal(snapshot.payload.reviewComboRewards.length, 1);
+  assert.equal(snapshot.payload.reviewComboRewards[0].comboLength, 12);
   assert.equal(
     Object.hasOwn(snapshot.payload, "userId"),
     false,
@@ -131,9 +139,21 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     completed: false,
     createdAt: "2026-11-08T09:00:00.000Z",
   };
+  const remoteComboReward = {
+    sessionId: "session-account-b",
+    deviceId: "device-account-b",
+    day: "2026-11-08",
+    comboIndex: 1,
+    comboLength: 6,
+    createdAt: "2026-11-08T09:00:00.000Z",
+  };
   await sync.mergeSyncSnapshot({
     ...snapshot.payload,
     reviewSessions: [...snapshot.payload.reviewSessions, remoteSession],
+    reviewComboRewards: [
+      ...snapshot.payload.reviewComboRewards,
+      remoteComboReward,
+    ],
   });
   snapshot = await sync.exportSyncSnapshot();
   assert.equal(
@@ -149,6 +169,15 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     ).maxCombo,
     6,
     "The imported peak combo stays associated with its own session.",
+  );
+  assert.deepEqual(
+    {
+      ...snapshot.payload.reviewComboRewards.find(
+        (reward) => reward.sessionId === remoteComboReward.sessionId,
+      ),
+    },
+    remoteComboReward,
+    "Combo Stone rewards restore from another device without duplication.",
   );
 
   const generationBeforeEdit = snapshot.generation;

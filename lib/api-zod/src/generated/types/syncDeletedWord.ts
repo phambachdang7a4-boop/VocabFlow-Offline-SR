@@ -8,9 +8,9 @@
 
 export interface SyncDeletedWord {
   /**
-     * @minLength 1
-     * @maxLength 7000
-     */
+   * @minLength 1
+   * @maxLength 7000
+   */
   syncId: string;
   deletedAt: Date;
 }

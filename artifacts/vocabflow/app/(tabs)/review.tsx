@@ -64,6 +64,8 @@ import { soundCueFor } from "@/domain/sound-cues";
 import {
   recordReviewSessionResult,
   recordReviewSessionStart,
+  recordReviewComboReward,
+  getReviewSessionSummaryMetrics,
 } from "@/data/vocabulary";
 import { ReviewMistakeMatchGame } from "@/components/ReviewMistakeMatchGame";
 import * as Crypto from "expo-crypto";
@@ -77,6 +79,7 @@ type Session = {
   correct: number[];
   currentCombo: number;
   maxCombo: number;
+  comboRewardCount: number;
   mistakes: VocabularyWord[];
   startedAt: number;
   index: number;
@@ -90,6 +93,18 @@ type SessionActiveClock = {
   clock: ActiveReviewClock;
 };
 
+type ReviewSummaryDetails = ReviewSessionSummary & {
+  stoneEarned: number;
+  longestCombo: number;
+  personalComboRecord: number;
+};
+
+type ComboNotice = {
+  kind: "milestone" | "reward";
+  count: number;
+  sequence: number;
+};
+
 export default function ReviewScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
@@ -101,20 +116,19 @@ export default function ReviewScreen() {
   const now = useReviewClock();
   const day = localDay(new Date(now));
   const [session, setSession] = useState<Session | null>(null);
-  const [summary, setSummary] = useState<ReviewSessionSummary | null>(null);
+  const [summary, setSummary] = useState<ReviewSummaryDetails | null>(null);
   const [pendingSummary, setPendingSummary] =
-    useState<ReviewSessionSummary | null>(null);
+    useState<ReviewSummaryDetails | null>(null);
   const [gameWords, setGameWords] = useState<VocabularyWord[] | null>(null);
+  const [sessionFinalizing, setSessionFinalizing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [sessionSaveError, setSessionSaveError] = useState<string | null>(null);
-  const [comboNotice, setComboNotice] = useState<{
-    count: number;
-    sequence: number;
-  } | null>(null);
+  const [comboNotice, setComboNotice] = useState<ComboNotice | null>(null);
   const busyRef = useRef(false);
   const startingRef = useRef(false);
+  const finalizingRef = useRef(false);
   const sequence = useRef(0);
   const comboNoticeSequence = useRef(0);
   const sessionRef = useRef<Session | null>(null);
@@ -122,7 +136,7 @@ export default function ReviewScreen() {
   sessionRef.current = session;
   const overview = useMemo(() => reviewOverview(words, day), [words, day]);
   const card = overview.dueWords[0];
-  const inSession = !!session || !!gameWords;
+  const inSession = !!session || !!gameWords || sessionFinalizing;
 
   useEffect(() => {
     navigation.setOptions({
@@ -149,11 +163,11 @@ export default function ReviewScreen() {
 
   useEffect(() => {
     if (!session) {
-      setComboNotice(null);
       return;
     }
     if (isReviewComboMilestone(session.currentCombo)) {
       setComboNotice({
+        kind: "milestone",
         count: session.currentCombo,
         sequence: ++comboNoticeSequence.current,
       });
@@ -214,6 +228,7 @@ export default function ReviewScreen() {
     sound.unlockFromGesture();
     setStarting(true);
     setStartError(null);
+    setComboNotice(null);
     try {
       await recordReviewSessionStart();
       sound.play(soundCueFor("reviewStarted"));
@@ -236,6 +251,7 @@ export default function ReviewScreen() {
         correct: [],
         currentCombo: 0,
         maxCombo: 0,
+        comboRewardCount: 0,
         mistakes: [],
         startedAt,
         index: 0,
@@ -253,6 +269,8 @@ export default function ReviewScreen() {
     }
   };
   const finishSession = (current: Session, completed: boolean) => {
+    if (finalizingRef.current) return;
+    finalizingRef.current = true;
     if (completed) sound.play(soundCueFor("reviewCompleted"));
     const endedAt = Date.now();
     const activeSessionClock = activeClockRef.current;
@@ -260,7 +278,7 @@ export default function ReviewScreen() {
       activeSessionClock?.sessionId === current.sessionId
         ? activeReviewDuration(activeSessionClock.clock, endedAt)
         : 0;
-    const result = createReviewSessionSummary(
+    const baseResult = createReviewSessionSummary(
       current,
       endedAt,
       completed,
@@ -269,34 +287,100 @@ export default function ReviewScreen() {
     activeClockRef.current = null;
     sessionRef.current = null;
     setSession(null);
+    setSummary(null);
+    setPendingSummary(null);
+    setGameWords(null);
+    setSessionFinalizing(true);
     setSessionSaveError(null);
-    void recordReviewSessionResult({
-      sessionId: current.sessionId,
-      startedAt: current.startedAt,
-      activeDurationMs,
-      maxCombo: current.maxCombo,
-      reviewedCount: result.reviewedCount,
-      correctCount: result.correctCount,
-      grade: getReviewGrade(
-        result.correctCount,
-        result.reviewedCount,
-        result.completed,
-      ),
-      completed: result.completed,
-    }).catch(() => {
-      setSessionSaveError(
-        "Chưa lưu được kết quả phiên ôn vào Nhiệm Vụ. Hãy đồng bộ lại khi có thể.",
-      );
+    const finalize = async () => {
+      let stoneEarned = 0;
+      let personalComboRecord = current.maxCombo;
+      if (current.currentCombo > 0) {
+        await saveComboReward(
+          current.sessionId,
+          current.startedAt,
+          current.comboRewardCount + 1,
+          current.currentCombo,
+        );
+      }
+      try {
+        await recordReviewSessionResult({
+          sessionId: current.sessionId,
+          startedAt: current.startedAt,
+          activeDurationMs,
+          maxCombo: current.maxCombo,
+          reviewedCount: baseResult.reviewedCount,
+          correctCount: baseResult.correctCount,
+          grade: getReviewGrade(
+            baseResult.correctCount,
+            baseResult.reviewedCount,
+            baseResult.completed,
+          ),
+          completed: baseResult.completed,
+        });
+      } catch {
+        setSessionSaveError(
+          "Chưa lưu được kết quả phiên ôn vào Nhiệm Vụ. Hãy đồng bộ lại khi có thể.",
+        );
+      }
+      try {
+        const metrics = await getReviewSessionSummaryMetrics(current.sessionId);
+        stoneEarned = metrics.stoneEarned;
+        personalComboRecord = Math.max(
+          personalComboRecord,
+          metrics.personalComboRecord,
+        );
+      } catch {
+        setSessionSaveError(
+          "Chưa đọc được Stone và kỷ lục Combo của phiên này.",
+        );
+      }
+      const result: ReviewSummaryDetails = {
+        ...baseResult,
+        stoneEarned,
+        longestCombo: current.maxCombo,
+        personalComboRecord,
+      };
+      if (current.mistakes.length) {
+        setPendingSummary(result);
+        setGameWords(current.mistakes);
+      } else {
+        setSummary(result);
+      }
+    };
+    void finalize().finally(() => {
+      finalizingRef.current = false;
+      setSessionFinalizing(false);
     });
-    if (current.mistakes.length) {
-      setPendingSummary(result);
-      setSummary(null);
-      setGameWords(current.mistakes);
-    } else {
-      setPendingSummary(null);
-      setSummary(result);
-      setGameWords(null);
-    }
+  };
+  const saveComboReward = (
+    sessionId: string,
+    startedAt: number,
+    comboIndex: number,
+    comboLength: number,
+  ): Promise<boolean> => {
+    return recordReviewComboReward({
+      sessionId,
+      startedAt,
+      comboIndex,
+      comboLength,
+    })
+      .then((inserted) => {
+        if (inserted) {
+          setComboNotice({
+            kind: "reward",
+            count: comboLength,
+            sequence: ++comboNoticeSequence.current,
+          });
+        }
+        return inserted;
+      })
+      .catch(() => {
+        setSessionSaveError(
+          "Không thể lưu Stone của chuỗi Combo. Dữ liệu ôn vẫn được giữ.",
+        );
+        return false;
+      });
   };
   const exitSession = () => {
     const current = sessionRef.current;
@@ -307,33 +391,46 @@ export default function ReviewScreen() {
     token: number,
     id: number,
     correct: boolean | null = null,
-  ) =>
-    setSession((s) => {
-      if (
-        !s ||
-        s.token !== token ||
-        s.word.id !== id ||
-        s.processed.includes(id)
-      )
-        return s;
-      const mistakes =
-        correct === false && !s.mistakes.some((word) => word.id === id)
-          ? [...s.mistakes, s.word]
-          : s.mistakes;
-      const combo = advanceReviewCombo(
-        { current: s.currentCombo, max: s.maxCombo },
-        correct === true,
+  ) => {
+    const current = sessionRef.current;
+    if (
+      !current ||
+      current.token !== token ||
+      current.word.id !== id ||
+      current.processed.includes(id)
+    )
+      return;
+    const endedCombo = correct !== true ? current.currentCombo : 0;
+    const comboIndex = current.comboRewardCount + (endedCombo > 0 ? 1 : 0);
+    const mistakes =
+      correct === false && !current.mistakes.some((word) => word.id === id)
+        ? [...current.mistakes, current.word]
+        : current.mistakes;
+    const combo = advanceReviewCombo(
+      { current: current.currentCombo, max: current.maxCombo },
+      correct === true,
+    );
+    const nextSession = {
+      ...current,
+      processed: [...current.processed, id],
+      answered: correct === null ? current.answered : [...current.answered, id],
+      correct: correct === true ? [...current.correct, id] : current.correct,
+      currentCombo: combo.current,
+      maxCombo: combo.max,
+      comboRewardCount: comboIndex,
+      mistakes,
+    };
+    sessionRef.current = nextSession;
+    setSession(nextSession);
+    if (endedCombo > 0) {
+      saveComboReward(
+        current.sessionId,
+        current.startedAt,
+        comboIndex,
+        endedCombo,
       );
-      return {
-        ...s,
-        processed: [...s.processed, id],
-        answered: correct === null ? s.answered : [...s.answered, id],
-        correct: correct === true ? [...s.correct, id] : s.correct,
-        currentCombo: combo.current,
-        maxCombo: combo.max,
-        mistakes,
-      };
-    });
+    }
+  };
   const changeBusy = (token: number, index: number, value: boolean) => {
     if (
       sessionRef.current?.token !== token ||
@@ -532,13 +629,21 @@ export default function ReviewScreen() {
           </Text>
         </View>
       ) : null}
-      {session && comboNotice ? (
+      {comboNotice && (session || summary || gameWords) ? (
         <View
-          testID="review-combo-notice"
+          testID={
+            comboNotice.kind === "reward"
+              ? "review-combo-reward"
+              : "review-combo-notice"
+          }
           pointerEvents="none"
           accessibilityRole="alert"
           accessibilityLiveRegion="assertive"
-          accessibilityLabel={`Combo ${comboNotice.count} câu đúng liên tiếp!`}
+          accessibilityLabel={
+            comboNotice.kind === "reward"
+              ? `Chuỗi ${comboNotice.count} câu được thưởng ${comboNotice.count} Stone`
+              : `Combo ${comboNotice.count} câu đúng liên tiếp!`
+          }
           style={[
             styles.comboNotice,
             {
@@ -548,17 +653,25 @@ export default function ReviewScreen() {
             },
           ]}
         >
-          <Feather name="zap" size={20} color={c.primaryForeground} />
+          <Feather
+            name={comboNotice.kind === "reward" ? "award" : "zap"}
+            size={20}
+            color={c.primaryForeground}
+          />
           <View style={styles.comboNoticeCopy}>
             <Text
               style={[styles.comboNoticeTitle, { color: c.primaryForeground }]}
             >
-              Combo {comboNotice.count}!
+              {comboNotice.kind === "reward"
+                ? `+${comboNotice.count} Stone`
+                : `Combo ${comboNotice.count}!`}
             </Text>
             <Text
               style={[styles.comboNoticeText, { color: c.primaryForeground }]}
             >
-              Đúng liên tiếp rất tốt!
+              {comboNotice.kind === "reward"
+                ? `${comboNotice.count} câu đúng liên tiếp đã được cộng vào số dư.`
+                : "Đúng liên tiếp rất tốt!"}
             </Text>
           </View>
         </View>
@@ -742,6 +855,112 @@ export default function ReviewScreen() {
                   </Text>
                 </View>
               </View>
+              <View style={styles.summaryHighlights}>
+                <View
+                  style={[
+                    styles.summaryHighlight,
+                    {
+                      backgroundColor: c.secondary,
+                      borderColor: c.border,
+                      borderRadius: c.radius,
+                    },
+                  ]}
+                >
+                  <View style={styles.summaryHighlightHeading}>
+                    <Feather name="award" size={16} color={c.primary} />
+                    <Text
+                      style={[
+                        styles.summaryHighlightLabel,
+                        { color: c.mutedForeground },
+                      ]}
+                      numberOfLines={2}
+                    >
+                      Stone được thưởng
+                    </Text>
+                  </View>
+                  <Text
+                    testID="review-summary-stone"
+                    style={[
+                      styles.summaryHighlightValue,
+                      { color: c.primary },
+                    ]}
+                  >
+                    {summary.stoneEarned.toLocaleString("vi-VN")} Stone
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.summaryHighlight,
+                    {
+                      backgroundColor: c.secondary,
+                      borderColor: c.border,
+                      borderRadius: c.radius,
+                    },
+                  ]}
+                >
+                  <View style={styles.summaryHighlightHeading}>
+                    <Feather name="zap" size={16} color={c.primary} />
+                    <Text
+                      style={[
+                        styles.summaryHighlightLabel,
+                        { color: c.mutedForeground },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      Combo dài nhất
+                    </Text>
+                  </View>
+                  <View style={styles.summaryComboValues}>
+                    <View style={styles.summaryComboSlot}>
+                      <Text
+                        testID="review-summary-combo"
+                        style={[
+                          styles.summaryHighlightValue,
+                          { color: c.foreground },
+                        ]}
+                      >
+                        {summary.longestCombo}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.summaryComboLabel,
+                          { color: c.mutedForeground },
+                        ]}
+                      >
+                        Phiên này
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.summaryComboSeparator,
+                        { color: c.mutedForeground },
+                      ]}
+                    >
+                      /
+                    </Text>
+                    <View style={styles.summaryComboSlot}>
+                      <Text
+                        testID="review-summary-personal-record"
+                        style={[
+                          styles.summaryHighlightValue,
+                          { color: c.primary },
+                        ]}
+                      >
+                        {summary.personalComboRecord}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.summaryComboLabel,
+                          { color: c.mutedForeground },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        Kỷ lục của bạn
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
               <View
                 style={[
                   styles.durationRow,
@@ -773,6 +992,13 @@ export default function ReviewScreen() {
                 icon="arrow-right"
                 onPress={() => setSummary(null)}
               />
+            </View>
+          ) : sessionFinalizing ? (
+            <View testID="review-summary-loading" style={styles.summaryFinalizing}>
+              <Feather name="loader" size={22} color={c.primary} />
+              <Text style={[styles.summarySubtitle, { color: c.mutedForeground }]}>
+                Đang tổng kết phiên ôn...
+              </Text>
             </View>
           ) : loading ? (
             <>
@@ -860,6 +1086,44 @@ const styles = StyleSheet.create({
   },
   summaryLabel: { fontFamily: F.m, fontSize: 10, textAlign: "center" },
   metricDivider: { width: 1, height: 36 },
+  summaryHighlights: { flexDirection: "row", gap: 10 },
+  summaryHighlight: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    padding: 12,
+    gap: 8,
+  },
+  summaryHighlightHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  summaryHighlightLabel: {
+    flexShrink: 1,
+    fontFamily: F.m,
+    fontSize: 12,
+  },
+  summaryHighlightValue: {
+    fontFamily: F.b,
+    fontSize: 18,
+    fontVariant: ["tabular-nums"],
+  },
+  summaryComboValues: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  summaryComboSlot: { flex: 1, alignItems: "center", gap: 2 },
+  summaryComboLabel: { fontFamily: F.m, fontSize: 9, textAlign: "center" },
+  summaryComboSeparator: { fontFamily: F.r, fontSize: 16 },
+  summaryFinalizing: {
+    flex: 1,
+    minHeight: 280,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
   durationRow: {
     flexDirection: "row",
     alignItems: "center",

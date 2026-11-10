@@ -94,6 +94,16 @@ export const mergeUserSyncDataBodyReviewSessionsItemMaxComboMin = 0;
 
 export const mergeUserSyncDataBodyReviewSessionsMax = 10000;
 
+export const mergeUserSyncDataBodyReviewComboRewardsItemSessionIdMax = 120;
+
+export const mergeUserSyncDataBodyReviewComboRewardsItemDeviceIdMax = 80;
+
+export const mergeUserSyncDataBodyReviewComboRewardsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const mergeUserSyncDataBodyReviewComboRewardsMax = 10000;
+
 export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
   "^\\d{4}-\\d{2}-\\d{2}$",
 );
@@ -289,6 +299,27 @@ export const MergeUserSyncDataBody = zod.object({
     )
     .max(mergeUserSyncDataBodyReviewSessionsMax)
     .optional(),
+  reviewComboRewards: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyReviewComboRewardsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyReviewComboRewardsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncDataBodyReviewComboRewardsItemDayRegExp),
+        comboIndex: zod.number().int().min(1),
+        comboLength: zod.number().int().min(1),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyReviewComboRewardsMax)
+    .optional(),
   missionAwards: zod
     .array(
       zod.object({
@@ -461,6 +492,15 @@ export const mergeUserSyncData200ResponseReviewSessionsItemActiveDurationMsMin =
 export const mergeUserSyncData200ResponseReviewSessionsItemMaxComboMin = 0;
 
 export const mergeUserSyncData200ResponseReviewSessionsMax = 10000;
+
+export const mergeUserSyncData200ResponseReviewComboRewardsItemSessionIdMax = 120;
+
+export const mergeUserSyncData200ResponseReviewComboRewardsItemDeviceIdMax = 80;
+
+export const mergeUserSyncData200ResponseReviewComboRewardsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+
+export const mergeUserSyncData200ResponseReviewComboRewardsMax = 10000;
 
 export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp =
   new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
@@ -661,6 +701,27 @@ export const MergeUserSyncData200Response = zod.object({
     )
     .max(mergeUserSyncData200ResponseReviewSessionsMax)
     .optional(),
+  reviewComboRewards: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseReviewComboRewardsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseReviewComboRewardsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseReviewComboRewardsItemDayRegExp),
+        comboIndex: zod.number().int().min(1),
+        comboLength: zod.number().int().min(1),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseReviewComboRewardsMax)
+    .optional(),
   missionAwards: zod
     .array(
       zod.object({
@@ -851,6 +912,15 @@ export const replaceUserSyncDataBodyReviewSessionsItemActiveDurationMsMin = 0;
 export const replaceUserSyncDataBodyReviewSessionsItemMaxComboMin = 0;
 
 export const replaceUserSyncDataBodyReviewSessionsMax = 10000;
+
+export const replaceUserSyncDataBodyReviewComboRewardsItemSessionIdMax = 120;
+
+export const replaceUserSyncDataBodyReviewComboRewardsItemDeviceIdMax = 80;
+
+export const replaceUserSyncDataBodyReviewComboRewardsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+
+export const replaceUserSyncDataBodyReviewComboRewardsMax = 10000;
 
 export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
   "^\\d{4}-\\d{2}-\\d{2}$",
@@ -1047,6 +1117,27 @@ export const ReplaceUserSyncDataBody = zod.object({
     )
     .max(replaceUserSyncDataBodyReviewSessionsMax)
     .optional(),
+  reviewComboRewards: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyReviewComboRewardsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyReviewComboRewardsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncDataBodyReviewComboRewardsItemDayRegExp),
+        comboIndex: zod.number().int().min(1),
+        comboLength: zod.number().int().min(1),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyReviewComboRewardsMax)
+    .optional(),
   missionAwards: zod
     .array(
       zod.object({
@@ -1217,6 +1308,15 @@ export const replaceUserSyncData200ResponseReviewSessionsItemActiveDurationMsMin
 export const replaceUserSyncData200ResponseReviewSessionsItemMaxComboMin = 0;
 
 export const replaceUserSyncData200ResponseReviewSessionsMax = 10000;
+
+export const replaceUserSyncData200ResponseReviewComboRewardsItemSessionIdMax = 120;
+
+export const replaceUserSyncData200ResponseReviewComboRewardsItemDeviceIdMax = 80;
+
+export const replaceUserSyncData200ResponseReviewComboRewardsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+
+export const replaceUserSyncData200ResponseReviewComboRewardsMax = 10000;
 
 export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp =
   new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
@@ -1418,6 +1518,29 @@ export const ReplaceUserSyncData200Response = zod.object({
       }),
     )
     .max(replaceUserSyncData200ResponseReviewSessionsMax)
+    .optional(),
+  reviewComboRewards: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(
+            replaceUserSyncData200ResponseReviewComboRewardsItemSessionIdMax,
+          ),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseReviewComboRewardsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseReviewComboRewardsItemDayRegExp),
+        comboIndex: zod.number().int().min(1),
+        comboLength: zod.number().int().min(1),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseReviewComboRewardsMax)
     .optional(),
   missionAwards: zod
     .array(

@@ -109,6 +109,24 @@ export const userReviewSessionResults = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.sessionId] })],
 );
 
+export const userReviewComboRewards = pgTable(
+  "user_review_combo_rewards",
+  {
+    userId: text("user_id").notNull(),
+    sessionId: text("session_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    day: date("review_day", { mode: "string" }).notNull(),
+    comboIndex: integer("combo_index").notNull(),
+    comboLength: integer("combo_length").notNull(),
+    createdAt: timestampColumn("created_at").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.userId, table.sessionId, table.comboIndex],
+    }),
+  ],
+);
+
 export const userDailyMissionAwards = pgTable(
   "user_daily_mission_awards",
   {

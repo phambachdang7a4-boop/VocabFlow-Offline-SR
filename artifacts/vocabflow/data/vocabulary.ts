@@ -77,6 +77,18 @@ export interface ReviewSessionResultInput {
   completed: boolean;
 }
 
+export interface ReviewComboRewardInput {
+  sessionId: string;
+  startedAt: number;
+  comboIndex: number;
+  comboLength: number;
+}
+
+export interface ReviewSessionSummaryMetrics {
+  stoneEarned: number;
+  personalComboRecord: number;
+}
+
 export function normalizeTerm(value: string): string {
   return value
     .normalize("NFKC")
@@ -212,7 +224,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 18) {
+    if ((version?.user_version ?? 0) > 19) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -682,6 +694,24 @@ async function initialize(): Promise<SQLiteDatabase> {
         await db.execAsync("PRAGMA user_version = 18;");
       });
     }
+    if ((version?.user_version ?? 0) < 19) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS review_combo_rewards (
+            session_id TEXT NOT NULL,
+            device_id TEXT NOT NULL,
+            review_day TEXT NOT NULL,
+            combo_index INTEGER NOT NULL CHECK (combo_index > 0),
+            combo_length INTEGER NOT NULL CHECK (combo_length > 0),
+            created_at TEXT NOT NULL,
+            PRIMARY KEY (session_id, combo_index)
+          );
+          CREATE INDEX IF NOT EXISTS idx_review_combo_rewards_day
+            ON review_combo_rewards(review_day);
+          PRAGMA user_version = 19;
+        `);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -838,6 +868,7 @@ export function getDailyMissionOverview(
         chestAwards,
         legacyBalance,
         chestBalance,
+        comboBalance,
         chests,
       ] = await Promise.all([
         readDailyMissionActivity(db, day),
@@ -856,12 +887,18 @@ export function getDailyMissionOverview(
         db.getFirstAsync<{ total: number | null }>(
           "SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1",
         ),
+        db.getFirstAsync<{ total: number | null }>(
+          "SELECT SUM(combo_length) AS total FROM review_combo_rewards",
+        ),
         readUnopenedMissionChests(db),
       ]);
       const missionRewards = [...legacyAwards, ...chestAwards];
       overview = {
         day,
-        stoneBalance: (legacyBalance?.total ?? 0) + (chestBalance?.total ?? 0),
+        stoneBalance:
+          (legacyBalance?.total ?? 0) +
+          (chestBalance?.total ?? 0) +
+          (comboBalance?.total ?? 0),
         missions: evaluateDailyMissions(day, activity, missionRewards),
         chests,
       };
@@ -1366,6 +1403,86 @@ export function recordReviewSessionResult(
       if (changed) await markSyncDirty(db);
     });
     if (changed) notifySyncListeners();
+  });
+}
+
+export function getReviewSessionSummaryMetrics(
+  sessionId: string,
+): Promise<ReviewSessionSummaryMetrics> {
+  return serialize(async () => {
+    if (
+      typeof sessionId !== "string" ||
+      !sessionId.trim() ||
+      sessionId.length > 120
+    ) {
+      throw new Error("Phiên ôn không hợp lệ.");
+    }
+    const db = await database();
+    const row = await db.getFirstAsync<{
+      stoneEarned: number | null;
+      personalComboRecord: number | null;
+    }>(
+      `
+      SELECT
+        COALESCE((
+          SELECT SUM(combo_length)
+          FROM review_combo_rewards
+          WHERE session_id = ?
+        ), 0) AS stoneEarned,
+        COALESCE((
+          SELECT MAX(max_combo)
+          FROM review_session_results
+        ), 0) AS personalComboRecord
+      `,
+      sessionId,
+    );
+    return {
+      stoneEarned: row?.stoneEarned ?? 0,
+      personalComboRecord: row?.personalComboRecord ?? 0,
+    };
+  });
+}
+
+export function recordReviewComboReward(
+  input: ReviewComboRewardInput,
+): Promise<boolean> {
+  return serialize(async () => {
+    if (
+      typeof input.sessionId !== "string" ||
+      !input.sessionId.trim() ||
+      input.sessionId.length > 120 ||
+      !Number.isFinite(input.startedAt) ||
+      !Number.isSafeInteger(input.comboIndex) ||
+      input.comboIndex < 1 ||
+      !Number.isSafeInteger(input.comboLength) ||
+      input.comboLength < 1
+    ) {
+      throw new Error("Phần thưởng Combo không hợp lệ.");
+    }
+    if (input.comboLength < 20) return false;
+    const db = await database();
+    const day = localDay(new Date(input.startedAt));
+    const deviceId = await getDeviceId(db);
+    let inserted = false;
+    await db.withTransactionAsync(async () => {
+      const result = await db.runAsync(
+        `
+        INSERT OR IGNORE INTO review_combo_rewards
+          (session_id, device_id, review_day, combo_index, combo_length, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        `,
+        input.sessionId,
+        deviceId,
+        day,
+        input.comboIndex,
+        input.comboLength,
+        new Date().toISOString(),
+      );
+      inserted = result.changes === 1;
+      if (inserted) await markSyncDirty(db);
+    });
+    if (inserted) notifySyncListeners();
+    return inserted;
   });
 }
 

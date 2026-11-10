@@ -16,9 +16,9 @@ export interface SyncReviewStat {
   /** @minimum 0 */
   correctCount: number;
   /**
-     * Number of times the learner started a review session on this device and day.
-     * @minimum 0
-     */
+   * Number of times the learner started a review session on this device and day.
+   * @minimum 0
+   */
   sessionCount?: number;
   updatedAt: Date;
 }

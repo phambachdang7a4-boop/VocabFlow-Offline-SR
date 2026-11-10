@@ -20,3 +20,10 @@ Corvi là linh vật chính thức của VocabFlow. Hình pixel-art người dù
 
 **How to apply:** Dùng hình đã gửi làm tham chiếu nhất quán khi thể hiện Corvi; dùng tên Corvi và tông đen Hắc Diệu Thạch cho bậc rương cao nhất.
 
+## Stone từ Combo
+Chỉ chuỗi có ít nhất 20 câu đúng liên tiếp mới nhận Stone; số Stone bằng độ dài chuỗi khi chuỗi kết thúc do trả lời sai hoặc kết thúc/thoát phiên. Chuỗi ngắn hơn 20 câu không nhận Stone. Mỗi chuỗi đủ điều kiện tính riêng, không giới hạn số lần nhận.
+
+**Why:** Người dùng cập nhật ngưỡng nhận Stone thành 20 câu sau khi chọn quy tắc thưởng theo chuỗi. Giữ Stone đã nhận trước khi đổi để không thu hồi phần thưởng cũ.
+
+**How to apply:** Ghi mỗi chuỗi thành một sự kiện thưởng riêng, chống ghi trùng khi xử lý lại cùng phiên và đồng bộ/backup sự kiện đó để số dư Stone không mất hoặc bị cộng lặp.
+

@@ -183,6 +183,57 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     assert.equal(savedComboMission.progress, comboMission.target);
     assert.equal(savedComboMission.rewarded, true);
 
+    for (let comboIndex = 1; comboIndex <= 5; comboIndex += 1) {
+      assert.equal(
+        await comboHarness.repo.recordReviewComboReward({
+          sessionId: "five-stone-combos",
+          startedAt: new Date(`${comboDay}T14:00:00`).getTime(),
+          comboIndex,
+          comboLength: 20,
+        }),
+        true,
+        "Each ended Combo streak is stored as one reward event.",
+      );
+    }
+    assert.equal(
+      await comboHarness.repo.recordReviewComboReward({
+        sessionId: "five-stone-combos",
+        startedAt: new Date(`${comboDay}T14:00:00`).getTime(),
+        comboIndex: 5,
+        comboLength: 20,
+      }),
+      false,
+      "Recording the same ended streak twice cannot pay it twice.",
+    );
+    comboOverview = await comboHarness.repo.getDailyMissionOverview(comboDay);
+    assert.equal(
+      comboOverview.stoneBalance,
+      100,
+      "Five 20-answer streaks earn exactly 100 Stone, with no daily cap.",
+    );
+    const comboSummaryMetrics =
+      await comboHarness.repo.getReviewSessionSummaryMetrics(
+        "five-stone-combos",
+      );
+    assert.equal(comboSummaryMetrics.stoneEarned, 100);
+    assert.equal(
+      comboSummaryMetrics.personalComboRecord,
+      comboMission.target,
+      "The session summary reads the all-time best Combo from saved sessions.",
+    );
+    assert.equal(
+      await comboHarness.repo.recordReviewComboReward({
+        sessionId: "under-threshold-streak",
+        startedAt: new Date(`${comboDay}T15:00:00`).getTime(),
+        comboIndex: 1,
+        comboLength: 19,
+      }),
+      false,
+      "A streak shorter than 20 does not receive Stone.",
+    );
+    comboOverview = await comboHarness.repo.getDailyMissionOverview(comboDay);
+    assert.equal(comboOverview.stoneBalance, 100);
+
     for (let index = 0; index < gradeMission.target; index += 1) {
       await harness.repo.recordReviewSessionResult({
         sessionId: `qualified-session-${index}`,
