@@ -9,7 +9,7 @@ import {
   View,
   type ImageSourcePropType,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
@@ -178,140 +178,76 @@ export default function CollectionScreen() {
       </View>
 
       {loading && !overview ? <ActivityIndicator color={c.primary} /> : null}
-      {overview
-        ? RARITY_ORDER.map((rarity) => {
+      {overview ? (
+        <View style={styles.rarityGrid}>
+          {RARITY_ORDER.map((rarity) => {
             const fragments = overview.fragments[rarity];
-            const progress = Math.min(100, fragments);
+            const canCraft = fragments >= 100 && crafting === null;
+            const tileLabel =
+              rarity === "legendary" ? "Corvi" : rarityDisplayLabel(rarity);
             return (
-              <View
+              <Pressable
                 key={rarity}
                 testID={`collection-rarity-${rarity}`}
-                style={[
-                  styles.rarityCard,
+                accessibilityRole="button"
+                accessibilityLabel={`${rarityDisplayLabel(rarity)}: ${fragments} mảnh. ${canCraft ? "Chạm để ghép tranh." : "Cần đủ 100 mảnh để ghép tranh."}`}
+                accessibilityState={{ disabled: !canCraft }}
+                disabled={!canCraft}
+                onPress={() => void craft(rarity)}
+                style={({ pressed }) => [
+                  styles.rarityTile,
                   {
                     backgroundColor: c.card,
                     borderColor: c.border,
                     shadowColor: c.shade,
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.14,
-                    shadowRadius: 7,
-                    elevation: 3,
+                    shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                    shadowOpacity: pressed ? 0.08 : 0.14,
+                    shadowRadius: 6,
+                    elevation: pressed ? 1 : 3,
+                    opacity: pressed ? 0.86 : 1,
                   },
                 ]}
               >
-                <MaterialSheen radius={18} />
-                <View style={styles.rarityTop}>
-                  <View
-                    style={[
-                      styles.rarityIcon,
-                      { backgroundColor: CHEST_RARITY_COLORS[rarity] },
-                    ]}
-                  >
-                    <Feather
-                      name="layers"
-                      size={20}
-                      color={CHEST_RARITY_ICON_COLORS[rarity]}
-                    />
-                  </View>
-                  <View style={styles.rarityText}>
-                    <Text
-                      style={[
-                        styles.rarityName,
-                        { color: CHEST_RARITY_TEXT_COLORS[rarity] },
-                      ]}
-                    >
-                      {rarityDisplayLabel(rarity)}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.fragmentCount,
-                        { color: c.mutedForeground },
-                      ]}
-                    >
-                      {fragments}/100 mảnh
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.progressNumber,
-                      { color: CHEST_RARITY_TEXT_COLORS[rarity] },
-                    ]}
-                  >
-                    {Math.round(progress)}%
-                  </Text>
-                </View>
-                <View style={[styles.track, { backgroundColor: c.muted }]}>
-                  <View
-                    style={[
-                      styles.fill,
-                      {
-                        width: `${progress}%`,
-                        backgroundColor:
-                          rarity === "legendary"
-                            ? CHEST_RARITY_TEXT_COLORS.legendary
-                            : CHEST_RARITY_COLORS[rarity],
-                      },
-                    ]}
-                  />
-                </View>
-                <Pressable
-                  testID={`craft-artwork-${rarity}`}
-                  accessibilityRole="button"
-                  accessibilityState={{
-                    disabled: fragments < 100 || crafting !== null,
-                  }}
-                  disabled={fragments < 100 || crafting !== null}
-                  onPress={() => void craft(rarity)}
-                  style={({ pressed }) => [
-                    styles.craftButton,
-                    {
-                      backgroundColor: fragments >= 100 ? c.accent : c.muted,
-                      borderColor:
-                        fragments >= 100 ? c.buttonPressed : c.border,
-                      opacity:
-                        crafting && crafting !== rarity
-                          ? 0.6
-                          : pressed
-                            ? 0.86
-                            : 1,
-                      shadowColor: c.shade,
-                      shadowOffset: { width: 0, height: pressed ? 1 : 3 },
-                      shadowOpacity: pressed
-                        ? 0.06
-                        : fragments >= 100
-                          ? 0.18
-                          : 0,
-                      shadowRadius: pressed ? 2 : 6,
-                      elevation: pressed ? 1 : fragments >= 100 ? 3 : 0,
-                    },
+                <MaterialSheen radius={15} />
+                <View
+                  style={[
+                    styles.rarityIcon,
+                    { backgroundColor: CHEST_RARITY_COLORS[rarity] },
                   ]}
                 >
-                  {fragments >= 100 ? (
-                    <MaterialSheen tone="gold" radius={13} />
-                  ) : null}
                   {crafting === rarity ? (
-                    <ActivityIndicator color={c.buttonForeground} />
+                    <ActivityIndicator
+                      size="small"
+                      color={CHEST_RARITY_ICON_COLORS[rarity]}
+                    />
                   ) : (
-                    <Feather
-                      name="image"
-                      size={17}
-                      color={c.buttonForeground}
+                    <MaterialCommunityIcons
+                      name="puzzle"
+                      size={24}
+                      color={CHEST_RARITY_ICON_COLORS[rarity]}
                     />
                   )}
-                  <Text
-                    style={[styles.craftText, { color: c.buttonForeground }]}
-                  >
-                    {crafting === rarity
-                      ? "Đang ghép…"
-                      : fragments >= 100
-                        ? "Ghép tranh"
-                        : "Cần thêm mảnh"}
-                  </Text>
-                </Pressable>
-              </View>
+                </View>
+                <Text
+                  style={[
+                    styles.rarityName,
+                    { color: CHEST_RARITY_TEXT_COLORS[rarity] },
+                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {tileLabel}
+                </Text>
+                <Text
+                  style={[styles.fragmentCount, { color: c.mutedForeground }]}
+                >
+                  {fragments}
+                </Text>
+              </Pressable>
             );
-          })
-        : null}
+          })}
+        </View>
+      ) : null}
 
       <View style={[styles.heading, styles.galleryHeading]}>
         <Text style={[styles.title, { color: c.foreground }]}>
@@ -420,38 +356,32 @@ const styles = StyleSheet.create({
   galleryHeading: { marginTop: 14 },
   title: { fontFamily: F.b, fontSize: 20 },
   caption: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
-  rarityCard: {
-    position: "relative",
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 14,
-    gap: 12,
-  },
-  rarityTop: { flexDirection: "row", alignItems: "center", gap: 11 },
-  rarityIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rarityText: { flex: 1, gap: 3 },
-  rarityName: { fontFamily: F.b, fontSize: 16 },
-  fragmentCount: { fontFamily: F.r, fontSize: 13 },
-  progressNumber: { fontFamily: F.b, fontSize: 13 },
-  track: { height: 8, borderRadius: 5, overflow: "hidden" },
-  fill: { height: "100%", borderRadius: 5 },
-  craftButton: {
-    position: "relative",
-    minHeight: 44,
-    borderWidth: 1,
-    borderRadius: 13,
+  rarityGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 10,
+  },
+  rarityTile: {
+    position: "relative",
+    borderWidth: 1,
+    borderRadius: 15,
+    width: "31%",
+    aspectRatio: 1,
+    padding: 8,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 5,
   },
-  craftText: { fontFamily: F.s, fontSize: 14 },
+  rarityIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rarityName: { fontFamily: F.b, fontSize: 13, textAlign: "center" },
+  fragmentCount: { fontFamily: F.r, fontSize: 12 },
   reveal: {
     position: "relative",
     borderRadius: 16,
