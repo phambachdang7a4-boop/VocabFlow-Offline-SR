@@ -175,35 +175,50 @@ export default function DictionaryScreen() {
       onBack={() => setOpenId(null)} />
   );
   else if (!debounced) body = (
-    <View testID="dictionary-search-idle" style={styles.idleState}>
-      <Image
-        testID="dictionary-corvi-idle-art"
-        accessible={false}
-        source={corviArt}
-        resizeMode="contain"
-        style={styles.idleArt}
-      />
-      <Text style={[styles.loadingTitle, { color: c.dictHead }]}>Tra một từ tiếng Anh</Text>
-      <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
-        Corvi sẵn sàng tra từ cho bạn. Gõ vài chữ cái đầu; chỉ những nghĩa bạn chọn mới được lưu vào sổ.
-      </Text>
-    </View>
+    <ScrollView
+      testID="dictionary-search-idle-scroll"
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottom }}
+    >
+      <View testID="dictionary-search-idle" style={styles.idleState}>
+        <Image
+          testID="dictionary-corvi-idle-art"
+          accessible={false}
+          source={corviArt}
+          resizeMode="contain"
+          style={styles.idleArt}
+        />
+        <Text style={[styles.loadingTitle, { color: c.dictHead }]}>Tra một từ tiếng Anh</Text>
+        <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
+          Corvi sẵn sàng tra từ cho bạn. Gõ vài chữ cái đầu; chỉ những nghĩa bạn chọn mới được lưu vào sổ.
+        </Text>
+      </View>
+    </ScrollView>
   );
   else if (loading && items.length === 0) body = (
-    <View testID="dictionary-search-loading" accessibilityLiveRegion="polite" style={styles.loadingState}>
-      <Image
-        testID="dictionary-corvi-search-art"
-        accessible={false}
-        source={corviArt}
-        resizeMode="contain"
-        style={styles.loadingArt}
-      />
-      <Text style={[styles.loadingTitle, { color: c.dictHead }]}>Corvi đang tìm từ cho bạn</Text>
-      <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
-        Chờ một chút nhé, Corvi đang tra trong từ điển ngoại tuyến.
-      </Text>
-      <ActivityIndicator accessibilityLabel="Đang tìm từ" size="small" color={c.dictHead} />
-    </View>
+    <ScrollView
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottom }}
+    >
+      <View testID="dictionary-search-loading" accessibilityLiveRegion="polite" style={styles.loadingState}>
+        <Image
+          testID="dictionary-corvi-search-art"
+          accessible={false}
+          source={corviArt}
+          resizeMode="contain"
+          style={styles.loadingArt}
+        />
+        <Text style={[styles.loadingTitle, { color: c.dictHead }]}>Corvi đang tìm từ cho bạn</Text>
+        <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
+          Chờ một chút nhé, Corvi đang tra trong từ điển ngoại tuyến.
+        </Text>
+        <ActivityIndicator accessibilityLabel="Đang tìm từ" size="small" color={c.dictHead} />
+      </View>
+    </ScrollView>
   );
   else if (error && items.length === 0) body = (
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: bottom }} keyboardShouldPersistTaps="handled">
@@ -215,9 +230,16 @@ export default function DictionaryScreen() {
       onAddManual={() => router.push('/word')} />
   );
   else if (items.length === 0) body = (
-    <EmptyState icon="feather" title="Không có mục từ phù hợp" body={`Không tìm thấy từ bắt đầu bằng “${debounced}”. Bạn vẫn có thể tự ghi từ này vào sổ.`}>
-      <Button testID="dictionary-add-manual" label="Tự ghi từ mới" icon="edit-3" variant="ghost" onPress={() => router.push('/word')} />
-    </EmptyState>
+    <ScrollView
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottom }}
+    >
+      <EmptyState icon="feather" title="Không có mục từ phù hợp" body={`Không tìm thấy từ bắt đầu bằng “${debounced}”. Bạn vẫn có thể tự ghi từ này vào sổ.`}>
+        <Button testID="dictionary-add-manual" label="Tự ghi từ mới" icon="edit-3" variant="ghost" onPress={() => router.push('/word')} />
+      </EmptyState>
+    </ScrollView>
   );
   else body = (
     <FlatList
@@ -244,7 +266,7 @@ export default function DictionaryScreen() {
   );
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: c.dictPage }}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: c.dictPage }}>
       <View style={[styles.band, {
         backgroundColor: c.dictBand,
         paddingTop: top + 10,
@@ -255,16 +277,6 @@ export default function DictionaryScreen() {
         elevation: 4,
       }]}>
         <MaterialSheen tone="navy" radius={0} />
-        <View style={styles.bandHead}>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.kicker, { color: c.dictBandMuted }]}>VocabFlow · Anh – Việt ngoại tuyến</Text>
-            <Text style={[styles.title, { color: c.dictBandInk }]}>Tra Từ</Text>
-          </View>
-          <Pressable testID="dictionary-open-sources" accessibilityLabel="Nguồn từ điển" onPress={() => router.push('/dictionary-sources')}
-            hitSlop={8} style={({ pressed }) => [styles.iconBtn, { opacity: pressed ? 0.6 : 1 }]}>
-            <Feather name="info" size={20} color={c.dictBandInk} />
-          </Pressable>
-        </View>
         <View style={[styles.search, {
           backgroundColor: c.dictField,
           borderRadius: c.radius,
@@ -299,6 +311,10 @@ export default function DictionaryScreen() {
               <Feather name="x-circle" size={20} color={c.dictMuted} />
             </Pressable>
           ) : null}
+          <Pressable testID="dictionary-open-sources" accessibilityLabel="Nguồn từ điển" onPress={() => router.push('/dictionary-sources')}
+            hitSlop={8} style={({ pressed }) => [styles.iconBtn, { opacity: pressed ? 0.6 : 1 }]}>
+            <Feather name="info" size={20} color={c.dictMuted} />
+          </Pressable>
           <View style={[styles.divider, { backgroundColor: c.dictLine }]} />
           <Pressable testID="dictionary-submit" accessibilityRole="button" accessibilityLabel="Tra ngay" onPress={submit}
             disabled={!dict.ready || !q.trim()} hitSlop={6}
@@ -313,14 +329,11 @@ export default function DictionaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  band: { position: 'relative', paddingHorizontal: 16, paddingBottom: 18, gap: 14 },
-  bandHead: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 4 },
-  kicker: { fontFamily: F.s, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 2 },
-  title: { fontFamily: F.b, fontSize: 26, letterSpacing: -0.5 },
-  iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  band: { position: 'relative', paddingHorizontal: 16, paddingBottom: 14 },
+  iconBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
-  idleState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
+  idleState: { flexGrow: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
   idleArt: { width: 236, height: 236, maxWidth: '100%' },
   loadingState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
   loadingArt: { width: 236, height: 236, maxWidth: '100%' },

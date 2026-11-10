@@ -9,10 +9,16 @@ const { exampleSegments } = dictionaryDomain;
 const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
 const dictionaryTabSource = readFileSync(join(__dirname, '../app/(tabs)/dictionary.tsx'), 'utf8');
 const dictionarySourcesSource = readFileSync(join(__dirname, '../app/dictionary-sources.tsx'), 'utf8');
+for (const tab of ['courses', 'index', 'review', 'blank']) {
+  const source = readFileSync(join(__dirname, `../app/(tabs)/${tab}.tsx`), 'utf8');
+  assert.doesNotMatch(source, /<ScreenHeader\b/, `${tab} no longer renders a redundant page-title banner.`);
+}
 assert.doesNotMatch(dictionaryEntrySource, /entry-open-sources|Nguồn và giấy phép từ điển/,
   'Entry results do not repeat the source attribution link under each lookup.');
 assert.match(dictionaryTabSource, /dictionary-open-sources/,
   'A compact info button still provides access to the attribution page.');
+assert.doesNotMatch(dictionaryTabSource, /VocabFlow · Anh – Việt ngoại tuyến|<Text[^>]*>Tra Từ<\/Text>/,
+  'The redundant dictionary title above the search field is removed.');
 assert.match(dictionarySourcesSource, /Nguồn từ điển/,
   'The full dictionary attribution page remains available in the app.');
 for (const [sentence, term, expected] of [
@@ -132,6 +138,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     suggestDictionary: term => new Promise((resolve, reject) => suggestionCalls.push({ term, resolve, reject })),
   });
   assert.ok(screen.byId('dictionary-search-idle'), 'Dictionary shows a welcoming idle state before a search');
+  assert.ok(screen.byId('dictionary-search-idle-scroll'), 'The empty state can scroll when it exceeds the viewport');
   assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi artwork is visible before a search');
   screen.byId('dictionary-search').props.onChangeText('job');
   screen.byId('dictionary-submit').props.onPress();

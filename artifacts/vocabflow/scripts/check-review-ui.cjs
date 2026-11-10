@@ -111,7 +111,7 @@ async function startReview(screen) {
 
 (async () => {
   const screen = mount('../app/(tabs)/review.tsx');
-  const settingsButton = () => find(screen.byType('ScreenHeader').props.right, node => node.props?.testID === 'review-open-settings');
+  const settingsButton = () => screen.byId('review-open-settings');
   assert.equal(settingsButton().props.accessibilityLabel, 'Mở cài đặt');
   settingsButton().props.onPress();
   assert.equal(screen.routes.at(-1), '/settings');

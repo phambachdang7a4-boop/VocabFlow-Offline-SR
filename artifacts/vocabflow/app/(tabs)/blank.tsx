@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomPad } from '@/components/ScreenHeader';
 import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { getDailyMissionOverview, type DailyMissionOverview } from '@/data/vocabulary';
 import {
@@ -17,6 +18,8 @@ import {
 export default function BlankScreen() {
   const c = useColors();
   const bottom = useBottomPad();
+  const insets = useSafeAreaInsets();
+  const top = Platform.OS === 'web' ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,9 +42,8 @@ export default function BlankScreen() {
 
   return (
     <View testID="missions-screen" style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker="THỬ THÁCH MỖI NGÀY" title="Nhiệm Vụ" />
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: bottom }]}
+        contentContainerStyle={[styles.content, { paddingTop: top + 12, paddingBottom: bottom }]}
         showsVerticalScrollIndicator={false}
       >
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}

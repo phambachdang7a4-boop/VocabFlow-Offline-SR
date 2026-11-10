@@ -12,7 +12,7 @@ import { useReviewClock } from '@/hooks/useReviewClock';
 import { localDay } from '@/domain/srs';
 import { formatReviewCountdown, reviewOverview, secondsUntilReview } from '@/domain/review-overview';
 import { Button, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
-import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
+import { useBottomPad } from '@/components/ScreenHeader';
 import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
 import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
@@ -285,11 +285,30 @@ export default function ReviewScreen() {
           </View>
           <Text style={[styles.sessionTitle, { color: c.foreground }]}>{session.exercise.kind === 'multiple-choice' ? 'Chọn từ đúng' : 'Điền từ'}</Text>
         </View>
-      ) : gameWords ? null : (
-        <ScreenHeader
-          kicker="Học ngắt quãng"
-          title="Ôn tập"
-          right={
+      ) : null}
+      {gameWords ? (
+        <ReviewMistakeMatchGame
+          words={gameWords}
+          onReturnToReview={() => {
+            setGameWords(null);
+            setSummary(pendingSummary);
+            setPendingSummary(null);
+          }}
+        />
+      ) : (
+      <KeyboardAwareScrollViewCompat
+        bottomOffset={24}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: session ? 8 : (Platform.OS === 'web' ? 67 : insets.top) + 12,
+          paddingBottom: session ? Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 16) + 8 : bottom,
+          flexGrow: 1,
+          gap: session ? 10 : 18,
+        }}
+      >
+        {!session ? (
+          <View style={styles.reviewToolbar}>
             <Pressable
               testID="review-open-settings"
               accessibilityRole="button"
@@ -306,29 +325,8 @@ export default function ReviewScreen() {
             >
               <Feather name="settings" size={20} color={c.headerForeground} />
             </Pressable>
-          }
-        />
-      )}
-      {gameWords ? (
-        <ReviewMistakeMatchGame
-          words={gameWords}
-          onReturnToReview={() => {
-            setGameWords(null);
-            setSummary(pendingSummary);
-            setPendingSummary(null);
-          }}
-        />
-      ) : (
-      <KeyboardAwareScrollViewCompat
-        bottomOffset={24}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingBottom: session ? Math.max(insets.bottom, Platform.OS === 'web' ? 34 : 16) + 8 : bottom,
-          flexGrow: 1,
-          gap: session ? 10 : 18,
-        }}
-      >
+          </View>
+        ) : null}
         {error ? <ErrorBanner message={inSession ? `${error} Kết quả đã lưu vẫn được giữ; hãy thử tải lại.` : error} onRetry={reload} /> : null}
         {session ? (
           <ReviewCard
@@ -528,4 +526,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  reviewToolbar: { alignItems: 'flex-end', minHeight: 44 },
 });

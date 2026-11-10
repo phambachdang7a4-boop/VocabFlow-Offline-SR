@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomPad } from '@/components/ScreenHeader';
 import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { useColors } from '@/hooks/useColors';
 import { COURSE_CATALOGS } from '@/data/course-catalog';
@@ -11,6 +12,8 @@ import { listCourseProgress, type CourseLessonProgress } from '@/data/vocabulary
 export default function CoursesScreen() {
   const c = useColors();
   const bottom = useBottomPad();
+  const insets = useSafeAreaInsets();
+  const top = Platform.OS === 'web' ? 67 : insets.top;
   const [progress, setProgress] = useState<CourseLessonProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +37,7 @@ export default function CoursesScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker="HỌC THEO CHỦ ĐỀ" title="Khóa Học" />
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottom }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: top + 12, paddingBottom: bottom }]} showsVerticalScrollIndicator={false}>
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
         <Text style={[styles.sectionTitle, { color: c.foreground }]}>Chọn khóa học</Text>

@@ -66,7 +66,8 @@ assert.deepEqual(
 );
 
 const screen = readFileSync(join(__dirname, "../app/(tabs)/index.tsx"), "utf8");
-assert.match(screen, /kicker=\{`\$\{words\.length\} từ trong sổ`\}/);
+assert.match(screen, /styles\.notebookCount/);
+assert.match(screen, /\{words\.length\} từ trong sổ/);
 assert.match(screen, /data=\{filtered\}/);
 assert.equal(words.length, 3, "Filtering the visible list does not change the saved-word total.");
 

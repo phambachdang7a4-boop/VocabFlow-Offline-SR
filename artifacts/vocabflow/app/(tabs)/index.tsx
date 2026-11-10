@@ -1,12 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import type { VocabularyWord } from '@/data/types';
 import { useColors } from '@/hooks/useColors';
 import { Button, EmptyState, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
-import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
+import { useBottomPad } from '@/components/ScreenHeader';
 import { filterNotebookWords } from '@/domain/notebook-filter';
 import { getReviewStatistics } from '@/data/vocabulary';
 import type { ReviewStatistics } from '@/domain/review-statistics';
@@ -17,6 +18,8 @@ const REVIEW_LEVELS = [1, 2, 3, 4, 5, 6] as const;
 
 export default function VocabularyScreen() {
   const c = useColors();
+  const insets = useSafeAreaInsets();
+  const top = Platform.OS === 'web' ? 67 : insets.top;
   const { words, loading, error, reload } = useVocabulary();
   const [q, setQ] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -137,6 +140,12 @@ export default function VocabularyScreen() {
 
   const listHeader = (
     <View style={styles.listHeader}>
+      {words.length > 0 ? (
+        <View style={styles.notebookToolbar}>
+          <Text style={[styles.notebookCount, { color: c.mutedForeground }]}>{words.length} từ trong sổ</Text>
+          {addBtn}
+        </View>
+      ) : null}
       {statistics ? (
         <NotebookStatistics statistics={statistics} canGoForward={statisticsMonth < `${localDay(new Date()).slice(0, 7)}-01`} onMonthChange={setStatisticsMonth} />
       ) : statisticsError ? (
@@ -194,14 +203,13 @@ export default function VocabularyScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
-      <ScreenHeader kicker={`${words.length} từ trong sổ`} title="Sổ từ của bạn" right={words.length > 0 ? addBtn : undefined} />
       {error ? (
-        <View style={styles.pad}>
+        <View style={[styles.pad, { paddingTop: top + 12 }]}>
           <ErrorBanner message={error} onRetry={reload} />
         </View>
       ) : null}
       {loading && words.length === 0 ? (
-        <View style={styles.pad}>
+        <View style={[styles.pad, { paddingTop: top + 12 }]}>
           <Skeleton />
           <Skeleton />
           <Skeleton />
@@ -217,7 +225,7 @@ export default function VocabularyScreen() {
           ListHeaderComponent={listHeader}
           contentContainerStyle={{
             paddingHorizontal: 20,
-            paddingTop: 8,
+            paddingTop: top + 12,
             paddingBottom: bottom,
             gap: 10,
           }}
@@ -264,6 +272,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listHeader: { gap: 10 },
+  notebookToolbar: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  notebookCount: { fontFamily: F.s, fontSize: 12, letterSpacing: 1.2, textTransform: 'uppercase' },
   search: {
     borderWidth: 1,
     flexDirection: 'row',
