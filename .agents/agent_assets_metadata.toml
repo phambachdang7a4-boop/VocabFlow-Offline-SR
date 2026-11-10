@@ -56,3 +56,17 @@ mtime_ms = 1794191046646
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/9d9ffe16-d6af-48ad-b027-0bc0e0554b86/a6f5c11f-90e4-485b-b455-4420593e8a51"
 storage_version_token = "1794191072913124"
 content_type = "text/csv"
+
+[[outputs]]
+id = "bWsWI3AiAY9FpF2Bw_OP5"
+uri = "file://artifacts/vocabflow/assets/images/corvi-app-icon.png"
+type = "image"
+title = "Icon ứng dụng Corvi"
+description = "Biểu tượng vuông pixel-art, lấy nét vào gương mặt Corvi với kính vàng và nền navy."
+logical_id = "6452a4cb-7303-4db8-bbdd-80dd4a0c441a"
+content_hash = "sha256:b3644cb335e31cc9fabb811a7a336918dee365c4d833e30281854bf9a1faf0ab"
+size = 1067817
+mtime_ms = 1794312101701
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/6452a4cb-7303-4db8-bbdd-80dd4a0c441a/5d3a2f65-cac0-4fa0-874f-d4a07335531e"
+storage_version_token = "1794312177348057"
+content_type = "image/png"

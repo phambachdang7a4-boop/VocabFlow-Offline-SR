@@ -4,10 +4,10 @@
     "slug": "vocabflow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/corvi-app-icon.png",
     "scheme": "vocabflow",
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/corvi-app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#F7F1E3"
     },
@@ -16,10 +16,14 @@
       "supportsTablet": false
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/corvi-app-icon.png",
+        "backgroundColor": "#1E2130"
+      },
       "package": "com.vocabflow.app"
     },
     "web": {
-      "favicon": "./assets/images/icon.png",
+      "favicon": "./assets/images/corvi-app-icon.png",
       "output": "static"
     },
     "plugins": [
