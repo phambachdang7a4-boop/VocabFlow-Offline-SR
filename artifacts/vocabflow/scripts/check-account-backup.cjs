@@ -79,6 +79,8 @@ const payload = {
       day: "2026-11-08",
       reviewedCount: 30,
       correctCount: 27,
+      activeDurationMs: 125_000,
+      maxCombo: 18,
       grade: "A",
       completed: true,
       createdAt: "2026-11-08T10:00:00.000Z",
@@ -143,6 +145,20 @@ assert.equal(
     .sessionCount,
   0,
   "Backups without session history start at zero instead of fabricating data.",
+);
+delete olderBackup.payload.reviewSessions[0].activeDurationMs;
+assert.equal(
+  parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewSessions[0]
+    .activeDurationMs,
+  0,
+  "Older session records default to zero active time instead of inventing duration.",
+);
+delete olderBackup.payload.reviewSessions[0].maxCombo;
+assert.equal(
+  parseAccountBackup(JSON.stringify(olderBackup)).payload.reviewSessions[0]
+    .maxCombo,
+  0,
+  "Older session records default missing combo history to zero.",
 );
 delete olderBackup.payload.reviewSessions;
 delete olderBackup.payload.missionAwards;

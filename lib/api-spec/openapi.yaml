@@ -363,6 +363,12 @@ components:
         correctCount:
           type: integer
           minimum: 0
+        activeDurationMs:
+          type: integer
+          minimum: 0
+        maxCombo:
+          type: integer
+          minimum: 0
         grade:
           type: string
           enum: ["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]
@@ -382,7 +388,7 @@ components:
           type: string
           minLength: 1
           maxLength: 40
-          pattern: "^(review|add-words|lesson|grade)-[1-3]$"
+          pattern: "^(review|add-words|lesson|grade|time|combo)-[1-3]$"
         stone:
           type: integer
           minimum: 1
@@ -417,7 +423,7 @@ components:
           type: string
           minLength: 1
           maxLength: 40
-          pattern: "^(review|add-words|lesson|grade)-[1-3]$"
+          pattern: "^(review|add-words|lesson|grade|time|combo)-[1-3]$"
         baseStone:
           type: integer
           minimum: 1

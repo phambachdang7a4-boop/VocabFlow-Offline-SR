@@ -54,9 +54,11 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   await repo.recordReviewSessionResult({
     sessionId: "session-account-a",
     startedAt: Date.parse("2026-11-08T08:00:00.000Z"),
+    activeDurationMs: 45_000,
+    maxCombo: 12,
     reviewedCount: 30,
-    correctCount: 27,
-    grade: "A",
+    correctCount: 12,
+    grade: "C",
     completed: true,
   });
   const reviewTotals = await repo.getReviewStatistics("2026-01-01");
@@ -70,6 +72,12 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     1,
     "Review grades sync with account data for daily missions.",
   );
+  assert.equal(
+    snapshot.payload.reviewSessions[0].activeDurationMs,
+    45_000,
+    "Active review time is included in the sync snapshot.",
+  );
+  assert.equal(snapshot.payload.reviewSessions[0].maxCombo, 12);
   assert.equal(
     Object.hasOwn(snapshot.payload, "userId"),
     false,
@@ -109,6 +117,38 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     snapshot.payload.missionChests.length,
     1,
     "Repeating an offline chest sync cannot duplicate the chest.",
+  );
+
+  const remoteSession = {
+    sessionId: "session-account-b",
+    deviceId: "device-account-b",
+    day: "2026-11-08",
+    reviewedCount: 8,
+    correctCount: 6,
+    activeDurationMs: 120_000,
+    maxCombo: 6,
+    grade: "A-",
+    completed: false,
+    createdAt: "2026-11-08T09:00:00.000Z",
+  };
+  await sync.mergeSyncSnapshot({
+    ...snapshot.payload,
+    reviewSessions: [...snapshot.payload.reviewSessions, remoteSession],
+  });
+  snapshot = await sync.exportSyncSnapshot();
+  assert.equal(
+    snapshot.payload.reviewSessions.find(
+      (session) => session.sessionId === remoteSession.sessionId,
+    ).activeDurationMs,
+    120_000,
+    "Active review time from another device is restored without loss.",
+  );
+  assert.equal(
+    snapshot.payload.reviewSessions.find(
+      (session) => session.sessionId === remoteSession.sessionId,
+    ).maxCombo,
+    6,
+    "The imported peak combo stays associated with its own session.",
   );
 
   const generationBeforeEdit = snapshot.generation;

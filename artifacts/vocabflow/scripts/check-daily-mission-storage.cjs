@@ -10,7 +10,13 @@ const {
 } = require("./test-support.cjs");
 
 const missionDomain = loadTs(join(__dirname, "../domain/daily-missions.ts"));
-const candidateDays = ["2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13"];
+const candidateDays = [
+  "2026-11-10",
+  "2026-11-11",
+  "2026-11-12",
+  "2026-11-13",
+  "2026-11-14",
+];
 const day = candidateDays.find((candidate) =>
   missionDomain
     .evaluateDailyMissions(
@@ -18,7 +24,8 @@ const day = candidateDays.find((candidate) =>
       {
         reviewedCount: 0,
         addedWordCount: 0,
-        qualifiedGradeCount: 0,
+        reviewSessions: [],
+        reviewDurationMs: 0,
       },
       [],
     )
@@ -30,23 +37,161 @@ const gradeMission = missionDomain
     {
       reviewedCount: 0,
       addedWordCount: 0,
-      qualifiedGradeCount: 0,
+      reviewSessions: [],
+      reviewDurationMs: 0,
     },
     [],
   )
   .find((mission) => mission.type === "grade");
+const timeDay = candidateDays.find((candidate) =>
+  missionDomain
+    .evaluateDailyMissions(
+      candidate,
+      {
+        reviewedCount: 0,
+        addedWordCount: 0,
+        reviewSessions: [],
+        reviewDurationMs: 0,
+      },
+      [],
+    )
+    .some((mission) => mission.type === "time"),
+);
+const timeMission = missionDomain
+  .evaluateDailyMissions(
+    timeDay,
+    {
+      reviewedCount: 0,
+      addedWordCount: 0,
+      reviewSessions: [],
+      reviewDurationMs: 0,
+    },
+    [],
+  )
+  .find((mission) => mission.type === "time");
+const comboDay = candidateDays.find((candidate) =>
+  missionDomain
+    .evaluateDailyMissions(
+      candidate,
+      {
+        reviewedCount: 0,
+        addedWordCount: 0,
+        reviewSessions: [],
+        reviewDurationMs: 0,
+      },
+      [],
+    )
+    .some((mission) => mission.type === "combo"),
+);
+const comboMission = missionDomain
+  .evaluateDailyMissions(
+    comboDay,
+    {
+      reviewedCount: 0,
+      addedWordCount: 0,
+      reviewSessions: [],
+      reviewDurationMs: 0,
+    },
+    [],
+  )
+  .find((mission) => mission.type === "combo");
 const root = mkdtempSync(join(tmpdir(), "vocabflow-daily-missions-"));
 const harness = createRepository(root, `${day}T12:00:00`);
+const timeRoot = mkdtempSync(join(tmpdir(), "vocabflow-time-mission-"));
+const timeHarness = createRepository(timeRoot, `${timeDay}T12:00:00`);
+const comboRoot = mkdtempSync(join(tmpdir(), "vocabflow-combo-mission-"));
+const comboHarness = createRepository(comboRoot, `${comboDay}T12:00:00`);
+const gradeByLevel = { 1: "A-", 2: "A", 3: "A+" };
+const requiredGrade = gradeByLevel[gradeMission.level];
+const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
 
 (async () => {
   try {
+    const firstStudyChunkMs = Math.floor((timeMission.target * 60_000) / 2);
+    for (const [index, activeDurationMs] of [
+      firstStudyChunkMs,
+      timeMission.target * 60_000 - firstStudyChunkMs,
+    ].entries()) {
+      await timeHarness.repo.recordReviewSessionResult({
+        sessionId: `time-session-${index}`,
+        startedAt: new Date(`${timeDay}T12:00:00`).getTime(),
+        activeDurationMs,
+        maxCombo: 0,
+        reviewedCount: 0,
+        correctCount: 0,
+        grade: "C",
+        completed: false,
+      });
+      const timeOverview =
+        await timeHarness.repo.getDailyMissionOverview(timeDay);
+      const savedTimeMission = timeOverview.missions.find(
+        (mission) => mission.type === "time",
+      );
+      assert.equal(
+        savedTimeMission.progress,
+        index === 0 ? Math.floor(timeMission.target / 2) : timeMission.target,
+        "Active study time accumulates across separate interrupted review sessions.",
+      );
+      assert.equal(
+        savedTimeMission.rewarded,
+        index === 1,
+        "The time mission grants its chest only after reaching its minute target.",
+      );
+    }
+
+    const splitStreaks = [
+      Math.floor(comboMission.target / 2),
+      comboMission.target - Math.floor(comboMission.target / 2),
+    ];
+    for (const [index, maxCombo] of splitStreaks.entries()) {
+      await comboHarness.repo.recordReviewSessionResult({
+        sessionId: `combo-short-${index}`,
+        startedAt: new Date(`${comboDay}T12:00:00`).getTime(),
+        activeDurationMs: 0,
+        maxCombo,
+        reviewedCount: maxCombo,
+        correctCount: maxCombo,
+        grade: "S+",
+        completed: true,
+      });
+    }
+    let comboOverview =
+      await comboHarness.repo.getDailyMissionOverview(comboDay);
+    let savedComboMission = comboOverview.missions.find(
+      (mission) => mission.type === "combo",
+    );
+    assert.equal(savedComboMission.progress, Math.max(...splitStreaks));
+    assert.equal(
+      savedComboMission.rewarded,
+      false,
+      "Separate shorter streaks do not complete the combo mission.",
+    );
+    await comboHarness.repo.recordReviewSessionResult({
+      sessionId: "combo-full",
+      startedAt: new Date(`${comboDay}T13:00:00`).getTime(),
+      activeDurationMs: 0,
+      maxCombo: comboMission.target,
+      reviewedCount: comboMission.target,
+      correctCount: comboMission.target,
+      grade: "S+",
+      completed: true,
+    });
+    comboOverview = await comboHarness.repo.getDailyMissionOverview(comboDay);
+    savedComboMission = comboOverview.missions.find(
+      (mission) => mission.type === "combo",
+    );
+    assert.equal(savedComboMission.progress, comboMission.target);
+    assert.equal(savedComboMission.rewarded, true);
+
     for (let index = 0; index < gradeMission.target; index += 1) {
       await harness.repo.recordReviewSessionResult({
         sessionId: `qualified-session-${index}`,
         startedAt: new Date(`${day}T12:00:00`).getTime(),
+        activeDurationMs: 0,
+        maxCombo: 0,
         reviewedCount: 30,
-        correctCount: 27,
-        grade: "A",
+        correctCount: correctCountByGrade[requiredGrade],
+        grade: requiredGrade,
         completed: true,
       });
     }
@@ -259,9 +404,11 @@ const harness = createRepository(root, `${day}T12:00:00`);
     await harness.repo.recordReviewSessionResult({
       sessionId: "qualified-session-0",
       startedAt: new Date(`${day}T12:00:00`).getTime(),
+      activeDurationMs: 0,
+      maxCombo: 0,
       reviewedCount: 30,
-      correctCount: 27,
-      grade: "A",
+      correctCount: correctCountByGrade[requiredGrade],
+      grade: requiredGrade,
       completed: true,
     });
     const secondOverview = await harness.repo.getDailyMissionOverview(day);
@@ -321,6 +468,10 @@ const harness = createRepository(root, `${day}T12:00:00`);
   } finally {
     harness.db.close();
     rmSync(root, { recursive: true, force: true });
+    timeHarness.db.close();
+    rmSync(timeRoot, { recursive: true, force: true });
+    comboHarness.db.close();
+    rmSync(comboRoot, { recursive: true, force: true });
   }
   console.log(
     "Daily mission storage, chest award/opening, legacy Stone preservation, and exactly-once reward passed.",

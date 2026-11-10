@@ -316,8 +316,10 @@ assert.ok(
   `The special fourth attempt stays near 2% (got ${luckyChestCount}/10000).`,
 );
 assert.deepEqual(
-  ["review-1", "add-words-2", "lesson-3"].map(startingRarityForMission),
-  ["common", "uncommon", "rare"],
+  ["review-1", "add-words-2", "lesson-3", "time-2", "combo-1"].map(
+    startingRarityForMission,
+  ),
+  ["common", "uncommon", "rare", "uncommon", "common"],
 );
 
 let superChestId;

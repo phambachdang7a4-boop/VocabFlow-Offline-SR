@@ -88,6 +88,10 @@ export const mergeUserSyncDataBodyReviewSessionsItemReviewedCountMin = 0;
 
 export const mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin = 0;
 
+export const mergeUserSyncDataBodyReviewSessionsItemActiveDurationMsMin = 0;
+
+export const mergeUserSyncDataBodyReviewSessionsItemMaxComboMin = 0;
+
 export const mergeUserSyncDataBodyReviewSessionsMax = 10000;
 
 export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
@@ -96,7 +100,7 @@ export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
 export const mergeUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
 
 export const mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp = new RegExp(
-  "^(review|add-words|lesson|grade)-[1-3]$",
+  "^(review|add-words|lesson|grade|time|combo)-[1-3]$",
 );
 export const mergeUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
@@ -110,7 +114,7 @@ export const mergeUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp(
 export const mergeUserSyncDataBodyMissionChestsItemMissionIdMax = 40;
 
 export const mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp = new RegExp(
-  "^(review|add-words|lesson|grade)-[1-3]$",
+  "^(review|add-words|lesson|grade|time|combo)-[1-3]$",
 );
 export const mergeUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
 
@@ -268,6 +272,16 @@ export const MergeUserSyncDataBody = zod.object({
           .number()
           .int()
           .min(mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin),
+        activeDurationMs: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewSessionsItemActiveDurationMsMin)
+          .optional(),
+        maxCombo: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewSessionsItemMaxComboMin)
+          .optional(),
         grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
         completed: zod.boolean(),
         createdAt: zod.coerce.date(),
@@ -442,6 +456,10 @@ export const mergeUserSyncData200ResponseReviewSessionsItemReviewedCountMin = 0;
 
 export const mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin = 0;
 
+export const mergeUserSyncData200ResponseReviewSessionsItemActiveDurationMsMin = 0;
+
+export const mergeUserSyncData200ResponseReviewSessionsItemMaxComboMin = 0;
+
 export const mergeUserSyncData200ResponseReviewSessionsMax = 10000;
 
 export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp =
@@ -449,7 +467,7 @@ export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp =
 export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
 
 export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp =
-  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
+  new RegExp("^(review|add-words|lesson|grade|time|combo)-[1-3]$");
 export const mergeUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncData200ResponseMissionAwardsMax = 10000;
@@ -461,7 +479,7 @@ export const mergeUserSyncData200ResponseMissionChestsItemDayRegExp =
 export const mergeUserSyncData200ResponseMissionChestsItemMissionIdMax = 40;
 
 export const mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp =
-  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
+  new RegExp("^(review|add-words|lesson|grade|time|combo)-[1-3]$");
 export const mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
 
 export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
@@ -624,6 +642,18 @@ export const MergeUserSyncData200Response = zod.object({
           .number()
           .int()
           .min(mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
+        activeDurationMs: zod
+          .number()
+          .int()
+          .min(
+            mergeUserSyncData200ResponseReviewSessionsItemActiveDurationMsMin,
+          )
+          .optional(),
+        maxCombo: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseReviewSessionsItemMaxComboMin)
+          .optional(),
         grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
         completed: zod.boolean(),
         createdAt: zod.coerce.date(),
@@ -816,6 +846,10 @@ export const replaceUserSyncDataBodyReviewSessionsItemReviewedCountMin = 0;
 
 export const replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin = 0;
 
+export const replaceUserSyncDataBodyReviewSessionsItemActiveDurationMsMin = 0;
+
+export const replaceUserSyncDataBodyReviewSessionsItemMaxComboMin = 0;
+
 export const replaceUserSyncDataBodyReviewSessionsMax = 10000;
 
 export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
@@ -824,7 +858,7 @@ export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
 export const replaceUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
 
 export const replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp =
-  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
+  new RegExp("^(review|add-words|lesson|grade|time|combo)-[1-3]$");
 export const replaceUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncDataBodyMissionAwardsMax = 10000;
@@ -837,7 +871,7 @@ export const replaceUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp(
 export const replaceUserSyncDataBodyMissionChestsItemMissionIdMax = 40;
 
 export const replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp =
-  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
+  new RegExp("^(review|add-words|lesson|grade|time|combo)-[1-3]$");
 export const replaceUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
 
 export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
@@ -996,6 +1030,16 @@ export const ReplaceUserSyncDataBody = zod.object({
           .number()
           .int()
           .min(replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin),
+        activeDurationMs: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewSessionsItemActiveDurationMsMin)
+          .optional(),
+        maxCombo: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewSessionsItemMaxComboMin)
+          .optional(),
         grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
         completed: zod.boolean(),
         createdAt: zod.coerce.date(),
@@ -1168,6 +1212,10 @@ export const replaceUserSyncData200ResponseReviewSessionsItemReviewedCountMin = 
 
 export const replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin = 0;
 
+export const replaceUserSyncData200ResponseReviewSessionsItemActiveDurationMsMin = 0;
+
+export const replaceUserSyncData200ResponseReviewSessionsItemMaxComboMin = 0;
+
 export const replaceUserSyncData200ResponseReviewSessionsMax = 10000;
 
 export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp =
@@ -1175,7 +1223,7 @@ export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp =
 export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
 
 export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp =
-  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
+  new RegExp("^(review|add-words|lesson|grade|time|combo)-[1-3]$");
 export const replaceUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncData200ResponseMissionAwardsMax = 10000;
@@ -1187,7 +1235,7 @@ export const replaceUserSyncData200ResponseMissionChestsItemDayRegExp =
 export const replaceUserSyncData200ResponseMissionChestsItemMissionIdMax = 40;
 
 export const replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp =
-  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
+  new RegExp("^(review|add-words|lesson|grade|time|combo)-[1-3]$");
 export const replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
 
 export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
@@ -1352,6 +1400,18 @@ export const ReplaceUserSyncData200Response = zod.object({
           .number()
           .int()
           .min(replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
+        activeDurationMs: zod
+          .number()
+          .int()
+          .min(
+            replaceUserSyncData200ResponseReviewSessionsItemActiveDurationMsMin,
+          )
+          .optional(),
+        maxCombo: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseReviewSessionsItemMaxComboMin)
+          .optional(),
         grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
         completed: zod.boolean(),
         createdAt: zod.coerce.date(),

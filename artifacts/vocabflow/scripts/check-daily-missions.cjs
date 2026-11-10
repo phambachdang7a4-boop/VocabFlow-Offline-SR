@@ -6,14 +6,22 @@ const { evaluateDailyMissions, isDailyReviewGradeQualified } = loadTs(
   join(__dirname, "../domain/daily-missions.ts"),
 );
 
-const dates = ["2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13"];
+const dates = [
+  "2026-11-10",
+  "2026-11-11",
+  "2026-11-12",
+  "2026-11-13",
+  "2026-11-14",
+];
+const missionTypes = ["review", "add-words", "grade", "time", "combo"];
 const plans = dates.map((day) =>
   evaluateDailyMissions(
     day,
     {
       reviewedCount: 0,
       addedWordCount: 0,
-      qualifiedGradeCount: 0,
+      reviewSessions: [],
+      reviewDurationMs: 0,
     },
     [],
   ),
@@ -26,14 +34,27 @@ assert.ok(
 assert.deepEqual(
   new Set(
     plans.flatMap((missions) =>
-      ["review", "add-words", "grade"].filter(
+      missionTypes.filter(
         (type) => !missions.some((mission) => mission.type === type),
       ),
     ),
   ),
-  new Set(),
-  "All three remaining mission categories appear each day.",
+  new Set(missionTypes),
+  "Every category rotates out over a five-day cycle.",
 );
+const omittedTypes = plans.flatMap((missions) =>
+  missionTypes.filter(
+      (type) => !missions.some((mission) => mission.type === type),
+  ),
+);
+assert.equal(omittedTypes.length, 10, "Two categories are omitted each day.");
+for (const type of missionTypes) {
+  assert.equal(
+    omittedTypes.filter((omittedType) => omittedType === type).length,
+    2,
+    `${type} rotates out twice in a five-day cycle.`,
+  );
+}
 assert.ok(
   plans.every(
     (missions) =>
@@ -60,7 +81,8 @@ for (const [index, missions] of plans.entries()) {
         {
           reviewedCount: 0,
           addedWordCount: 0,
-          qualifiedGradeCount: 0,
+          reviewSessions: [],
+          reviewDurationMs: 0,
         },
         [],
       )[mission.level - 1].stoneReward,
@@ -77,7 +99,15 @@ const byTypeAndLevel = (type, level) => {
       {
         reviewedCount: 100,
         addedWordCount: 100,
-        qualifiedGradeCount: 100,
+        reviewSessions: [
+          {
+            grade: "S+",
+            reviewedCount: 100,
+            activeDurationMs: 0,
+            maxCombo: 30,
+          },
+        ],
+        reviewDurationMs: 0,
       },
       [],
     ).find((item) => item.type === type && item.level === level);
@@ -88,27 +118,147 @@ const byTypeAndLevel = (type, level) => {
 
 assert.deepEqual(
   [1, 2, 3].map((level) => byTypeAndLevel("review", level)?.target),
-  [5, 10, 20],
+  [30, 60, 90],
 );
 assert.deepEqual(
   [1, 2, 3].map((level) => byTypeAndLevel("add-words", level)?.target),
-  [1, 5, 10],
+  [5, 10, 15],
 );
 assert.deepEqual(
   [1, 2, 3].map((level) => byTypeAndLevel("grade", level)?.target),
-  [1, 2, 3],
+  [1, 1, 1],
+);
+assert.deepEqual(
+  [1, 2, 3].map((level) => byTypeAndLevel("time", level)?.target),
+  [5, 10, 20],
+);
+assert.deepEqual(
+  [1, 2, 3].map((level) => byTypeAndLevel("combo", level)?.target),
+  [5, 10, 25],
 );
 
-assert.equal(isDailyReviewGradeQualified("A", 30), true);
-assert.equal(isDailyReviewGradeQualified("S+", 30), true);
-assert.equal(isDailyReviewGradeQualified("A-", 30), false);
-assert.equal(isDailyReviewGradeQualified("S+", 29), false);
+for (const [level, target] of [5, 10, 20].entries()) {
+  const missionLevel = level + 1;
+  const day = dates.find((candidate) =>
+    evaluateDailyMissions(
+      candidate,
+      {
+        reviewedCount: 0,
+        addedWordCount: 0,
+        reviewSessions: [],
+        reviewDurationMs: 0,
+      },
+      [],
+    ).some(
+      (mission) => mission.type === "time" && mission.level === missionLevel,
+    ),
+  );
+  assert.ok(day, `Time level ${missionLevel} appears during the rotation.`);
+  const atThreshold = evaluateDailyMissions(
+    day,
+    {
+      reviewedCount: 0,
+      addedWordCount: 0,
+      reviewSessions: [],
+      reviewDurationMs: target * 60_000,
+    },
+    [],
+  ).find((mission) => mission.type === "time");
+  const beforeThreshold = evaluateDailyMissions(
+    day,
+    {
+      reviewedCount: 0,
+      addedWordCount: 0,
+      reviewSessions: [],
+      reviewDurationMs: target * 60_000 - 1,
+    },
+    [],
+  ).find((mission) => mission.type === "time");
+  assert.equal(atThreshold.completed, true);
+  assert.equal(beforeThreshold.completed, false);
+}
+
+for (const [index, target] of [5, 10, 25].entries()) {
+  const missionLevel = index + 1;
+  const day = dates.find((candidate) =>
+    evaluateDailyMissions(
+      candidate,
+      {
+        reviewedCount: 0,
+        addedWordCount: 0,
+        reviewSessions: [],
+        reviewDurationMs: 0,
+      },
+      [],
+    ).some(
+      (mission) => mission.type === "combo" && mission.level === missionLevel,
+    ),
+  );
+  assert.ok(day, `Combo level ${missionLevel} appears during the rotation.`);
+  const completedCombo = evaluateDailyMissions(
+    day,
+    {
+      reviewedCount: target,
+      addedWordCount: 0,
+      reviewSessions: [
+        { grade: "C", reviewedCount: target, activeDurationMs: 0, maxCombo: target },
+      ],
+      reviewDurationMs: 0,
+    },
+    [],
+  ).find((mission) => mission.type === "combo");
+  const shorterStreaks = [
+    Math.floor(target / 2),
+    target - Math.floor(target / 2),
+  ];
+  const splitCombo = evaluateDailyMissions(
+    day,
+    {
+      reviewedCount: target,
+      addedWordCount: 0,
+      reviewSessions: shorterStreaks.map((maxCombo) => ({
+        grade: "C",
+        reviewedCount: maxCombo,
+        activeDurationMs: 0,
+        maxCombo,
+      })),
+      reviewDurationMs: 0,
+    },
+    [],
+  ).find((mission) => mission.type === "combo");
+  assert.equal(completedCombo.completed, true);
+  assert.equal(
+    splitCombo.completed,
+    false,
+    "Separate shorter streaks cannot be combined into one combo.",
+  );
+}
+
+assert.equal(isDailyReviewGradeQualified("A-", 30, "A-"), true);
+assert.equal(isDailyReviewGradeQualified("A-", 30, "A"), false);
+assert.equal(isDailyReviewGradeQualified("A", 30, "A"), true);
+assert.equal(isDailyReviewGradeQualified("A", 30, "A+"), false);
+assert.equal(isDailyReviewGradeQualified("A+", 30, "A+"), true);
+assert.equal(isDailyReviewGradeQualified("S+", 29, "A-"), false);
+
+assert.deepEqual(
+  [1, 2, 3].map((level) => byTypeAndLevel("grade", level)?.title),
+  ["Đạt hạng A- trở lên", "Đạt hạng A trở lên", "Đạt hạng A+ trở lên"],
+);
 
 const activeDay = dates[0];
 const activity = {
   reviewedCount: 100,
   addedWordCount: 100,
-  qualifiedGradeCount: 100,
+  reviewSessions: [
+    {
+      grade: "S+",
+      reviewedCount: 100,
+      activeDurationMs: 30 * 60_000,
+      maxCombo: 100,
+    },
+  ],
+  reviewDurationMs: 30 * 60_000,
 };
 const unclaimed = evaluateDailyMissions(activeDay, activity, []);
 const claimed = evaluateDailyMissions(
@@ -127,5 +277,5 @@ assert.ok(
 );
 
 console.log(
-  "Daily mission rotation, levels, rewards, and grade requirements passed.",
+  "Daily mission rotation, levels, rewards, grade, time, and combo requirements passed.",
 );

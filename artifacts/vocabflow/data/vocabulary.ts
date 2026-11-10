@@ -19,7 +19,6 @@ import {
 } from "../domain/review-statistics";
 import {
   evaluateDailyMissions,
-  isDailyReviewGradeQualified,
   missionAwardIsEarned,
   type DailyMission,
   type DailyMissionActivity,
@@ -70,6 +69,8 @@ export interface MissionChestUpgradeResult {
 export interface ReviewSessionResultInput {
   sessionId: string;
   startedAt: number;
+  activeDurationMs: number;
+  maxCombo: number;
   reviewedCount: number;
   correctCount: number;
   grade: DailyReviewGrade;
@@ -211,7 +212,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 16) {
+    if ((version?.user_version ?? 0) > 18) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -629,11 +630,56 @@ async function initialize(): Promise<SQLiteDatabase> {
           ALTER TABLE mission_chests_v16 RENAME TO mission_chests;
           CREATE INDEX idx_mission_chests_opened
             ON mission_chests(opened, mission_day);
-          ALTER TABLE collection_crafts
-            ADD COLUMN piece_cost INTEGER NOT NULL DEFAULT 20
-            CHECK (piece_cost IN (20, 100));
-          PRAGMA user_version = 16;
         `);
+        const collectionCraftColumns = await db.getAllAsync<{ name: string }>(
+          "PRAGMA table_info(collection_crafts)",
+        );
+        if (
+          !collectionCraftColumns.some((column) => column.name === "piece_cost")
+        ) {
+          await db.execAsync(`
+            ALTER TABLE collection_crafts
+              ADD COLUMN piece_cost INTEGER NOT NULL DEFAULT 20
+              CHECK (piece_cost IN (20, 100));
+          `);
+        }
+        await db.execAsync("PRAGMA user_version = 16;");
+      });
+    }
+    if ((version?.user_version ?? 0) < 17) {
+      await db.withTransactionAsync(async () => {
+        const reviewSessionColumns = await db.getAllAsync<{ name: string }>(
+          "PRAGMA table_info(review_session_results)",
+        );
+        if (
+          !reviewSessionColumns.some(
+            (column) => column.name === "active_duration_ms",
+          )
+        ) {
+          await db.execAsync(`
+            ALTER TABLE review_session_results
+              ADD COLUMN active_duration_ms INTEGER NOT NULL DEFAULT 0
+              CHECK (active_duration_ms >= 0);
+          `);
+        }
+        await db.execAsync("PRAGMA user_version = 17;");
+      });
+    }
+    if ((version?.user_version ?? 0) < 18) {
+      await db.withTransactionAsync(async () => {
+        const reviewSessionColumns = await db.getAllAsync<{ name: string }>(
+          "PRAGMA table_info(review_session_results)",
+        );
+        if (
+          !reviewSessionColumns.some((column) => column.name === "max_combo")
+        ) {
+          await db.execAsync(`
+            ALTER TABLE review_session_results
+              ADD COLUMN max_combo INTEGER NOT NULL DEFAULT 0
+              CHECK (max_combo >= 0);
+          `);
+        }
+        await db.execAsync("PRAGMA user_version = 18;");
       });
     }
     return db;
@@ -668,7 +714,7 @@ async function readDailyMissionActivity(
   day: string,
 ): Promise<DailyMissionActivity> {
   const [dayStart, nextDayStart] = localDayBounds(day);
-  const [reviewed, added, sessions] = await Promise.all([
+  const [reviewed, added, reviewSessions] = await Promise.all([
     db.getFirstAsync<{ count: number | null }>(
       "SELECT SUM(reviewed_count) AS count FROM device_review_day_statistics WHERE review_day = ?",
       day,
@@ -678,17 +724,26 @@ async function readDailyMissionActivity(
       dayStart,
       nextDayStart,
     ),
-    db.getAllAsync<{ grade: DailyReviewGrade; reviewedCount: number }>(
-      "SELECT grade, reviewed_count AS reviewedCount FROM review_session_results WHERE review_day = ?",
+    db.getAllAsync<{
+      grade: DailyReviewGrade;
+      reviewedCount: number;
+      activeDurationMs: number;
+      maxCombo: number;
+    }>(
+      `SELECT grade, reviewed_count AS reviewedCount,
+        active_duration_ms AS activeDurationMs, max_combo AS maxCombo
+       FROM review_session_results WHERE review_day = ?`,
       day,
     ),
   ]);
   return {
     reviewedCount: reviewed?.count ?? 0,
     addedWordCount: added?.count ?? 0,
-    qualifiedGradeCount: sessions.filter((session) =>
-      isDailyReviewGradeQualified(session.grade, session.reviewedCount),
-    ).length,
+    reviewSessions,
+    reviewDurationMs: reviewSessions.reduce(
+      (total, session) => total + session.activeDurationMs,
+      0,
+    ),
   };
 }
 
@@ -1268,6 +1323,11 @@ export function recordReviewSessionResult(
       !input.sessionId.trim() ||
       input.sessionId.length > 120 ||
       !Number.isFinite(input.startedAt) ||
+      !Number.isSafeInteger(input.activeDurationMs) ||
+      input.activeDurationMs < 0 ||
+      !Number.isSafeInteger(input.maxCombo) ||
+      input.maxCombo < 0 ||
+      input.maxCombo > input.correctCount ||
       !Number.isSafeInteger(input.reviewedCount) ||
       input.reviewedCount < 0 ||
       !Number.isSafeInteger(input.correctCount) ||
@@ -1287,8 +1347,8 @@ export function recordReviewSessionResult(
       const result = await db.runAsync(
         `
         INSERT OR IGNORE INTO review_session_results
-          (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at, active_duration_ms, max_combo)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         input.sessionId,
         deviceId,
@@ -1298,6 +1358,8 @@ export function recordReviewSessionResult(
         input.grade,
         input.completed ? 1 : 0,
         now,
+        input.activeDurationMs,
+        input.maxCombo,
       );
       const chestsChanged = await grantDailyMissionChests(db, day);
       changed = result.changes === 1 || chestsChanged;

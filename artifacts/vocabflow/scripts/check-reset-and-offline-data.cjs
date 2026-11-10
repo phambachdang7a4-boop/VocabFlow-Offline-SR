@@ -143,6 +143,8 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   await harness.repo.recordReviewSessionResult({
     sessionId: "before-reset",
     startedAt: Date.parse("2026-11-10T12:00:00.000Z"),
+    activeDurationMs: 0,
+    maxCombo: 0,
     reviewedCount: 1,
     correctCount: 1,
     grade: "S",

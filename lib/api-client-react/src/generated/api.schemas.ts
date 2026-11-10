@@ -149,6 +149,10 @@ export interface SyncReviewSession {
   reviewedCount: number;
   /** @minimum 0 */
   correctCount: number;
+  /** @minimum 0 */
+  activeDurationMs?: number;
+  /** @minimum 0 */
+  maxCombo?: number;
   grade: SyncReviewSessionGrade;
   completed: boolean;
   createdAt: string;
@@ -160,7 +164,7 @@ export interface SyncMissionAward {
   /**
    * @minLength 1
    * @maxLength 40
-   * @pattern ^(review|add-words|lesson|grade)-[1-3]$
+   * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
    */
   missionId: string;
   /**
@@ -206,7 +210,7 @@ export interface SyncMissionChest {
   /**
    * @minLength 1
    * @maxLength 40
-   * @pattern ^(review|add-words|lesson|grade)-[1-3]$
+   * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
    */
   missionId: string;
   /**

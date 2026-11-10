@@ -171,7 +171,9 @@ export function chestStoneReward(
 }
 
 export function startingRarityForMission(missionId: string): ChestRarity {
-  const match = /^(review|add-words|lesson|grade)-([1-3])$/.exec(missionId);
+  const match = /^(review|add-words|lesson|grade|time|combo)-([1-3])$/.exec(
+    missionId,
+  );
   if (!match) throw new Error("Nhiệm vụ gắn với rương không hợp lệ.");
   if (match[2] === "1") return "common";
   if (match[2] === "2") return "uncommon";
@@ -271,7 +273,9 @@ export function isValidMissionChest(chest: MissionChest): boolean {
   if (
     !chest.chestId.trim() ||
     !isDay(chest.day) ||
-    !/^(review|add-words|lesson|grade)-[1-3]$/.test(chest.missionId) ||
+    !/^(review|add-words|lesson|grade|time|combo)-[1-3]$/.test(
+      chest.missionId,
+    ) ||
     !Number.isSafeInteger(chest.baseStone) ||
     chest.baseStone < 1 ||
     chest.baseStone > 20 ||

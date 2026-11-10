@@ -100,6 +100,8 @@ export const userReviewSessionResults = pgTable(
     day: date("review_day", { mode: "string" }).notNull(),
     reviewedCount: integer("reviewed_count").notNull(),
     correctCount: integer("correct_count").notNull(),
+    activeDurationMs: integer("active_duration_ms").notNull().default(0),
+    maxCombo: integer("max_combo").notNull().default(0),
     grade: text("grade").notNull(),
     completed: boolean("completed").notNull(),
     createdAt: timestampColumn("created_at").notNull(),

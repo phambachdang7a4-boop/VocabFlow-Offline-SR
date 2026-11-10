@@ -5,7 +5,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  AppState,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import {
@@ -41,8 +48,15 @@ import {
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
 import {
   createReviewSessionSummary,
+  advanceReviewCombo,
+  activeReviewDuration,
   formatReviewDuration,
   getReviewGrade,
+  isReviewComboMilestone,
+  pauseActiveReviewClock,
+  resumeActiveReviewClock,
+  startActiveReviewClock,
+  type ActiveReviewClock,
   type ReviewSessionSummary,
 } from "@/domain/review-session";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
@@ -61,12 +75,19 @@ type Session = {
   processed: number[];
   answered: number[];
   correct: number[];
+  currentCombo: number;
+  maxCombo: number;
   mistakes: VocabularyWord[];
   startedAt: number;
   index: number;
   formatOffset: number;
   word: VocabularyWord;
   exercise: ReviewExercise;
+};
+
+type SessionActiveClock = {
+  sessionId: string;
+  clock: ActiveReviewClock;
 };
 
 export default function ReviewScreen() {
@@ -88,10 +109,16 @@ export default function ReviewScreen() {
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [sessionSaveError, setSessionSaveError] = useState<string | null>(null);
+  const [comboNotice, setComboNotice] = useState<{
+    count: number;
+    sequence: number;
+  } | null>(null);
   const busyRef = useRef(false);
   const startingRef = useRef(false);
   const sequence = useRef(0);
+  const comboNoticeSequence = useRef(0);
   const sessionRef = useRef<Session | null>(null);
+  const activeClockRef = useRef<SessionActiveClock | null>(null);
   sessionRef.current = session;
   const overview = useMemo(() => reviewOverview(words, day), [words, day]);
   const card = overview.dueWords[0];
@@ -104,6 +131,41 @@ export default function ReviewScreen() {
     return () => navigation.setOptions({ tabBarStyle: undefined });
   }, [navigation, inSession]);
 
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      const activeSession = activeClockRef.current;
+      if (!activeSession) return;
+      const now = Date.now();
+      activeClockRef.current = {
+        ...activeSession,
+        clock:
+          state === "active"
+            ? resumeActiveReviewClock(activeSession.clock, now)
+            : pauseActiveReviewClock(activeSession.clock, now),
+      };
+    });
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      setComboNotice(null);
+      return;
+    }
+    if (isReviewComboMilestone(session.currentCombo)) {
+      setComboNotice({
+        count: session.currentCombo,
+        sequence: ++comboNoticeSequence.current,
+      });
+    }
+  }, [session?.sessionId, session?.currentCombo]);
+
+  useEffect(() => {
+    if (!comboNotice) return;
+    const timeout = setTimeout(() => setComboNotice(null), 2_000);
+    return () => clearTimeout(timeout);
+  }, [comboNotice]);
+
   useFocusEffect(
     useCallback(() => {
       setSession(null);
@@ -114,6 +176,7 @@ export default function ReviewScreen() {
       void reload();
       return () => {
         void speech.stopSpeaking();
+        activeClockRef.current = null;
         setSession(null);
         busyRef.current = false;
         setBusy(false);
@@ -159,13 +222,20 @@ export default function ReviewScreen() {
       setGameWords(null);
       setSessionSaveError(null);
       const startedAt = Date.now();
+      const sessionId = Crypto.randomUUID();
+      activeClockRef.current = {
+        sessionId,
+        clock: startActiveReviewClock(startedAt),
+      };
       setSession({
         token: ++sequence.current,
-        sessionId: Crypto.randomUUID(),
+        sessionId,
         queue: overview.dueWords.map((w) => w.id),
         processed: [],
         answered: [],
         correct: [],
+        currentCombo: 0,
+        maxCombo: 0,
         mistakes: [],
         startedAt,
         index: 0,
@@ -184,13 +254,27 @@ export default function ReviewScreen() {
   };
   const finishSession = (current: Session, completed: boolean) => {
     if (completed) sound.play(soundCueFor("reviewCompleted"));
-    const result = createReviewSessionSummary(current, Date.now(), completed);
+    const endedAt = Date.now();
+    const activeSessionClock = activeClockRef.current;
+    const activeDurationMs =
+      activeSessionClock?.sessionId === current.sessionId
+        ? activeReviewDuration(activeSessionClock.clock, endedAt)
+        : 0;
+    const result = createReviewSessionSummary(
+      current,
+      endedAt,
+      completed,
+      activeDurationMs,
+    );
+    activeClockRef.current = null;
     sessionRef.current = null;
     setSession(null);
     setSessionSaveError(null);
     void recordReviewSessionResult({
       sessionId: current.sessionId,
       startedAt: current.startedAt,
+      activeDurationMs,
+      maxCombo: current.maxCombo,
       reviewedCount: result.reviewedCount,
       correctCount: result.correctCount,
       grade: getReviewGrade(
@@ -236,11 +320,17 @@ export default function ReviewScreen() {
         correct === false && !s.mistakes.some((word) => word.id === id)
           ? [...s.mistakes, s.word]
           : s.mistakes;
+      const combo = advanceReviewCombo(
+        { current: s.currentCombo, max: s.maxCombo },
+        correct === true,
+      );
       return {
         ...s,
         processed: [...s.processed, id],
         answered: correct === null ? s.answered : [...s.answered, id],
         correct: correct === true ? [...s.correct, id] : s.correct,
+        currentCombo: combo.current,
+        maxCombo: combo.max,
         mistakes,
       };
     });
@@ -390,18 +480,87 @@ export default function ReviewScreen() {
                 />
               </View>
             </View>
-            <Text
-              testID="review-session-count"
-              style={[styles.sessionCount, { color: c.mutedForeground }]}
-            >
-              {session.processed.length}/{session.queue.length}
-            </Text>
+            <View style={styles.sessionStats}>
+              <View
+                testID="review-combo-counter"
+                accessibilityLabel={`Combo ${session.currentCombo} câu đúng liên tiếp`}
+                style={[
+                  styles.comboCounter,
+                  {
+                    backgroundColor:
+                      session.currentCombo > 0 ? c.primary : c.card,
+                    borderColor:
+                      session.currentCombo > 0 ? c.primary : c.border,
+                  },
+                ]}
+              >
+                <Feather
+                  name="zap"
+                  size={13}
+                  color={
+                    session.currentCombo > 0
+                      ? c.primaryForeground
+                      : c.mutedForeground
+                  }
+                />
+                <Text
+                  style={[
+                    styles.comboCount,
+                    {
+                      color:
+                        session.currentCombo > 0
+                          ? c.primaryForeground
+                          : c.mutedForeground,
+                    },
+                  ]}
+                >
+                  {session.currentCombo}
+                </Text>
+              </View>
+              <Text
+                testID="review-session-count"
+                style={[styles.sessionCount, { color: c.mutedForeground }]}
+              >
+                {session.processed.length}/{session.queue.length}
+              </Text>
+            </View>
           </View>
           <Text style={[styles.sessionTitle, { color: c.foreground }]}>
             {session.exercise.kind === "multiple-choice"
               ? "Chọn từ đúng"
               : "Điền từ"}
           </Text>
+        </View>
+      ) : null}
+      {session && comboNotice ? (
+        <View
+          testID="review-combo-notice"
+          pointerEvents="none"
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          accessibilityLabel={`Combo ${comboNotice.count} câu đúng liên tiếp!`}
+          style={[
+            styles.comboNotice,
+            {
+              top: (Platform.OS === "web" ? 67 : insets.top) + 102,
+              backgroundColor: c.primary,
+              borderColor: c.border,
+            },
+          ]}
+        >
+          <Feather name="zap" size={20} color={c.primaryForeground} />
+          <View style={styles.comboNoticeCopy}>
+            <Text
+              style={[styles.comboNoticeTitle, { color: c.primaryForeground }]}
+            >
+              Combo {comboNotice.count}!
+            </Text>
+            <Text
+              style={[styles.comboNoticeText, { color: c.primaryForeground }]}
+            >
+              Đúng liên tiếp rất tốt!
+            </Text>
+          </View>
         </View>
       ) : null}
       {gameWords ? (
@@ -596,7 +755,7 @@ export default function ReviewScreen() {
                     { color: c.secondaryForeground },
                   ]}
                 >
-                  Thời gian ôn
+                  Thời gian học lượt này
                 </Text>
                 <Text
                   testID="review-summary-duration"
@@ -716,6 +875,40 @@ const styles = StyleSheet.create({
   },
   sessionHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 16 },
   sessionProgressRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  sessionStats: { alignItems: "flex-end", gap: 4 },
+  comboCounter: {
+    minWidth: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderRadius: 999,
+  },
+  comboCount: { fontFamily: F.b, fontSize: 13, fontVariant: ["tabular-nums"] },
+  comboNotice: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    zIndex: 10,
+    elevation: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: 18,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+  },
+  comboNoticeCopy: { flex: 1, gap: 2 },
+  comboNoticeTitle: { fontFamily: F.b, fontSize: 16 },
+  comboNoticeText: { fontFamily: F.m, fontSize: 13 },
   sessionClose: {
     width: 32,
     height: 36,

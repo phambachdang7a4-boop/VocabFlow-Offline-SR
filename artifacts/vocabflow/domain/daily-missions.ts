@@ -1,4 +1,5 @@
-export type DailyMissionType = "review" | "add-words" | "grade";
+export type DailyMissionType =
+  "review" | "add-words" | "grade" | "time" | "combo";
 export type DailyMissionLevel = 1 | 2 | 3;
 export type DailyReviewGrade =
   "S+" | "S" | "A+" | "A" | "A-" | "B+" | "B" | "B-" | "C";
@@ -6,7 +7,13 @@ export type DailyReviewGrade =
 export interface DailyMissionActivity {
   reviewedCount: number;
   addedWordCount: number;
-  qualifiedGradeCount: number;
+  reviewSessions: {
+    grade: DailyReviewGrade;
+    reviewedCount: number;
+    activeDurationMs: number;
+    maxCombo: number;
+  }[];
+  reviewDurationMs: number;
 }
 
 export interface DailyMissionAward {
@@ -29,18 +36,43 @@ export interface DailyMission {
   rewarded: boolean;
 }
 
-const MISSION_TYPES: DailyMissionType[] = ["review", "add-words", "grade"];
+const MISSION_TYPES: DailyMissionType[] = [
+  "review",
+  "add-words",
+  "grade",
+  "time",
+  "combo",
+];
 const LEVEL_REWARDS: Record<DailyMissionLevel, readonly [number, number]> = {
   1: [1, 5],
   2: [5, 10],
   3: [10, 20],
 };
 const REVIEW_TARGETS: Record<DailyMissionLevel, number> = {
+  1: 30,
+  2: 60,
+  3: 90,
+};
+const ADD_TARGETS: Record<DailyMissionLevel, number> = {
+  1: 5,
+  2: 10,
+  3: 15,
+};
+const GRADE_TARGETS: Record<DailyMissionLevel, DailyReviewGrade> = {
+  1: "A-",
+  2: "A",
+  3: "A+",
+};
+const TIME_TARGETS: Record<DailyMissionLevel, number> = {
   1: 5,
   2: 10,
   3: 20,
 };
-const ADD_TARGETS: Record<DailyMissionLevel, number> = { 1: 1, 2: 5, 3: 10 };
+const COMBO_TARGETS: Record<DailyMissionLevel, number> = {
+  1: 5,
+  2: 10,
+  3: 25,
+};
 const GRADE_RANK: Record<DailyReviewGrade, number> = {
   "S+": 8,
   S: 7,
@@ -90,11 +122,12 @@ export function rewardForDailyMission(
 export function isDailyReviewGradeQualified(
   grade: DailyReviewGrade,
   reviewedCount: number,
+  requiredGrade: DailyReviewGrade,
 ): boolean {
   return (
     Number.isSafeInteger(reviewedCount) &&
     reviewedCount >= 30 &&
-    GRADE_RANK[grade] >= GRADE_RANK.A
+    GRADE_RANK[grade] >= GRADE_RANK[requiredGrade]
   );
 }
 
@@ -108,7 +141,7 @@ export function evaluateDailyMissions(
   const todayTypes = [
     ...MISSION_TYPES.slice(rotation),
     ...MISSION_TYPES.slice(0, rotation),
-  ];
+  ].slice(0, 3);
   const awardedIds = new Set(
     awards
       .filter((award) => award.missionDay === day)
@@ -122,7 +155,27 @@ export function evaluateDailyMissions(
     let rawProgress = 0;
     if (type === "review") rawProgress = activity.reviewedCount;
     if (type === "add-words") rawProgress = activity.addedWordCount;
-    if (type === "grade") rawProgress = activity.qualifiedGradeCount;
+    if (type === "grade") {
+      const requiredGrade = GRADE_TARGETS[level];
+      rawProgress = activity.reviewSessions.some((session) =>
+        isDailyReviewGradeQualified(
+          session.grade,
+          session.reviewedCount,
+          requiredGrade,
+        ),
+      )
+        ? 1
+        : 0;
+    }
+    if (type === "time") {
+      rawProgress = Math.floor(Math.max(0, activity.reviewDurationMs) / 60_000);
+    }
+    if (type === "combo") {
+      rawProgress = Math.max(
+        0,
+        ...activity.reviewSessions.map((session) => session.maxCombo),
+      );
+    }
     const progress = Math.min(specification.target, Math.max(0, rawProgress));
 
     return {
@@ -162,11 +215,26 @@ function missionSpecification(
       target,
     };
   }
-  const target = level;
+  if (type === "grade") {
+    const requiredGrade = GRADE_TARGETS[level];
+    return {
+      title: `Đạt hạng ${requiredGrade} trở lên`,
+      description: `Đạt hạng ${requiredGrade} trở lên trong một phiên ôn ít nhất 30 từ.`,
+      target: 1,
+    };
+  }
+  if (type === "time") {
+    const target = TIME_TARGETS[level];
+    return {
+      title: `Học ${target} phút`,
+      description: "Cộng thời gian trong phiên Ôn tập; tạm dừng khi app ở nền.",
+      target,
+    };
+  }
+  const target = COMBO_TARGETS[level];
   return {
-    title:
-      target === 1 ? "Đạt hạng A trở lên" : `Đạt hạng A trở lên ${target} lần`,
-    description: "Mỗi lần cần ôn ít nhất 30 từ trong một phiên.",
+    title: `Combo ${target} câu liên tiếp`,
+    description: `Trả lời đúng liên tiếp ${target} câu trong một phiên Ôn tập.`,
     target,
   };
 }

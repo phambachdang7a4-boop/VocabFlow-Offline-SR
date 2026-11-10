@@ -133,16 +133,30 @@ export default function BlankScreen() {
                 ? "layers"
                 : mission.type === "add-words"
                   ? "plus-circle"
-                  : "award";
+                  : mission.type === "time"
+                    ? "clock"
+                    : mission.type === "combo"
+                      ? "zap"
+                      : "award";
             const progressPercent = Math.min(
               100,
               (mission.progress / mission.target) * 100,
             );
+            const progressLabel =
+              mission.type === "grade"
+                ? mission.completed
+                  ? "Đã đạt hạng yêu cầu"
+                  : "Chưa đạt hạng yêu cầu"
+                : `${mission.progress} trên ${mission.target}`;
+            const displayProgressLabel =
+              mission.type === "time"
+                ? `${mission.progress} trên ${mission.target} phút`
+                : progressLabel;
             return (
               <View
                 key={mission.id}
                 testID={`daily-mission-${mission.id}`}
-                accessibilityLabel={`${mission.title}. ${mission.progress} trên ${mission.target}. ${finished ? "Đã nhận phần thưởng." : "Phần thưởng sắp nhận."}`}
+                accessibilityLabel={`${mission.title}. ${displayProgressLabel}. ${finished ? "Đã nhận phần thưởng." : "Phần thưởng sắp nhận."}`}
                 style={[
                   styles.missionCard,
                   {
@@ -231,7 +245,13 @@ export default function BlankScreen() {
                       { color: finished ? c.successText : c.primary },
                     ]}
                   >
-                    {mission.progress}/{mission.target}
+                    {mission.type === "grade"
+                      ? mission.completed
+                        ? "Đạt"
+                        : "Chưa đạt"
+                      : mission.type === "time"
+                        ? `${mission.progress}/${mission.target} phút`
+                        : `${mission.progress}/${mission.target}`}
                   </Text>
                 </View>
               </View>

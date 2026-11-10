@@ -2,8 +2,36 @@ const assert = require('node:assert/strict');
 const { join } = require('node:path');
 const { loadTs } = require('./test-support.cjs');
 
-const { createReviewSessionSummary, formatReviewDuration, getReviewGrade } =
-  loadTs(join(__dirname, '../domain/review-session.ts'));
+const {
+  advanceReviewCombo,
+  activeReviewDuration,
+  createReviewSessionSummary,
+  formatReviewDuration,
+  getReviewGrade,
+  isReviewComboMilestone,
+  pauseActiveReviewClock,
+  resumeActiveReviewClock,
+  startActiveReviewClock,
+} = loadTs(join(__dirname, '../domain/review-session.ts'));
+
+let activeClock = startActiveReviewClock(1_000);
+activeClock = pauseActiveReviewClock(activeClock, 4_000);
+activeClock = resumeActiveReviewClock(activeClock, 10_000);
+assert.equal(activeReviewDuration(activeClock, 13_000), 6_000);
+activeClock = pauseActiveReviewClock(activeClock, 15_000);
+assert.equal(activeReviewDuration(activeClock, 30_000), 8_000);
+activeClock = resumeActiveReviewClock(activeClock, 40_000);
+assert.equal(activeReviewDuration(activeClock, 42_000), 10_000);
+
+let combo = { current: 0, max: 0 };
+for (const correct of [true, true, false, true, true, true]) {
+  combo = advanceReviewCombo(combo, correct);
+}
+assert.deepEqual(combo, { current: 3, max: 3 });
+assert.deepEqual(
+  [4, 5, 9, 10, 24, 25].filter(isReviewComboMilestone),
+  [5, 10, 25],
+);
 
 const completed = createReviewSessionSummary({
   queue: [1, 2, 3],
@@ -18,6 +46,17 @@ assert.deepEqual(completed, {
   elapsedMs: 62_500,
   completed: true,
 }, 'Only saved answers from the current queue count; duplicate callbacks cannot inflate totals.');
+const activeDurationSummary = createReviewSessionSummary({
+  queue: [1],
+  answered: [1],
+  correct: [1],
+  startedAt: 10_000,
+}, 72_500, true, 12_000);
+assert.equal(
+  activeDurationSummary.elapsedMs,
+  12_000,
+  'The result screen uses active study time instead of wall-clock time.',
+);
 
 const interrupted = createReviewSessionSummary({
   queue: [1, 2],
@@ -62,4 +101,4 @@ for (const [correct, total, expected] of [
   assert.equal(getReviewGrade(correct, total, false), expected,
     `An interrupted ${correct}/${total} session must be lowered to ${expected}`);
 }
-console.log('PASS: completed and interrupted session summaries, grade thresholds, and elapsed-time formatting.');
+console.log('PASS: active-time pause/resume, session summaries, grades, and elapsed-time formatting.');

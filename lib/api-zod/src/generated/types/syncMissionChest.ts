@@ -19,7 +19,7 @@ export interface SyncMissionChest {
   /**
      * @minLength 1
      * @maxLength 40
-     * @pattern ^(review|add-words|lesson|grade)-[1-3]$
+     * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
      */
   missionId: string;
   /**

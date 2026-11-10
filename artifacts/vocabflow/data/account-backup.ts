@@ -282,6 +282,12 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
 
 function parseReviewSession(value: unknown): SyncReviewSession | null {
   const grades = ["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"];
+  const activeDurationMs =
+    isRecord(value) && value.activeDurationMs !== undefined
+      ? value.activeDurationMs
+      : 0;
+  const maxCombo =
+    isRecord(value) && value.maxCombo !== undefined ? value.maxCombo : 0;
   if (
     !isRecord(value) ||
     !isString(value.sessionId, 120, false) ||
@@ -289,6 +295,9 @@ function parseReviewSession(value: unknown): SyncReviewSession | null {
     !isDay(value.day) ||
     !isNonNegativeInteger(value.reviewedCount) ||
     !isNonNegativeInteger(value.correctCount) ||
+    !isNonNegativeInteger(activeDurationMs) ||
+    !isNonNegativeInteger(maxCombo) ||
+    maxCombo > value.correctCount ||
     value.correctCount > value.reviewedCount ||
     typeof value.grade !== "string" ||
     !grades.includes(value.grade) ||
@@ -303,6 +312,8 @@ function parseReviewSession(value: unknown): SyncReviewSession | null {
     day: value.day,
     reviewedCount: value.reviewedCount,
     correctCount: value.correctCount,
+    activeDurationMs,
+    maxCombo,
     grade: value.grade as SyncReviewSession["grade"],
     completed: value.completed,
     createdAt: value.createdAt,

@@ -245,6 +245,8 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
             day: session.day,
             reviewedCount: session.reviewedCount,
             correctCount: session.correctCount,
+            activeDurationMs: session.activeDurationMs ?? 0,
+            maxCombo: session.maxCombo ?? 0,
             grade: session.grade,
             completed: session.completed,
             createdAt: session.createdAt,
@@ -608,6 +610,8 @@ router.post("/sync", requireAuth, async (req, res) => {
               day: session.day,
               reviewedCount: session.reviewedCount,
               correctCount: session.correctCount,
+              activeDurationMs: session.activeDurationMs ?? 0,
+              maxCombo: session.maxCombo ?? 0,
               grade: session.grade,
               completed: session.completed,
               createdAt: session.createdAt,
@@ -942,7 +946,11 @@ function maxTimestamp(left: string, right: string): string {
 }
 
 function hasInvalidMissionData(
-  sessions: Array<{ reviewedCount: number; correctCount: number }>,
+  sessions: Array<{
+    reviewedCount: number;
+    correctCount: number;
+    maxCombo?: number;
+  }>,
   awards: Array<{ stone: number; missionId: string }>,
   chests: Array<{
     chestId: string;
@@ -970,12 +978,15 @@ function hasInvalidMissionData(
       (session) =>
         !Number.isSafeInteger(session.reviewedCount) ||
         !Number.isSafeInteger(session.correctCount) ||
+        !Number.isSafeInteger(session.maxCombo ?? 0) ||
         session.reviewedCount < 0 ||
         session.correctCount < 0 ||
+        (session.maxCombo ?? 0) < 0 ||
+        (session.maxCombo ?? 0) > session.correctCount ||
         session.correctCount > session.reviewedCount,
     ) ||
     awards.some((award) => {
-      const match = /^(review|add-words|lesson|grade)-([1-3])$/.exec(
+      const match = /^(review|add-words|lesson|grade|time|combo)-([1-3])$/.exec(
         award.missionId,
       );
       if (!match || !Number.isSafeInteger(award.stone)) return true;
@@ -1026,7 +1037,9 @@ function isValidMissionChestRecord(chest: {
   if (
     !chest.chestId.trim() ||
     !/^\d{4}-\d{2}-\d{2}$/.test(chest.day) ||
-    !/^(review|add-words|lesson|grade)-[1-3]$/.test(chest.missionId) ||
+    !/^(review|add-words|lesson|grade|time|combo)-[1-3]$/.test(
+      chest.missionId,
+    ) ||
     !Number.isSafeInteger(chest.baseStone) ||
     chest.baseStone < 1 ||
     chest.baseStone > 20 ||

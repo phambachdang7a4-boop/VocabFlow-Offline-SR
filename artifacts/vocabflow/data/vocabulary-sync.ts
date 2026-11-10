@@ -69,6 +69,8 @@ export interface SyncReviewSession {
   day: string;
   reviewedCount: number;
   correctCount: number;
+  activeDurationMs?: number;
+  maxCombo?: number;
   grade: DailyReviewGrade;
   completed: boolean;
   createdAt: string;
@@ -166,6 +168,7 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       db.getAllAsync<SyncReviewSession>(`
         SELECT session_id AS sessionId, device_id AS deviceId, review_day AS day,
           reviewed_count AS reviewedCount, correct_count AS correctCount, grade,
+          active_duration_ms AS activeDurationMs, max_combo AS maxCombo,
           completed, created_at AS createdAt
         FROM review_session_results ORDER BY review_day, session_id
       `),
@@ -455,8 +458,8 @@ async function replacePayloadData(
     await db.runAsync(
       `
       INSERT OR IGNORE INTO review_session_results
-        (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at, active_duration_ms, max_combo)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       session.sessionId,
       session.deviceId,
@@ -466,6 +469,8 @@ async function replacePayloadData(
       session.grade,
       session.completed ? 1 : 0,
       session.createdAt,
+      session.activeDurationMs ?? 0,
+      session.maxCombo ?? 0,
     );
   }
   for (const award of payload.missionAwards ?? []) {
@@ -789,8 +794,8 @@ async function mergeSnapshotIntoDatabase(
       await db.runAsync(
         `
         INSERT OR IGNORE INTO review_session_results
-          (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          (session_id, device_id, review_day, reviewed_count, correct_count, grade, completed, created_at, active_duration_ms, max_combo)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
         session.sessionId,
         session.deviceId,
@@ -800,6 +805,8 @@ async function mergeSnapshotIntoDatabase(
         session.grade,
         session.completed ? 1 : 0,
         session.createdAt,
+        session.activeDurationMs ?? 0,
+        session.maxCombo ?? 0,
       );
     }
     for (const award of payload.missionAwards ?? []) {

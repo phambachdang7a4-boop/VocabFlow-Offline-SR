@@ -12,6 +12,7 @@ const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'T
 native.StyleSheet = { create: value => value, hairlineWidth: 1 };
 native.Platform = { OS: 'android' };
 native.Keyboard = { dismiss() {} };
+native.AppState = { addEventListener: () => ({ remove() {} }) };
 native.useWindowDimensions = () => ({ width: 400, height: 800, scale: 1, fontScale: 1 });
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function find(node, predicate) {
@@ -496,5 +497,42 @@ async function startReview(screen) {
   finishLate(); await tick();
   assert.equal(busyChanges.length, afterUnmount);
   assert.deepEqual(lateCommits, []);
+  const comboWords = Array.from({ length: 25 }, (_, index) => ({
+    ...word,
+    id: index + 1,
+    level: 2,
+    nextReviewOn: '2026-11-08',
+  }));
+  const comboScreen = mount('../app/(tabs)/review.tsx', {}, { words: comboWords });
+  comboScreen.time('2026-11-08T00:00:00');
+  await startReview(comboScreen);
+  assert.equal(
+    comboScreen.byId('review-combo-counter').props.accessibilityLabel,
+    'Combo 0 câu đúng liên tiếp',
+  );
+  let lastComboNotice = null;
+  for (const [index, comboWord] of comboWords.entries()) {
+    comboScreen.byType('ReviewCard').props.onCommitted(comboWord.id, true);
+    const comboCount = index + 1;
+    assert.equal(
+      comboScreen.byId('review-combo-counter').props.accessibilityLabel,
+      `Combo ${comboCount} câu đúng liên tiếp`,
+    );
+    if ([5, 10, 25].includes(comboCount)) {
+      lastComboNotice = comboCount;
+    }
+    if (lastComboNotice !== null) {
+      assert.equal(
+        comboScreen.byId('review-combo-notice').props.accessibilityLabel,
+        `Combo ${lastComboNotice} câu đúng liên tiếp!`,
+      );
+    } else {
+      assert.equal(comboScreen.byId('review-combo-notice'), undefined);
+    }
+    if (index < comboWords.length - 1) {
+      comboScreen.byType('ReviewCard').props.onNext();
+    }
+  }
+  comboScreen.unmount();
   console.log('PASS: mixed queue and stable snapshots; final feedback held; auto grading/check/dont-know/freeze locks; immutable retry and double-retry guard; no hints4–6; global read error retention; stale callbacks; dashboard/countdown/chart.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
