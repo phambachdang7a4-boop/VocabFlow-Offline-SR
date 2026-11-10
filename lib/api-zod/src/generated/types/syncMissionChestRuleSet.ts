@@ -9,10 +9,11 @@
 /**
  * Optional for legacy clients; omitted values use the legacy chest rules.
  */
-export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
-
+export type SyncMissionChestRuleSet =
+  (typeof SyncMissionChestRuleSet)[keyof typeof SyncMissionChestRuleSet];
 
 export const SyncMissionChestRuleSet = {
   NUMBER_1: 1,
   NUMBER_2: 2,
+  NUMBER_3: 3,
 } as const;

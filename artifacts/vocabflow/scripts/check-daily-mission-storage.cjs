@@ -73,8 +73,8 @@ const harness = createRepository(root, `${day}T12:00:00`);
     );
     assert.equal(
       firstOverview.chests[0].ruleSet,
-      2,
-      "New missions use the rarity upgrade rules.",
+      3,
+      "New missions use the fixed-reward chest rules.",
     );
     assert.equal(
       firstOverview.chests[0].rarity,
@@ -141,7 +141,7 @@ const harness = createRepository(root, `${day}T12:00:00`);
           candidate,
           attempt,
           rarity,
-          2,
+          3,
           true,
         );
         if (!upgrade.success) {
@@ -164,7 +164,7 @@ const harness = createRepository(root, `${day}T12:00:00`);
         `INSERT INTO mission_chests
         (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity, rule_set, super_upgrade,
           opened, final_stone, created_at, updated_at)
-       VALUES (?, '2026-12-30', 'review-1', 3, 3, ?, 2, 1, 0, NULL, ?, ?)`,
+       VALUES (?, '2026-12-30', 'review-1', 3, 3, ?, 3, 1, 0, NULL, ?, ?)`,
       )
       .run(
         superChestId,
@@ -187,8 +187,8 @@ const harness = createRepository(root, `${day}T12:00:00`);
     assert.equal(superResult.chest.opened, true);
     assert.equal(
       superResult.awardedStone,
-      23,
-      "The fourth-tier reward is finalized exactly once.",
+      1000,
+      "A Corvi chest awards the fixed total exactly once.",
     );
 
     let seededCommonPieces = 0;
@@ -282,6 +282,30 @@ const harness = createRepository(root, `${day}T12:00:00`);
         superResult.awardedStone +
         seededCommonPieces,
       "Previously earned Stone carries forward.",
+    );
+
+    harness.db
+      .prepare(
+        `INSERT INTO mission_chests
+          (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
+            rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+         VALUES ('old-untouched-chest', '2026-10-01', 'review-2', 3, 0,
+            'common', 1, 0, 0, NULL, '2026-10-01T12:00:00.000Z',
+            '2026-10-01T12:00:00.000Z')`,
+      )
+      .run();
+    await harness.repo.getDailyMissionOverview(nextDay);
+    const migratedChest = harness.db
+      .prepare(
+        "SELECT rarity, rule_set, super_upgrade FROM mission_chests WHERE chest_id = ?",
+      )
+      .get("old-untouched-chest");
+    assert.equal(migratedChest.rule_set, 3);
+    assert.equal(migratedChest.rarity, "uncommon");
+    assert.equal(
+      migratedChest.super_upgrade,
+      Number(missionChests.hasSuperUpgradeChance("old-untouched-chest")),
+      "Only an untouched chest receives the new rules and deterministic lucky state.",
     );
   } finally {
     harness.db.close();

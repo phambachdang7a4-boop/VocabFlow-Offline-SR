@@ -1,37 +1,43 @@
-export const CHEST_RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const;
+export const CHEST_RARITIES = [
+  "common",
+  "uncommon",
+  "rare",
+  "epic",
+  "legendary",
+] as const;
 export type ChestRarity = (typeof CHEST_RARITIES)[number];
-export type ChestRuleSet = 1 | 2;
+export type ChestRuleSet = 1 | 2 | 3;
 
 export const CHEST_RARITY_LABELS: Record<ChestRarity, string> = {
-  common: 'Copper',
-  uncommon: 'Silver',
-  rare: 'Gold',
-  epic: 'Platinum',
-  legendary: 'Corvi',
+  common: "Copper",
+  uncommon: "Silver",
+  rare: "Gold",
+  epic: "Platinum",
+  legendary: "Corvi",
 };
 
 export const CHEST_RARITY_COLORS: Record<ChestRarity, string> = {
-  common: '#C47A3D',
-  uncommon: '#BDC7D3',
-  rare: '#E9B949',
-  epic: '#BBCDE3',
-  legendary: '#111318',
+  common: "#C47A3D",
+  uncommon: "#BDC7D3",
+  rare: "#E9B949",
+  epic: "#BBCDE3",
+  legendary: "#111318",
 };
 
 export const CHEST_RARITY_ICON_COLORS: Record<ChestRarity, string> = {
-  common: '#23232D',
-  uncommon: '#23232D',
-  rare: '#23232D',
-  epic: '#23232D',
-  legendary: '#F7F3EA',
+  common: "#23232D",
+  uncommon: "#23232D",
+  rare: "#23232D",
+  epic: "#23232D",
+  legendary: "#F7F3EA",
 };
 
 export const CHEST_RARITY_TEXT_COLORS: Record<ChestRarity, string> = {
-  common: '#B87333',
-  uncommon: '#A7ADB4',
-  rare: '#E9B949',
-  epic: '#B5C7DD',
-  legendary: '#D7D9DE',
+  common: "#B87333",
+  uncommon: "#A7ADB4",
+  rare: "#E9B949",
+  epic: "#B5C7DD",
+  legendary: "#D7D9DE",
 };
 
 export interface MissionChest {
@@ -54,7 +60,7 @@ export interface ChestUpgrade {
   rarity: ChestRarity;
 }
 
-const STONE_BONUS: Record<ChestRarity, number> = {
+const LEGACY_STONE_BONUS: Record<ChestRarity, number> = {
   common: 0,
   uncommon: 2,
   rare: 5,
@@ -62,28 +68,45 @@ const STONE_BONUS: Record<ChestRarity, number> = {
   legendary: 20,
 };
 
-export function chestStoneReward(baseStone: number, rarity: ChestRarity): number {
+export const CHEST_FIXED_STONE_REWARDS: Record<ChestRarity, number> = {
+  common: 25,
+  uncommon: 50,
+  rare: 100,
+  epic: 150,
+  legendary: 1000,
+};
+
+export function chestStoneReward(
+  baseStone: number,
+  rarity: ChestRarity,
+  ruleSet: ChestRuleSet = 1,
+): number {
   if (!Number.isSafeInteger(baseStone) || baseStone < 1 || baseStone > 20) {
-    throw new Error('Stone trong rương không hợp lệ.');
+    throw new Error("Stone trong rương không hợp lệ.");
   }
-  return baseStone + STONE_BONUS[rarity];
+  return ruleSet === 3
+    ? CHEST_FIXED_STONE_REWARDS[rarity]
+    : baseStone + LEGACY_STONE_BONUS[rarity];
 }
 
 export function startingRarityForMission(missionId: string): ChestRarity {
   const match = /^(review|add-words|lesson|grade)-([1-3])$/.exec(missionId);
-  if (!match) throw new Error('Nhiệm vụ gắn với rương không hợp lệ.');
-  if (match[2] === '1') return 'common';
-  if (match[2] === '2') return 'uncommon';
-  return 'rare';
+  if (!match) throw new Error("Nhiệm vụ gắn với rương không hợp lệ.");
+  if (match[2] === "1") return "common";
+  if (match[2] === "2") return "uncommon";
+  return "rare";
 }
 
 export function hasSuperUpgradeChance(chestId: string): boolean {
-  if (!chestId.trim()) throw new Error('Mã rương không hợp lệ.');
+  if (!chestId.trim()) throw new Error("Mã rương không hợp lệ.");
   return stableHash(`super-upgrade:${chestId}`) % 100 < 2;
 }
 
-export function maxChestUpgradeAttempts(ruleSet: ChestRuleSet, superUpgrade: boolean): number {
-  return ruleSet === 2 && superUpgrade ? 4 : 3;
+export function maxChestUpgradeAttempts(
+  ruleSet: ChestRuleSet,
+  superUpgrade: boolean,
+): number {
+  return ruleSet >= 2 && superUpgrade ? 4 : 3;
 }
 
 export function chestUpgradeChance(
@@ -106,36 +129,59 @@ export function chestUpgradeChance(
 export function resolveChestUpgrade(
   chestId: string,
   attempt: number,
-  currentRarity: ChestRarity = 'common',
+  currentRarity: ChestRarity = "common",
   ruleSet: ChestRuleSet = 1,
   superUpgrade = false,
 ): ChestUpgrade {
   const attemptLimit = maxChestUpgradeAttempts(ruleSet, superUpgrade);
-  if (!chestId.trim() || !Number.isSafeInteger(attempt) || attempt < 1 || attempt > attemptLimit) {
-    throw new Error('Lượt nâng cấp rương không hợp lệ.');
+  if (
+    !chestId.trim() ||
+    !Number.isSafeInteger(attempt) ||
+    attempt < 1 ||
+    attempt > attemptLimit
+  ) {
+    throw new Error("Lượt nâng cấp rương không hợp lệ.");
   }
   if (ruleSet === 1) return resolveLegacyChestUpgrade(chestId, attempt);
 
   const tierIndex = CHEST_RARITIES.indexOf(currentRarity);
   if (tierIndex < 0 || tierIndex >= CHEST_RARITIES.length - 1) {
-    throw new Error('Rương đã ở phẩm chất cao nhất.');
+    throw new Error("Rương đã ở phẩm chất cao nhất.");
   }
   const rarity = CHEST_RARITIES[tierIndex + 1]!;
   if (attempt === 4 && superUpgrade) return { success: true, rarity };
 
-  const chance = chestUpgradeChance(currentRarity, attempt, ruleSet, superUpgrade);
-  if (chance === null) throw new Error('Không xác định được tỉ lệ nâng cấp.');
-  const roll = stableHash(`rarity-upgrade-v2:${chestId}:${attempt}:${currentRarity}`) % 100;
-  return roll < chance ? { success: true, rarity } : { success: false, rarity: currentRarity };
+  const chance = chestUpgradeChance(
+    currentRarity,
+    attempt,
+    ruleSet,
+    superUpgrade,
+  );
+  if (chance === null) throw new Error("Không xác định được tỉ lệ nâng cấp.");
+  const roll =
+    stableHash(`rarity-upgrade-v2:${chestId}:${attempt}:${currentRarity}`) %
+    100;
+  return roll < chance
+    ? { success: true, rarity }
+    : { success: false, rarity: currentRarity };
 }
 
-function resolveLegacyChestUpgrade(chestId: string, attempt: number): ChestUpgrade {
+function resolveLegacyChestUpgrade(
+  chestId: string,
+  attempt: number,
+): ChestUpgrade {
   const roll = stableHash(`${chestId}:${attempt}`) % 100;
-  if (attempt === 1) return roll < 55 ? { success: true, rarity: 'uncommon' } : { success: false, rarity: 'common' };
-  if (attempt === 2) return roll < 40 ? { success: true, rarity: 'rare' } : { success: false, rarity: 'uncommon' };
-  if (roll < 5) return { success: true, rarity: 'legendary' };
-  if (roll < 25) return { success: true, rarity: 'epic' };
-  return { success: false, rarity: 'rare' };
+  if (attempt === 1)
+    return roll < 55
+      ? { success: true, rarity: "uncommon" }
+      : { success: false, rarity: "common" };
+  if (attempt === 2)
+    return roll < 40
+      ? { success: true, rarity: "rare" }
+      : { success: false, rarity: "uncommon" };
+  if (roll < 5) return { success: true, rarity: "legendary" };
+  if (roll < 25) return { success: true, rarity: "epic" };
+  return { success: false, rarity: "rare" };
 }
 
 export function isValidMissionChest(chest: MissionChest): boolean {
@@ -151,38 +197,51 @@ export function isValidMissionChest(chest: MissionChest): boolean {
     !Number.isSafeInteger(chest.upgradeAttempts) ||
     chest.upgradeAttempts < 0 ||
     chest.upgradeAttempts > maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
-    (ruleSet !== 1 && ruleSet !== 2) ||
+    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3) ||
     (ruleSet === 1 && superUpgrade) ||
-    (ruleSet === 2 && superUpgrade !== hasSuperUpgradeChance(chest.chestId)) ||
+    (ruleSet >= 2 && superUpgrade !== hasSuperUpgradeChance(chest.chestId)) ||
     !CHEST_RARITIES.includes(chest.rarity) ||
-    typeof chest.opened !== 'boolean' ||
+    typeof chest.opened !== "boolean" ||
     !isTimestamp(chest.createdAt) ||
     !isTimestamp(chest.updatedAt)
   ) {
     return false;
   }
 
-  let expectedRarity = ruleSet === 1 ? 'common' : startingRarityForMission(chest.missionId);
+  let expectedRarity =
+    ruleSet === 1 ? "common" : startingRarityForMission(chest.missionId);
   let expectedOpened = false;
   let resolvedAttempts = 0;
   const attemptLimit = maxChestUpgradeAttempts(ruleSet, superUpgrade);
   for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
     if (expectedOpened) return false;
-    const result = resolveChestUpgrade(chest.chestId, attempt, expectedRarity, ruleSet, superUpgrade);
+    const result = resolveChestUpgrade(
+      chest.chestId,
+      attempt,
+      expectedRarity,
+      ruleSet,
+      superUpgrade,
+    );
     resolvedAttempts = attempt;
     if (result.success) {
       expectedRarity = result.rarity;
-      expectedOpened = attempt === attemptLimit || expectedRarity === 'legendary';
+      expectedOpened =
+        attempt === attemptLimit || expectedRarity === "legendary";
     } else {
       expectedOpened = true;
     }
   }
 
-  if (resolvedAttempts !== chest.upgradeAttempts || chest.rarity !== expectedRarity || chest.opened !== expectedOpened) {
+  if (
+    resolvedAttempts !== chest.upgradeAttempts ||
+    chest.rarity !== expectedRarity ||
+    chest.opened !== expectedOpened
+  ) {
     return false;
   }
   return chest.opened
-    ? chest.finalStone === chestStoneReward(chest.baseStone, chest.rarity)
+    ? chest.finalStone ===
+        chestStoneReward(chest.baseStone, chest.rarity, ruleSet)
     : chest.finalStone === null;
 }
 
@@ -198,9 +257,15 @@ function stableHash(value: string): number {
 function isDay(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  return (
+    Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
 }
 
 function isTimestamp(value: string): boolean {
-  return typeof value === 'string' && value.length <= 64 && Number.isFinite(Date.parse(value));
+  return (
+    typeof value === "string" &&
+    value.length <= 64 &&
+    Number.isFinite(Date.parse(value))
+  );
 }

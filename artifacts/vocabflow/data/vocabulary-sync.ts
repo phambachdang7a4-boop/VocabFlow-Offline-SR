@@ -215,7 +215,7 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         missionAwards,
         missionChests: missionChests.map((chest) => ({
           ...chest,
-          ruleSet: chest.ruleSet === 2 ? 2 : 1,
+          ruleSet: chest.ruleSet === 3 ? 3 : chest.ruleSet === 2 ? 2 : 1,
           superUpgrade: Boolean(chest.superUpgrade),
           opened: Boolean(chest.opened),
         })),
@@ -828,7 +828,12 @@ async function mergeSnapshotIntoDatabase(
       const current = currentRow
         ? {
             ...currentRow,
-            ruleSet: currentRow.ruleSet === 2 ? (2 as const) : (1 as const),
+            ruleSet:
+              currentRow.ruleSet === 3
+                ? (3 as const)
+                : currentRow.ruleSet === 2
+                  ? (2 as const)
+                  : (1 as const),
             superUpgrade: Boolean(currentRow.superUpgrade),
             opened: Boolean(currentRow.opened),
           }

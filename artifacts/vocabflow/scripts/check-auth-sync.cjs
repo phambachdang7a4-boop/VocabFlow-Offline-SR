@@ -6,6 +6,7 @@ const { join } = require("node:path");
 const {
   createRepository,
   loadTs,
+  missionChests,
   collectionArtworks,
 } = require("./test-support.cjs");
 
@@ -87,6 +88,10 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     baseStone: 3,
     upgradeAttempts: 0,
     rarity: "common",
+    ruleSet: 3,
+    superUpgrade: missionChests.hasSuperUpgradeChance(
+      "mission-2026-11-08-grade-1",
+    ),
     opened: false,
     finalStone: null,
     createdAt: "2026-11-08T10:00:00.000Z",

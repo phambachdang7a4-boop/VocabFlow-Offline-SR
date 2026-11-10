@@ -37,6 +37,13 @@ assert.deepEqual(
   [20, 22, 25, 30, 40],
   "The displayed reward preview handles the largest mission payout.",
 );
+assert.deepEqual(
+  ["common", "uncommon", "rare", "epic", "legendary"].map((rarity) =>
+    chestStoneReward(5, rarity, 3),
+  ),
+  [25, 50, 100, 150, 1000],
+  "The new chest rules pay a fixed total by final rarity.",
+);
 const chestScreen = readFileSync(
   join(__dirname, "../app/chest/[chestId].tsx"),
   "utf8",
@@ -198,9 +205,19 @@ assert.deepEqual(
   ),
   [70, 50, 25, 10, null],
 );
+assert.deepEqual(
+  ["common", "uncommon", "rare", "epic", "legendary"].map((rarity) =>
+    chestUpgradeChance(rarity, 1, 3, false),
+  ),
+  [70, 50, 25, 10, null],
+  "The fixed-reward rules keep the agreed upgrade odds.",
+);
 assert.equal(chestUpgradeChance("epic", 4, 2, true), 100);
+assert.equal(chestUpgradeChance("epic", 4, 3, true), 100);
 assert.equal(maxChestUpgradeAttempts(2, false), 3);
 assert.equal(maxChestUpgradeAttempts(2, true), 4);
+assert.equal(maxChestUpgradeAttempts(3, false), 3);
+assert.equal(maxChestUpgradeAttempts(3, true), 4);
 assert.equal(
   maxChestUpgradeAttempts(1, false),
   3,
@@ -287,11 +304,23 @@ assert.equal(
   true,
 );
 assert.equal(
+  isValidMissionChest({
+    ...superChest,
+    ruleSet: 3,
+    upgradeAttempts: 4,
+    rarity: "legendary",
+    opened: true,
+    finalStone: chestStoneReward(5, "legendary", 3),
+  }),
+  true,
+  "New-rule chests validate the fixed 1,000 Stone Corvi reward.",
+);
+assert.equal(
   isValidMissionChest({ ...superChest, superUpgrade: false }),
   false,
   "The lucky state is stable for each chest.",
 );
 
 console.log(
-  "PASS: legacy chest migration compatibility, rarity odds, task starting tiers, guaranteed super upgrade, Stone bonuses and collection artwork.",
+  "PASS: legacy reward compatibility, fixed rarity rewards, upgrade odds, task starting tiers, super upgrade, and collection artwork.",
 );

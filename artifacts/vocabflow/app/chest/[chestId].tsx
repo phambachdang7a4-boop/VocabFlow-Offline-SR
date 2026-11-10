@@ -82,10 +82,12 @@ export default function MissionChestScreen() {
     : null;
   const specialAttempt = superUpgrade && nextAttempt === 4;
   const currentStoneReward = chest
-    ? chestStoneReward(chest.baseStone, chest.rarity)
+    ? chestStoneReward(chest.baseStone, chest.rarity, ruleSet)
     : 0;
   const nextStoneReward =
-    chest && nextRarity ? chestStoneReward(chest.baseStone, nextRarity) : null;
+    chest && nextRarity
+      ? chestStoneReward(chest.baseStone, nextRarity, ruleSet)
+      : null;
 
   const load = useCallback(async () => {
     if (!id) {
@@ -163,7 +165,7 @@ export default function MissionChestScreen() {
         withTiming(0, { duration: 460 }),
       );
       const usedSuperUpgrade =
-        result.chest.ruleSet === 2 &&
+        (result.chest.ruleSet ?? 1) >= 2 &&
         result.chest.superUpgrade &&
         result.chest.upgradeAttempts === 4;
       if (result.finished) {
@@ -372,7 +374,9 @@ export default function MissionChestScreen() {
               ) : null}
               {!chest.opened ? (
                 <Text style={[styles.rewardNote, { color: c.mutedForeground }]}>
-                  Gồm {chest.baseStone} Stone nhiệm vụ và thưởng theo phẩm chất.
+                  {ruleSet === 3
+                    ? "Stone thưởng cố định theo phẩm chất."
+                    : `Gồm ${chest.baseStone} Stone nhiệm vụ và thưởng theo phẩm chất.`}
                 </Text>
               ) : null}
             </Animated.View>

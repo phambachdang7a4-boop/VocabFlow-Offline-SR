@@ -5,18 +5,16 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * @summary Download the pinned public reference dictionary once for local offline use
  */
-export const DownloadDictionaryAsset200Response = zod.unknown()
+export const DownloadDictionaryAsset200Response = zod.unknown();
 
 export const DownloadDictionaryAsset503Response = zod.object({
-  "error": zod.string()
-})
-
+  error: zod.string(),
+});
 
 /**
  * @summary Merge the signed-in user's offline learning data
@@ -35,15 +33,19 @@ export const mergeUserSyncDataBodyWordsItemExampleMax = 4000;
 
 export const mergeUserSyncDataBodyWordsItemNoteMax = 4000;
 
-
-
 export const mergeUserSyncDataBodyWordsItemReviewCountMin = 0;
 
 export const mergeUserSyncDataBodyWordsItemLevelMax = 6;
 
-export const mergeUserSyncDataBodyWordsItemLearnedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const mergeUserSyncDataBodyWordsItemNextReviewOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const mergeUserSyncDataBodyWordsItemLastReviewedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyWordsItemLearnedOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+export const mergeUserSyncDataBodyWordsItemNextReviewOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+export const mergeUserSyncDataBodyWordsItemLastReviewedOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const mergeUserSyncDataBodyWordsMax = 10000;
 
 export const mergeUserSyncDataBodyDeletedWordsItemSyncIdMax = 7000;
@@ -64,7 +66,9 @@ export const mergeUserSyncDataBodyCourseSelectionsMax = 10000;
 
 export const mergeUserSyncDataBodyReviewStatsItemDeviceIdMax = 80;
 
-export const mergeUserSyncDataBodyReviewStatsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyReviewStatsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const mergeUserSyncDataBodyReviewStatsItemReviewedCountMin = 0;
 
 export const mergeUserSyncDataBodyReviewStatsItemCorrectCountMin = 0;
@@ -77,132 +81,289 @@ export const mergeUserSyncDataBodyReviewSessionsItemSessionIdMax = 120;
 
 export const mergeUserSyncDataBodyReviewSessionsItemDeviceIdMax = 80;
 
-export const mergeUserSyncDataBodyReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyReviewSessionsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const mergeUserSyncDataBodyReviewSessionsItemReviewedCountMin = 0;
 
 export const mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin = 0;
 
 export const mergeUserSyncDataBodyReviewSessionsMax = 10000;
 
-export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const mergeUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
 
-
-export const mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp = new RegExp(
+  "^(review|add-words|lesson|grade)-[1-3]$",
+);
 export const mergeUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncDataBodyMissionAwardsMax = 10000;
 
 export const mergeUserSyncDataBodyMissionChestsItemChestIdMax = 160;
 
-export const mergeUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const mergeUserSyncDataBodyMissionChestsItemMissionIdMax = 40;
 
-
-export const mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp = new RegExp(
+  "^(review|add-words|lesson|grade)-[1-3]$",
+);
 export const mergeUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
 
 export const mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
 export const mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const mergeUserSyncDataBodyMissionChestsItemFinalStoneMax = 40;
+export const mergeUserSyncDataBodyMissionChestsItemFinalStoneMax = 1000;
 
 export const mergeUserSyncDataBodyMissionChestsMax = 10000;
 
 export const mergeUserSyncDataBodyCollectionCraftsItemCraftIdMax = 120;
 
-
 export const mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax = 80;
 
 export const mergeUserSyncDataBodyCollectionCraftsMax = 10000;
 
-
-
 export const MergeUserSyncDataBody = zod.object({
-  "revision": zod.number().int().min(mergeUserSyncDataBodyRevisionMin).optional().describe('Account data generation used to prevent stale devices from restoring older data.'),
-  "words": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(mergeUserSyncDataBodyWordsItemSyncIdMax),
-  "term": zod.string().max(mergeUserSyncDataBodyWordsItemTermMax),
-  "meaning": zod.string().max(mergeUserSyncDataBodyWordsItemMeaningMax),
-  "ipa": zod.string().max(mergeUserSyncDataBodyWordsItemIpaMax),
-  "example": zod.string().max(mergeUserSyncDataBodyWordsItemExampleMax),
-  "note": zod.string().max(mergeUserSyncDataBodyWordsItemNoteMax),
-  "dictionaryEntryId": zod.number().int().min(1).nullable(),
-  "dictionarySenseId": zod.number().int().min(1).nullable(),
-  "createdAt": zod.coerce.date(),
-  "contentUpdatedAt": zod.coerce.date(),
-  "reviewCount": zod.number().int().min(mergeUserSyncDataBodyWordsItemReviewCountMin),
-  "level": zod.number().int().min(1).max(mergeUserSyncDataBodyWordsItemLevelMax),
-  "learnedOn": zod.string().regex(mergeUserSyncDataBodyWordsItemLearnedOnRegExp),
-  "nextReviewOn": zod.string().regex(mergeUserSyncDataBodyWordsItemNextReviewOnRegExp).nullable(),
-  "completed": zod.boolean(),
-  "lastReviewedOn": zod.string().regex(mergeUserSyncDataBodyWordsItemLastReviewedOnRegExp).nullable(),
-  "frozen": zod.boolean(),
-  "progressUpdatedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyWordsMax),
-  "deletedWords": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(mergeUserSyncDataBodyDeletedWordsItemSyncIdMax),
-  "deletedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyDeletedWordsMax),
-  "courseProgress": zod.array(zod.object({
-  "lessonId": zod.string().max(mergeUserSyncDataBodyCourseProgressItemLessonIdMax),
-  "currentIndex": zod.number().int().min(mergeUserSyncDataBodyCourseProgressItemCurrentIndexMin),
-  "stage": zod.enum(['flashcard', 'answer', 'selection', 'completed']),
-  "completedAt": zod.coerce.date().nullable(),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyCourseProgressMax),
-  "courseSelections": zod.array(zod.object({
-  "lessonId": zod.string().max(mergeUserSyncDataBodyCourseSelectionsItemLessonIdMax),
-  "wordId": zod.string().max(mergeUserSyncDataBodyCourseSelectionsItemWordIdMax),
-  "selected": zod.boolean(),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyCourseSelectionsMax),
-  "reviewStats": zod.array(zod.object({
-  "deviceId": zod.string().max(mergeUserSyncDataBodyReviewStatsItemDeviceIdMax),
-  "day": zod.string().regex(mergeUserSyncDataBodyReviewStatsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemCorrectCountMin),
-  "sessionCount": zod.number().int().min(mergeUserSyncDataBodyReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyReviewStatsMax),
-  "reviewSessions": zod.array(zod.object({
-  "sessionId": zod.string().min(1).max(mergeUserSyncDataBodyReviewSessionsItemSessionIdMax),
-  "deviceId": zod.string().min(1).max(mergeUserSyncDataBodyReviewSessionsItemDeviceIdMax),
-  "day": zod.string().regex(mergeUserSyncDataBodyReviewSessionsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(mergeUserSyncDataBodyReviewSessionsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin),
-  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
-  "completed": zod.boolean(),
-  "createdAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyReviewSessionsMax).optional(),
-  "missionAwards": zod.array(zod.object({
-  "day": zod.string().regex(mergeUserSyncDataBodyMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionAwardsItemMissionIdMax).regex(mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
-  "stone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionAwardsItemStoneMax),
-  "completedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyMissionAwardsMax).optional(),
-  "missionChests": zod.array(zod.object({
-  "chestId": zod.string().min(1).max(mergeUserSyncDataBodyMissionChestsItemChestIdMax),
-  "day": zod.string().regex(mergeUserSyncDataBodyMissionChestsItemDayRegExp),
-  "missionId": zod.string().min(1).max(mergeUserSyncDataBodyMissionChestsItemMissionIdMax).regex(mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp),
-  "baseStone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionChestsItemBaseStoneMax),
-  "upgradeAttempts": zod.number().int().min(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin).max(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
-  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
-  "opened": zod.boolean(),
-  "finalStone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionChestsItemFinalStoneMax).nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyMissionChestsMax).optional(),
-  "collectionCrafts": zod.array(zod.object({
-  "craftId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionCraftsItemCraftIdMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "craftIndex": zod.number().int().min(1),
-  "artworkId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
-  "craftedAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyCollectionCraftsMax).optional()
-})
+  revision: zod
+    .number()
+    .int()
+    .min(mergeUserSyncDataBodyRevisionMin)
+    .optional()
+    .describe(
+      "Account data generation used to prevent stale devices from restoring older data.",
+    ),
+  words: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyWordsItemSyncIdMax),
+        term: zod.string().max(mergeUserSyncDataBodyWordsItemTermMax),
+        meaning: zod.string().max(mergeUserSyncDataBodyWordsItemMeaningMax),
+        ipa: zod.string().max(mergeUserSyncDataBodyWordsItemIpaMax),
+        example: zod.string().max(mergeUserSyncDataBodyWordsItemExampleMax),
+        note: zod.string().max(mergeUserSyncDataBodyWordsItemNoteMax),
+        dictionaryEntryId: zod.number().int().min(1).nullable(),
+        dictionarySenseId: zod.number().int().min(1).nullable(),
+        createdAt: zod.coerce.date(),
+        contentUpdatedAt: zod.coerce.date(),
+        reviewCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyWordsItemReviewCountMin),
+        level: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncDataBodyWordsItemLevelMax),
+        learnedOn: zod
+          .string()
+          .regex(mergeUserSyncDataBodyWordsItemLearnedOnRegExp),
+        nextReviewOn: zod
+          .string()
+          .regex(mergeUserSyncDataBodyWordsItemNextReviewOnRegExp)
+          .nullable(),
+        completed: zod.boolean(),
+        lastReviewedOn: zod
+          .string()
+          .regex(mergeUserSyncDataBodyWordsItemLastReviewedOnRegExp)
+          .nullable(),
+        frozen: zod.boolean(),
+        progressUpdatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyWordsMax),
+  deletedWords: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyDeletedWordsItemSyncIdMax),
+        deletedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyDeletedWordsMax),
+  courseProgress: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(mergeUserSyncDataBodyCourseProgressItemLessonIdMax),
+        currentIndex: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyCourseProgressItemCurrentIndexMin),
+        stage: zod.enum(["flashcard", "answer", "selection", "completed"]),
+        completedAt: zod.coerce.date().nullable(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyCourseProgressMax),
+  courseSelections: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(mergeUserSyncDataBodyCourseSelectionsItemLessonIdMax),
+        wordId: zod
+          .string()
+          .max(mergeUserSyncDataBodyCourseSelectionsItemWordIdMax),
+        selected: zod.boolean(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyCourseSelectionsMax),
+  reviewStats: zod
+    .array(
+      zod.object({
+        deviceId: zod
+          .string()
+          .max(mergeUserSyncDataBodyReviewStatsItemDeviceIdMax),
+        day: zod.string().regex(mergeUserSyncDataBodyReviewStatsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewStatsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewStatsItemCorrectCountMin),
+        sessionCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewStatsItemSessionCountMin)
+          .optional()
+          .describe(
+            "Number of times the learner started a review session on this device and day.",
+          ),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyReviewStatsMax),
+  reviewSessions: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyReviewSessionsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyReviewSessionsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncDataBodyReviewSessionsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewSessionsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyReviewSessionsItemCorrectCountMin),
+        grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
+        completed: zod.boolean(),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyReviewSessionsMax)
+    .optional(),
+  missionAwards: zod
+    .array(
+      zod.object({
+        day: zod
+          .string()
+          .regex(mergeUserSyncDataBodyMissionAwardsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyMissionAwardsItemMissionIdMax)
+          .regex(mergeUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
+        stone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncDataBodyMissionAwardsItemStoneMax),
+        completedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyMissionAwardsMax)
+    .optional(),
+  missionChests: zod
+    .array(
+      zod.object({
+        chestId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyMissionChestsItemChestIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncDataBodyMissionChestsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyMissionChestsItemMissionIdMax)
+          .regex(mergeUserSyncDataBodyMissionChestsItemMissionIdRegExp),
+        baseStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncDataBodyMissionChestsItemBaseStoneMax),
+        upgradeAttempts: zod
+          .number()
+          .int()
+          .min(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin)
+          .max(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        ruleSet: zod
+          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .optional()
+          .describe(
+            "Optional for legacy clients; omitted values use the legacy chest rules.",
+          ),
+        superUpgrade: zod
+          .boolean()
+          .optional()
+          .describe("Whether this chest has its guaranteed fourth upgrade."),
+        opened: zod.boolean(),
+        finalStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncDataBodyMissionChestsItemFinalStoneMax)
+          .nullable(),
+        createdAt: zod.coerce.date(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyMissionChestsMax)
+    .optional(),
+  collectionCrafts: zod
+    .array(
+      zod.object({
+        craftId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyCollectionCraftsItemCraftIdMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        craftIndex: zod.number().int().min(1),
+        artworkId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
+        craftedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncDataBodyCollectionCraftsMax)
+    .optional(),
+});
 
 export const mergeUserSyncData200ResponseRevisionMin = 0;
 
@@ -218,15 +379,17 @@ export const mergeUserSyncData200ResponseWordsItemExampleMax = 4000;
 
 export const mergeUserSyncData200ResponseWordsItemNoteMax = 4000;
 
-
-
 export const mergeUserSyncData200ResponseWordsItemReviewCountMin = 0;
 
 export const mergeUserSyncData200ResponseWordsItemLevelMax = 6;
 
-export const mergeUserSyncData200ResponseWordsItemLearnedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const mergeUserSyncData200ResponseWordsItemNextReviewOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const mergeUserSyncData200ResponseWordsItemLastReviewedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseWordsItemLearnedOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+export const mergeUserSyncData200ResponseWordsItemNextReviewOnRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+export const mergeUserSyncData200ResponseWordsItemLastReviewedOnRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const mergeUserSyncData200ResponseWordsMax = 10000;
 
 export const mergeUserSyncData200ResponseDeletedWordsItemSyncIdMax = 7000;
@@ -247,7 +410,9 @@ export const mergeUserSyncData200ResponseCourseSelectionsMax = 10000;
 
 export const mergeUserSyncData200ResponseReviewStatsItemDeviceIdMax = 80;
 
-export const mergeUserSyncData200ResponseReviewStatsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseReviewStatsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin = 0;
 
 export const mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin = 0;
@@ -260,145 +425,302 @@ export const mergeUserSyncData200ResponseReviewSessionsItemSessionIdMax = 120;
 
 export const mergeUserSyncData200ResponseReviewSessionsItemDeviceIdMax = 80;
 
-export const mergeUserSyncData200ResponseReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseReviewSessionsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const mergeUserSyncData200ResponseReviewSessionsItemReviewedCountMin = 0;
 
 export const mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin = 0;
 
 export const mergeUserSyncData200ResponseReviewSessionsMax = 10000;
 
-export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseMissionAwardsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
 
-
-export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp =
+  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
 export const mergeUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const mergeUserSyncData200ResponseMissionAwardsMax = 10000;
 
 export const mergeUserSyncData200ResponseMissionChestsItemChestIdMax = 160;
 
-export const mergeUserSyncData200ResponseMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseMissionChestsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const mergeUserSyncData200ResponseMissionChestsItemMissionIdMax = 40;
 
-
-export const mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp =
+  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
 export const mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
 
 export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
 export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax = 40;
+export const mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax = 1000;
 
 export const mergeUserSyncData200ResponseMissionChestsMax = 10000;
 
 export const mergeUserSyncData200ResponseCollectionCraftsItemCraftIdMax = 120;
 
-
 export const mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax = 80;
 
 export const mergeUserSyncData200ResponseCollectionCraftsMax = 10000;
 
-
-
 export const MergeUserSyncData200Response = zod.object({
-  "revision": zod.number().int().min(mergeUserSyncData200ResponseRevisionMin).optional().describe('Account data generation used to prevent stale devices from restoring older data.'),
-  "words": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(mergeUserSyncData200ResponseWordsItemSyncIdMax),
-  "term": zod.string().max(mergeUserSyncData200ResponseWordsItemTermMax),
-  "meaning": zod.string().max(mergeUserSyncData200ResponseWordsItemMeaningMax),
-  "ipa": zod.string().max(mergeUserSyncData200ResponseWordsItemIpaMax),
-  "example": zod.string().max(mergeUserSyncData200ResponseWordsItemExampleMax),
-  "note": zod.string().max(mergeUserSyncData200ResponseWordsItemNoteMax),
-  "dictionaryEntryId": zod.number().int().min(1).nullable(),
-  "dictionarySenseId": zod.number().int().min(1).nullable(),
-  "createdAt": zod.coerce.date(),
-  "contentUpdatedAt": zod.coerce.date(),
-  "reviewCount": zod.number().int().min(mergeUserSyncData200ResponseWordsItemReviewCountMin),
-  "level": zod.number().int().min(1).max(mergeUserSyncData200ResponseWordsItemLevelMax),
-  "learnedOn": zod.string().regex(mergeUserSyncData200ResponseWordsItemLearnedOnRegExp),
-  "nextReviewOn": zod.string().regex(mergeUserSyncData200ResponseWordsItemNextReviewOnRegExp).nullable(),
-  "completed": zod.boolean(),
-  "lastReviewedOn": zod.string().regex(mergeUserSyncData200ResponseWordsItemLastReviewedOnRegExp).nullable(),
-  "frozen": zod.boolean(),
-  "progressUpdatedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseWordsMax),
-  "deletedWords": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(mergeUserSyncData200ResponseDeletedWordsItemSyncIdMax),
-  "deletedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseDeletedWordsMax),
-  "courseProgress": zod.array(zod.object({
-  "lessonId": zod.string().max(mergeUserSyncData200ResponseCourseProgressItemLessonIdMax),
-  "currentIndex": zod.number().int().min(mergeUserSyncData200ResponseCourseProgressItemCurrentIndexMin),
-  "stage": zod.enum(['flashcard', 'answer', 'selection', 'completed']),
-  "completedAt": zod.coerce.date().nullable(),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseCourseProgressMax),
-  "courseSelections": zod.array(zod.object({
-  "lessonId": zod.string().max(mergeUserSyncData200ResponseCourseSelectionsItemLessonIdMax),
-  "wordId": zod.string().max(mergeUserSyncData200ResponseCourseSelectionsItemWordIdMax),
-  "selected": zod.boolean(),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseCourseSelectionsMax),
-  "reviewStats": zod.array(zod.object({
-  "deviceId": zod.string().max(mergeUserSyncData200ResponseReviewStatsItemDeviceIdMax),
-  "day": zod.string().regex(mergeUserSyncData200ResponseReviewStatsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin),
-  "sessionCount": zod.number().int().min(mergeUserSyncData200ResponseReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseReviewStatsMax),
-  "reviewSessions": zod.array(zod.object({
-  "sessionId": zod.string().min(1).max(mergeUserSyncData200ResponseReviewSessionsItemSessionIdMax),
-  "deviceId": zod.string().min(1).max(mergeUserSyncData200ResponseReviewSessionsItemDeviceIdMax),
-  "day": zod.string().regex(mergeUserSyncData200ResponseReviewSessionsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(mergeUserSyncData200ResponseReviewSessionsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
-  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
-  "completed": zod.boolean(),
-  "createdAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseReviewSessionsMax).optional(),
-  "missionAwards": zod.array(zod.object({
-  "day": zod.string().regex(mergeUserSyncData200ResponseMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax).regex(mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
-  "stone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionAwardsItemStoneMax),
-  "completedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseMissionAwardsMax).optional(),
-  "missionChests": zod.array(zod.object({
-  "chestId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionChestsItemChestIdMax),
-  "day": zod.string().regex(mergeUserSyncData200ResponseMissionChestsItemDayRegExp),
-  "missionId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionChestsItemMissionIdMax).regex(mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp),
-  "baseStone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax),
-  "upgradeAttempts": zod.number().int().min(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin).max(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
-  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
-  "opened": zod.boolean(),
-  "finalStone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax).nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseMissionChestsMax).optional(),
-  "collectionCrafts": zod.array(zod.object({
-  "craftId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionCraftsItemCraftIdMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "craftIndex": zod.number().int().min(1),
-  "artworkId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
-  "craftedAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseCollectionCraftsMax).optional()
-})
+  revision: zod
+    .number()
+    .int()
+    .min(mergeUserSyncData200ResponseRevisionMin)
+    .optional()
+    .describe(
+      "Account data generation used to prevent stale devices from restoring older data.",
+    ),
+  words: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseWordsItemSyncIdMax),
+        term: zod.string().max(mergeUserSyncData200ResponseWordsItemTermMax),
+        meaning: zod
+          .string()
+          .max(mergeUserSyncData200ResponseWordsItemMeaningMax),
+        ipa: zod.string().max(mergeUserSyncData200ResponseWordsItemIpaMax),
+        example: zod
+          .string()
+          .max(mergeUserSyncData200ResponseWordsItemExampleMax),
+        note: zod.string().max(mergeUserSyncData200ResponseWordsItemNoteMax),
+        dictionaryEntryId: zod.number().int().min(1).nullable(),
+        dictionarySenseId: zod.number().int().min(1).nullable(),
+        createdAt: zod.coerce.date(),
+        contentUpdatedAt: zod.coerce.date(),
+        reviewCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseWordsItemReviewCountMin),
+        level: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncData200ResponseWordsItemLevelMax),
+        learnedOn: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseWordsItemLearnedOnRegExp),
+        nextReviewOn: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseWordsItemNextReviewOnRegExp)
+          .nullable(),
+        completed: zod.boolean(),
+        lastReviewedOn: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseWordsItemLastReviewedOnRegExp)
+          .nullable(),
+        frozen: zod.boolean(),
+        progressUpdatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseWordsMax),
+  deletedWords: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseDeletedWordsItemSyncIdMax),
+        deletedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseDeletedWordsMax),
+  courseProgress: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(mergeUserSyncData200ResponseCourseProgressItemLessonIdMax),
+        currentIndex: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseCourseProgressItemCurrentIndexMin),
+        stage: zod.enum(["flashcard", "answer", "selection", "completed"]),
+        completedAt: zod.coerce.date().nullable(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseCourseProgressMax),
+  courseSelections: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(mergeUserSyncData200ResponseCourseSelectionsItemLessonIdMax),
+        wordId: zod
+          .string()
+          .max(mergeUserSyncData200ResponseCourseSelectionsItemWordIdMax),
+        selected: zod.boolean(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseCourseSelectionsMax),
+  reviewStats: zod
+    .array(
+      zod.object({
+        deviceId: zod
+          .string()
+          .max(mergeUserSyncData200ResponseReviewStatsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseReviewStatsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseReviewStatsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseReviewStatsItemCorrectCountMin),
+        sessionCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseReviewStatsItemSessionCountMin)
+          .optional()
+          .describe(
+            "Number of times the learner started a review session on this device and day.",
+          ),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseReviewStatsMax),
+  reviewSessions: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseReviewSessionsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseReviewSessionsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseReviewSessionsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseReviewSessionsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
+        grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
+        completed: zod.boolean(),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseReviewSessionsMax)
+    .optional(),
+  missionAwards: zod
+    .array(
+      zod.object({
+        day: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseMissionAwardsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseMissionAwardsItemMissionIdMax)
+          .regex(mergeUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
+        stone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncData200ResponseMissionAwardsItemStoneMax),
+        completedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseMissionAwardsMax)
+    .optional(),
+  missionChests: zod
+    .array(
+      zod.object({
+        chestId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseMissionChestsItemChestIdMax),
+        day: zod
+          .string()
+          .regex(mergeUserSyncData200ResponseMissionChestsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseMissionChestsItemMissionIdMax)
+          .regex(mergeUserSyncData200ResponseMissionChestsItemMissionIdRegExp),
+        baseStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax),
+        upgradeAttempts: zod
+          .number()
+          .int()
+          .min(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin)
+          .max(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        ruleSet: zod
+          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .optional()
+          .describe(
+            "Optional for legacy clients; omitted values use the legacy chest rules.",
+          ),
+        superUpgrade: zod
+          .boolean()
+          .optional()
+          .describe("Whether this chest has its guaranteed fourth upgrade."),
+        opened: zod.boolean(),
+        finalStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax)
+          .nullable(),
+        createdAt: zod.coerce.date(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseMissionChestsMax)
+    .optional(),
+  collectionCrafts: zod
+    .array(
+      zod.object({
+        craftId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseCollectionCraftsItemCraftIdMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        craftIndex: zod.number().int().min(1),
+        artworkId: zod
+          .string()
+          .min(1)
+          .max(mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
+        craftedAt: zod.coerce.date(),
+      }),
+    )
+    .max(mergeUserSyncData200ResponseCollectionCraftsMax)
+    .optional(),
+});
 
 export const MergeUserSyncData400Response = zod.object({
-  "error": zod.string()
-})
+  error: zod.string(),
+});
 
 export const MergeUserSyncData401Response = zod.object({
-  "error": zod.string()
-})
+  error: zod.string(),
+});
 
 export const MergeUserSyncData503Response = zod.object({
-  "error": zod.string()
-})
-
+  error: zod.string(),
+});
 
 /**
  * @summary Replace the signed-in user's learning data with a confirmed backup
@@ -417,15 +739,19 @@ export const replaceUserSyncDataBodyWordsItemExampleMax = 4000;
 
 export const replaceUserSyncDataBodyWordsItemNoteMax = 4000;
 
-
-
 export const replaceUserSyncDataBodyWordsItemReviewCountMin = 0;
 
 export const replaceUserSyncDataBodyWordsItemLevelMax = 6;
 
-export const replaceUserSyncDataBodyWordsItemLearnedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const replaceUserSyncDataBodyWordsItemNextReviewOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const replaceUserSyncDataBodyWordsItemLastReviewedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyWordsItemLearnedOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+export const replaceUserSyncDataBodyWordsItemNextReviewOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+export const replaceUserSyncDataBodyWordsItemLastReviewedOnRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const replaceUserSyncDataBodyWordsMax = 10000;
 
 export const replaceUserSyncDataBodyDeletedWordsItemSyncIdMax = 7000;
@@ -446,7 +772,9 @@ export const replaceUserSyncDataBodyCourseSelectionsMax = 10000;
 
 export const replaceUserSyncDataBodyReviewStatsItemDeviceIdMax = 80;
 
-export const replaceUserSyncDataBodyReviewStatsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyReviewStatsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const replaceUserSyncDataBodyReviewStatsItemReviewedCountMin = 0;
 
 export const replaceUserSyncDataBodyReviewStatsItemCorrectCountMin = 0;
@@ -459,132 +787,289 @@ export const replaceUserSyncDataBodyReviewSessionsItemSessionIdMax = 120;
 
 export const replaceUserSyncDataBodyReviewSessionsItemDeviceIdMax = 80;
 
-export const replaceUserSyncDataBodyReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyReviewSessionsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const replaceUserSyncDataBodyReviewSessionsItemReviewedCountMin = 0;
 
 export const replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin = 0;
 
 export const replaceUserSyncDataBodyReviewSessionsMax = 10000;
 
-export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyMissionAwardsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const replaceUserSyncDataBodyMissionAwardsItemMissionIdMax = 40;
 
-
-export const replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp =
+  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
 export const replaceUserSyncDataBodyMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncDataBodyMissionAwardsMax = 10000;
 
 export const replaceUserSyncDataBodyMissionChestsItemChestIdMax = 160;
 
-export const replaceUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyMissionChestsItemDayRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
 export const replaceUserSyncDataBodyMissionChestsItemMissionIdMax = 40;
 
-
-export const replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp =
+  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
 export const replaceUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
 
 export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
 export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const replaceUserSyncDataBodyMissionChestsItemFinalStoneMax = 40;
+export const replaceUserSyncDataBodyMissionChestsItemFinalStoneMax = 1000;
 
 export const replaceUserSyncDataBodyMissionChestsMax = 10000;
 
 export const replaceUserSyncDataBodyCollectionCraftsItemCraftIdMax = 120;
 
-
 export const replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax = 80;
 
 export const replaceUserSyncDataBodyCollectionCraftsMax = 10000;
 
-
-
 export const ReplaceUserSyncDataBody = zod.object({
-  "revision": zod.number().int().min(replaceUserSyncDataBodyRevisionMin).optional().describe('Account data generation used to prevent stale devices from restoring older data.'),
-  "words": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(replaceUserSyncDataBodyWordsItemSyncIdMax),
-  "term": zod.string().max(replaceUserSyncDataBodyWordsItemTermMax),
-  "meaning": zod.string().max(replaceUserSyncDataBodyWordsItemMeaningMax),
-  "ipa": zod.string().max(replaceUserSyncDataBodyWordsItemIpaMax),
-  "example": zod.string().max(replaceUserSyncDataBodyWordsItemExampleMax),
-  "note": zod.string().max(replaceUserSyncDataBodyWordsItemNoteMax),
-  "dictionaryEntryId": zod.number().int().min(1).nullable(),
-  "dictionarySenseId": zod.number().int().min(1).nullable(),
-  "createdAt": zod.coerce.date(),
-  "contentUpdatedAt": zod.coerce.date(),
-  "reviewCount": zod.number().int().min(replaceUserSyncDataBodyWordsItemReviewCountMin),
-  "level": zod.number().int().min(1).max(replaceUserSyncDataBodyWordsItemLevelMax),
-  "learnedOn": zod.string().regex(replaceUserSyncDataBodyWordsItemLearnedOnRegExp),
-  "nextReviewOn": zod.string().regex(replaceUserSyncDataBodyWordsItemNextReviewOnRegExp).nullable(),
-  "completed": zod.boolean(),
-  "lastReviewedOn": zod.string().regex(replaceUserSyncDataBodyWordsItemLastReviewedOnRegExp).nullable(),
-  "frozen": zod.boolean(),
-  "progressUpdatedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyWordsMax),
-  "deletedWords": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(replaceUserSyncDataBodyDeletedWordsItemSyncIdMax),
-  "deletedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyDeletedWordsMax),
-  "courseProgress": zod.array(zod.object({
-  "lessonId": zod.string().max(replaceUserSyncDataBodyCourseProgressItemLessonIdMax),
-  "currentIndex": zod.number().int().min(replaceUserSyncDataBodyCourseProgressItemCurrentIndexMin),
-  "stage": zod.enum(['flashcard', 'answer', 'selection', 'completed']),
-  "completedAt": zod.coerce.date().nullable(),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyCourseProgressMax),
-  "courseSelections": zod.array(zod.object({
-  "lessonId": zod.string().max(replaceUserSyncDataBodyCourseSelectionsItemLessonIdMax),
-  "wordId": zod.string().max(replaceUserSyncDataBodyCourseSelectionsItemWordIdMax),
-  "selected": zod.boolean(),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyCourseSelectionsMax),
-  "reviewStats": zod.array(zod.object({
-  "deviceId": zod.string().max(replaceUserSyncDataBodyReviewStatsItemDeviceIdMax),
-  "day": zod.string().regex(replaceUserSyncDataBodyReviewStatsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemCorrectCountMin),
-  "sessionCount": zod.number().int().min(replaceUserSyncDataBodyReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyReviewStatsMax),
-  "reviewSessions": zod.array(zod.object({
-  "sessionId": zod.string().min(1).max(replaceUserSyncDataBodyReviewSessionsItemSessionIdMax),
-  "deviceId": zod.string().min(1).max(replaceUserSyncDataBodyReviewSessionsItemDeviceIdMax),
-  "day": zod.string().regex(replaceUserSyncDataBodyReviewSessionsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(replaceUserSyncDataBodyReviewSessionsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin),
-  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
-  "completed": zod.boolean(),
-  "createdAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyReviewSessionsMax).optional(),
-  "missionAwards": zod.array(zod.object({
-  "day": zod.string().regex(replaceUserSyncDataBodyMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionAwardsItemMissionIdMax).regex(replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
-  "stone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionAwardsItemStoneMax),
-  "completedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyMissionAwardsMax).optional(),
-  "missionChests": zod.array(zod.object({
-  "chestId": zod.string().min(1).max(replaceUserSyncDataBodyMissionChestsItemChestIdMax),
-  "day": zod.string().regex(replaceUserSyncDataBodyMissionChestsItemDayRegExp),
-  "missionId": zod.string().min(1).max(replaceUserSyncDataBodyMissionChestsItemMissionIdMax).regex(replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp),
-  "baseStone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionChestsItemBaseStoneMax),
-  "upgradeAttempts": zod.number().int().min(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin).max(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
-  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
-  "opened": zod.boolean(),
-  "finalStone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionChestsItemFinalStoneMax).nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyMissionChestsMax).optional(),
-  "collectionCrafts": zod.array(zod.object({
-  "craftId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionCraftsItemCraftIdMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "craftIndex": zod.number().int().min(1),
-  "artworkId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
-  "craftedAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyCollectionCraftsMax).optional()
-})
+  revision: zod
+    .number()
+    .int()
+    .min(replaceUserSyncDataBodyRevisionMin)
+    .optional()
+    .describe(
+      "Account data generation used to prevent stale devices from restoring older data.",
+    ),
+  words: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyWordsItemSyncIdMax),
+        term: zod.string().max(replaceUserSyncDataBodyWordsItemTermMax),
+        meaning: zod.string().max(replaceUserSyncDataBodyWordsItemMeaningMax),
+        ipa: zod.string().max(replaceUserSyncDataBodyWordsItemIpaMax),
+        example: zod.string().max(replaceUserSyncDataBodyWordsItemExampleMax),
+        note: zod.string().max(replaceUserSyncDataBodyWordsItemNoteMax),
+        dictionaryEntryId: zod.number().int().min(1).nullable(),
+        dictionarySenseId: zod.number().int().min(1).nullable(),
+        createdAt: zod.coerce.date(),
+        contentUpdatedAt: zod.coerce.date(),
+        reviewCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyWordsItemReviewCountMin),
+        level: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncDataBodyWordsItemLevelMax),
+        learnedOn: zod
+          .string()
+          .regex(replaceUserSyncDataBodyWordsItemLearnedOnRegExp),
+        nextReviewOn: zod
+          .string()
+          .regex(replaceUserSyncDataBodyWordsItemNextReviewOnRegExp)
+          .nullable(),
+        completed: zod.boolean(),
+        lastReviewedOn: zod
+          .string()
+          .regex(replaceUserSyncDataBodyWordsItemLastReviewedOnRegExp)
+          .nullable(),
+        frozen: zod.boolean(),
+        progressUpdatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyWordsMax),
+  deletedWords: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyDeletedWordsItemSyncIdMax),
+        deletedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyDeletedWordsMax),
+  courseProgress: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(replaceUserSyncDataBodyCourseProgressItemLessonIdMax),
+        currentIndex: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyCourseProgressItemCurrentIndexMin),
+        stage: zod.enum(["flashcard", "answer", "selection", "completed"]),
+        completedAt: zod.coerce.date().nullable(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyCourseProgressMax),
+  courseSelections: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(replaceUserSyncDataBodyCourseSelectionsItemLessonIdMax),
+        wordId: zod
+          .string()
+          .max(replaceUserSyncDataBodyCourseSelectionsItemWordIdMax),
+        selected: zod.boolean(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyCourseSelectionsMax),
+  reviewStats: zod
+    .array(
+      zod.object({
+        deviceId: zod
+          .string()
+          .max(replaceUserSyncDataBodyReviewStatsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncDataBodyReviewStatsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewStatsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewStatsItemCorrectCountMin),
+        sessionCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewStatsItemSessionCountMin)
+          .optional()
+          .describe(
+            "Number of times the learner started a review session on this device and day.",
+          ),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyReviewStatsMax),
+  reviewSessions: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyReviewSessionsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyReviewSessionsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncDataBodyReviewSessionsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewSessionsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyReviewSessionsItemCorrectCountMin),
+        grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
+        completed: zod.boolean(),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyReviewSessionsMax)
+    .optional(),
+  missionAwards: zod
+    .array(
+      zod.object({
+        day: zod
+          .string()
+          .regex(replaceUserSyncDataBodyMissionAwardsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyMissionAwardsItemMissionIdMax)
+          .regex(replaceUserSyncDataBodyMissionAwardsItemMissionIdRegExp),
+        stone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncDataBodyMissionAwardsItemStoneMax),
+        completedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyMissionAwardsMax)
+    .optional(),
+  missionChests: zod
+    .array(
+      zod.object({
+        chestId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyMissionChestsItemChestIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncDataBodyMissionChestsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyMissionChestsItemMissionIdMax)
+          .regex(replaceUserSyncDataBodyMissionChestsItemMissionIdRegExp),
+        baseStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncDataBodyMissionChestsItemBaseStoneMax),
+        upgradeAttempts: zod
+          .number()
+          .int()
+          .min(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin)
+          .max(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        ruleSet: zod
+          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .optional()
+          .describe(
+            "Optional for legacy clients; omitted values use the legacy chest rules.",
+          ),
+        superUpgrade: zod
+          .boolean()
+          .optional()
+          .describe("Whether this chest has its guaranteed fourth upgrade."),
+        opened: zod.boolean(),
+        finalStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncDataBodyMissionChestsItemFinalStoneMax)
+          .nullable(),
+        createdAt: zod.coerce.date(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyMissionChestsMax)
+    .optional(),
+  collectionCrafts: zod
+    .array(
+      zod.object({
+        craftId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyCollectionCraftsItemCraftIdMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        craftIndex: zod.number().int().min(1),
+        artworkId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
+        craftedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncDataBodyCollectionCraftsMax)
+    .optional(),
+});
 
 export const replaceUserSyncData200ResponseRevisionMin = 0;
 
@@ -600,15 +1085,16 @@ export const replaceUserSyncData200ResponseWordsItemExampleMax = 4000;
 
 export const replaceUserSyncData200ResponseWordsItemNoteMax = 4000;
 
-
-
 export const replaceUserSyncData200ResponseWordsItemReviewCountMin = 0;
 
 export const replaceUserSyncData200ResponseWordsItemLevelMax = 6;
 
-export const replaceUserSyncData200ResponseWordsItemLearnedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const replaceUserSyncData200ResponseWordsItemNextReviewOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const replaceUserSyncData200ResponseWordsItemLastReviewedOnRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseWordsItemLearnedOnRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+export const replaceUserSyncData200ResponseWordsItemNextReviewOnRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+export const replaceUserSyncData200ResponseWordsItemLastReviewedOnRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const replaceUserSyncData200ResponseWordsMax = 10000;
 
 export const replaceUserSyncData200ResponseDeletedWordsItemSyncIdMax = 7000;
@@ -629,7 +1115,8 @@ export const replaceUserSyncData200ResponseCourseSelectionsMax = 10000;
 
 export const replaceUserSyncData200ResponseReviewStatsItemDeviceIdMax = 80;
 
-export const replaceUserSyncData200ResponseReviewStatsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseReviewStatsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const replaceUserSyncData200ResponseReviewStatsItemReviewedCountMin = 0;
 
 export const replaceUserSyncData200ResponseReviewStatsItemCorrectCountMin = 0;
@@ -642,152 +1129,317 @@ export const replaceUserSyncData200ResponseReviewSessionsItemSessionIdMax = 120;
 
 export const replaceUserSyncData200ResponseReviewSessionsItemDeviceIdMax = 80;
 
-export const replaceUserSyncData200ResponseReviewSessionsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseReviewSessionsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const replaceUserSyncData200ResponseReviewSessionsItemReviewedCountMin = 0;
 
 export const replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin = 0;
 
 export const replaceUserSyncData200ResponseReviewSessionsMax = 10000;
 
-export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseMissionAwardsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax = 40;
 
-
-export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp =
+  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
 export const replaceUserSyncData200ResponseMissionAwardsItemStoneMax = 20;
 
 export const replaceUserSyncData200ResponseMissionAwardsMax = 10000;
 
 export const replaceUserSyncData200ResponseMissionChestsItemChestIdMax = 160;
 
-export const replaceUserSyncData200ResponseMissionChestsItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseMissionChestsItemDayRegExp =
+  new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
 export const replaceUserSyncData200ResponseMissionChestsItemMissionIdMax = 40;
 
-
-export const replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp = new RegExp('^(review|add-words|lesson|grade)-[1-3]$');
+export const replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp =
+  new RegExp("^(review|add-words|lesson|grade)-[1-3]$");
 export const replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
 
 export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
 export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax = 40;
+export const replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax = 1000;
 
 export const replaceUserSyncData200ResponseMissionChestsMax = 10000;
 
 export const replaceUserSyncData200ResponseCollectionCraftsItemCraftIdMax = 120;
 
-
 export const replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax = 80;
 
 export const replaceUserSyncData200ResponseCollectionCraftsMax = 10000;
 
-
-
 export const ReplaceUserSyncData200Response = zod.object({
-  "revision": zod.number().int().min(replaceUserSyncData200ResponseRevisionMin).optional().describe('Account data generation used to prevent stale devices from restoring older data.'),
-  "words": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(replaceUserSyncData200ResponseWordsItemSyncIdMax),
-  "term": zod.string().max(replaceUserSyncData200ResponseWordsItemTermMax),
-  "meaning": zod.string().max(replaceUserSyncData200ResponseWordsItemMeaningMax),
-  "ipa": zod.string().max(replaceUserSyncData200ResponseWordsItemIpaMax),
-  "example": zod.string().max(replaceUserSyncData200ResponseWordsItemExampleMax),
-  "note": zod.string().max(replaceUserSyncData200ResponseWordsItemNoteMax),
-  "dictionaryEntryId": zod.number().int().min(1).nullable(),
-  "dictionarySenseId": zod.number().int().min(1).nullable(),
-  "createdAt": zod.coerce.date(),
-  "contentUpdatedAt": zod.coerce.date(),
-  "reviewCount": zod.number().int().min(replaceUserSyncData200ResponseWordsItemReviewCountMin),
-  "level": zod.number().int().min(1).max(replaceUserSyncData200ResponseWordsItemLevelMax),
-  "learnedOn": zod.string().regex(replaceUserSyncData200ResponseWordsItemLearnedOnRegExp),
-  "nextReviewOn": zod.string().regex(replaceUserSyncData200ResponseWordsItemNextReviewOnRegExp).nullable(),
-  "completed": zod.boolean(),
-  "lastReviewedOn": zod.string().regex(replaceUserSyncData200ResponseWordsItemLastReviewedOnRegExp).nullable(),
-  "frozen": zod.boolean(),
-  "progressUpdatedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseWordsMax),
-  "deletedWords": zod.array(zod.object({
-  "syncId": zod.string().min(1).max(replaceUserSyncData200ResponseDeletedWordsItemSyncIdMax),
-  "deletedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseDeletedWordsMax),
-  "courseProgress": zod.array(zod.object({
-  "lessonId": zod.string().max(replaceUserSyncData200ResponseCourseProgressItemLessonIdMax),
-  "currentIndex": zod.number().int().min(replaceUserSyncData200ResponseCourseProgressItemCurrentIndexMin),
-  "stage": zod.enum(['flashcard', 'answer', 'selection', 'completed']),
-  "completedAt": zod.coerce.date().nullable(),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseCourseProgressMax),
-  "courseSelections": zod.array(zod.object({
-  "lessonId": zod.string().max(replaceUserSyncData200ResponseCourseSelectionsItemLessonIdMax),
-  "wordId": zod.string().max(replaceUserSyncData200ResponseCourseSelectionsItemWordIdMax),
-  "selected": zod.boolean(),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseCourseSelectionsMax),
-  "reviewStats": zod.array(zod.object({
-  "deviceId": zod.string().max(replaceUserSyncData200ResponseReviewStatsItemDeviceIdMax),
-  "day": zod.string().regex(replaceUserSyncData200ResponseReviewStatsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemCorrectCountMin),
-  "sessionCount": zod.number().int().min(replaceUserSyncData200ResponseReviewStatsItemSessionCountMin).optional().describe('Number of times the learner started a review session on this device and day.'),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseReviewStatsMax),
-  "reviewSessions": zod.array(zod.object({
-  "sessionId": zod.string().min(1).max(replaceUserSyncData200ResponseReviewSessionsItemSessionIdMax),
-  "deviceId": zod.string().min(1).max(replaceUserSyncData200ResponseReviewSessionsItemDeviceIdMax),
-  "day": zod.string().regex(replaceUserSyncData200ResponseReviewSessionsItemDayRegExp),
-  "reviewedCount": zod.number().int().min(replaceUserSyncData200ResponseReviewSessionsItemReviewedCountMin),
-  "correctCount": zod.number().int().min(replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
-  "grade": zod.enum(['S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'B-', 'C']),
-  "completed": zod.boolean(),
-  "createdAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseReviewSessionsMax).optional(),
-  "missionAwards": zod.array(zod.object({
-  "day": zod.string().regex(replaceUserSyncData200ResponseMissionAwardsItemDayRegExp),
-  "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax).regex(replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp),
-  "stone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionAwardsItemStoneMax),
-  "completedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseMissionAwardsMax).optional(),
-  "missionChests": zod.array(zod.object({
-  "chestId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionChestsItemChestIdMax),
-  "day": zod.string().regex(replaceUserSyncData200ResponseMissionChestsItemDayRegExp),
-  "missionId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionChestsItemMissionIdMax).regex(replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp),
-  "baseStone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax),
-  "upgradeAttempts": zod.number().int().min(replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin).max(replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
-  "superUpgrade": zod.boolean().optional().describe('Whether this ruleset 2 chest has its guaranteed fourth upgrade.'),
-  "opened": zod.boolean(),
-  "finalStone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax).nullable(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseMissionChestsMax).optional(),
-  "collectionCrafts": zod.array(zod.object({
-  "craftId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionCraftsItemCraftIdMax),
-  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "craftIndex": zod.number().int().min(1),
-  "artworkId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
-  "craftedAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseCollectionCraftsMax).optional()
-})
+  revision: zod
+    .number()
+    .int()
+    .min(replaceUserSyncData200ResponseRevisionMin)
+    .optional()
+    .describe(
+      "Account data generation used to prevent stale devices from restoring older data.",
+    ),
+  words: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseWordsItemSyncIdMax),
+        term: zod.string().max(replaceUserSyncData200ResponseWordsItemTermMax),
+        meaning: zod
+          .string()
+          .max(replaceUserSyncData200ResponseWordsItemMeaningMax),
+        ipa: zod.string().max(replaceUserSyncData200ResponseWordsItemIpaMax),
+        example: zod
+          .string()
+          .max(replaceUserSyncData200ResponseWordsItemExampleMax),
+        note: zod.string().max(replaceUserSyncData200ResponseWordsItemNoteMax),
+        dictionaryEntryId: zod.number().int().min(1).nullable(),
+        dictionarySenseId: zod.number().int().min(1).nullable(),
+        createdAt: zod.coerce.date(),
+        contentUpdatedAt: zod.coerce.date(),
+        reviewCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseWordsItemReviewCountMin),
+        level: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncData200ResponseWordsItemLevelMax),
+        learnedOn: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseWordsItemLearnedOnRegExp),
+        nextReviewOn: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseWordsItemNextReviewOnRegExp)
+          .nullable(),
+        completed: zod.boolean(),
+        lastReviewedOn: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseWordsItemLastReviewedOnRegExp)
+          .nullable(),
+        frozen: zod.boolean(),
+        progressUpdatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseWordsMax),
+  deletedWords: zod
+    .array(
+      zod.object({
+        syncId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseDeletedWordsItemSyncIdMax),
+        deletedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseDeletedWordsMax),
+  courseProgress: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(replaceUserSyncData200ResponseCourseProgressItemLessonIdMax),
+        currentIndex: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseCourseProgressItemCurrentIndexMin),
+        stage: zod.enum(["flashcard", "answer", "selection", "completed"]),
+        completedAt: zod.coerce.date().nullable(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseCourseProgressMax),
+  courseSelections: zod
+    .array(
+      zod.object({
+        lessonId: zod
+          .string()
+          .max(replaceUserSyncData200ResponseCourseSelectionsItemLessonIdMax),
+        wordId: zod
+          .string()
+          .max(replaceUserSyncData200ResponseCourseSelectionsItemWordIdMax),
+        selected: zod.boolean(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseCourseSelectionsMax),
+  reviewStats: zod
+    .array(
+      zod.object({
+        deviceId: zod
+          .string()
+          .max(replaceUserSyncData200ResponseReviewStatsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseReviewStatsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseReviewStatsItemReviewedCountMin),
+        correctCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseReviewStatsItemCorrectCountMin),
+        sessionCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseReviewStatsItemSessionCountMin)
+          .optional()
+          .describe(
+            "Number of times the learner started a review session on this device and day.",
+          ),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseReviewStatsMax),
+  reviewSessions: zod
+    .array(
+      zod.object({
+        sessionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseReviewSessionsItemSessionIdMax),
+        deviceId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseReviewSessionsItemDeviceIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseReviewSessionsItemDayRegExp),
+        reviewedCount: zod
+          .number()
+          .int()
+          .min(
+            replaceUserSyncData200ResponseReviewSessionsItemReviewedCountMin,
+          ),
+        correctCount: zod
+          .number()
+          .int()
+          .min(replaceUserSyncData200ResponseReviewSessionsItemCorrectCountMin),
+        grade: zod.enum(["S+", "S", "A+", "A", "A-", "B+", "B", "B-", "C"]),
+        completed: zod.boolean(),
+        createdAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseReviewSessionsMax)
+    .optional(),
+  missionAwards: zod
+    .array(
+      zod.object({
+        day: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseMissionAwardsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseMissionAwardsItemMissionIdMax)
+          .regex(
+            replaceUserSyncData200ResponseMissionAwardsItemMissionIdRegExp,
+          ),
+        stone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncData200ResponseMissionAwardsItemStoneMax),
+        completedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseMissionAwardsMax)
+    .optional(),
+  missionChests: zod
+    .array(
+      zod.object({
+        chestId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseMissionChestsItemChestIdMax),
+        day: zod
+          .string()
+          .regex(replaceUserSyncData200ResponseMissionChestsItemDayRegExp),
+        missionId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseMissionChestsItemMissionIdMax)
+          .regex(
+            replaceUserSyncData200ResponseMissionChestsItemMissionIdRegExp,
+          ),
+        baseStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax),
+        upgradeAttempts: zod
+          .number()
+          .int()
+          .min(
+            replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin,
+          )
+          .max(
+            replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax,
+          ),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        ruleSet: zod
+          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .optional()
+          .describe(
+            "Optional for legacy clients; omitted values use the legacy chest rules.",
+          ),
+        superUpgrade: zod
+          .boolean()
+          .optional()
+          .describe("Whether this chest has its guaranteed fourth upgrade."),
+        opened: zod.boolean(),
+        finalStone: zod
+          .number()
+          .int()
+          .min(1)
+          .max(replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax)
+          .nullable(),
+        createdAt: zod.coerce.date(),
+        updatedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseMissionChestsMax)
+    .optional(),
+  collectionCrafts: zod
+    .array(
+      zod.object({
+        craftId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseCollectionCraftsItemCraftIdMax),
+        rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+        craftIndex: zod.number().int().min(1),
+        artworkId: zod
+          .string()
+          .min(1)
+          .max(replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
+        craftedAt: zod.coerce.date(),
+      }),
+    )
+    .max(replaceUserSyncData200ResponseCollectionCraftsMax)
+    .optional(),
+});
 
 export const ReplaceUserSyncData400Response = zod.object({
-  "error": zod.string()
-})
+  error: zod.string(),
+});
 
 export const ReplaceUserSyncData401Response = zod.object({
-  "error": zod.string()
-})
+  error: zod.string(),
+});
 
 export const ReplaceUserSyncData503Response = zod.object({
-  "error": zod.string()
-})
-
+  error: zod.string(),
+});
 
 /**
  * Returns server health status
  * @summary Health check
  */
 export const HealthCheck200Response = zod.object({
-  "status": zod.string()
-})
-
-
+  status: zod.string(),
+});

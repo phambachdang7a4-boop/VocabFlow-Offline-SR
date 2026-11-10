@@ -22,6 +22,7 @@ import {
   CHEST_RARITY_COLORS,
   CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_LABELS,
+  chestStoneReward,
   maxChestUpgradeAttempts,
   type MissionChest,
 } from "@/domain/mission-chests";
@@ -354,14 +355,18 @@ function ChestCard({
         <Text
           style={[styles.chestDescription, { color: colors.mutedForeground }]}
         >
-          {chest.baseStone} Stone cơ bản · {chest.upgradeAttempts}/
-          {attemptLimit} lượt đã dùng
+          {chestStoneReward(chest.baseStone, chest.rarity, chest.ruleSet ?? 1)}{" "}
+          Stone khi mở · {chest.upgradeAttempts}/{attemptLimit} lượt đã dùng
         </Text>
       </View>
       <Pressable
         testID={`open-chest-${chest.chestId}`}
         accessibilityRole="button"
-        accessibilityLabel={`Mở rương ${rarityLabel}, ${chest.baseStone} Stone cơ bản`}
+        accessibilityLabel={`Mở rương ${rarityLabel}, ${chestStoneReward(
+          chest.baseStone,
+          chest.rarity,
+          chest.ruleSet ?? 1,
+        )} Stone khi mở`}
         onPress={() =>
           router.push({
             pathname: "/chest/[chestId]",

@@ -1016,7 +1016,7 @@ function isValidMissionChestRecord(chest: {
 }): boolean {
   const ruleSet = chest.ruleSet ?? 1;
   const superUpgrade = chest.superUpgrade ?? false;
-  const attemptLimit = ruleSet === 2 && superUpgrade ? 4 : 3;
+  const attemptLimit = ruleSet >= 2 && superUpgrade ? 4 : 3;
   if (
     !chest.chestId.trim() ||
     !/^\d{4}-\d{2}-\d{2}$/.test(chest.day) ||
@@ -1027,9 +1027,9 @@ function isValidMissionChestRecord(chest: {
     !Number.isSafeInteger(chest.upgradeAttempts) ||
     chest.upgradeAttempts < 0 ||
     chest.upgradeAttempts > attemptLimit ||
-    (ruleSet !== 1 && ruleSet !== 2) ||
+    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3) ||
     (ruleSet === 1 && superUpgrade) ||
-    (ruleSet === 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
+    (ruleSet >= 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
     !isChestRarity(chest.rarity)
   ) {
     return false;
@@ -1064,14 +1064,25 @@ function isValidMissionChestRecord(chest: {
   )
     return false;
   if (!opened) return chest.finalStone === null;
-  const bonuses: Record<string, number> = {
+  const legacyBonuses: Record<string, number> = {
     common: 0,
     uncommon: 2,
     rare: 5,
     epic: 10,
     legendary: 20,
   };
-  return chest.finalStone === chest.baseStone + bonuses[rarity];
+  const fixedRewards: Record<string, number> = {
+    common: 25,
+    uncommon: 50,
+    rare: 100,
+    epic: 150,
+    legendary: 1000,
+  };
+  const expectedStone =
+    ruleSet === 3
+      ? fixedRewards[rarity]
+      : chest.baseStone + legacyBonuses[rarity];
+  return chest.finalStone === expectedStone;
 }
 
 function serverChestUpgrade(
