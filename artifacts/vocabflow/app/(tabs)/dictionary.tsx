@@ -172,7 +172,19 @@ export default function DictionaryScreen() {
       onBack={() => setOpenId(null)} />
   );
   else if (!debounced) body = (
-    <EmptyState icon="search" title="Tra một từ tiếng Anh" body="Gõ vài chữ cái đầu. Chỉ những nghĩa bạn chọn mới được ghi vào sổ và trở thành thẻ ôn." />
+    <View testID="dictionary-search-idle" style={styles.idleState}>
+      <Image
+        testID="dictionary-corvi-idle-art"
+        accessible={false}
+        source={require('../../assets/images/corvi-dictionary-search.png')}
+        resizeMode="contain"
+        style={styles.idleArt}
+      />
+      <Text style={[styles.loadingTitle, { color: c.dictHead }]}>Tra một từ tiếng Anh</Text>
+      <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
+        Corvi sẵn sàng tra từ cho bạn. Gõ vài chữ cái đầu; chỉ những nghĩa bạn chọn mới được lưu vào sổ.
+      </Text>
+    </View>
   );
   else if (loading && items.length === 0) body = (
     <View testID="dictionary-search-loading" accessibilityLiveRegion="polite" style={styles.loadingState}>
@@ -305,6 +317,8 @@ const styles = StyleSheet.create({
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
+  idleState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
+  idleArt: { width: 236, height: 236, maxWidth: '100%', borderRadius: 20 },
   loadingState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
   loadingArt: { width: 236, height: 236, maxWidth: '100%', borderRadius: 20 },
   loadingTitle: { fontFamily: F.b, fontSize: 19, textAlign: 'center' },

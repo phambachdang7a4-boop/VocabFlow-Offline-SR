@@ -130,6 +130,8 @@ function mount(file, services, personalWords = [], properties = {}) {
     searchDictionary: (term, offset) => new Promise(resolve => calls.push({ term, offset, resolve })),
     suggestDictionary: term => new Promise((resolve, reject) => suggestionCalls.push({ term, resolve, reject })),
   });
+  assert.ok(screen.byId('dictionary-search-idle'), 'Dictionary shows a welcoming idle state before a search');
+  assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi artwork is visible before a search');
   screen.byId('dictionary-search').props.onChangeText('job');
   screen.byId('dictionary-submit').props.onPress();
   await screen.settle();
