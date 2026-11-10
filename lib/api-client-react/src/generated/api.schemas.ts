@@ -192,6 +192,7 @@ export const SyncMissionChestRuleSet = {
   NUMBER_1: 1,
   NUMBER_2: 2,
   NUMBER_3: 3,
+  NUMBER_4: 4,
 } as const;
 
 export interface SyncMissionChest {
@@ -245,6 +246,17 @@ export const SyncCollectionCraftRarity = {
   legendary: "legendary",
 } as const;
 
+/**
+ * Optional for older clients and backups; omitted values preserve the original 20-piece cost.
+ */
+export type SyncCollectionCraftPieceCost =
+  (typeof SyncCollectionCraftPieceCost)[keyof typeof SyncCollectionCraftPieceCost];
+
+export const SyncCollectionCraftPieceCost = {
+  NUMBER_20: 20,
+  NUMBER_100: 100,
+} as const;
+
 export interface SyncCollectionCraft {
   /**
    * @minLength 1
@@ -260,6 +272,8 @@ export interface SyncCollectionCraft {
    */
   artworkId: string;
   craftedAt: string;
+  /** Optional for older clients and backups; omitted values preserve the original 20-piece cost. */
+  pieceCost?: SyncCollectionCraftPieceCost;
 }
 
 export interface UserSyncSnapshot {

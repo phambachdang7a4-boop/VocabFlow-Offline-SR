@@ -28,6 +28,7 @@ import {
   CHEST_RARITY_LABELS,
   CHEST_RARITY_TEXT_COLORS,
   chestUpgradeChance,
+  chestFragmentReward,
   chestStoneReward,
   maxChestUpgradeAttempts,
   type ChestRarity,
@@ -38,6 +39,17 @@ function rarityDisplayLabel(rarity: ChestRarity): string {
   return rarity === "legendary"
     ? "Corvi · Hắc Diệu Thạch"
     : CHEST_RARITY_LABELS[rarity];
+}
+
+function fragmentRewardLabel(
+  reward: Record<ChestRarity, number> | null | undefined,
+): string {
+  if (!reward) return "mảnh ghép ngẫu nhiên";
+  return (
+    CHEST_RARITIES.filter((rarity) => reward[rarity] > 0)
+      .map((rarity) => `${reward[rarity]} mảnh ${rarityDisplayLabel(rarity)}`)
+      .join(", ") || "không có mảnh"
+  );
 }
 
 export default function MissionChestScreen() {
@@ -84,6 +96,9 @@ export default function MissionChestScreen() {
   const currentStoneReward = chest
     ? chestStoneReward(chest.baseStone, chest.rarity, ruleSet)
     : 0;
+  const openedFragments = chest?.opened
+    ? chestFragmentReward(chest.chestId, chest.rarity, ruleSet)
+    : null;
   const nextStoneReward =
     chest && nextRarity
       ? chestStoneReward(chest.baseStone, nextRarity, ruleSet)
@@ -171,8 +186,8 @@ export default function MissionChestScreen() {
       if (result.finished) {
         setMessage(
           result.succeeded
-            ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và 1 mảnh ${rarityDisplayLabel(result.chest.rarity)}.`
-            : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và 1 mảnh.`,
+            ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.`
+            : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.`,
         );
       } else {
         setMessage(
@@ -363,18 +378,25 @@ export default function MissionChestScreen() {
                 </Text>
               </View>
               <Text style={[styles.rewardLine, { color: c.foreground }]}>
-                {chest.opened ? chest.finalStone : currentStoneReward} Stone · 1
-                mảnh {rarityDisplayLabel(chest.rarity)}
+                {chest.opened
+                  ? `${chest.finalStone} Stone · ${fragmentRewardLabel(openedFragments)}`
+                  : `${currentStoneReward} Stone · ${
+                      ruleSet >= 4
+                        ? "mảnh ngẫu nhiên theo phẩm chất"
+                        : `1 mảnh ${rarityDisplayLabel(chest.rarity)}`
+                    }`}
               </Text>
               {!chest.opened && nextRarity && nextStoneReward !== null ? (
                 <Text style={[styles.rewardNote, { color: c.mutedForeground }]}>
-                  Nếu nâng thành công: {nextStoneReward} Stone · 1 mảnh{" "}
-                  {rarityDisplayLabel(nextRarity)}
+                  Nếu nâng thành công: {nextStoneReward} Stone ·{" "}
+                  {ruleSet >= 4
+                    ? `mảnh ngẫu nhiên theo phẩm chất ${rarityDisplayLabel(nextRarity)}`
+                    : `1 mảnh ${rarityDisplayLabel(nextRarity)}`}
                 </Text>
               ) : null}
               {!chest.opened ? (
                 <Text style={[styles.rewardNote, { color: c.mutedForeground }]}>
-                  {ruleSet === 3
+                  {ruleSet >= 3
                     ? "Stone thưởng cố định theo phẩm chất."
                     : `Gồm ${chest.baseStone} Stone nhiệm vụ và thưởng theo phẩm chất.`}
                 </Text>

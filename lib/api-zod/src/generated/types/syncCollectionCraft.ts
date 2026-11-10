@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SyncCollectionCraftPieceCost } from './syncCollectionCraftPieceCost';
 import type { SyncCollectionCraftRarity } from './syncCollectionCraftRarity';
 
 export interface SyncCollectionCraft {
@@ -22,4 +23,6 @@ export interface SyncCollectionCraft {
      */
   artworkId: string;
   craftedAt: Date;
+  /** Optional for older clients and backups; omitted values preserve the original 20-piece cost. */
+  pieceCost?: SyncCollectionCraftPieceCost;
 }

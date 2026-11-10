@@ -6,6 +6,10 @@ const { missionChests, collectionArtworks } = require("./test-support.cjs");
 const {
   CHEST_RARITY_LABELS,
   chestUpgradeChance,
+  CHEST_FRAGMENT_POINT_RANGES,
+  COLLECTION_FRAGMENT_POINT_COSTS,
+  chestFragmentPointBudget,
+  chestFragmentReward,
   chestStoneReward,
   hasSuperUpgradeChance,
   isValidMissionChest,
@@ -43,6 +47,84 @@ assert.deepEqual(
   ),
   [25, 50, 100, 150, 1000],
   "The new chest rules pay a fixed total by final rarity.",
+);
+assert.deepEqual(
+  ["common", "uncommon", "rare", "epic", "legendary"].map(
+    (rarity) => CHEST_FRAGMENT_POINT_RANGES[rarity],
+  ),
+  [
+    { min: 2, max: 10 },
+    { min: 6, max: 30 },
+    { min: 18, max: 90 },
+    { min: 54, max: 270 },
+    { min: 162, max: 810 },
+  ],
+  "Fragment point ranges are doubled, stay hidden from the UI, and depend on chest rarity.",
+);
+assert.deepEqual(
+  ["common", "uncommon", "rare", "epic", "legendary"].map(
+    (rarity) => COLLECTION_FRAGMENT_POINT_COSTS[rarity],
+  ),
+  [1, 3, 9, 27, 81],
+);
+for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"]) {
+  const chestId = `fragment-seed-${rarity}`;
+  const reward = chestFragmentReward(chestId, rarity, 4);
+  const spent = Object.entries(reward).reduce(
+    (total, [pieceRarity, count]) =>
+      total + count * COLLECTION_FRAGMENT_POINT_COSTS[pieceRarity],
+    0,
+  );
+  assert.equal(
+    spent,
+    chestFragmentPointBudget(chestId, rarity),
+    "A drop uses its full hidden budget without exceeding it.",
+  );
+  assert.deepEqual(
+    reward,
+    chestFragmentReward(chestId, rarity, 4),
+    "Opening or syncing the same chest yields the same random-looking drop.",
+  );
+  const chestTier = ["common", "uncommon", "rare", "epic", "legendary"].indexOf(
+    rarity,
+  );
+  assert.ok(
+    Object.entries(reward).every(
+      ([pieceRarity, count]) =>
+        count === 0 ||
+        ["common", "uncommon", "rare", "epic", "legendary"].indexOf(
+          pieceRarity,
+        ) <= chestTier,
+    ),
+    "A chest never awards fragments above its rarity.",
+  );
+}
+const observedDistributions = new Set();
+let mixedRarityDrop = false;
+for (let index = 0; index < 500; index += 1) {
+  const reward = chestFragmentReward(`varied-drop-${index}`, "uncommon", 4);
+  observedDistributions.add(JSON.stringify(reward));
+  mixedRarityDrop ||=
+    Object.values(reward).filter((count) => count > 0).length > 1;
+}
+assert.ok(
+  observedDistributions.size > 1 && mixedRarityDrop,
+  "Random-looking chest drops vary and can award multiple fragment rarities.",
+);
+const twoPointCopperChest = Array.from(
+  { length: 500 },
+  (_, index) => `copper-two-points-${index}`,
+).find((chestId) => chestFragmentPointBudget(chestId, "common") === 2);
+assert.ok(twoPointCopperChest, "A Copper chest can roll exactly two Points.");
+assert.deepEqual(
+  chestFragmentReward(twoPointCopperChest, "common", 4),
+  { common: 2, uncommon: 0, rare: 0, epic: 0, legendary: 0 },
+  "Two hidden Points from a Copper chest award exactly two Copper fragments.",
+);
+assert.deepEqual(
+  chestFragmentReward("legacy-chest", "epic", 3),
+  { common: 0, uncommon: 0, rare: 0, epic: 1, legendary: 0 },
+  "Older opened chests keep their original single-fragment award.",
 );
 const chestScreen = readFileSync(
   join(__dirname, "../app/chest/[chestId].tsx"),
@@ -214,10 +296,13 @@ assert.deepEqual(
 );
 assert.equal(chestUpgradeChance("epic", 4, 2, true), 100);
 assert.equal(chestUpgradeChance("epic", 4, 3, true), 100);
+assert.equal(chestUpgradeChance("epic", 4, 4, true), 100);
 assert.equal(maxChestUpgradeAttempts(2, false), 3);
 assert.equal(maxChestUpgradeAttempts(2, true), 4);
 assert.equal(maxChestUpgradeAttempts(3, false), 3);
 assert.equal(maxChestUpgradeAttempts(3, true), 4);
+assert.equal(maxChestUpgradeAttempts(4, false), 3);
+assert.equal(maxChestUpgradeAttempts(4, true), 4);
 assert.equal(
   maxChestUpgradeAttempts(1, false),
   3,
@@ -306,14 +391,14 @@ assert.equal(
 assert.equal(
   isValidMissionChest({
     ...superChest,
-    ruleSet: 3,
+    ruleSet: 4,
     upgradeAttempts: 4,
     rarity: "legendary",
     opened: true,
     finalStone: chestStoneReward(5, "legendary", 3),
   }),
   true,
-  "New-rule chests validate the fixed 1,000 Stone Corvi reward.",
+  "Points-rule chests validate the fixed 1,000 Stone Corvi reward.",
 );
 assert.equal(
   isValidMissionChest({ ...superChest, superUpgrade: false }),

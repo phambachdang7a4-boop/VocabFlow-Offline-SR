@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -108,46 +108,6 @@ export default function BlankScreen() {
             Hôm nay
           </Text>
         </View>
-
-        <Pressable
-          testID="open-collection"
-          accessibilityRole="button"
-          accessibilityLabel="Mở Bộ Sưu Tập mảnh ghép và tranh"
-          onPress={() => router.push("/collection")}
-          style={({ pressed }) => [
-            styles.collectionButton,
-            {
-              backgroundColor: c.vocabCardAccent,
-              opacity: pressed ? 0.88 : 1,
-              shadowColor: c.shade,
-              shadowOffset: { width: 0, height: pressed ? 1 : 3 },
-              shadowOpacity: pressed ? 0.06 : 0.18,
-              shadowRadius: 6,
-              elevation: pressed ? 1 : 3,
-            },
-          ]}
-        >
-          <MaterialSheen tone="gold" radius={18} />
-          <View style={[styles.collectionIcon, { backgroundColor: c.accent }]}>
-            <Feather name="image" size={20} color={c.buttonForeground} />
-          </View>
-          <View style={styles.collectionCopy}>
-            <Text
-              style={[styles.collectionTitle, { color: c.buttonForeground }]}
-            >
-              Bộ Sưu Tập
-            </Text>
-            <Text
-              style={[
-                styles.collectionDescription,
-                { color: c.buttonForeground },
-              ]}
-            >
-              Mảnh ghép và tranh đã mở
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={21} color={c.primary} />
-        </Pressable>
 
         <View style={styles.sectionHeading}>
           <Text style={[styles.sectionTitle, { color: c.foreground }]}>
@@ -293,6 +253,49 @@ export default function BlankScreen() {
             ))}
           </>
         ) : null}
+        <Pressable
+          testID="open-collection"
+          accessibilityRole="button"
+          accessibilityLabel="Mở Bộ Sưu Tập mảnh ghép và tranh"
+          onPress={() => router.push("/collection")}
+          style={({ pressed }) => [
+            styles.collectionButton,
+            {
+              backgroundColor: c.vocabCardAccent,
+              opacity: pressed ? 0.88 : 1,
+              shadowColor: c.shade,
+              shadowOffset: { width: 0, height: pressed ? 1 : 2 },
+              shadowOpacity: pressed ? 0.06 : 0.15,
+              shadowRadius: 5,
+              elevation: pressed ? 1 : 2,
+            },
+          ]}
+        >
+          <MaterialSheen tone="gold" radius={15} />
+          <View style={[styles.collectionIcon, { backgroundColor: c.accent }]}>
+            <MaterialCommunityIcons
+              name="puzzle"
+              size={22}
+              color={c.buttonForeground}
+            />
+          </View>
+          <View style={styles.collectionCopy}>
+            <Text
+              style={[styles.collectionTitle, { color: c.buttonForeground }]}
+            >
+              Bộ Sưu Tập
+            </Text>
+            <Text
+              style={[
+                styles.collectionDescription,
+                { color: c.buttonForeground },
+              ]}
+            >
+              Mảnh ghép và tranh đã mở
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={19} color={c.primary} />
+        </Pressable>
         <Text style={[styles.footerNote, { color: c.mutedForeground }]}>
           Stone, rương và tiến độ nhiệm vụ được lưu offline, rồi đồng bộ cùng dữ
           liệu tài khoản.
@@ -422,22 +425,23 @@ const styles = StyleSheet.create({
   walletDate: { fontFamily: F.m, fontSize: 12 },
   collectionButton: {
     position: "relative",
-    borderRadius: 18,
-    padding: 12,
+    borderRadius: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
+    gap: 9,
   },
   collectionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
+    width: 34,
+    height: 34,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
   },
   collectionCopy: { flex: 1, gap: 2 },
-  collectionTitle: { fontFamily: F.b, fontSize: 15 },
-  collectionDescription: { fontFamily: F.r, fontSize: 12 },
+  collectionTitle: { fontFamily: F.b, fontSize: 14 },
+  collectionDescription: { fontFamily: F.r, fontSize: 11 },
   sectionHeading: { gap: 2, marginTop: 6, marginBottom: 2 },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
   sectionHint: { fontFamily: F.r, fontSize: 13 },

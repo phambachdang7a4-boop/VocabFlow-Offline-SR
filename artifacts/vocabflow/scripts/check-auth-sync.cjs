@@ -88,7 +88,7 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     baseStone: 3,
     upgradeAttempts: 0,
     rarity: "common",
-    ruleSet: 3,
+    ruleSet: 4,
     superUpgrade: missionChests.hasSuperUpgradeChance(
       "mission-2026-11-08-grade-1",
     ),
@@ -240,6 +240,7 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
         craftIndex: 1,
         artworkId: artwork.id,
         craftedAt: "2026-11-08T10:00:00.000Z",
+        pieceCost: 100,
       },
     ],
   };
@@ -271,6 +272,11 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     restoredSnapshot.payload.collectionCrafts.length,
     1,
     "Account replacement restores crafted artwork.",
+  );
+  assert.equal(
+    restoredSnapshot.payload.collectionCrafts[0].pieceCost,
+    100,
+    "Account replacement preserves the new 100-piece artwork cost.",
   );
   assert.equal(
     await sync.hasPendingAccountReplacement(),

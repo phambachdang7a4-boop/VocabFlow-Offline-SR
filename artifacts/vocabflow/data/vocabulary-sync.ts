@@ -189,7 +189,7 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       `),
       db.getAllAsync<SyncCollectionCraft>(`
         SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
-          artwork_id AS artworkId, crafted_at AS craftedAt
+          artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
         FROM collection_crafts ORDER BY rarity, craft_index
       `),
       getSyncQueueStateFromDatabase(db),
@@ -215,7 +215,14 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         missionAwards,
         missionChests: missionChests.map((chest) => ({
           ...chest,
-          ruleSet: chest.ruleSet === 3 ? 3 : chest.ruleSet === 2 ? 2 : 1,
+          ruleSet:
+            chest.ruleSet === 4
+              ? 4
+              : chest.ruleSet === 3
+                ? 3
+                : chest.ruleSet === 2
+                  ? 2
+                  : 1,
           superUpgrade: Boolean(chest.superUpgrade),
           opened: Boolean(chest.opened),
         })),
@@ -495,13 +502,15 @@ async function replacePayloadData(
   }
   for (const craft of payload.collectionCrafts ?? []) {
     await db.runAsync(
-      `INSERT INTO collection_crafts (craft_id, rarity, craft_index, artwork_id, crafted_at)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO collection_crafts
+        (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       craft.craftId,
       craft.rarity,
       craft.craftIndex,
       craft.artworkId,
       craft.craftedAt,
+      craft.pieceCost ?? 20,
     );
   }
   await db.runAsync(`
@@ -829,11 +838,13 @@ async function mergeSnapshotIntoDatabase(
         ? {
             ...currentRow,
             ruleSet:
-              currentRow.ruleSet === 3
-                ? (3 as const)
-                : currentRow.ruleSet === 2
-                  ? (2 as const)
-                  : (1 as const),
+              currentRow.ruleSet === 4
+                ? (4 as const)
+                : currentRow.ruleSet === 3
+                  ? (3 as const)
+                  : currentRow.ruleSet === 2
+                    ? (2 as const)
+                    : (1 as const),
             superUpgrade: Boolean(currentRow.superUpgrade),
             opened: Boolean(currentRow.opened),
           }
@@ -883,13 +894,15 @@ async function mergeSnapshotIntoDatabase(
     }
     for (const craft of payload.collectionCrafts ?? []) {
       await db.runAsync(
-        `INSERT OR IGNORE INTO collection_crafts (craft_id, rarity, craft_index, artwork_id, crafted_at)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT OR IGNORE INTO collection_crafts
+          (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         craft.craftId,
         craft.rarity,
         craft.craftIndex,
         craft.artworkId,
         craft.craftedAt,
+        craft.pieceCost ?? 20,
       );
     }
 

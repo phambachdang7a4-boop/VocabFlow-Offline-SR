@@ -10,6 +10,7 @@ export * from './apiError';
 export * from './dictionaryAssetError';
 export * from './healthStatus';
 export * from './syncCollectionCraft';
+export * from './syncCollectionCraftPieceCost';
 export * from './syncCollectionCraftRarity';
 export * from './syncCourseProgress';
 export * from './syncCourseProgressStage';

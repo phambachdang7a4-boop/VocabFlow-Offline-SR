@@ -73,8 +73,8 @@ const harness = createRepository(root, `${day}T12:00:00`);
     );
     assert.equal(
       firstOverview.chests[0].ruleSet,
-      3,
-      "New missions use the fixed-reward chest rules.",
+      4,
+      "New missions use fixed Stone rewards and Points-based fragments.",
     );
     assert.equal(
       firstOverview.chests[0].rarity,
@@ -93,6 +93,7 @@ const harness = createRepository(root, `${day}T12:00:00`);
       .run("2026-11-01", "review-1", 4, "2026-11-01T12:00:00.000Z");
 
     let openedChest;
+    let openedResult;
     const chestId = firstOverview.chests[0].chestId;
     const attemptLimit = missionChests.maxChestUpgradeAttempts(
       openedChest?.ruleSet ?? firstOverview.chests[0].ruleSet,
@@ -100,6 +101,7 @@ const harness = createRepository(root, `${day}T12:00:00`);
     );
     for (let attempt = 0; attempt < attemptLimit; attempt += 1) {
       const outcome = await harness.repo.attemptMissionChestUpgrade(chestId);
+      openedResult = outcome;
       openedChest = outcome.chest;
       if (outcome.finished) break;
       assert.equal(
@@ -112,6 +114,11 @@ const harness = createRepository(root, `${day}T12:00:00`);
       openedChest.opened,
       true,
       "The chest is finalized after failure or the final upgrade.",
+    );
+    assert.deepEqual(
+      openedResult.awardedFragments,
+      missionChests.chestFragmentReward(chestId, openedChest.rarity, 4),
+      "The chest returns its stable multi-rarity fragment reward once opened.",
     );
     const openedOverview = await harness.repo.getDailyMissionOverview(day);
     assert.equal(
@@ -193,7 +200,11 @@ const harness = createRepository(root, `${day}T12:00:00`);
 
     let seededCommonPieces = 0;
     const missionIds = ["review-1", "add-words-1", "lesson-1", "grade-1"];
-    for (let offset = 0; seededCommonPieces < 20 && offset < 200; offset += 1) {
+    for (
+      let offset = 0;
+      seededCommonPieces < 100 && offset < 200;
+      offset += 1
+    ) {
       const candidate = new Date(Date.UTC(2025, 0, 1 + offset))
         .toISOString()
         .slice(0, 10);
@@ -215,13 +226,13 @@ const harness = createRepository(root, `${day}T12:00:00`);
             "2026-11-01T12:00:00.000Z",
           );
         seededCommonPieces += 1;
-        if (seededCommonPieces === 20) break;
+        if (seededCommonPieces === 100) break;
       }
     }
     assert.equal(
       seededCommonPieces,
-      20,
-      "Test fixture seeds 20 valid common chest fragments.",
+      100,
+      "Test fixture seeds 100 valid common chest fragments.",
     );
     const beforeCraft = await harness.repo.getMissionCollectionOverview();
     const craft = await harness.repo.craftCollectionArtwork("common");
@@ -232,8 +243,8 @@ const harness = createRepository(root, `${day}T12:00:00`);
     const afterCraft = await harness.repo.getMissionCollectionOverview();
     assert.equal(
       afterCraft.fragments.common,
-      beforeCraft.fragments.common - 20,
-      "Crafting consumes exactly 20 same-rarity fragments.",
+      beforeCraft.fragments.common - 100,
+      "Crafting consumes exactly 100 same-rarity fragments.",
     );
     assert.equal(
       afterCraft.crafts.length,
@@ -242,7 +253,7 @@ const harness = createRepository(root, `${day}T12:00:00`);
     );
     await assert.rejects(
       () => harness.repo.craftCollectionArtwork("common"),
-      /đủ 20 mảnh/,
+      /đủ 100 mảnh/,
     );
 
     await harness.repo.recordReviewSessionResult({
@@ -300,7 +311,7 @@ const harness = createRepository(root, `${day}T12:00:00`);
         "SELECT rarity, rule_set, super_upgrade FROM mission_chests WHERE chest_id = ?",
       )
       .get("old-untouched-chest");
-    assert.equal(migratedChest.rule_set, 3);
+    assert.equal(migratedChest.rule_set, 4);
     assert.equal(migratedChest.rarity, "uncommon");
     assert.equal(
       migratedChest.super_upgrade,

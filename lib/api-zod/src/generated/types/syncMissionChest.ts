@@ -5,32 +5,32 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { SyncMissionChestRarity } from "./syncMissionChestRarity";
-import type { SyncMissionChestRuleSet } from "./syncMissionChestRuleSet";
+import type { SyncMissionChestRarity } from './syncMissionChestRarity';
+import type { SyncMissionChestRuleSet } from './syncMissionChestRuleSet';
 
 export interface SyncMissionChest {
   /**
-   * @minLength 1
-   * @maxLength 160
-   */
+     * @minLength 1
+     * @maxLength 160
+     */
   chestId: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
   /**
-   * @minLength 1
-   * @maxLength 40
-   * @pattern ^(review|add-words|lesson|grade)-[1-3]$
-   */
+     * @minLength 1
+     * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade)-[1-3]$
+     */
   missionId: string;
   /**
-   * @minimum 1
-   * @maximum 20
-   */
+     * @minimum 1
+     * @maximum 20
+     */
   baseStone: number;
   /**
-   * @minimum 0
-   * @maximum 4
-   */
+     * @minimum 0
+     * @maximum 4
+     */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
   /** Optional for legacy clients; omitted values use the legacy chest rules. */
@@ -39,10 +39,10 @@ export interface SyncMissionChest {
   superUpgrade?: boolean;
   opened: boolean;
   /**
-   * @minimum 1
-   * @maximum 1000
-   * @nullable
-   */
+     * @minimum 1
+     * @maximum 1000
+     * @nullable
+     */
   finalStone: number | null;
   createdAt: Date;
   updatedAt: Date;

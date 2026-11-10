@@ -27,6 +27,7 @@ import {
   type DailyReviewGrade,
 } from "../domain/daily-missions";
 import {
+  chestFragmentReward,
   chestStoneReward,
   hasSuperUpgradeChance,
   isValidMissionChest,
@@ -63,6 +64,7 @@ export interface MissionChestUpgradeResult {
   succeeded: boolean;
   finished: boolean;
   awardedStone: number | null;
+  awardedFragments: Record<ChestRarity, number> | null;
 }
 
 export interface ReviewSessionResultInput {
@@ -209,7 +211,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 15) {
+    if ((version?.user_version ?? 0) > 16) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -594,6 +596,46 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 16) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE mission_chests_v16 (
+            chest_id TEXT PRIMARY KEY NOT NULL,
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            base_stone INTEGER NOT NULL CHECK (base_stone BETWEEN 1 AND 20),
+            upgrade_attempts INTEGER NOT NULL DEFAULT 0 CHECK (upgrade_attempts BETWEEN 0 AND 4),
+            rarity TEXT NOT NULL DEFAULT 'common'
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            rule_set INTEGER NOT NULL DEFAULT 1 CHECK (rule_set IN (1, 2, 3, 4)),
+            super_upgrade INTEGER NOT NULL DEFAULT 0 CHECK (super_upgrade IN (0, 1)),
+            opened INTEGER NOT NULL DEFAULT 0 CHECK (opened IN (0, 1)),
+            final_stone INTEGER,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (mission_day, mission_id),
+            CHECK (
+              (opened = 0 AND final_stone IS NULL) OR
+              (opened = 1 AND final_stone BETWEEN 1 AND 1000)
+            )
+          );
+          INSERT INTO mission_chests_v16
+            (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+              rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+          SELECT chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+            rule_set, super_upgrade, opened, final_stone, created_at, updated_at
+          FROM mission_chests;
+          DROP TABLE mission_chests;
+          ALTER TABLE mission_chests_v16 RENAME TO mission_chests;
+          CREATE INDEX idx_mission_chests_opened
+            ON mission_chests(opened, mission_day);
+          ALTER TABLE collection_crafts
+            ADD COLUMN piece_cost INTEGER NOT NULL DEFAULT 20
+            CHECK (piece_cost IN (20, 100));
+          PRAGMA user_version = 16;
+        `);
+      });
+    }
     return db;
   } catch (error) {
     await db.closeAsync();
@@ -682,7 +724,7 @@ async function grantDailyMissionChests(
     const result = await db.runAsync(
       `INSERT OR IGNORE INTO mission_chests
         (chest_id, mission_day, mission_id, base_stone, rarity, rule_set, super_upgrade, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 3, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)`,
       chestId,
       day,
       mission.id,
@@ -707,14 +749,14 @@ async function migrateUntouchedMissionChests(
   }>(
     `SELECT chest_id AS chestId, mission_id AS missionId
      FROM mission_chests
-     WHERE opened = 0 AND upgrade_attempts = 0 AND rule_set < 3`,
+      WHERE opened = 0 AND upgrade_attempts = 0 AND rule_set < 4`,
   );
   let changed = false;
   for (const chest of untouched) {
     const update = await db.runAsync(
       `UPDATE mission_chests
-       SET rarity = ?, rule_set = 3, super_upgrade = ?, updated_at = ?
-       WHERE chest_id = ? AND opened = 0 AND upgrade_attempts = 0 AND rule_set < 3`,
+        SET rarity = ?, rule_set = 4, super_upgrade = ?, updated_at = ?
+        WHERE chest_id = ? AND opened = 0 AND upgrade_attempts = 0 AND rule_set < 4`,
       startingRarityForMission(chest.missionId),
       hasSuperUpgradeChance(chest.chestId) ? 1 : 0,
       now,
@@ -802,7 +844,8 @@ function missionChestFromRow(
 ): MissionChest {
   return {
     ...row,
-    ruleSet: row.ruleSet === 3 ? 3 : row.ruleSet === 2 ? 2 : 1,
+    ruleSet:
+      row.ruleSet === 4 ? 4 : row.ruleSet === 3 ? 3 : row.ruleSet === 2 ? 2 : 1,
     superUpgrade: Boolean(row.superUpgrade),
     opened: Boolean(row.opened),
   };
@@ -911,6 +954,9 @@ export function attemptMissionChestUpgrade(
         succeeded: upgrade.success,
         finished,
         awardedStone,
+        awardedFragments: finished
+          ? chestFragmentReward(chestId, rarity, ruleSet)
+          : null,
       };
     });
     notifySyncListeners();
@@ -920,41 +966,7 @@ export function attemptMissionChestUpgrade(
 
 export function getMissionCollectionOverview(): Promise<MissionCollectionOverview> {
   return serialize(async () => {
-    const db = await database();
-    const [earnedRows, crafts] = await Promise.all([
-      db.getAllAsync<{ rarity: ChestRarity; count: number }>(
-        "SELECT rarity, COUNT(*) AS count FROM mission_chests WHERE opened = 1 GROUP BY rarity",
-      ),
-      db.getAllAsync<CollectionCraft>(
-        `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
-          artwork_id AS artworkId, crafted_at AS craftedAt
-         FROM collection_crafts ORDER BY crafted_at DESC, craft_id DESC`,
-      ),
-    ]);
-    const fragments: Record<ChestRarity, number> = {
-      common: 0,
-      uncommon: 0,
-      rare: 0,
-      epic: 0,
-      legendary: 0,
-    };
-    const earnedByRarity = new Map(
-      earnedRows.map((row) => [row.rarity, row.count]),
-    );
-    const craftedByRarity = new Map<ChestRarity, number>();
-    for (const craft of crafts)
-      craftedByRarity.set(
-        craft.rarity,
-        (craftedByRarity.get(craft.rarity) ?? 0) + 1,
-      );
-    for (const rarity of Object.keys(fragments) as ChestRarity[]) {
-      fragments[rarity] = Math.max(
-        0,
-        (earnedByRarity.get(rarity) ?? 0) -
-          (craftedByRarity.get(rarity) ?? 0) * 20,
-      );
-    }
-    return { fragments, crafts };
+    return readMissionCollectionOverview(await database());
   });
 }
 
@@ -965,19 +977,16 @@ export function craftCollectionArtwork(
     const db = await database();
     let craft: CollectionCraft | undefined;
     await db.withTransactionAsync(async () => {
-      const [earned, previous] = await Promise.all([
-        db.getFirstAsync<{ count: number }>(
-          "SELECT COUNT(*) AS count FROM mission_chests WHERE opened = 1 AND rarity = ?",
-          rarity,
-        ),
-        db.getFirstAsync<{ count: number; nextIndex: number | null }>(
-          "SELECT COUNT(*) AS count, MAX(craft_index) + 1 AS nextIndex FROM collection_crafts WHERE rarity = ?",
+      const [overview, previous] = await Promise.all([
+        readMissionCollectionOverview(db),
+        db.getFirstAsync<{ nextIndex: number | null }>(
+          "SELECT MAX(craft_index) + 1 AS nextIndex FROM collection_crafts WHERE rarity = ?",
           rarity,
         ),
       ]);
       const craftIndex = previous?.nextIndex ?? 1;
-      if ((earned?.count ?? 0) - (previous?.count ?? 0) * 20 < 20) {
-        throw new Error("Cần đủ 20 mảnh cùng phẩm chất để ghép tranh.");
+      if (overview.fragments[rarity] < 100) {
+        throw new Error("Cần đủ 100 mảnh cùng phẩm chất để ghép tranh.");
       }
       const artwork = artworkForCraft(rarity, craftIndex);
       const next: CollectionCraft = {
@@ -986,19 +995,22 @@ export function craftCollectionArtwork(
         craftIndex,
         artworkId: artwork.id,
         craftedAt: new Date().toISOString(),
+        pieceCost: 100,
       };
       await db.runAsync(
-        `INSERT OR IGNORE INTO collection_crafts (craft_id, rarity, craft_index, artwork_id, crafted_at)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT OR IGNORE INTO collection_crafts
+          (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         next.craftId,
         next.rarity,
         next.craftIndex,
         next.artworkId,
         next.craftedAt,
+        next.pieceCost ?? 100,
       );
       const savedCraft = await db.getFirstAsync<CollectionCraft>(
         `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
-          artwork_id AS artworkId, crafted_at AS craftedAt
+          artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
          FROM collection_crafts WHERE craft_id = ?`,
         next.craftId,
       );
@@ -1009,6 +1021,54 @@ export function craftCollectionArtwork(
     notifySyncListeners();
     return craft!;
   });
+}
+
+async function readMissionCollectionOverview(
+  db: SQLiteDatabase,
+): Promise<MissionCollectionOverview> {
+  const openedChests = await db.getAllAsync<{
+    chestId: string;
+    rarity: ChestRarity;
+    ruleSet: number;
+  }>(
+    `SELECT chest_id AS chestId, rarity, rule_set AS ruleSet
+     FROM mission_chests WHERE opened = 1`,
+  );
+  const crafts = await db.getAllAsync<CollectionCraft>(
+    `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
+      artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
+     FROM collection_crafts ORDER BY crafted_at DESC, craft_id DESC`,
+  );
+  const fragments: Record<ChestRarity, number> = {
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    epic: 0,
+    legendary: 0,
+  };
+
+  for (const chest of openedChests) {
+    const chestRules =
+      chest.ruleSet === 4
+        ? 4
+        : chest.ruleSet === 3
+          ? 3
+          : chest.ruleSet === 2
+            ? 2
+            : 1;
+    const reward = chestFragmentReward(chest.chestId, chest.rarity, chestRules);
+    for (const rarity of Object.keys(fragments) as ChestRarity[]) {
+      fragments[rarity] += reward[rarity];
+    }
+  }
+
+  for (const craft of crafts) {
+    fragments[craft.rarity] = Math.max(
+      0,
+      fragments[craft.rarity] - (craft.pieceCost ?? 20),
+    );
+  }
+  return { fragments, crafts };
 }
 
 // Serialize operations so reads cannot observe a partially applied write.

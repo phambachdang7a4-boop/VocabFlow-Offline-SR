@@ -215,7 +215,8 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
     (value.ruleSet !== undefined &&
       value.ruleSet !== 1 &&
       value.ruleSet !== 2 &&
-      value.ruleSet !== 3) ||
+      value.ruleSet !== 3 &&
+      value.ruleSet !== 4) ||
     (value.superUpgrade !== undefined &&
       typeof value.superUpgrade !== "boolean") ||
     !isChestRarity(value.rarity) ||
@@ -234,7 +235,14 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
     baseStone: value.baseStone as number,
     upgradeAttempts: value.upgradeAttempts,
     rarity: value.rarity,
-    ruleSet: value.ruleSet === 3 ? 3 : value.ruleSet === 2 ? 2 : 1,
+    ruleSet:
+      value.ruleSet === 4
+        ? 4
+        : value.ruleSet === 3
+          ? 3
+          : value.ruleSet === 2
+            ? 2
+            : 1,
     superUpgrade: value.superUpgrade === true,
     opened: value.opened,
     finalStone: value.finalStone as number | null,
@@ -252,6 +260,9 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
     !isPositiveInteger(value.craftIndex) ||
     !isString(value.artworkId, 80, false) ||
     !isTimestamp(value.craftedAt) ||
+    (value.pieceCost !== undefined &&
+      value.pieceCost !== 20 &&
+      value.pieceCost !== 100) ||
     value.craftId !== `craft-${value.rarity}-${value.craftIndex}` ||
     !isCollectionArtwork(value.rarity, value.artworkId) ||
     artworkForCraft(value.rarity, value.craftIndex as number).id !==
@@ -265,6 +276,7 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
     craftIndex: value.craftIndex as number,
     artworkId: value.artworkId,
     craftedAt: value.craftedAt,
+    pieceCost: value.pieceCost === 100 ? 100 : 20,
   };
 }
 

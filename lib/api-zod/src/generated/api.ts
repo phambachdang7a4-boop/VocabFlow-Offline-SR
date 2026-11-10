@@ -323,7 +323,12 @@ export const MergeUserSyncDataBody = zod.object({
           .max(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
         rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
         ruleSet: zod
-          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .union([
+            zod.literal(1),
+            zod.literal(2),
+            zod.literal(3),
+            zod.literal(4),
+          ])
           .optional()
           .describe(
             "Optional for legacy clients; omitted values use the legacy chest rules.",
@@ -359,6 +364,12 @@ export const MergeUserSyncDataBody = zod.object({
           .min(1)
           .max(mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
         craftedAt: zod.coerce.date(),
+        pieceCost: zod
+          .union([zod.literal(20), zod.literal(100)])
+          .optional()
+          .describe(
+            "Optional for older clients and backups; omitted values preserve the original 20-piece cost.",
+          ),
       }),
     )
     .max(mergeUserSyncDataBodyCollectionCraftsMax)
@@ -668,7 +679,12 @@ export const MergeUserSyncData200Response = zod.object({
           .max(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
         rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
         ruleSet: zod
-          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .union([
+            zod.literal(1),
+            zod.literal(2),
+            zod.literal(3),
+            zod.literal(4),
+          ])
           .optional()
           .describe(
             "Optional for legacy clients; omitted values use the legacy chest rules.",
@@ -704,6 +720,12 @@ export const MergeUserSyncData200Response = zod.object({
           .min(1)
           .max(mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
         craftedAt: zod.coerce.date(),
+        pieceCost: zod
+          .union([zod.literal(20), zod.literal(100)])
+          .optional()
+          .describe(
+            "Optional for older clients and backups; omitted values preserve the original 20-piece cost.",
+          ),
       }),
     )
     .max(mergeUserSyncData200ResponseCollectionCraftsMax)
@@ -1029,7 +1051,12 @@ export const ReplaceUserSyncDataBody = zod.object({
           .max(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
         rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
         ruleSet: zod
-          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .union([
+            zod.literal(1),
+            zod.literal(2),
+            zod.literal(3),
+            zod.literal(4),
+          ])
           .optional()
           .describe(
             "Optional for legacy clients; omitted values use the legacy chest rules.",
@@ -1065,6 +1092,12 @@ export const ReplaceUserSyncDataBody = zod.object({
           .min(1)
           .max(replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
         craftedAt: zod.coerce.date(),
+        pieceCost: zod
+          .union([zod.literal(20), zod.literal(100)])
+          .optional()
+          .describe(
+            "Optional for older clients and backups; omitted values preserve the original 20-piece cost.",
+          ),
       }),
     )
     .max(replaceUserSyncDataBodyCollectionCraftsMax)
@@ -1382,7 +1415,12 @@ export const ReplaceUserSyncData200Response = zod.object({
           ),
         rarity: zod.enum(["common", "uncommon", "rare", "epic", "legendary"]),
         ruleSet: zod
-          .union([zod.literal(1), zod.literal(2), zod.literal(3)])
+          .union([
+            zod.literal(1),
+            zod.literal(2),
+            zod.literal(3),
+            zod.literal(4),
+          ])
           .optional()
           .describe(
             "Optional for legacy clients; omitted values use the legacy chest rules.",
@@ -1418,6 +1456,12 @@ export const ReplaceUserSyncData200Response = zod.object({
           .min(1)
           .max(replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
         craftedAt: zod.coerce.date(),
+        pieceCost: zod
+          .union([zod.literal(20), zod.literal(100)])
+          .optional()
+          .describe(
+            "Optional for older clients and backups; omitted values preserve the original 20-piece cost.",
+          ),
       }),
     )
     .max(replaceUserSyncData200ResponseCollectionCraftsMax)

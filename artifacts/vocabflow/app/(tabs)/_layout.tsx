@@ -23,6 +23,12 @@ function NativeTabLayout() {
         />
         <NativeTabs.Trigger.Label>Tra Từ</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="courses">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: "square.grid.2x2", selected: "square.grid.2x2.fill" }}
+        />
+        <NativeTabs.Trigger.Label>Khóa học</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="review">
         <NativeTabs.Trigger.Icon
           sf={{ default: "arrow.2.circlepath", selected: "arrow.2.circlepath" }}
@@ -48,6 +54,7 @@ function NativeTabLayout() {
 const ICONS = {
   index: { sf: "book", fe: "book-open" },
   dictionary: { sf: "character.book.closed", fe: "search" },
+  courses: { sf: "square.grid.2x2", fe: "grid" },
   review: { sf: "arrow.2.circlepath", fe: "repeat" },
   blank: { sf: "checklist", fe: "check-square" },
 } as const;
@@ -143,6 +150,10 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="dictionary"
         options={{ title: "Tra Từ", tabBarIcon: icon("dictionary", false) }}
+      />
+      <Tabs.Screen
+        name="courses"
+        options={{ title: "Khóa học", tabBarIcon: icon("courses") }}
       />
       <Tabs.Screen
         name="review"

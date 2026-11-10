@@ -100,7 +100,7 @@ const payload = {
       baseStone: 3,
       upgradeAttempts: 0,
       rarity: "common",
-      ruleSet: 3,
+      ruleSet: 4,
       superUpgrade: missionChests.hasSuperUpgradeChance(
         "mission-2026-11-08-lesson-1",
       ),
@@ -117,6 +117,7 @@ const payload = {
       craftIndex: 1,
       artworkId: collectionArtworks.artworkForCraft("common", 1).id,
       craftedAt: "2026-11-08T10:00:00.000Z",
+      pieceCost: 20,
     },
   ],
 };
@@ -158,6 +159,11 @@ assert.equal(
   legacyChest.superUpgrade,
   false,
   "Older backups do not gain a lucky attempt.",
+);
+assert.equal(
+  parseAccountBackup(serialized).payload.collectionCrafts[0].pieceCost,
+  20,
+  "Older collection crafts retain their original piece cost.",
 );
 delete olderBackup.payload.missionChests;
 delete olderBackup.payload.collectionCrafts;

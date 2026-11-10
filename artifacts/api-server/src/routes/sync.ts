@@ -290,6 +290,7 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
             craftIndex: craft.craftIndex,
             artworkId: craft.artworkId,
             craftedAt: craft.craftedAt,
+            pieceCost: craft.pieceCost ?? 20,
           })),
         );
       }
@@ -702,6 +703,7 @@ router.post("/sync", requireAuth, async (req, res) => {
               craftIndex: craft.craftIndex,
               artworkId: craft.artworkId,
               craftedAt: craft.craftedAt,
+              pieceCost: craft.pieceCost ?? 20,
             })),
           )
           .onConflictDoNothing();
@@ -960,6 +962,7 @@ function hasInvalidMissionData(
     craftIndex: number;
     artworkId: string;
     craftedAt: string | Date;
+    pieceCost?: number;
   }>,
 ): boolean {
   return (
@@ -994,6 +997,9 @@ function hasInvalidMissionData(
         craft.craftIndex < 1 ||
         craft.craftId !== `craft-${craft.rarity}-${craft.craftIndex}` ||
         !craft.artworkId.trim() ||
+        (craft.pieceCost !== undefined &&
+          craft.pieceCost !== 20 &&
+          craft.pieceCost !== 100) ||
         !Number.isFinite(Date.parse(toTimestamp(craft.craftedAt)))
       );
     })
@@ -1027,7 +1033,7 @@ function isValidMissionChestRecord(chest: {
     !Number.isSafeInteger(chest.upgradeAttempts) ||
     chest.upgradeAttempts < 0 ||
     chest.upgradeAttempts > attemptLimit ||
-    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3) ||
+    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3 && ruleSet !== 4) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
     !isChestRarity(chest.rarity)
@@ -1079,7 +1085,7 @@ function isValidMissionChestRecord(chest: {
     legendary: 1000,
   };
   const expectedStone =
-    ruleSet === 3
+    ruleSet >= 3
       ? fixedRewards[rarity]
       : chest.baseStone + legacyBonuses[rarity];
   return chest.finalStone === expectedStone;

@@ -6,7 +6,7 @@ export const CHEST_RARITIES = [
   "legendary",
 ] as const;
 export type ChestRarity = (typeof CHEST_RARITIES)[number];
-export type ChestRuleSet = 1 | 2 | 3;
+export type ChestRuleSet = 1 | 2 | 3 | 4;
 
 export const CHEST_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Copper",
@@ -76,6 +76,87 @@ export const CHEST_FIXED_STONE_REWARDS: Record<ChestRarity, number> = {
   legendary: 1000,
 };
 
+export const COLLECTION_FRAGMENT_POINT_COSTS: Record<ChestRarity, number> = {
+  common: 1,
+  uncommon: 3,
+  rare: 9,
+  epic: 27,
+  legendary: 81,
+};
+
+export const CHEST_FRAGMENT_POINT_RANGES: Record<
+  ChestRarity,
+  { min: number; max: number }
+> = {
+  common: { min: 2, max: 10 },
+  uncommon: { min: 6, max: 30 },
+  rare: { min: 18, max: 90 },
+  epic: { min: 54, max: 270 },
+  legendary: { min: 162, max: 810 },
+};
+
+export type CollectionFragmentReward = Record<ChestRarity, number>;
+
+export function chestFragmentPointBudget(
+  chestId: string,
+  rarity: ChestRarity,
+): number {
+  if (!chestId.trim()) throw new Error("Mã rương không hợp lệ.");
+  const range = CHEST_FRAGMENT_POINT_RANGES[rarity];
+  return (
+    range.min +
+    (stableHash(`fragment-points:${chestId}:${rarity}`) %
+      (range.max - range.min + 1))
+  );
+}
+
+export function chestFragmentReward(
+  chestId: string,
+  rarity: ChestRarity,
+  ruleSet: ChestRuleSet = 1,
+): CollectionFragmentReward {
+  const reward: CollectionFragmentReward = {
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    epic: 0,
+    legendary: 0,
+  };
+  if (ruleSet < 4) {
+    reward[rarity] = 1;
+    return reward;
+  }
+  if (!chestId.trim()) throw new Error("Mã rương không hợp lệ.");
+
+  const tierIndex = CHEST_RARITIES.indexOf(rarity);
+  let points = chestFragmentPointBudget(chestId, rarity);
+  const budget = points;
+  let roll = 0;
+
+  // A stable per-chest pseudo-random choice makes the drop repeatable offline
+  // and identical after account sync or backup restoration.
+  while (points > 0) {
+    const available = CHEST_RARITIES.slice(0, tierIndex + 1).filter(
+      (candidate) => COLLECTION_FRAGMENT_POINT_COSTS[candidate] <= points,
+    );
+    const selectedHash = stableHash(
+      `fragment-distribution:${chestId}:${rarity}:${roll}`,
+    );
+    const selected = available[selectedHash % available.length]!;
+    reward[selected] += 1;
+    points -= COLLECTION_FRAGMENT_POINT_COSTS[selected];
+    roll += 1;
+  }
+
+  const spent = CHEST_RARITIES.reduce(
+    (total, candidate) =>
+      total + reward[candidate] * COLLECTION_FRAGMENT_POINT_COSTS[candidate],
+    0,
+  );
+  if (spent > budget) throw new Error("Phần thưởng mảnh vượt quá Points.");
+  return reward;
+}
+
 export function chestStoneReward(
   baseStone: number,
   rarity: ChestRarity,
@@ -84,7 +165,7 @@ export function chestStoneReward(
   if (!Number.isSafeInteger(baseStone) || baseStone < 1 || baseStone > 20) {
     throw new Error("Stone trong rương không hợp lệ.");
   }
-  return ruleSet === 3
+  return ruleSet >= 3
     ? CHEST_FIXED_STONE_REWARDS[rarity]
     : baseStone + LEGACY_STONE_BONUS[rarity];
 }
@@ -197,7 +278,7 @@ export function isValidMissionChest(chest: MissionChest): boolean {
     !Number.isSafeInteger(chest.upgradeAttempts) ||
     chest.upgradeAttempts < 0 ||
     chest.upgradeAttempts > maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
-    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3) ||
+    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3 && ruleSet !== 4) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== hasSuperUpgradeChance(chest.chestId)) ||
     !CHEST_RARITIES.includes(chest.rarity) ||

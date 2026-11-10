@@ -431,7 +431,7 @@ components:
           enum: [common, uncommon, rare, epic, legendary]
         ruleSet:
           type: integer
-          enum: [1, 2, 3]
+          enum: [1, 2, 3, 4]
           description: Optional for legacy clients; omitted values use the legacy chest rules.
         superUpgrade:
           type: boolean
@@ -470,6 +470,10 @@ components:
         craftedAt:
           type: string
           format: date-time
+        pieceCost:
+          type: integer
+          enum: [20, 100]
+          description: Optional for older clients and backups; omitted values preserve the original 20-piece cost.
     DictionaryAssetError:
       type: object
       required: [error]
