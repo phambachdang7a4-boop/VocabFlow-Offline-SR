@@ -4,7 +4,7 @@ import { Link, type Href, router } from 'expo-router';
 import { useAuth, useSignUp } from '@clerk/expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { F } from '@/components/ui';
+import { F, MaterialSheen } from '@/components/ui';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
 function getMessage(_error: unknown): string {
@@ -245,12 +245,20 @@ function AuthButton({ testID, label, busy, onPress, primary = false }: {
         {
           backgroundColor: primary ? c.accent : c.card,
           borderColor: primary ? c.accent : c.border,
+          borderTopColor: primary ? c.goldSheen : c.sheenEdge,
+          borderBottomColor: primary ? c.buttonPressed : c.border,
           opacity: busy ? 0.7 : pressed ? 0.8 : 1,
+          shadowColor: c.shade,
+          shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+          shadowOpacity: busy ? 0.05 : pressed ? 0.07 : 0.17,
+          shadowRadius: pressed ? 2 : 7,
+          elevation: busy ? 0 : pressed ? 1 : 3,
         },
       ]}
     >
-      {busy ? <ActivityIndicator color={primary ? c.foreground : c.primary} /> : null}
-      <Text style={[styles.buttonText, { color: primary ? c.foreground : c.primary }]}>{label}</Text>
+      <MaterialSheen tone={primary ? 'gold' : 'surface'} radius={16} />
+      {busy ? <ActivityIndicator color={primary ? c.accentForeground : c.primary} /> : null}
+      <Text style={[styles.buttonText, { color: primary ? c.accentForeground : c.primary }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -273,6 +281,7 @@ const styles = StyleSheet.create({
   label: { fontFamily: F.s, fontSize: 14, marginTop: 4 },
   input: { minHeight: 54, borderWidth: 1, paddingHorizontal: 16, fontFamily: F.r, fontSize: 16 },
   button: {
+    position: 'relative',
     minHeight: 54,
     borderWidth: 1,
     borderRadius: 16,

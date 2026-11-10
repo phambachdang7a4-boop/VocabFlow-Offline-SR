@@ -188,8 +188,11 @@ function ChestCard({ chest, colors }: { chest: MissionChest; colors: ReturnType<
       {
         backgroundColor: colors.card,
         borderColor: chest.rarity === 'legendary' ? colors.mutedForeground : colors.border,
+        shadowColor: colors.shade, shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.14, shadowRadius: 6, elevation: 3,
       },
     ]}>
+      <MaterialSheen radius={17} />
       <View style={[
         styles.chestIcon,
         { backgroundColor: CHEST_RARITY_COLORS[chest.rarity] },
@@ -207,8 +210,16 @@ function ChestCard({ chest, colors }: { chest: MissionChest; colors: ReturnType<
         accessibilityRole="button"
         accessibilityLabel={`Mở rương ${rarityLabel}, ${chest.baseStone} Stone cơ bản`}
         onPress={() => router.push({ pathname: '/chest/[chestId]', params: { chestId: chest.chestId } })}
-        style={[styles.openChestButton, { backgroundColor: colors.accent }]}
+        style={[
+          styles.openChestButton,
+          {
+            backgroundColor: colors.accent, borderColor: colors.buttonPressed,
+            shadowColor: colors.shade, shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.17, shadowRadius: 5, elevation: 3,
+          },
+        ]}
       >
+        <MaterialSheen tone="gold" radius={12} />
         <Text style={[styles.openChestText, { color: colors.buttonForeground }]}>Mở</Text>
       </Pressable>
     </View>
@@ -242,12 +253,12 @@ const styles = StyleSheet.create({
   missionTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   missionDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   rewardPill: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  chestCard: { borderWidth: 1, borderRadius: 17, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  chestCard: { position: 'relative', borderWidth: 1, borderRadius: 17, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
   chestIcon: { width: 50, height: 50, borderWidth: 1, borderColor: '#FFFFFF55', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   chestCopy: { flex: 1, gap: 3 },
   chestTitle: { fontFamily: F.b, fontSize: 14 },
   chestDescription: { fontFamily: F.r, fontSize: 11, lineHeight: 16 },
-  openChestButton: { borderRadius: 12, minWidth: 52, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
+  openChestButton: { position: 'relative', borderWidth: 1, borderRadius: 12, minWidth: 52, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
   openChestText: { fontFamily: F.b, fontSize: 13 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   track: { flex: 1, height: 8, borderRadius: 5, overflow: 'hidden' },

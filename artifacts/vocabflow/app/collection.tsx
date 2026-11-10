@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { ErrorBanner, F } from '@/components/ui';
+import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { craftCollectionArtwork, getMissionCollectionOverview, type MissionCollectionOverview } from '@/data/vocabulary';
 import { COLLECTION_ARTWORKS, type CollectionCraft } from '@/domain/collection-artworks';
 import {
@@ -75,8 +75,13 @@ export default function CollectionScreen() {
         <View
           testID="new-collection-artwork"
           accessibilityLiveRegion="polite"
-          style={[styles.reveal, { backgroundColor: CHEST_RARITY_COLORS[newCraft.rarity] }]}
+          style={[styles.reveal, {
+            backgroundColor: CHEST_RARITY_COLORS[newCraft.rarity],
+            shadowColor: c.shade, shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.18, shadowRadius: 8, elevation: 4,
+          }]}
         >
+          <MaterialSheen tone="gold" radius={16} />
           {newCraftImage ? (
             <Image
               accessibilityLabel={newCraftArtwork?.title}
@@ -109,7 +114,15 @@ export default function CollectionScreen() {
         const fragments = overview.fragments[rarity];
         const progress = Math.min(100, (fragments / 20) * 100);
         return (
-          <View key={rarity} testID={`collection-rarity-${rarity}`} style={[styles.rarityCard, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View key={rarity} testID={`collection-rarity-${rarity}`} style={[
+            styles.rarityCard,
+            {
+              backgroundColor: c.card, borderColor: c.border,
+              shadowColor: c.shade, shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.14, shadowRadius: 7, elevation: 3,
+            },
+          ]}>
+            <MaterialSheen radius={18} />
             <View style={styles.rarityTop}>
               <View style={[styles.rarityIcon, { backgroundColor: CHEST_RARITY_COLORS[rarity] }]}>
                 <Feather name="layers" size={20} color={CHEST_RARITY_ICON_COLORS[rarity]} />
@@ -135,11 +148,19 @@ export default function CollectionScreen() {
               accessibilityState={{ disabled: fragments < 20 || crafting !== null }}
               disabled={fragments < 20 || crafting !== null}
               onPress={() => void craft(rarity)}
-              style={[
+              style={({ pressed }) => [
                 styles.craftButton,
-                { backgroundColor: fragments >= 20 ? c.accent : c.muted, opacity: crafting && crafting !== rarity ? 0.6 : 1 },
+                {
+                  backgroundColor: fragments >= 20 ? c.accent : c.muted,
+                  borderColor: fragments >= 20 ? c.buttonPressed : c.border,
+                  opacity: crafting && crafting !== rarity ? 0.6 : pressed ? 0.86 : 1,
+                  shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                  shadowOpacity: pressed ? 0.06 : fragments >= 20 ? 0.18 : 0,
+                  shadowRadius: pressed ? 2 : 6, elevation: pressed ? 1 : fragments >= 20 ? 3 : 0,
+                },
               ]}
             >
+              {fragments >= 20 ? <MaterialSheen tone="gold" radius={13} /> : null}
               {crafting === rarity ? <ActivityIndicator color={c.buttonForeground} /> : <Feather name="image" size={17} color={c.buttonForeground} />}
               <Text style={[styles.craftText, { color: c.buttonForeground }]}>
                 {crafting === rarity ? 'Đang ghép…' : fragments >= 20 ? 'Ghép tranh' : 'Cần thêm mảnh'}
@@ -160,7 +181,15 @@ export default function CollectionScreen() {
             if (!artwork) return null;
             const artworkImage = artwork.imageAssetKey ? ARTWORK_IMAGE_SOURCES[artwork.imageAssetKey] : undefined;
             return (
-              <View key={craft.craftId} style={[styles.artCard, { backgroundColor: c.card, borderColor: c.border }]}>
+              <View key={craft.craftId} style={[
+                styles.artCard,
+                {
+                  backgroundColor: c.card, borderColor: c.border,
+                  shadowColor: c.shade, shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.14, shadowRadius: 7, elevation: 3,
+                },
+              ]}>
+                <MaterialSheen radius={16} />
                 <View style={[styles.artImage, { backgroundColor: CHEST_RARITY_COLORS[craft.rarity] }]}>
                   {artworkImage ? (
                     <Image accessibilityLabel={artwork.title} source={artworkImage} style={styles.artArtwork} resizeMode="cover" />
@@ -175,7 +204,15 @@ export default function CollectionScreen() {
           })}
         </View>
       ) : (
-        <View style={[styles.emptyCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        <View style={[
+          styles.emptyCard,
+          {
+            backgroundColor: c.card, borderColor: c.border,
+            shadowColor: c.shade, shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.12, shadowRadius: 6, elevation: 2,
+          },
+        ]}>
+          <MaterialSheen radius={18} />
           <Feather name="image" size={24} color={c.mutedForeground} />
           <Text style={[styles.emptyText, { color: c.mutedForeground }]}>Chưa có tranh nào. Mở rương để nhận mảnh ghép.</Text>
         </View>
@@ -191,7 +228,7 @@ const styles = StyleSheet.create({
   galleryHeading: { marginTop: 14 },
   title: { fontFamily: F.b, fontSize: 20 },
   caption: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
-  rarityCard: { borderWidth: 1, borderRadius: 18, padding: 14, gap: 12 },
+  rarityCard: { position: 'relative', borderWidth: 1, borderRadius: 18, padding: 14, gap: 12 },
   rarityTop: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   rarityIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   rarityText: { flex: 1, gap: 3 },
@@ -200,19 +237,19 @@ const styles = StyleSheet.create({
   progressNumber: { fontFamily: F.b, fontSize: 13 },
   track: { height: 8, borderRadius: 5, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 5 },
-  craftButton: { minHeight: 44, borderRadius: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  craftButton: { position: 'relative', minHeight: 44, borderWidth: 1, borderRadius: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   craftText: { fontFamily: F.s, fontSize: 14 },
-  reveal: { borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  reveal: { position: 'relative', borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   revealArtwork: { width: 54, height: 42, borderRadius: 8 },
   revealText: { flex: 1, gap: 2 },
   revealTitle: { fontFamily: F.b, fontSize: 15 },
   revealSubtitle: { fontFamily: F.r, fontSize: 13 },
   gallery: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  artCard: { width: '47%', flexGrow: 1, borderWidth: 1, borderRadius: 16, padding: 10, gap: 6 },
+  artCard: { position: 'relative', width: '47%', flexGrow: 1, borderWidth: 1, borderRadius: 16, padding: 10, gap: 6 },
   artImage: { height: 110, borderRadius: 12, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   artArtwork: { width: '100%', height: '100%' },
   artTitle: { fontFamily: F.s, fontSize: 14 },
   artRarity: { fontFamily: F.r, fontSize: 12 },
-  emptyCard: { borderWidth: 1, borderRadius: 18, minHeight: 100, alignItems: 'center', justifyContent: 'center', gap: 9, padding: 18 },
+  emptyCard: { position: 'relative', borderWidth: 1, borderRadius: 18, minHeight: 100, alignItems: 'center', justifyContent: 'center', gap: 9, padding: 18 },
   emptyText: { fontFamily: F.r, fontSize: 13, textAlign: 'center', lineHeight: 18 },
 });

@@ -6,7 +6,7 @@ import { useVocabulary } from '@/contexts/VocabularyContext';
 import { getDictionaryEntry } from '@/data/dictionary';
 import { dictionaryDraft, exampleSegments, sameWordSense, type DictionaryEntry, type DictionaryPartOfSpeech, type DictionarySense } from '@/domain/dictionary';
 import { useColors } from '@/hooks/useColors';
-import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { Button, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
 import { PartOfSpeechFilter } from '@/components/PartOfSpeechFilter';
 import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
@@ -211,9 +211,15 @@ export function DictionaryEntryView({ id, bottomPad, onBack, backLabel = 'Quay l
                   void saveSense(item);
                 }}
                 hitSlop={6}
-                style={({ pressed }) => [styles.add, inBook
-                  ? { backgroundColor: c.dictChip, opacity: pressed ? 0.7 : 1 }
-                  : { backgroundColor: pressed ? c.dictAddPressed : c.dictAdd, opacity: saving !== null && !busy ? 0.6 : 1 }]}>
+                 style={({ pressed }) => [styles.add, {
+                  backgroundColor: inBook ? c.dictChip : pressed ? c.dictAddPressed : c.dictAdd,
+                  borderColor: inBook ? c.border : c.buttonPressed,
+                  opacity: saving !== null && !busy ? 0.6 : pressed ? 0.86 : 1,
+                  shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 3 },
+                  shadowOpacity: pressed ? 0.06 : 0.14, shadowRadius: pressed ? 2 : 5,
+                  elevation: pressed ? 1 : 2,
+                }]}>
+                <MaterialSheen tone={inBook ? 'navy' : 'gold'} radius={18} />
                 <Feather name={inBook ? 'book-open' : 'plus-circle'} size={16} color={inBook ? c.dictHead : c.dictAddInk} />
                 <Text style={[styles.addText, { color: inBook ? c.dictHead : c.dictAddInk }]}>
                   {inBook ? (existing?.frozen ? 'Đóng băng' : 'Trong sổ') : busy ? 'Đang lưu…' : 'Lưu từ'}
@@ -308,7 +314,7 @@ const styles = StyleSheet.create({
   kind: { alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10 },
   kindText: { fontFamily: F.s, fontSize: 12 },
   def: { fontFamily: F.s, fontSize: 17, lineHeight: 25 },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, minHeight: 36, borderRadius: 18 },
+  add: { position: 'relative', borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, minHeight: 36, borderRadius: 18 },
   addText: { fontFamily: F.s, fontSize: 13 },
   exRow: { flexDirection: 'row', gap: 10, paddingLeft: 26, alignItems: 'flex-start' },
   bullet: { width: 5, height: 5, borderRadius: 3, marginTop: 9 },

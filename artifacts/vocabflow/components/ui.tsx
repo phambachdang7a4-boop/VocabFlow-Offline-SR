@@ -24,15 +24,15 @@ export const F = {
 export function MaterialSheen({ tone = "surface", radius }: { tone?: "surface" | "navy" | "gold"; radius?: number }) {
   const c = useColors();
   const colors = tone === "gold"
-    ? [c.goldSheen, "rgba(255,255,255,0.03)", c.shade] as const
-    : [c.sheen, c.sheenSoft, c.shade] as const;
+    ? [c.goldSheen, c.sheenEdge, c.sheenSoft, c.shade] as const
+    : [c.sheenEdge, c.sheen, c.sheenSoft, c.shade] as const;
   return (
     <LinearGradient
       pointerEvents="none"
       colors={colors}
-      locations={[0, 0.48, 1]}
-      start={{ x: 0.08, y: 0 }}
-      end={{ x: 0.94, y: 1 }}
+      locations={[0, 0.14, 0.48, 1]}
+      start={{ x: 0.04, y: 0 }}
+      end={{ x: 0.96, y: 1 }}
       style={[StyleSheet.absoluteFill, { borderRadius: radius ?? c.radius }]}
     />
   );
@@ -85,6 +85,8 @@ export function Button({
           backgroundColor: bg,
           borderRadius: c.radius,
           borderColor: variant === "ghost" ? c.border : bg,
+          borderTopColor: variant === "ghost" ? c.border : variant === "primary" ? c.goldSheen : c.sheenEdge,
+          borderBottomColor: variant === "ghost" ? c.border : variant === "primary" ? c.buttonPressed : c.shade,
           overflow: "visible",
           shadowColor: c.shade,
           shadowOffset: { width: 0, height: pressed ? 1 : 4 },
@@ -271,6 +273,7 @@ export function Skeleton({ h = 72 }: { h?: number }) {
 
 const styles = StyleSheet.create({
   btn: {
+    position: "relative",
     minHeight: 50,
     paddingHorizontal: 18,
     flexDirection: "row",

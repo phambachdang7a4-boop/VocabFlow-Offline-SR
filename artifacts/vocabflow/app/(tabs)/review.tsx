@@ -11,7 +11,7 @@ import { useColors } from '@/hooks/useColors';
 import { useReviewClock } from '@/hooks/useReviewClock';
 import { localDay } from '@/domain/srs';
 import { formatReviewCountdown, reviewOverview, secondsUntilReview } from '@/domain/review-overview';
-import { Button, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { Button, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
 import { ScreenHeader, useBottomPad } from '@/components/ScreenHeader';
 import { ReviewCard, calendarLabel } from '@/components/ReviewCard';
 import { LevelDistributionChart, ReviewStatusBar, SavedTotal } from '@/components/ReviewOverview';
@@ -351,9 +351,16 @@ export default function ReviewScreen() {
                 backgroundColor: c.card,
                 borderColor: c.border,
                 borderRadius: c.radius + 8,
+                position: 'relative',
+                shadowColor: c.shade,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.16,
+                shadowRadius: 8,
+                elevation: 4,
               },
             ]}
           >
+            <MaterialSheen radius={c.radius + 8} />
             <Text testID="review-summary-title" style={[styles.summaryTitle, { color: c.foreground }]}>
               Bạn đã ôn được {summary.reviewedCount.toLocaleString('vi-VN')} từ!
             </Text>
@@ -417,9 +424,16 @@ export default function ReviewScreen() {
                   backgroundColor: c.card,
                   borderColor: c.border,
                   borderRadius: c.radius + 8,
+                  position: 'relative',
+                  shadowColor: c.shade,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.14,
+                  shadowRadius: 7,
+                  elevation: 3,
                 },
               ]}
             >
+              <MaterialSheen radius={c.radius + 8} />
               <LevelDistributionChart levels={overview.levels} />
             </View>
             {action}
@@ -437,6 +451,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
   summaryCard: {
+    position: 'relative',
     flex: 1,
     minHeight: 520,
     justifyContent: 'center',

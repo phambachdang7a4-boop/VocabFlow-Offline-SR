@@ -297,6 +297,7 @@ export function ReviewCard({ word, exercise, blocked, isLast, onCommitted, onBus
                     },
                   ]}
                 >
+                  <MaterialSheen radius={12} />
                   <Text style={[styles.choiceLabel, { color: textColor }]}>{choice}</Text>
                   {revealRight ? <Feather name="check-circle" size={17} color={c.success} /> : null}
                   {revealWrong ? <Feather name="x-circle" size={17} color={c.destructive} /> : null}
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
   sentenceToken: { fontFamily: F.m, fontSize: 18, lineHeight: 28 },
   extraBlank: { fontFamily: F.s, fontSize: 18, letterSpacing: 2, paddingHorizontal: 4 },
   choiceGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  choiceButton: { flexBasis: '48%', flexGrow: 1, minHeight: 52, paddingHorizontal: 10, paddingVertical: 11, borderWidth: 1.5, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  choiceButton: { position: 'relative', flexBasis: '48%', flexGrow: 1, minHeight: 52, paddingHorizontal: 10, paddingVertical: 11, borderWidth: 1.5, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   choiceLabel: { flexShrink: 1, fontFamily: F.s, fontSize: 16, lineHeight: 21, textAlign: 'center' },
   answerSlots: { position: 'relative', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignContent: 'center', justifyContent: 'center', padding: 4 },
   letterSlot: { borderWidth: 1.5, borderRadius: 5, alignItems: 'center', justifyContent: 'center' },

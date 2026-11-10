@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, router } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { ErrorBanner, F } from '@/components/ui';
+import { ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { attemptMissionChestUpgrade, getMissionChest } from '@/data/vocabulary';
 import {
   CHEST_RARITIES,
@@ -98,8 +98,12 @@ export default function MissionChestScreen() {
             {
               backgroundColor: c.card,
               borderColor: chest.rarity === 'legendary' ? CHEST_RARITY_TEXT_COLORS.legendary : CHEST_RARITY_COLORS[chest.rarity],
+              position: 'relative',
+              shadowColor: c.shade, shadowOffset: { width: 0, height: 5 },
+              shadowOpacity: 0.18, shadowRadius: 10, elevation: 4,
             },
           ]}>
+            <MaterialSheen radius={24} />
             <View style={[
               styles.chestIcon,
               {
@@ -133,6 +137,7 @@ export default function MissionChestScreen() {
           </View>
           {superUpgrade ? (
             <View style={[styles.superUpgradeBanner, { backgroundColor: c.card, borderColor: c.accent }]}>
+              <MaterialSheen radius={14} />
               <Feather name="zap" size={19} color={c.accent} />
               <Text style={[styles.superUpgradeText, { color: c.foreground }]}>Nâng Cấp Siêu Việt</Text>
             </View>
@@ -147,6 +152,7 @@ export default function MissionChestScreen() {
                 { backgroundColor: chest.opened ? c.successSoft : c.card, borderColor: chest.opened ? c.success : c.border },
               ]}
             >
+              <MaterialSheen radius={16} />
               <Feather name={chest.opened ? 'check-circle' : 'trending-up'} size={20} color={chest.opened ? c.success : c.primary} />
               <Text style={[styles.resultText, { color: chest.opened ? c.successText : c.foreground }]}>{message}</Text>
             </View>
@@ -172,8 +178,18 @@ export default function MissionChestScreen() {
                   : `Thử nâng cấp rương phẩm chất ${rarityDisplayLabel(chest.rarity)}`}
                 disabled={busy}
                 onPress={() => void upgrade()}
-                style={[styles.primaryButton, { backgroundColor: c.accent, opacity: busy ? 0.7 : 1 }]}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  {
+                    backgroundColor: c.accent, borderColor: c.buttonPressed,
+                    opacity: busy ? 0.7 : pressed ? 0.88 : 1,
+                    shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+                    shadowOpacity: pressed ? 0.06 : 0.2, shadowRadius: pressed ? 2 : 7,
+                    elevation: pressed ? 1 : 3,
+                  },
+                ]}
               >
+                <MaterialSheen tone="gold" radius={16} />
                 {busy ? <ActivityIndicator color={c.buttonForeground} /> : <Feather name="trending-up" size={19} color={c.buttonForeground} />}
                 <Text style={[styles.primaryText, { color: c.buttonForeground }]}>
                   {busy ? 'Đang nâng cấp…' : specialAttempt ? 'Nâng Cấp Siêu Việt' : 'Thử nâng cấp'}
@@ -184,8 +200,18 @@ export default function MissionChestScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={() => router.replace('/(tabs)/blank')}
-              style={[styles.primaryButton, { backgroundColor: c.accent }]}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                {
+                  backgroundColor: c.accent, borderColor: c.buttonPressed,
+                  opacity: pressed ? 0.88 : 1,
+                  shadowColor: c.shade, shadowOffset: { width: 0, height: pressed ? 1 : 4 },
+                  shadowOpacity: pressed ? 0.06 : 0.2, shadowRadius: pressed ? 2 : 7,
+                  elevation: pressed ? 1 : 3,
+                },
+              ]}
             >
+              <MaterialSheen tone="gold" radius={16} />
               <Feather name="arrow-left" size={19} color={c.buttonForeground} />
               <Text style={[styles.primaryText, { color: c.buttonForeground }]}>Về Nhiệm Vụ</Text>
             </Pressable>
@@ -205,13 +231,13 @@ const styles = StyleSheet.create({
   detail: { fontFamily: F.r, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   attemptRow: { flexDirection: 'row', gap: 10, marginVertical: 2 },
   attemptDot: { width: 13, height: 13, borderRadius: 7 },
-  superUpgradeBanner: { borderWidth: 1, borderRadius: 14, padding: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  superUpgradeBanner: { position: 'relative', borderWidth: 1, borderRadius: 14, padding: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
   superUpgradeText: { fontFamily: F.b, fontSize: 15 },
   chanceText: { fontFamily: F.b, fontSize: 14, textAlign: 'center' },
-  result: { borderWidth: 1, borderRadius: 16, padding: 15, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  result: { position: 'relative', borderWidth: 1, borderRadius: 16, padding: 15, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   resultText: { flex: 1, fontFamily: F.s, fontSize: 14, lineHeight: 21 },
   actionArea: { gap: 12 },
   explainer: { fontFamily: F.r, fontSize: 13, lineHeight: 20, textAlign: 'center' },
-  primaryButton: { minHeight: 54, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingHorizontal: 16 },
+  primaryButton: { position: 'relative', minHeight: 54, borderWidth: 1, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingHorizontal: 16 },
   primaryText: { fontFamily: F.b, fontSize: 16 },
 });

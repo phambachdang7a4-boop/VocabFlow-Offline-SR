@@ -13,7 +13,7 @@ import { DictionaryGate } from '@/components/DictionaryGate';
 import { DictionaryEntryView } from '@/components/DictionaryEntryView';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useColors } from '@/hooks/useColors';
-import { Button, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { Button, EmptyState, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
 import { useBottomPad } from '@/components/ScreenHeader';
 
 export default function DictionaryScreen() {
@@ -215,7 +215,16 @@ export default function DictionaryScreen() {
 
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: c.dictPage }}>
-      <View style={[styles.band, { backgroundColor: c.dictBand, paddingTop: top + 10 }]}>
+      <View style={[styles.band, {
+        backgroundColor: c.dictBand,
+        paddingTop: top + 10,
+        shadowColor: c.shade,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 8,
+        elevation: 4,
+      }]}>
+        <MaterialSheen tone="navy" radius={0} />
         <View style={styles.bandHead}>
           <View style={{ flex: 1 }}>
             <Text style={[styles.kicker, { color: c.dictBandMuted }]}>VocabFlow · Anh – Việt ngoại tuyến</Text>
@@ -226,7 +235,18 @@ export default function DictionaryScreen() {
             <Feather name="info" size={20} color={c.dictBandInk} />
           </Pressable>
         </View>
-        <View style={[styles.search, { backgroundColor: c.dictField, borderRadius: c.radius, opacity: dict.ready ? 1 : 0.6 }]}>
+        <View style={[styles.search, {
+          backgroundColor: c.dictField,
+          borderRadius: c.radius,
+          borderColor: c.border,
+          opacity: dict.ready ? 1 : 0.6,
+          shadowColor: c.shade,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.14,
+          shadowRadius: 6,
+          elevation: 3,
+        }]}>
+          <MaterialSheen radius={c.radius} />
           <TextInput
             ref={inputRef}
             testID="dictionary-search"
@@ -263,12 +283,12 @@ export default function DictionaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  band: { paddingHorizontal: 16, paddingBottom: 18, gap: 14 },
+  band: { position: 'relative', paddingHorizontal: 16, paddingBottom: 18, gap: 14 },
   bandHead: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 4 },
   kicker: { fontFamily: F.s, fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 2 },
   title: { fontFamily: F.b, fontSize: 26, letterSpacing: -0.5 },
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54 },
+  search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
   divider: { width: 1, alignSelf: 'stretch', marginVertical: 10 },
   go: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },

@@ -21,6 +21,7 @@
 - Lưu lựa chọn sáng/tối riêng trên thiết bị; khởi động mới không được phụ thuộc vào giao diện hệ thống. Không lưu tùy chọn này thay cho SQLite từ vựng/tiến độ.
 - Chữ thường phải đủ tương phản. Không dùng chữ vàng trên nền kem. Đỏ `#C0392B` dành cho sai/cảnh báo; xanh lá `#3E8E5A` cho đúng; xanh băng `#BFE3F2` cho trạng thái đóng băng.
 - Giữ hai bảng màu đồng bộ ở mọi màn hình, nút, trạng thái và thanh điều hướng; cập nhật `constants/colors.ts` cùng kiểm tra `scripts/check-appearance.cjs` khi đổi màu giao diện.
+- Thẻ và nút chính dùng ánh kim bóng nhẹ, viền sáng và đổ bóng tạo cảm giác nổi; lớp bóng chỉ phủ trong suốt, không đổi màu ngữ nghĩa hoặc làm giảm độ tương phản.
 - Người dùng yêu cầu Tra Từ theo bố cục ảnh Mochi: phần tìm kiếm xanh, nội dung nghĩa/ví dụ rõ ràng trên nền sáng và nút thêm cạnh nghĩa; tab Tra Từ nằm ngoài cùng bên trái. Giữ tên VocabFlow, không tự thêm đồng nghĩa, IELTS, cấp CEFR hay âm thanh không có dữ liệu/chức năng thật.
 - Tra Từ có gợi ý sai chính tả offline khi không khớp tiền tố: câu “Có phải bạn đang tìm từ này?” và các từ gần đúng có thể chạm để xem nghĩa. Chỉ lấy mục từ thật trong SQLite, không API/AI hoặc tự lưu; giữ lựa chọn tự ghi từ mới.
 - Người dùng yêu cầu gạch chân từ đang tra trong câu ví dụ ở Tra Từ.

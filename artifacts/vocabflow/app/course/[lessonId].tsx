@@ -6,7 +6,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, ErrorBanner, F } from '@/components/ui';
+import { Button, ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { displayCollocationType, displayCourseMeaning } from '@/data/basic-course';
 import { courseForLesson } from '@/data/course-catalog';
@@ -224,7 +224,13 @@ export default function CourseLessonScreen() {
 
   return (
     <KeyboardAvoidingView style={[styles.flex, { backgroundColor: c.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[styles.header, { paddingTop: topInset + 7, backgroundColor: c.header }]}>
+      <View style={[styles.header, {
+        paddingTop: topInset + 7,
+        backgroundColor: c.header,
+        shadowColor: c.shade, shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18, shadowRadius: 8, elevation: 4,
+      }]}>
+        <MaterialSheen tone="navy" radius={0} />
         <View style={styles.headerRow}>
           <Pressable accessibilityRole="button" accessibilityLabel="Thoát bài học" onPress={goBack} style={styles.closeButton}>
             <Feather name="x" size={23} color={c.headerForeground} />
@@ -267,8 +273,17 @@ export default function CourseLessonScreen() {
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: selected }}
                   onPress={() => void toggleSelection(word.id)}
-                  style={[styles.wordRow, { backgroundColor: selected ? c.accentSoft : c.card, borderColor: selected ? c.primary : c.border }]}
+                  style={[
+                    styles.wordRow,
+                    {
+                      backgroundColor: selected ? c.accentSoft : c.card,
+                      borderColor: selected ? c.primary : c.border,
+                      shadowColor: c.shade, shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: selected ? 0.12 : 0.08, shadowRadius: 4, elevation: 2,
+                    },
+                  ]}
                 >
+                  <MaterialSheen radius={14} />
                   <View style={[styles.checkbox, { backgroundColor: selected ? c.primary : 'transparent', borderColor: selected ? c.primary : c.border }]}>
                     {selected ? <Feather name="check" size={14} color={c.primaryForeground} /> : null}
                   </View>
@@ -305,9 +320,14 @@ export default function CourseLessonScreen() {
               onPress={() => void finish(true)}
               style={[
                 styles.addAllButton,
-                { backgroundColor: c.secondary, borderColor: c.border, opacity: busy ? 0.6 : 1 },
+                {
+                  backgroundColor: c.secondary, borderColor: c.border, opacity: busy ? 0.6 : 1,
+                  shadowColor: c.shade, shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.14, shadowRadius: 6, elevation: 3,
+                },
               ]}
             >
+              <MaterialSheen tone="navy" radius={16} />
               <Feather name="plus-circle" size={18} color={c.primary} />
               <Text style={[styles.addAllText, { color: c.foreground }]}>Thêm tất cả từ</Text>
             </Pressable>
@@ -338,7 +358,15 @@ export default function CourseLessonScreen() {
           {stage === 'flashcard' && currentWord ? (
             <>
               <Text style={[styles.overline, { color: c.primary }]}>THẺ TỪ {progress.currentIndex + 1}</Text>
-              <View style={[styles.flashcard, { backgroundColor: c.vocabCard, borderColor: c.vocabCard }]}>
+              <View style={[
+                styles.flashcard,
+                {
+                  backgroundColor: c.vocabCard, borderColor: c.vocabCard,
+                  shadowColor: c.shade, shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.22, shadowRadius: 12, elevation: 6,
+                },
+              ]}>
+                <MaterialSheen tone="navy" radius={24} />
                 {displayCollocationType(currentWord) ? (
                   <View style={[styles.collocationTypeBadge, { backgroundColor: c.vocabCardAccent }]}>
                     <Text testID="course-collocation-type" style={[styles.collocationTypeText, { color: c.buttonForeground }]}>
@@ -382,8 +410,16 @@ export default function CourseLessonScreen() {
                 accessibilityState={{ selected: showExample }}
                 accessibilityLabel={showExample ? 'Lật lại từ và nghĩa' : 'Lật thẻ xem ví dụ'}
                 onPress={() => setShowExample(value => !value)}
-                style={[styles.flipButton, { backgroundColor: c.secondary, borderColor: c.border }]}
+                style={[
+                  styles.flipButton,
+                  {
+                    backgroundColor: c.secondary, borderColor: c.border,
+                    shadowColor: c.shade, shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.14, shadowRadius: 6, elevation: 3,
+                  },
+                ]}
               >
+                <MaterialSheen tone="navy" radius={14} />
                 <Feather name={showExample ? 'rotate-ccw' : 'rotate-cw'} size={17} color={c.primary} />
                 <Text style={[styles.flipText, { color: c.primary }]}>
                   {showExample ? 'Lật lại từ và nghĩa' : 'Lật thẻ xem ví dụ'}
@@ -466,7 +502,7 @@ export default function CourseLessonScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  header: { paddingHorizontal: 16, paddingBottom: 14 },
+  header: { position: 'relative', paddingHorizontal: 16, paddingBottom: 14 },
   headerRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10 },
   closeButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   headerText: { flex: 1, gap: 2 },
@@ -478,7 +514,7 @@ const styles = StyleSheet.create({
   errorWrap: { paddingHorizontal: 16, paddingTop: 8 },
   lessonContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 22, paddingVertical: 24, gap: 18 },
   overline: { fontFamily: F.s, fontSize: 12, letterSpacing: 1.1, textAlign: 'center' },
-  flashcard: { borderRadius: 24, borderWidth: 1, padding: 28, minHeight: 300, alignItems: 'center', justifyContent: 'center', gap: 18 },
+  flashcard: { position: 'relative', borderRadius: 24, borderWidth: 1, padding: 28, minHeight: 300, alignItems: 'center', justifyContent: 'center', gap: 18 },
   collocationTypeBadge: { alignSelf: 'center', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   collocationTypeText: { fontFamily: F.s, fontSize: 13, fontWeight: '700', textAlign: 'center' },
   answerCollocationType: { fontFamily: F.s, fontSize: 14, fontWeight: '700', textAlign: 'center', marginTop: 12 },
@@ -491,7 +527,7 @@ const styles = StyleSheet.create({
   exampleWord: { fontFamily: F.s, fontSize: 16, textAlign: 'center' },
   flashExample: { fontFamily: F.m, fontSize: 19, textAlign: 'center', lineHeight: 29 },
   exampleUnderline: { textDecorationLine: 'underline' },
-  flipButton: { alignSelf: 'center', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16 },
+  flipButton: { position: 'relative', alignSelf: 'center', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16 },
   flipText: { fontFamily: F.s, fontSize: 14 },
   helper: { fontFamily: F.r, fontSize: 14, textAlign: 'center', lineHeight: 21 },
   prompt: { fontFamily: F.s, fontSize: 27, lineHeight: 37, textAlign: 'center', marginTop: 16 },
@@ -505,14 +541,14 @@ const styles = StyleSheet.create({
   selectedCount: { fontFamily: F.s, fontSize: 13, textAlign: 'center' },
   selectionList: { flex: 1, paddingHorizontal: 14 },
   selectionContent: { gap: 8, paddingBottom: 16 },
-  wordRow: { minHeight: 66, borderWidth: 1, borderRadius: 14, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  wordRow: { position: 'relative', minHeight: 66, borderWidth: 1, borderRadius: 14, padding: 11, flexDirection: 'row', alignItems: 'center', gap: 11 },
   checkbox: { width: 23, height: 23, borderWidth: 1.5, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
   wordRowText: { flex: 1, gap: 3 },
   wordTerm: { fontFamily: F.s, fontSize: 14 },
   selectionCollocationType: { fontFamily: F.s, fontSize: 12 },
   wordMeaning: { fontFamily: F.r, fontSize: 13 },
   footer: { paddingHorizontal: 16, paddingTop: 11, borderTopWidth: 1, gap: 10 },
-  addAllButton: { minHeight: 48, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  addAllButton: { position: 'relative', minHeight: 48, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   addAllText: { fontFamily: F.s, fontSize: 15 },
   completedWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 15 },
   completedIcon: { width: 82, height: 82, borderRadius: 41, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },

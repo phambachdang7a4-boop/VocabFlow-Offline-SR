@@ -6,6 +6,7 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 import { SymbolView } from 'expo-symbols';
+import { MaterialSheen } from '@/components/ui';
 
 // Keep Sổ từ (/) as the landing tab even though Tra Từ and Khóa Học are listed first.
 export const unstable_settings = { anchor: 'index' };
@@ -80,8 +81,11 @@ function ClassicTabLayout() {
           shadowRadius: 10,
           ...(isWeb ? { height: 84 } : {}),
         },
-        tabBarBackground: () =>
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.navigation }]} />,
+        tabBarBackground: () => (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.navigation }]}>
+            <MaterialSheen tone="navy" radius={0} />
+          </View>
+        ),
       }}
     >
       <Tabs.Screen name="dictionary" options={{ title: 'Tra Từ', tabBarIcon: icon('dictionary') }} />

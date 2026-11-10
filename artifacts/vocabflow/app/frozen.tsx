@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import type { VocabularyWord } from '@/data/types';
-import { Button, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { Button, EmptyState, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
 
 function FrozenItem({ word, disabled, onSaved }: { word: VocabularyWord; disabled: boolean; onSaved: () => void }) {
   const c = useColors();
@@ -28,7 +28,15 @@ function FrozenItem({ word, disabled, onSaved }: { word: VocabularyWord; disable
     }
   };
   return (
-    <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }]}>
+    <View style={[
+      styles.card,
+      {
+        backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius,
+        shadowColor: c.shade, shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15, shadowRadius: 7, elevation: 3,
+      },
+    ]}>
+      <MaterialSheen radius={c.radius} />
       <Pressable testID={`frozen-word-${word.id}`} disabled={saving}
         accessibilityRole="button" accessibilityLabel={`Xem từ ${word.term}`}
         onPress={() => router.push({ pathname: '/word', params: { id: String(word.id) } })}
@@ -79,7 +87,7 @@ export default function FrozenScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 16, borderWidth: 1, gap: 14 },
+  card: { position: 'relative', padding: 16, borderWidth: 1, gap: 14 },
   term: { fontFamily: F.b, fontSize: 20 },
   body: { fontFamily: F.r, fontSize: 14, lineHeight: 21 },
   label: { fontFamily: F.m, fontSize: 12 },
