@@ -18,6 +18,9 @@ import { useBottomPad } from '@/components/ScreenHeader';
 
 export default function DictionaryScreen() {
   const c = useColors();
+  const corviArt = c.dictPage === '#FBF7EE'
+    ? require('../../assets/images/corvi-dictionary-search-light.png')
+    : require('../../assets/images/corvi-dictionary-search.png');
   const insets = useSafeAreaInsets();
   const top = Platform.OS === 'web' ? 67 : insets.top;
   const bottom = useBottomPad();
@@ -176,7 +179,7 @@ export default function DictionaryScreen() {
       <Image
         testID="dictionary-corvi-idle-art"
         accessible={false}
-        source={require('../../assets/images/corvi-dictionary-search.png')}
+        source={corviArt}
         resizeMode="contain"
         style={styles.idleArt}
       />
@@ -191,7 +194,7 @@ export default function DictionaryScreen() {
       <Image
         testID="dictionary-corvi-search-art"
         accessible={false}
-        source={require('../../assets/images/corvi-dictionary-search.png')}
+        source={corviArt}
         resizeMode="contain"
         style={styles.loadingArt}
       />
@@ -318,9 +321,9 @@ const styles = StyleSheet.create({
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
   idleState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
-  idleArt: { width: 236, height: 236, maxWidth: '100%', borderRadius: 20 },
+  idleArt: { width: 236, height: 236, maxWidth: '100%' },
   loadingState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
-  loadingArt: { width: 236, height: 236, maxWidth: '100%', borderRadius: 20 },
+  loadingArt: { width: 236, height: 236, maxWidth: '100%' },
   loadingTitle: { fontFamily: F.b, fontSize: 19, textAlign: 'center' },
   loadingBody: { maxWidth: 300, fontFamily: F.r, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 2 },
   divider: { width: 1, alignSelf: 'stretch', marginVertical: 10 },

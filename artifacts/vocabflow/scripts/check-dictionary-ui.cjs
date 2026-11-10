@@ -96,6 +96,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/components/ui': { Button: 'Button', EmptyState: 'EmptyState', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '../../assets/images/corvi-dictionary-search.png': 1,
+    '../../assets/images/corvi-dictionary-search-light.png': 1,
     '@/components/ScreenHeader': { useBottomPad: () => 100 },
   };
   const loaded = loadTs(join(__dirname, file), dependencies, {
