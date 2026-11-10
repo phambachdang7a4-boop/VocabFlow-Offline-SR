@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import { DictionaryGate } from '@/components/DictionaryGate';
 import { DictionaryEntryView } from '@/components/DictionaryEntryView';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useColors } from '@/hooks/useColors';
-import { Button, EmptyState, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
+import { Button, EmptyState, ErrorBanner, F, MaterialSheen } from '@/components/ui';
 import { useBottomPad } from '@/components/ScreenHeader';
 
 export default function DictionaryScreen() {
@@ -174,7 +174,22 @@ export default function DictionaryScreen() {
   else if (!debounced) body = (
     <EmptyState icon="search" title="Tra một từ tiếng Anh" body="Gõ vài chữ cái đầu. Chỉ những nghĩa bạn chọn mới được ghi vào sổ và trở thành thẻ ôn." />
   );
-  else if (loading && items.length === 0) body = <View style={{ padding: 20 }}><Skeleton h={64} /><Skeleton h={64} /><Skeleton h={64} /></View>;
+  else if (loading && items.length === 0) body = (
+    <View testID="dictionary-search-loading" accessibilityLiveRegion="polite" style={styles.loadingState}>
+      <Image
+        testID="dictionary-corvi-search-art"
+        accessible={false}
+        source={require('../../assets/images/corvi-dictionary-search.png')}
+        resizeMode="contain"
+        style={styles.loadingArt}
+      />
+      <Text style={[styles.loadingTitle, { color: c.dictHead }]}>Corvi đang tìm từ cho bạn</Text>
+      <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
+        Chờ một chút nhé, Corvi đang tra trong từ điển ngoại tuyến.
+      </Text>
+      <ActivityIndicator accessibilityLabel="Đang tìm từ" size="small" color={c.dictHead} />
+    </View>
+  );
   else if (error && items.length === 0) body = (
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: bottom }} keyboardShouldPersistTaps="handled">
       <ErrorBanner message={error} onRetry={() => setRetryTick((n) => n + 1)} />
@@ -290,6 +305,10 @@ const styles = StyleSheet.create({
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
+  loadingState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
+  loadingArt: { width: 236, height: 236, maxWidth: '100%', borderRadius: 20 },
+  loadingTitle: { fontFamily: F.b, fontSize: 19, textAlign: 'center' },
+  loadingBody: { maxWidth: 300, fontFamily: F.r, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 2 },
   divider: { width: 1, alignSelf: 'stretch', marginVertical: 10 },
   go: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1 },

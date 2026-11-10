@@ -70,3 +70,17 @@ mtime_ms = 1794312101701
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/6452a4cb-7303-4db8-bbdd-80dd4a0c441a/5d3a2f65-cac0-4fa0-874f-d4a07335531e"
 storage_version_token = "1794312177348057"
 content_type = "image/png"
+
+[[outputs]]
+id = "ldXvPPuyyQvR0My2nIauX"
+uri = "file://artifacts/vocabflow/assets/images/corvi-dictionary-search.png"
+type = "image"
+title = "Corvi đang tra từ"
+description = "Minh họa pixel-art đã phối navy–vàng, dùng trong trạng thái chờ tìm kiếm từ điển."
+logical_id = "95664ddd-4ccd-4b1a-95af-5acd2bab8d8f"
+content_hash = "sha256:c27c6c7f152062fdb2332f69ef173d06dfd90d179c456306755281afece2e764"
+size = 911010
+mtime_ms = 1794314109206
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/95664ddd-4ccd-4b1a-95af-5acd2bab8d8f/c2bc1ac2-f3e7-4844-904b-1eb7d812b716"
+storage_version_token = "1794314219238460"
+content_type = "image/png"

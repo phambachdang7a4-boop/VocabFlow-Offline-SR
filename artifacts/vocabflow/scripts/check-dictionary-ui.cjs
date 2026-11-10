@@ -28,7 +28,7 @@ for (const [sentence, term, expected] of [
   assert.equal(segments.map(part => part.text).join(''), sentence);
   assert.deepEqual(segments.filter(part => part.underline).map(part => part.text), expected);
 }
-const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator'].map(key => [key, key]));
+const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator', 'Image'].map(key => [key, key]));
 Object.assign(native, { Platform: { OS: 'web' }, StyleSheet: { create: value => value }, Keyboard: { dismiss() {} } });
 const normalizeTerm = value => value.trim().toLowerCase();
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
@@ -95,6 +95,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/hooks/useDictionary': { useDictionary: () => ({ ready: true }) },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/components/ui': { Button: 'Button', EmptyState: 'EmptyState', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
+    '../../assets/images/corvi-dictionary-search.png': 1,
     '@/components/ScreenHeader': { useBottomPad: () => 100 },
   };
   const loaded = loadTs(join(__dirname, file), dependencies, {
@@ -134,6 +135,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   await screen.settle();
   assert.equal(calls.length, 1, 'Immediate submit must not race an automatic second search');
   assert.equal(calls[0].term, 'job');
+  assert.ok(screen.byId('dictionary-search-loading'), 'Dictionary search shows a dedicated waiting state');
+  assert.ok(screen.byId('dictionary-corvi-search-art'), 'Corvi artwork appears while results are loading');
   calls[0].resolve({ items: [{ id: 81, term: 'job', meaning: 'việc làm' }], hasMore: false });
   await screen.settle();
   assert.equal(screen.byType('DictionaryEntryView').props.id, 81);
@@ -164,7 +167,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   calls.at(-1).resolve({ items: [], hasMore: false });
   await screen.settle();
   assert.equal(suggestionCalls.at(-1).term, 'sincth');
-  assert.ok(screen.byType('Skeleton'), 'Keep loading until suggestions finish');
+  assert.ok(screen.byId('dictionary-search-loading'), 'Keep the Corvi loading state until suggestions finish');
   suggestionCalls.at(-1).resolve([{ id: 91, term: 'since' }]);
   await screen.settle();
   screen.byType('DictionarySuggestions').props.onAddManual();
