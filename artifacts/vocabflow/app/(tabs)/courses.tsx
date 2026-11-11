@@ -30,6 +30,7 @@ import {
   IELTS_TOPIC_COURSE_ID,
   IELTS_TOPIC_COURSE_LESSONS,
   IELTS_TOPIC_COURSE_TITLE,
+  IELTS_TOPIC_COURSE_WORD_COUNT,
 } from "@/domain/ielts-topic-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
 import { useColors } from "@/hooks/useColors";
@@ -44,13 +45,15 @@ type CourseLesson = {
   id: string;
   title: string;
   focus: string;
+  topicId?: string;
+  topicTitle?: string;
   questions: readonly CourseQuestion[];
 };
 
 type CourseAnswer = {
   definition: string;
   example: string;
-  exampleTranslation: string;
+  exampleTranslation?: string;
 };
 
 type CourseCatalogItem = {
@@ -88,7 +91,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: IELTS_TOPIC_COURSE_ID,
     title: IELTS_TOPIC_COURSE_TITLE,
     description:
-      "Học 25 từ IELTS qua 5 chủ đề quen thuộc: giáo dục, môi trường, công nghệ, sức khỏe và xã hội.",
+      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua 28 chủ đề IELTS, chia thành những bài học vừa sức.`,
     lessons: IELTS_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
     icon: "globe",
@@ -334,7 +337,11 @@ export default function CoursesScreen() {
                     (count, lesson) => count + lesson.questions.length,
                     0,
                   )}{" "}
-                  câu · học ngoại tuyến
+                  câu
+                  {activeCourse.id === IELTS_TOPIC_COURSE_ID
+                    ? ` · ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ`
+                    : ""}{" "}
+                  · học ngoại tuyến
                 </Text>
               </View>
             </View>
@@ -357,78 +364,124 @@ export default function CoursesScreen() {
             ) : (
               activeCourse.lessons.map((lesson, index) => {
                 const completed = completedLessons.includes(lesson.id);
+                const startsTopic =
+                  activeCourse.id === IELTS_TOPIC_COURSE_ID &&
+                  lesson.topicId !==
+                    activeCourse.lessons[index - 1]?.topicId;
+                const topicLessonCount = startsTopic
+                  ? activeCourse.lessons.filter(
+                      (candidate) => candidate.topicId === lesson.topicId,
+                    ).length
+                  : 0;
                 return (
-                  <Pressable
-                    key={lesson.id}
-                    testID={`${activeCourse.testIdPrefix}-lesson-${index + 1}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${lesson.title}, ${lesson.questions.length} câu${completed ? ", đã hoàn thành" : ""}`}
-                    onPress={() => startLesson(lesson)}
-                    style={({ pressed }) => [
-                      styles.lessonCard,
-                      {
-                        backgroundColor: completed ? c.successSoft : c.card,
-                        borderColor: completed ? c.success : c.border,
-                        opacity: pressed ? 0.86 : 1,
-                      },
-                    ]}
-                  >
-                    <MaterialSheen tone={completed ? "surface" : "navy"} radius={18} />
-                    <View
-                      style={[
-                        styles.lessonNumber,
+                  <React.Fragment key={lesson.id}>
+                    {startsTopic ? (
+                      <View style={styles.topicGroupHeading}>
+                        <Text
+                          style={[
+                            styles.topicGroupTitle,
+                            { color: c.foreground },
+                          ]}
+                        >
+                          {lesson.topicTitle}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.topicGroupHint,
+                            { color: c.mutedForeground },
+                          ]}
+                        >
+                          {topicLessonCount} bài ·{" "}
+                          {activeCourse.lessons
+                            .filter(
+                              (candidate) =>
+                                candidate.topicId === lesson.topicId,
+                            )
+                            .reduce(
+                              (count, candidate) =>
+                                count + candidate.questions.length,
+                              0,
+                            )}{" "}
+                          từ
+                        </Text>
+                      </View>
+                    ) : null}
+                    <Pressable
+                      testID={`${activeCourse.testIdPrefix}-lesson-${index + 1}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${lesson.topicTitle ? `${lesson.topicTitle}, ` : ""}${lesson.title}, ${lesson.questions.length} câu${completed ? ", đã hoàn thành" : ""}`}
+                      onPress={() => startLesson(lesson)}
+                      style={({ pressed }) => [
+                        styles.lessonCard,
                         {
-                          backgroundColor: completed ? c.success : c.secondary,
+                          backgroundColor: completed ? c.successSoft : c.card,
+                          borderColor: completed ? c.success : c.border,
+                          opacity: pressed ? 0.86 : 1,
                         },
                       ]}
                     >
-                      <Text
+                      <MaterialSheen
+                        tone={completed ? "surface" : "navy"}
+                        radius={18}
+                      />
+                      <View
                         style={[
-                          styles.lessonNumberText,
+                          styles.lessonNumber,
                           {
-                            color: completed
-                              ? c.destructiveForeground
-                              : c.secondaryForeground,
+                            backgroundColor: completed
+                              ? c.success
+                              : c.secondary,
                           },
                         ]}
                       >
-                        {completed ? "✓" : index + 1}
-                      </Text>
-                    </View>
-                    <View style={styles.lessonCopy}>
-                      <Text
-                        style={[
-                          styles.lessonTitle,
-                          { color: completed ? c.successText : c.foreground },
-                        ]}
-                      >
-                        {lesson.title}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.lessonFocus,
-                          { color: c.mutedForeground },
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {lesson.focus}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.lessonCount,
-                          { color: completed ? c.successText : c.primary },
-                        ]}
-                      >
-                        {lesson.questions.length} câu ·{" "}
-                        {completed ? "Đã hoàn thành" : "Chưa học"}
-                      </Text>
-                    </View>
-                    <Feather
-                      name={completed ? "check-circle" : "chevron-right"}
-                      size={22}
-                      color={completed ? c.success : c.primary}
-                    />
-                  </Pressable>
+                        <Text
+                          style={[
+                            styles.lessonNumberText,
+                            {
+                              color: completed
+                                ? c.destructiveForeground
+                                : c.secondaryForeground,
+                            },
+                          ]}
+                        >
+                          {completed ? "✓" : index + 1}
+                        </Text>
+                      </View>
+                      <View style={styles.lessonCopy}>
+                        <Text
+                          style={[
+                            styles.lessonTitle,
+                            { color: completed ? c.successText : c.foreground },
+                          ]}
+                        >
+                          {lesson.title}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.lessonFocus,
+                            { color: c.mutedForeground },
+                          ]}
+                          numberOfLines={2}
+                        >
+                          {lesson.focus}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.lessonCount,
+                            { color: completed ? c.successText : c.primary },
+                          ]}
+                        >
+                          {lesson.questions.length} từ ·{" "}
+                          {completed ? "Đã hoàn thành" : "Chưa học"}
+                        </Text>
+                      </View>
+                      <Feather
+                        name={completed ? "check-circle" : "chevron-right"}
+                        size={22}
+                        color={completed ? c.success : c.primary}
+                      />
+                    </Pressable>
+                  </React.Fragment>
                 );
               })
             )}
@@ -638,9 +691,16 @@ function QuestionView({
           <Text style={[styles.feedbackExample, { color: c.foreground }]}>
             {answer.example}
           </Text>
-          <Text style={[styles.feedbackTranslation, { color: c.mutedForeground }]}>
-            {answer.exampleTranslation}
-          </Text>
+          {answer.exampleTranslation ? (
+            <Text
+              style={[
+                styles.feedbackTranslation,
+                { color: c.mutedForeground },
+              ]}
+            >
+              {answer.exampleTranslation}
+            </Text>
+          ) : null}
         </View>
       ) : null}
       {selectedAnswer !== null ? (
@@ -783,6 +843,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
   sectionHint: { fontFamily: F.r, fontSize: 12 },
+  topicGroupHeading: {
+    marginTop: 8,
+    marginBottom: 1,
+    gap: 3,
+  },
+  topicGroupTitle: { fontFamily: F.b, fontSize: 17, lineHeight: 22 },
+  topicGroupHint: { fontFamily: F.r, fontSize: 11 },
   loading: { alignItems: "center", gap: 9, padding: 22 },
   loadingText: { fontFamily: F.r, fontSize: 13 },
   lessonCard: {
