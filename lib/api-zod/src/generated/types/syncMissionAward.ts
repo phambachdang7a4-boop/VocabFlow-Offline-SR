@@ -10,15 +10,15 @@ export interface SyncMissionAward {
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
   /**
-   * @minLength 1
-   * @maxLength 40
-   * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
-   */
+     * @minLength 1
+     * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
+     */
   missionId: string;
   /**
-   * @minimum 1
-   * @maximum 20
-   */
+     * @minimum 1
+     * @maximum 20
+     */
   stone: number;
   completedAt: Date;
 }

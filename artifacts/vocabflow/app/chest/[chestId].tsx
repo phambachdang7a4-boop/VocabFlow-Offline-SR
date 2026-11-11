@@ -20,6 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
+import { CorviChestArtwork } from "@/components/CorviChestArtwork";
 import { attemptMissionChestUpgrade, getMissionChest } from "@/data/vocabulary";
 import {
   CHEST_RARITIES,
@@ -257,65 +258,71 @@ export default function MissionChestScreen() {
                     glowStyle,
                   ]}
                 />
-                <View
-                  style={[
-                    styles.chestBody,
-                    {
-                      backgroundColor: CHEST_RARITY_COLORS[chest.rarity],
-                      borderColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                    },
-                  ]}
-                >
-                  <View
+                {chest.rarity === "legendary" ? (
+                  <CorviChestArtwork size={128} />
+                ) : (
+                  <>
+                    <View
                     style={[
-                      styles.chestStrap,
+                      styles.chestBody,
                       {
-                        backgroundColor: CHEST_RARITY_ICON_COLORS[chest.rarity],
+                        backgroundColor: CHEST_RARITY_COLORS[chest.rarity],
+                        borderColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
                       },
                     ]}
-                  />
-                  <View
+                    >
+                      <View
+                        style={[
+                          styles.chestStrap,
+                          {
+                            backgroundColor: CHEST_RARITY_ICON_COLORS[chest.rarity],
+                          },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.chestBaseBand,
+                          {
+                            backgroundColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
+                          },
+                        ]}
+                      />
+                      <View
+                        style={[
+                          styles.chestLock,
+                          {
+                            backgroundColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
+                          },
+                        ]}
+                      >
+                        <Feather
+                          name={chest.opened ? "unlock" : "lock"}
+                          size={16}
+                          color={CHEST_RARITY_ICON_COLORS[chest.rarity]}
+                        />
+                      </View>
+                    </View>
+                    <Animated.View
                     style={[
-                      styles.chestBaseBand,
-                      {
-                        backgroundColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                      },
+                        styles.chestLid,
+                        {
+                          backgroundColor: CHEST_RARITY_COLORS[chest.rarity],
+                          borderColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
+                        },
+                        lidStyle,
                     ]}
-                  />
-                  <View
-                    style={[
-                      styles.chestLock,
-                      {
-                        backgroundColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                      },
-                    ]}
-                  >
-                    <Feather
-                      name={chest.opened ? "unlock" : "lock"}
-                      size={16}
-                      color={CHEST_RARITY_ICON_COLORS[chest.rarity]}
-                    />
-                  </View>
-                </View>
-                <Animated.View
-                  style={[
-                    styles.chestLid,
-                    {
-                      backgroundColor: CHEST_RARITY_COLORS[chest.rarity],
-                      borderColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                    },
-                    lidStyle,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.chestLidBand,
-                      {
-                        backgroundColor: CHEST_RARITY_ICON_COLORS[chest.rarity],
-                      },
-                    ]}
-                  />
-                </Animated.View>
+                    >
+                      <View
+                        style={[
+                          styles.chestLidBand,
+                          {
+                            backgroundColor: CHEST_RARITY_ICON_COLORS[chest.rarity],
+                          },
+                        ]}
+                      />
+                    </Animated.View>
+                  </>
+                )}
               </Animated.View>
             </Pressable>
             <Text style={[styles.chestTitle, { color: c.foreground }]}>

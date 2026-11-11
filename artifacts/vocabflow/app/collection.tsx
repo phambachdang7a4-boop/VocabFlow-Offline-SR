@@ -13,6 +13,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
+import { CorviChestArtwork } from "@/components/CorviChestArtwork";
 import {
   craftCollectionArtwork,
   getMissionCollectionOverview,
@@ -122,7 +123,9 @@ export default function CollectionScreen() {
           ]}
         >
           <MaterialSheen tone="gold" radius={16} />
-          {newCraftImage ? (
+          {newCraftArtwork?.illustration === "corvi-chest" ? (
+            <CorviChestArtwork size={58} />
+          ) : newCraftImage ? (
             <Image
               accessibilityLabel={newCraftArtwork?.title}
               source={newCraftImage}
@@ -290,7 +293,9 @@ export default function CollectionScreen() {
                     { backgroundColor: CHEST_RARITY_COLORS[craft.rarity] },
                   ]}
                 >
-                  {artworkImage ? (
+                  {artwork.illustration === "corvi-chest" ? (
+                    <CorviChestArtwork size={104} />
+                  ) : artworkImage ? (
                     <Image
                       accessibilityLabel={artwork.title}
                       source={artworkImage}

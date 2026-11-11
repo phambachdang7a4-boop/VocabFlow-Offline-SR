@@ -18,7 +18,7 @@ Corvi là linh vật chính thức của VocabFlow. Hình pixel-art người dù
 
 **Why:** Người dùng xác nhận hình pixel-art đã gửi chính là linh vật; trước đó họ đã nêu tên Corvi và cách thể hiện bậc rương cao nhất.
 
-**How to apply:** Dùng hình đã gửi làm tham chiếu nhất quán khi thể hiện Corvi; dùng tên Corvi và tông đen Hắc Diệu Thạch cho bậc rương cao nhất.
+**How to apply:** Dùng hình đã gửi làm tham chiếu nhất quán khi thể hiện Corvi: quạ đen đeo kính, mặc áo vest/nơ đỏ trong thư viện. Artwork vector hiện tại cần giữ các dấu hiệu nhận diện này cùng rương viền bạc; dùng tên Corvi và tông đen Hắc Diệu Thạch cho bậc rương cao nhất.
 
 ## Stone từ Combo
 Chỉ chuỗi có ít nhất 20 câu đúng liên tiếp mới nhận Stone; số Stone bằng độ dài chuỗi khi chuỗi kết thúc do trả lời sai hoặc kết thúc/thoát phiên. Chuỗi ngắn hơn 20 câu không nhận Stone. Mỗi chuỗi đủ điều kiện tính riêng, không giới hạn số lần nhận.

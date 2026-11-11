@@ -6,13 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SyncCollectionCraftRarity =
-  (typeof SyncCollectionCraftRarity)[keyof typeof SyncCollectionCraftRarity];
+export type SyncCollectionCraftRarity = typeof SyncCollectionCraftRarity[keyof typeof SyncCollectionCraftRarity];
+
 
 export const SyncCollectionCraftRarity = {
-  common: "common",
-  uncommon: "uncommon",
-  rare: "rare",
-  epic: "epic",
-  legendary: "legendary",
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
 } as const;

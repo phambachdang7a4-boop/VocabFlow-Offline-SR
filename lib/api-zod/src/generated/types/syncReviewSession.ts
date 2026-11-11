@@ -5,18 +5,18 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { SyncReviewSessionGrade } from "./syncReviewSessionGrade";
+import type { SyncReviewSessionGrade } from './syncReviewSessionGrade';
 
 export interface SyncReviewSession {
   /**
-   * @minLength 1
-   * @maxLength 120
-   */
+     * @minLength 1
+     * @maxLength 120
+     */
   sessionId: string;
   /**
-   * @minLength 1
-   * @maxLength 80
-   */
+     * @minLength 1
+     * @maxLength 80
+     */
   deviceId: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;

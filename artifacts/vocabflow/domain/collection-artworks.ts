@@ -6,6 +6,7 @@ export interface CollectionArtwork {
   title: string;
   icon: string;
   imageAssetKey?: string;
+  illustration?: "corvi-chest";
 }
 
 export interface CollectionCraft {
@@ -79,6 +80,13 @@ export const COLLECTION_ARTWORKS: CollectionArtwork[] = [
     title: "Vượt sông",
     icon: "image",
     imageAssetKey: "legendary-crossing",
+  },
+  {
+    id: "legendary-corvi",
+    rarity: "legendary",
+    title: "Corvi · Hắc Diệu Thạch",
+    icon: "feather",
+    illustration: "corvi-chest",
   },
 ];
 

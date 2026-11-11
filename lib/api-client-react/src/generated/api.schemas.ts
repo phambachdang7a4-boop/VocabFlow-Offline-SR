@@ -11,9 +11,9 @@ export interface ApiError {
 
 export interface SyncWord {
   /**
-   * @minLength 1
-   * @maxLength 7000
-   */
+     * @minLength 1
+     * @maxLength 7000
+     */
   syncId: string;
   /** @maxLength 200 */
   term: string;
@@ -26,36 +26,36 @@ export interface SyncWord {
   /** @maxLength 4000 */
   note: string;
   /**
-   * @minimum 1
-   * @nullable
-   */
+     * @minimum 1
+     * @nullable
+     */
   dictionaryEntryId: number | null;
   /**
-   * @minimum 1
-   * @nullable
-   */
+     * @minimum 1
+     * @nullable
+     */
   dictionarySenseId: number | null;
   createdAt: string;
   contentUpdatedAt: string;
   /** @minimum 0 */
   reviewCount: number;
   /**
-   * @minimum 1
-   * @maximum 6
-   */
+     * @minimum 1
+     * @maximum 6
+     */
   level: number;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   learnedOn: string;
   /**
-   * @nullable
-   * @pattern ^\d{4}-\d{2}-\d{2}$
-   */
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
   nextReviewOn: string | null;
   completed: boolean;
   /**
-   * @nullable
-   * @pattern ^\d{4}-\d{2}-\d{2}$
-   */
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
   lastReviewedOn: string | null;
   frozen: boolean;
   progressUpdatedAt: string;
@@ -63,21 +63,21 @@ export interface SyncWord {
 
 export interface SyncDeletedWord {
   /**
-   * @minLength 1
-   * @maxLength 7000
-   */
+     * @minLength 1
+     * @maxLength 7000
+     */
   syncId: string;
   deletedAt: string;
 }
 
-export type SyncCourseProgressStage =
-  (typeof SyncCourseProgressStage)[keyof typeof SyncCourseProgressStage];
+export type SyncCourseProgressStage = typeof SyncCourseProgressStage[keyof typeof SyncCourseProgressStage];
+
 
 export const SyncCourseProgressStage = {
-  flashcard: "flashcard",
-  answer: "answer",
-  selection: "selection",
-  completed: "completed",
+  flashcard: 'flashcard',
+  answer: 'answer',
+  selection: 'selection',
+  completed: 'completed',
 } as const;
 
 export interface SyncCourseProgress {
@@ -110,38 +110,38 @@ export interface SyncReviewStat {
   /** @minimum 0 */
   correctCount: number;
   /**
-   * Number of times the learner started a review session on this device and day.
-   * @minimum 0
-   */
+     * Number of times the learner started a review session on this device and day.
+     * @minimum 0
+     */
   sessionCount?: number;
   updatedAt: string;
 }
 
-export type SyncReviewSessionGrade =
-  (typeof SyncReviewSessionGrade)[keyof typeof SyncReviewSessionGrade];
+export type SyncReviewSessionGrade = typeof SyncReviewSessionGrade[keyof typeof SyncReviewSessionGrade];
+
 
 export const SyncReviewSessionGrade = {
-  "S+": "S+",
-  S: "S",
-  "A+": "A+",
-  A: "A",
-  "A-": "A-",
-  "B+": "B+",
-  B: "B",
-  "B-": "B-",
-  C: "C",
+  'S+': 'S+',
+  S: 'S',
+  'A+': 'A+',
+  A: 'A',
+  'A-': 'A-',
+  'B+': 'B+',
+  B: 'B',
+  'B-': 'B-',
+  C: 'C',
 } as const;
 
 export interface SyncReviewSession {
   /**
-   * @minLength 1
-   * @maxLength 120
-   */
+     * @minLength 1
+     * @maxLength 120
+     */
   sessionId: string;
   /**
-   * @minLength 1
-   * @maxLength 80
-   */
+     * @minLength 1
+     * @maxLength 80
+     */
   deviceId: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
@@ -160,14 +160,14 @@ export interface SyncReviewSession {
 
 export interface SyncReviewComboReward {
   /**
-   * @minLength 1
-   * @maxLength 120
-   */
+     * @minLength 1
+     * @maxLength 120
+     */
   sessionId: string;
   /**
-   * @minLength 1
-   * @maxLength 80
-   */
+     * @minLength 1
+     * @maxLength 80
+     */
   deviceId: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
@@ -182,35 +182,35 @@ export interface SyncMissionAward {
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
   /**
-   * @minLength 1
-   * @maxLength 40
-   * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
-   */
+     * @minLength 1
+     * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
+     */
   missionId: string;
   /**
-   * @minimum 1
-   * @maximum 20
-   */
+     * @minimum 1
+     * @maximum 20
+     */
   stone: number;
   completedAt: string;
 }
 
-export type SyncMissionChestRarity =
-  (typeof SyncMissionChestRarity)[keyof typeof SyncMissionChestRarity];
+export type SyncMissionChestRarity = typeof SyncMissionChestRarity[keyof typeof SyncMissionChestRarity];
+
 
 export const SyncMissionChestRarity = {
-  common: "common",
-  uncommon: "uncommon",
-  rare: "rare",
-  epic: "epic",
-  legendary: "legendary",
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
 } as const;
 
 /**
  * Optional for legacy clients; omitted values use the legacy chest rules.
  */
-export type SyncMissionChestRuleSet =
-  (typeof SyncMissionChestRuleSet)[keyof typeof SyncMissionChestRuleSet];
+export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
+
 
 export const SyncMissionChestRuleSet = {
   NUMBER_1: 1,
@@ -221,27 +221,27 @@ export const SyncMissionChestRuleSet = {
 
 export interface SyncMissionChest {
   /**
-   * @minLength 1
-   * @maxLength 160
-   */
+     * @minLength 1
+     * @maxLength 160
+     */
   chestId: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   day: string;
   /**
-   * @minLength 1
-   * @maxLength 40
-   * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
-   */
+     * @minLength 1
+     * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
+     */
   missionId: string;
   /**
-   * @minimum 1
-   * @maximum 20
-   */
+     * @minimum 1
+     * @maximum 20
+     */
   baseStone: number;
   /**
-   * @minimum 0
-   * @maximum 4
-   */
+     * @minimum 0
+     * @maximum 4
+     */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
   /** Optional for legacy clients; omitted values use the legacy chest rules. */
@@ -250,31 +250,31 @@ export interface SyncMissionChest {
   superUpgrade?: boolean;
   opened: boolean;
   /**
-   * @minimum 1
-   * @maximum 1000
-   * @nullable
-   */
+     * @minimum 1
+     * @maximum 1000
+     * @nullable
+     */
   finalStone: number | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export type SyncCollectionCraftRarity =
-  (typeof SyncCollectionCraftRarity)[keyof typeof SyncCollectionCraftRarity];
+export type SyncCollectionCraftRarity = typeof SyncCollectionCraftRarity[keyof typeof SyncCollectionCraftRarity];
+
 
 export const SyncCollectionCraftRarity = {
-  common: "common",
-  uncommon: "uncommon",
-  rare: "rare",
-  epic: "epic",
-  legendary: "legendary",
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
 } as const;
 
 /**
  * Optional for older clients and backups; omitted values preserve the original 20-piece cost.
  */
-export type SyncCollectionCraftPieceCost =
-  (typeof SyncCollectionCraftPieceCost)[keyof typeof SyncCollectionCraftPieceCost];
+export type SyncCollectionCraftPieceCost = typeof SyncCollectionCraftPieceCost[keyof typeof SyncCollectionCraftPieceCost];
+
 
 export const SyncCollectionCraftPieceCost = {
   NUMBER_20: 20,
@@ -283,17 +283,17 @@ export const SyncCollectionCraftPieceCost = {
 
 export interface SyncCollectionCraft {
   /**
-   * @minLength 1
-   * @maxLength 120
-   */
+     * @minLength 1
+     * @maxLength 120
+     */
   craftId: string;
   rarity: SyncCollectionCraftRarity;
   /** @minimum 1 */
   craftIndex: number;
   /**
-   * @minLength 1
-   * @maxLength 80
-   */
+     * @minLength 1
+     * @maxLength 80
+     */
   artworkId: string;
   craftedAt: string;
   /** Optional for older clients and backups; omitted values preserve the original 20-piece cost. */
@@ -302,9 +302,9 @@ export interface SyncCollectionCraft {
 
 export interface UserSyncSnapshot {
   /**
-   * Account data generation used to prevent stale devices from restoring older data.
-   * @minimum 0
-   */
+     * Account data generation used to prevent stale devices from restoring older data.
+     * @minimum 0
+     */
   revision?: number;
   /** @maxItems 10000 */
   words: SyncWord[];
@@ -335,3 +335,4 @@ export interface DictionaryAssetError {
 export interface HealthStatus {
   status: string;
 }
+

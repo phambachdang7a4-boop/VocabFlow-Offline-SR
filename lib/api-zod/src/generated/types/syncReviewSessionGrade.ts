@@ -6,17 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SyncReviewSessionGrade =
-  (typeof SyncReviewSessionGrade)[keyof typeof SyncReviewSessionGrade];
+export type SyncReviewSessionGrade = typeof SyncReviewSessionGrade[keyof typeof SyncReviewSessionGrade];
+
 
 export const SyncReviewSessionGrade = {
-  "S+": "S+",
-  S: "S",
-  "A+": "A+",
-  A: "A",
-  "A-": "A-",
-  "B+": "B+",
-  B: "B",
-  "B-": "B-",
-  C: "C",
+  'S+': 'S+',
+  S: 'S',
+  'A+': 'A+',
+  A: 'A',
+  'A-': 'A-',
+  'B+': 'B+',
+  B: 'B',
+  'B-': 'B-',
+  C: 'C',
 } as const;
