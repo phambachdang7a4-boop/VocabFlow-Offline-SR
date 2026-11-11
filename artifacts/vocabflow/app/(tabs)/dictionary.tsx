@@ -194,6 +194,14 @@ export default function DictionaryScreen() {
         <Text style={[styles.loadingBody, { color: c.dictMuted }]}>
           Corvi sẵn sàng tra từ cho bạn. Gõ vài chữ cái đầu; chỉ những nghĩa bạn chọn mới được lưu vào sổ.
         </Text>
+        <Button
+          testID="dictionary-open-extract"
+          label="Trích từ vựng · Mắt Quạ"
+          icon="eye"
+          variant="ghost"
+          onPress={() => router.push('/extract')}
+          style={{ marginTop: 4 }}
+        />
       </View>
     </ScrollView>
   );

@@ -73,6 +73,7 @@ function RootStack() {
       <Stack.Screen name="chest/[chestId]" options={{ title: "Mở rương" }} />
       <Stack.Screen name="word" options={{ title: "Từ vựng" }} />
       <Stack.Screen name="dictionary-entry" options={{ title: "Mục từ" }} />
+      <Stack.Screen name="extract" options={{ title: "Mắt Quạ" }} />
       <Stack.Screen
         name="dictionary-sources"
         options={{ title: "Nguồn từ điển" }}

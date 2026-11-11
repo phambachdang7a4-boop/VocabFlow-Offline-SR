@@ -5,6 +5,12 @@ description: Yêu cầu sản phẩm và cách triển khai do người dùng qu
 
 VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, offline-first; không bắt buộc đăng nhập. Khách dùng SQLite cục bộ, còn đăng nhập là tùy chọn để đồng bộ thiết bị; không gọi API trả phí. SQLite cục bộ là nguồn dữ liệu chính cho từ và tiến độ. Không thêm dữ liệu mẫu hay từ khởi tạo. Giao diện tiếng Việt.
 
+Với Mắt Quạ, dán/đọc văn bản và tra từ phải dùng dữ liệu cục bộ, không gọi dịch vụ mạng. Từ được thêm đi qua luồng lưu hiện có như Tra Từ/Khóa học; nếu tài khoản đã đăng nhập và có mạng, đồng bộ tài khoản hiện có vẫn được phép.
+
+**Why:** Người dùng chọn giữ cách lưu và đồng bộ như khi thêm từ trong Tra Từ hoặc Khóa học, sau khi biết rằng lưu trực tuyến có thể kích hoạt đồng bộ cloud.
+
+**How to apply:** Không thêm API cho bước trích xuất hay tra nghĩa. Dùng hàm lưu từ hiện có và không tạo cơ chế đồng bộ riêng cho các từ này.
+
 Ưu tiên lấy ví dụ nguyên văn từ SQLite từ điển offline. Khi người dùng yêu cầu, có thể biên soạn ví dụ riêng cho khóa học nếu từ điển thiếu ví dụ phù hợp; không tự ghi nội dung khóa học vào từ điển gốc nếu chưa được yêu cầu.
 
 Từ đã lưu chỉ được xem, đóng băng/bỏ đóng băng hoặc xóa; không cho người dùng sửa nội dung. Form thêm từ không có trường ghi chú. Ghi chú cũ được giữ trong dữ liệu, không xóa khi ẩn trường.

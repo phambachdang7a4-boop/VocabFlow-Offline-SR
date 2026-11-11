@@ -1,10 +1,12 @@
 import { ENGLISH_STOP_WORDS } from "./english-stopwords";
 
 export const MAX_EXTRACTION_TEXT_CHARACTERS = 1_000_000;
+export const MAX_EXTRACTION_TEXT_BYTES = 1_048_576;
+export const FREE_WORD_LIMIT = 100;
 const SENTENCE_PATTERN = /[^.!?\r\n]+(?:[.!?]+)?|[.!?]+/gu;
 const TOKEN_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
 const WORK_BATCH_SIZE = 250;
-const LOOKUP_BATCH_SIZE = 40;
+const LOOKUP_BATCH_SIZE = 120;
 
 export interface ExtractionDictionarySense {
   id: number;
@@ -39,6 +41,20 @@ export interface ExtractionProgress {
 export type ExtractionLookup = (
   candidates: readonly string[],
 ) => Promise<ReadonlyMap<string, ExtractionDictionaryEntry>>;
+
+export function getFreeWordSlots(savedWordCount: number): number {
+  return Math.max(0, FREE_WORD_LIMIT - Math.max(0, savedWordCount));
+}
+
+export function getAddableWordCount(
+  savedWordCount: number,
+  selectedWordCount: number,
+): number {
+  return Math.min(
+    getFreeWordSlots(savedWordCount),
+    Math.max(0, selectedWordCount),
+  );
+}
 
 interface RawWordCount {
   count: number;
@@ -104,11 +120,13 @@ export function candidateLemmas(value: string): string[] {
     const stem = token.slice(0, -2);
     addDoubledConsonantCandidate(candidates, stem);
     add(`${stem}e`);
+    if (stem.endsWith("i")) add(`${stem.slice(0, -1)}y`);
   }
   if (token.endsWith("est") && token.length > 5) {
     const stem = token.slice(0, -3);
     addDoubledConsonantCandidate(candidates, stem);
     add(`${stem}e`);
+    if (stem.endsWith("i")) add(`${stem.slice(0, -1)}y`);
   }
   if (token.endsWith("ly") && token.length > 4) {
     const stem = token.slice(0, -2);
@@ -126,6 +144,19 @@ export function candidateLemmas(value: string): string[] {
 
 function yieldToUi(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+export function utf8ByteLength(value: string): number {
+  let bytes = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const codePoint = value.codePointAt(index) ?? 0;
+    if (codePoint > 0xffff) index += 1;
+    if (codePoint <= 0x7f) bytes += 1;
+    else if (codePoint <= 0x7ff) bytes += 2;
+    else if (codePoint <= 0xffff) bytes += 3;
+    else bytes += 4;
+  }
+  return bytes;
 }
 
 function report(
@@ -153,7 +184,10 @@ export async function extractVocabularyFromText(
   } = {},
 ): Promise<ExtractedVocabularyTerm[]> {
   if (!sourceText.trim()) throw new Error("Dán văn bản hoặc chọn tệp TXT trước.");
-  if (sourceText.length > MAX_EXTRACTION_TEXT_CHARACTERS) {
+  if (
+    sourceText.length > MAX_EXTRACTION_TEXT_CHARACTERS ||
+    utf8ByteLength(sourceText) > MAX_EXTRACTION_TEXT_BYTES
+  ) {
     throw new Error("Văn bản quá lớn. Giới hạn là 1 MB.");
   }
 
@@ -161,10 +195,28 @@ export async function extractVocabularyFromText(
   const sentenceMatcher = sourceText.matchAll(SENTENCE_PATTERN);
   let tokenizedCount = 0;
   let lastTokenizedProgress = -1;
+  let lastYieldedPosition = 0;
 
   for (const sentenceMatch of sentenceMatcher) {
     const sentence = sentenceMatch[0].trim();
-    if (!sentence) continue;
+    const sentenceEnd =
+      (sentenceMatch.index ?? 0) + sentenceMatch[0].length;
+    if (!sentence) {
+      if (sentenceEnd - lastYieldedPosition >= 32_000) {
+        const percent = (sentenceEnd / sourceText.length) * 35;
+        report(
+          options.onProgress,
+          "tokenizing",
+          percent,
+          sentenceEnd,
+          sourceText.length,
+        );
+        lastTokenizedProgress = Math.floor(percent);
+        lastYieldedPosition = sentenceEnd;
+        await yieldToUi();
+      }
+      continue;
+    }
     TOKEN_PATTERN.lastIndex = 0;
     for (const tokenMatch of sentence.matchAll(TOKEN_PATTERN)) {
       const token = tokenMatch[0].toLocaleLowerCase("en");
@@ -183,7 +235,21 @@ export async function extractVocabularyFromText(
           lastTokenizedProgress = Math.floor(percent);
         }
         await yieldToUi();
+        lastYieldedPosition = position;
       }
+    }
+    if (sentenceEnd - lastYieldedPosition >= 32_000) {
+      const percent = (sentenceEnd / sourceText.length) * 35;
+      report(
+        options.onProgress,
+        "tokenizing",
+        percent,
+        sentenceEnd,
+        sourceText.length,
+      );
+      lastTokenizedProgress = Math.floor(percent);
+      lastYieldedPosition = sentenceEnd;
+      await yieldToUi();
     }
   }
   report(options.onProgress, "tokenizing", 35, sourceText.length, sourceText.length);
@@ -231,7 +297,11 @@ export async function extractVocabularyFromText(
     await yieldToUi();
   }
 
-  const existing = options.existingTerms ?? new Set<string>();
+  const existing = new Set(
+    [...(options.existingTerms ?? [])].map((term) =>
+      term.normalize("NFKC").trim().toLocaleLowerCase("en"),
+    ),
+  );
   const results = [...resolved.values()].filter(
     (result) =>
       !options.hideExisting ||

@@ -20,7 +20,8 @@
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
     "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
-    "check:conjunction-course": "node scripts/check-conjunction-course.cjs && node scripts/check-conjunction-course-ui.cjs"
+    "check:conjunction-course": "node scripts/check-conjunction-course.cjs && node scripts/check-conjunction-course-ui.cjs",
+    "check:vocabulary-extraction": "node scripts/check-vocabulary-extraction.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
