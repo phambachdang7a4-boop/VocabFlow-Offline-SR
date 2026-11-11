@@ -641,7 +641,7 @@ function adapter(filename, readOnly = false) {
     revision.example_revision,
     `${exampleUpdates.DICTIONARY_EXAMPLE_REVISION}+${localAdditionData.LOCAL_DICTIONARY_ADDITIONS_REVISION}`,
   );
-  for (const entry of localAdditionData.LOCAL_DICTIONARY_ADDITIONS) {
+  for (const entry of localAdditionData.ALL_LOCAL_DICTIONARY_ADDITIONS) {
     const result = await repo.searchDictionary(entry.term);
     assert.ok(
       result.items.some((item) => item.term === entry.term),

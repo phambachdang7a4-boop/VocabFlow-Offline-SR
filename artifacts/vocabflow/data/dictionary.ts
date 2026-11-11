@@ -14,7 +14,7 @@ import {
   DICTIONARY_EXAMPLE_UPDATES,
 } from "../domain/dictionary-example-updates";
 import {
-  LOCAL_DICTIONARY_ADDITIONS,
+  ALL_LOCAL_DICTIONARY_ADDITIONS,
   LOCAL_DICTIONARY_ADDITIONS_REVISION,
 } from "../domain/dictionary-local-additions";
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
@@ -169,7 +169,7 @@ async function initialize(
       );
       if (
         count?.count !==
-        DICTIONARY.wordCount + LOCAL_DICTIONARY_ADDITIONS.length
+        DICTIONARY.wordCount + ALL_LOCAL_DICTIONARY_ADDITIONS.length
       )
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       await db.withTransactionAsync(async () => {
@@ -198,7 +198,7 @@ async function initialize(
       );
       if (
         count?.count !==
-        DICTIONARY.wordCount + LOCAL_DICTIONARY_ADDITIONS.length
+        DICTIONARY.wordCount + ALL_LOCAL_DICTIONARY_ADDITIONS.length
       )
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       await db.runAsync(

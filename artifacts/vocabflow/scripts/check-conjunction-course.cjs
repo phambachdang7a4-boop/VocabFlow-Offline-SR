@@ -98,18 +98,22 @@ async function checkDictionaryOverlay() {
        ORDER BY w.word`,
     )
     .all();
-  assert.equal(rows.length, 18, "Overlay adds each phrase exactly once.");
+  assert.equal(
+    rows.length,
+    additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
+    "Overlay adds every local dictionary entry exactly once.",
+  );
   assert.equal(
     new Set(rows.map((row) => row.word)).size,
-    additions.LOCAL_DICTIONARY_ADDITIONS.length,
+    additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
   );
-  for (const entry of additions.LOCAL_DICTIONARY_ADDITIONS) {
+  for (const entry of additions.ALL_LOCAL_DICTIONARY_ADDITIONS) {
     const row = rows.find((item) => item.word === entry.term);
     assert.ok(row, `${entry.term} exists in the offline dictionary.`);
     assert.equal(row.definition, entry.definition);
     assert.equal(row.example, entry.example);
-    assert.equal(row.pos, "conj");
-    assert.equal(row.subPos, "subordinating");
+    assert.equal(row.pos, entry.pos);
+    assert.equal(row.subPos, entry.subPos);
     assert.equal(row.langCode, "en");
   }
   assert.equal(dictionaryDomain.dictionaryPartOfSpeech("conj"), "conjunction");
@@ -128,6 +132,20 @@ async function checkDictionaryOverlay() {
     },
   );
   assert.match(draft.note, /biên soạn cho VocabFlow/);
+  const flyAddition = additions.LOCAL_DICTIONARY_WORD_ADDITIONS[0];
+  const flyDraft = dictionaryDomain.dictionaryDraft(
+    { id: 900002, term: flyAddition.term, pronunciations: [] },
+    {
+      id: 900002,
+      definition: flyAddition.definition,
+      pos: flyAddition.pos,
+      subPos: flyAddition.subPos,
+      example: flyAddition.example,
+    },
+  );
+  assert.equal(flyDraft.meaning, `(v) ${flyAddition.definition}`);
+  assert.equal(flyDraft.example, "The birds have flown south for the winter.");
+  assert.match(flyDraft.note, /biên soạn cho VocabFlow/);
   sqlite.close();
 }
 

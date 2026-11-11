@@ -3,11 +3,11 @@ export interface LocalDictionaryAddition {
   definition: string;
   example: string;
   exampleTranslation: string;
-  pos: "conj";
-  subPos: "subordinating";
+  pos: string;
+  subPos: string | null;
 }
 
-export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "subordinators-v1";
+export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v2";
 
 export const LOCAL_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] = [
   {
@@ -154,4 +154,21 @@ export const LOCAL_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] = [
     pos: "conj",
     subPos: "subordinating",
   },
+];
+
+export const LOCAL_DICTIONARY_WORD_ADDITIONS: LocalDictionaryAddition[] = [
+  {
+    term: "fly",
+    definition:
+      "Bay; di chuyển trong không trung bằng cánh hoặc bằng phương tiện bay. Quá khứ: flew; phân từ quá khứ: flown.",
+    example: "The birds have flown south for the winter.",
+    exampleTranslation: "Đàn chim đã bay về phương nam để tránh mùa đông.",
+    pos: "v",
+    subPos: null,
+  },
+];
+
+export const ALL_LOCAL_DICTIONARY_ADDITIONS: readonly LocalDictionaryAddition[] = [
+  ...LOCAL_DICTIONARY_ADDITIONS,
+  ...LOCAL_DICTIONARY_WORD_ADDITIONS,
 ];

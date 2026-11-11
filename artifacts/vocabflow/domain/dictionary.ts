@@ -1,5 +1,5 @@
 import type { WordInput } from '../data/types';
-import { LOCAL_DICTIONARY_ADDITIONS } from './dictionary-local-additions';
+import { ALL_LOCAL_DICTIONARY_ADDITIONS } from './dictionary-local-additions';
 
 export const DICTIONARY = {
   commit: '388adc0826300912e5b0311c089e0e70494b065f',
@@ -74,7 +74,7 @@ export function exampleSegments(example: string, term: string): { text: string; 
 
 export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
   const kind = [sense.pos, sense.subPos].filter(Boolean).join(' · ');
-  const isLocalAddition = LOCAL_DICTIONARY_ADDITIONS.some(
+  const isLocalAddition = ALL_LOCAL_DICTIONARY_ADDITIONS.some(
     (item) => item.term === entry.term,
   );
   return {
