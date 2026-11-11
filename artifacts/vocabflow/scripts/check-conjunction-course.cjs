@@ -19,6 +19,9 @@ const course = loadTs(
 const linkingAdverbCourse = loadTs(
   join(__dirname, "../domain/linking-adverb-course.ts"),
 );
+const ieltsTopicCourse = loadTs(
+  join(__dirname, "../domain/ielts-topic-course.ts"),
+);
 const dictionaryDomain = loadDictionaryDomain();
 const { applyLocalDictionaryAdditions } = loadTs(
   join(__dirname, "../data/dictionary-local-additions.ts"),
@@ -166,6 +169,47 @@ async function checkCourseContentAndProgress() {
       assert.ok(
         linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES[question.term],
       );
+    }
+  }
+
+  const ieltsTerms = ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.flatMap(
+    (topic) => topic.terms,
+  );
+  const ieltsQuestions = ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.flatMap(
+    (lesson) => lesson.questions,
+  );
+  assert.equal(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_TITLE,
+    "Từ vựng IELTS theo chủ đề",
+  );
+  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 5);
+  assert.equal(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length, 5);
+  assert.equal(ieltsTerms.length, 25);
+  assert.equal(new Set(ieltsTerms).size, 25);
+  assert.deepEqual(
+    [...ieltsQuestions.map((question) => question.term)].sort(),
+    [...ieltsTerms].sort(),
+    "Every curated IELTS word has one exercise.",
+  );
+  assert.deepEqual(
+    Object.keys(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).sort(),
+    [...ieltsTerms].sort(),
+    "Every curated IELTS word has course feedback content.",
+  );
+  assert.equal(
+    Object.values(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).filter(
+      (entry) => entry.dictionarySource === "authored",
+    ).length,
+    1,
+    "Only a missing offline dictionary entry is authored.",
+  );
+  for (const lesson of ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS) {
+    assert.equal(lesson.questions.length, 5);
+    for (const question of lesson.questions) {
+      assert.ok(question.prompt.includes("_____"));
+      assert.equal(new Set(question.choices).size, 4);
+      assert.ok(question.choices.includes(question.term));
+      assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES[question.term]);
     }
   }
 

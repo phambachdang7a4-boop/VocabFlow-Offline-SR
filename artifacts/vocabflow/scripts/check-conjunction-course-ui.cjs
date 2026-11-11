@@ -10,6 +10,9 @@ const courseDomain = loadTs(join(__dirname, "../domain/conjunction-course.ts"), 
 const linkingAdverbDomain = loadTs(
   join(__dirname, "../domain/linking-adverb-course.ts"),
 );
+const ieltsTopicDomain = loadTs(
+  join(__dirname, "../domain/ielts-topic-course.ts"),
+);
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});
   return { type, props: { ...props, children } };
@@ -74,6 +77,7 @@ function mount() {
     },
     "@/domain/conjunction-course": courseDomain,
     "@/domain/linking-adverb-course": linkingAdverbDomain,
+    "@/domain/ielts-topic-course": ieltsTopicDomain,
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
@@ -156,7 +160,25 @@ function mount() {
     await screen.settle();
   }
   assert.ok(screen.byId("linking-adverb-lesson-complete"));
-  console.log("Course catalog and both lesson flows passed.");
+  screen.byId("linking-adverb-return").props.onPress();
+  screen.byId("return-to-course-list").props.onPress();
+  assert.ok(screen.byId("ielts-course-card"));
+  screen.byId("ielts-course-card").props.onPress();
+  const ieltsLesson = ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS[0];
+  screen.byId("ielts-lesson-1").props.onPress();
+  for (let index = 0; index < ieltsLesson.questions.length; index++) {
+    const question = ieltsLesson.questions[index];
+    assert.deepEqual(
+      screen.byId("ielts-question-prompt").props.children,
+      [question.prompt],
+    );
+    screen.byId(`ielts-choice-${question.term}`).props.onPress();
+    assert.ok(screen.byId("ielts-answer-feedback"));
+    screen.byId("ielts-next").props.onPress();
+    await screen.settle();
+  }
+  assert.ok(screen.byId("ielts-lesson-complete"));
+  console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

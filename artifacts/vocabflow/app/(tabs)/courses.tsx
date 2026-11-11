@@ -25,6 +25,12 @@ import {
   LINKING_ADVERB_COURSE_LESSONS,
   LINKING_ADVERB_COURSE_TITLE,
 } from "@/domain/linking-adverb-course";
+import {
+  IELTS_TOPIC_COURSE_ENTRIES,
+  IELTS_TOPIC_COURSE_ID,
+  IELTS_TOPIC_COURSE_LESSONS,
+  IELTS_TOPIC_COURSE_TITLE,
+} from "@/domain/ielts-topic-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
 import { useColors } from "@/hooks/useColors";
 
@@ -77,6 +83,16 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     entriesByTerm: new Map(Object.entries(LINKING_ADVERB_COURSE_ENTRIES)),
     icon: "align-left",
     testIdPrefix: "linking-adverb",
+  },
+  {
+    id: IELTS_TOPIC_COURSE_ID,
+    title: IELTS_TOPIC_COURSE_TITLE,
+    description:
+      "Học 25 từ IELTS qua 5 chủ đề quen thuộc: giáo dục, môi trường, công nghệ, sức khỏe và xã hội.",
+    lessons: IELTS_TOPIC_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
+    icon: "globe",
+    testIdPrefix: "ielts",
   },
 ];
 
