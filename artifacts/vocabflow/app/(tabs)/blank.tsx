@@ -18,20 +18,16 @@ import {
   getDailyMissionOverview,
   type DailyMissionOverview,
 } from "@/data/vocabulary";
+import { DAILY_MISSION_CHEST_RARITY } from "@/domain/daily-missions";
 import {
   CHEST_RARITY_COLORS,
   CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_LABELS,
+  CHEST_RARITY_TEXT_COLORS,
   chestStoneReward,
   maxChestUpgradeAttempts,
   type MissionChest,
 } from "@/domain/mission-chests";
-
-const MISSION_REWARD_RARITY = {
-  1: "common",
-  2: "uncommon",
-  3: "rare",
-} as const;
 
 export default function BlankScreen() {
   const c = useColors();
@@ -134,7 +130,7 @@ export default function BlankScreen() {
         ) : (
           overview?.missions.map((mission) => {
             const finished = mission.rewarded;
-            const rewardRarity = MISSION_REWARD_RARITY[mission.level];
+            const rewardRarity = DAILY_MISSION_CHEST_RARITY[mission.level];
             const iconName =
               mission.type === "review"
                 ? "layers"
@@ -228,9 +224,20 @@ export default function BlankScreen() {
                         backgroundColor: finished
                           ? c.success
                           : CHEST_RARITY_COLORS[rewardRarity],
+                        borderColor: finished
+                          ? c.success
+                          : CHEST_RARITY_TEXT_COLORS[rewardRarity],
+                        shadowColor: finished
+                          ? c.success
+                          : CHEST_RARITY_COLORS[rewardRarity],
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.24,
+                        shadowRadius: 4,
+                        elevation: 3,
                       },
                     ]}
                   >
+                    {!finished ? <MaterialSheen radius={15} /> : null}
                     <Feather
                       name={finished ? "check" : "gift"}
                       size={finished ? 21 : 27}
@@ -502,8 +509,11 @@ const styles = StyleSheet.create({
   missionTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   missionDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   rewardPill: {
+    position: "relative",
+    overflow: "hidden",
     width: 48,
     height: 48,
+    borderWidth: 1.5,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",

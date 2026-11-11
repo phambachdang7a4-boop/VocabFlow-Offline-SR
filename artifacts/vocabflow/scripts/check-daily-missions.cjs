@@ -2,8 +2,31 @@ const assert = require("node:assert/strict");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 
-const { evaluateDailyMissions, isDailyReviewGradeQualified } = loadTs(
-  join(__dirname, "../domain/daily-missions.ts"),
+const {
+  DAILY_MISSION_CHEST_RARITY,
+  evaluateDailyMissions,
+  isDailyReviewGradeQualified,
+} = loadTs(join(__dirname, "../domain/daily-missions.ts"));
+const {
+  CHEST_RARITY_COLORS,
+  CHEST_RARITY_LABELS,
+  CHEST_RARITY_TEXT_COLORS,
+} = loadTs(join(__dirname, "../domain/mission-chests.ts"));
+
+assert.deepEqual(
+  [1, 2, 3].map((level) => CHEST_RARITY_LABELS[DAILY_MISSION_CHEST_RARITY[level]]),
+  ["Copper", "Silver", "Gold"],
+  "Daily mission levels use their matching chest tiers.",
+);
+assert.equal(
+  new Set([1, 2, 3].map((level) => CHEST_RARITY_COLORS[DAILY_MISSION_CHEST_RARITY[level]])).size,
+  3,
+  "Each mission chest tier has a distinct face color.",
+);
+assert.equal(
+  new Set([1, 2, 3].map((level) => CHEST_RARITY_TEXT_COLORS[DAILY_MISSION_CHEST_RARITY[level]])).size,
+  3,
+  "Each mission chest tier has a distinct metallic edge.",
 );
 
 const dates = [

@@ -4,6 +4,12 @@ export type DailyMissionLevel = 1 | 2 | 3;
 export type DailyReviewGrade =
   "S+" | "S" | "A+" | "A" | "A-" | "B+" | "B" | "B-" | "C";
 
+export const DAILY_MISSION_CHEST_RARITY = {
+  1: "common",
+  2: "uncommon",
+  3: "rare",
+} as const;
+
 export interface DailyMissionActivity {
   reviewedCount: number;
   addedWordCount: number;
