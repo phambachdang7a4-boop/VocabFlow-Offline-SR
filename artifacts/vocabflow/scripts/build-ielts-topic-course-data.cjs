@@ -895,6 +895,56 @@ function applyCourseDefinitionOverrides(entries) {
   }
 }
 
+function validateCourseDataAgainstAuthoredOverrides(courseData) {
+  const entries = courseData?.entries;
+  const errors = [];
+
+  if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
+    throw new Error("IELTS course data is missing its entries object.");
+  }
+
+  for (const [term, expectedDefinition] of Object.entries(
+    COURSE_DEFINITION_OVERRIDES,
+  )) {
+    const entry = entries[term];
+    if (!entry) {
+      errors.push(`- ${term}: missing authored IELTS definition`);
+      continue;
+    }
+    if (entry.definition !== expectedDefinition) {
+      errors.push(`- ${term}: authored IELTS definition changed`);
+    }
+    if (entry.dictionarySource !== "authored") {
+      errors.push(`- ${term}: definition is not marked as authored`);
+    }
+  }
+
+  for (const [term, expectedExample] of Object.entries(
+    COURSE_EXAMPLE_OVERRIDES,
+  )) {
+    const entry = entries[term];
+    if (!entry) {
+      errors.push(`- ${term}: missing authored IELTS example`);
+      continue;
+    }
+    if (entry.example !== expectedExample.example) {
+      errors.push(`- ${term}: authored IELTS example changed`);
+    }
+    if (entry.exampleTranslation !== expectedExample.exampleTranslation) {
+      errors.push(`- ${term}: authored IELTS example translation changed`);
+    }
+    if (entry.exampleSource !== "authored") {
+      errors.push(`- ${term}: example is not marked as authored`);
+    }
+  }
+
+  if (errors.length) {
+    throw new Error(
+      `IELTS course data does not match builder corrections:\n${errors.join("\n")}`,
+    );
+  }
+}
+
 function rowScore(row, term) {
   const exampleWords = row.example.match(/[A-Za-z]+/g)?.length ?? 0;
   const posScore = normalizePos(row.pos) === "other" ? 0 : 4;
@@ -1147,6 +1197,7 @@ function main() {
       })),
       entries,
     };
+    validateCourseDataAgainstAuthoredOverrides(output);
     writeFileSync(OUTPUT_PATH, `${JSON.stringify(output)}\n`, "utf8");
     console.log(
       `Built IELTS course data: ${totalWords} unique words across ${topics.length} topics.`,
@@ -1169,4 +1220,7 @@ module.exports = {
   usableExample,
   validateCourseExamples,
   applyCourseDefinitionOverrides,
+  validateCourseDataAgainstAuthoredOverrides,
+  COURSE_DEFINITION_OVERRIDES,
+  COURSE_EXAMPLE_OVERRIDES,
 };
