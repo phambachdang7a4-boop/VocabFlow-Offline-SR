@@ -64,9 +64,52 @@ async function checkLemmasAndAggregation() {
   assert.ok(extraction.candidateLemmas("happier").includes("happy"));
   assert.ok(extraction.candidateLemmas("happiest").includes("happy"));
   assert.ok(extraction.candidateLemmas("can't").includes("can't"));
+  assert.deepEqual(extraction.candidateLemmas("went").slice(0, 2), ["went", "go"]);
+  assert.deepEqual(extraction.candidateLemmas("children").slice(0, 2), ["children", "child"]);
+  assert.deepEqual(extraction.candidateLemmas("better").slice(0, 2), ["better", "good"]);
+  assert.ok(!extraction.candidateLemmas("saw").includes("see"), "Ambiguous saw is not guessed as see.");
+  assert.ok(!extraction.candidateLemmas("left").includes("leave"), "Ambiguous left is not guessed as leave.");
+  assert.ok(!extraction.candidateLemmas("rose").includes("rise"), "Ambiguous rose is not guessed as rise.");
+  assert.deepEqual(extraction.candidateLemmas("constructor"), ["constructor"]);
   assert.equal(extraction.utf8ByteLength("English"), 7);
   assert.equal(extraction.utf8ByteLength("học"), 5);
   assert.equal(extraction.utf8ByteLength("Corvi 🐦"), 10);
+}
+
+async function checkIrregularFormsAndExactMatchPriority() {
+  const entries = new Map([
+    ["go", makeEntry(11, "go", "Đi", "v")],
+    ["child", makeEntry(12, "child", "Trẻ em")],
+    ["good", makeEntry(13, "good", "Tốt", "a")],
+    ["see", makeEntry(15, "see", "Nhìn thấy", "v")],
+    ["leave", makeEntry(16, "leave", "Rời đi", "v")],
+    ["rise", makeEntry(17, "rise", "Mọc lên", "v")],
+  ]);
+  const lookup = async (candidates) =>
+    new Map(candidates.flatMap((candidate) => {
+      const entry = entries.get(candidate);
+      return entry ? [[candidate, entry]] : [];
+    }));
+
+  const result = await extraction.extractVocabularyFromText(
+    "She went home. The children went home. A better plan. Saw the sunrise, left a rose.",
+    lookup,
+  );
+  const byTerm = new Map(result.map((item) => [item.term, item]));
+  assert.equal(byTerm.get("go").count, 2, "Irregular verb forms group under go.");
+  assert.equal(byTerm.get("child").count, 1, "Irregular plural resolves to child.");
+  assert.equal(byTerm.get("good").count, 1, "Irregular comparative resolves to good.");
+  assert.equal(byTerm.has("see"), false, "Ambiguous saw is not assigned to see.");
+  assert.equal(byTerm.has("leave"), false, "Ambiguous left is not assigned to leave.");
+  assert.equal(byTerm.has("rise"), false, "Ambiguous rose is not assigned to rise.");
+
+  entries.set("went", makeEntry(14, "went", "Đã đi", "v"));
+  const exact = await extraction.extractVocabularyFromText("went.", lookup);
+  assert.equal(
+    exact[0].term,
+    "went",
+    "An exact dictionary entry takes priority over its irregular root.",
+  );
 }
 
 async function checkSavedWordsProgressAndInputLimits() {
@@ -203,6 +246,7 @@ async function main() {
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size >= 290);
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size <= 330);
   await checkLemmasAndAggregation();
+  await checkIrregularFormsAndExactMatchPriority();
   await checkSavedWordsProgressAndInputLimits();
   await checkLocalDictionaryLookup();
   checkScreenWiring();

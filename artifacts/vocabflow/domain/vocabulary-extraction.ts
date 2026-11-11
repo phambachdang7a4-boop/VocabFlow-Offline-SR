@@ -7,6 +7,83 @@ const TOKEN_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
 const WORK_BATCH_SIZE = 250;
 const LOOKUP_BATCH_SIZE = 120;
 
+const IRREGULAR_LEMMAS: Readonly<Record<string, string>> = {
+  went: "go",
+  gone: "go",
+  ran: "run",
+  did: "do",
+  does: "do",
+  done: "do",
+  had: "have",
+  has: "have",
+  made: "make",
+  took: "take",
+  taken: "take",
+  came: "come",
+  got: "get",
+  gotten: "get",
+  knew: "know",
+  known: "know",
+  gave: "give",
+  given: "give",
+  wrote: "write",
+  written: "write",
+  ate: "eat",
+  eaten: "eat",
+  drank: "drink",
+  drunk: "drink",
+  spoke: "speak",
+  spoken: "speak",
+  broke: "break",
+  broken: "break",
+  chose: "choose",
+  chosen: "choose",
+  drove: "drive",
+  driven: "drive",
+  flew: "fly",
+  flown: "fly",
+  grew: "grow",
+  grown: "grow",
+  threw: "throw",
+  thrown: "throw",
+  began: "begin",
+  begun: "begin",
+  sang: "sing",
+  sung: "sing",
+  fell: "fall",
+  fallen: "fall",
+  built: "build",
+  bought: "buy",
+  brought: "bring",
+  caught: "catch",
+  taught: "teach",
+  thought: "think",
+  slept: "sleep",
+  kept: "keep",
+  lost: "lose",
+  paid: "pay",
+  sold: "sell",
+  told: "tell",
+  won: "win",
+  held: "hold",
+  met: "meet",
+  understood: "understand",
+  stood: "stand",
+  sat: "sit",
+  children: "child",
+  people: "person",
+  men: "man",
+  women: "woman",
+  feet: "foot",
+  teeth: "tooth",
+  mice: "mouse",
+  geese: "goose",
+  better: "good",
+  best: "good",
+  worse: "bad",
+  worst: "bad",
+};
+
 export interface ExtractionDictionarySense {
   id: number;
   definition: string;
@@ -66,11 +143,19 @@ function addDoubledConsonantCandidate(
   }
 }
 
-/** Exact spelling is always tried first; later candidates are suffix-based roots. */
+/** Exact spelling wins, followed by curated irregular roots and regular suffixes. */
 export function candidateLemmas(value: string): string[] {
   const token = value.toLocaleLowerCase("en");
   const candidates = [token];
   const add = (candidate: string) => addCandidate(candidates, candidate);
+
+  const irregularLemma = Object.prototype.hasOwnProperty.call(
+    IRREGULAR_LEMMAS,
+    token,
+  )
+    ? IRREGULAR_LEMMAS[token]
+    : undefined;
+  if (irregularLemma) add(irregularLemma);
 
   if (token.endsWith("ies") && token.length > 4) {
     add(`${token.slice(0, -3)}y`);
