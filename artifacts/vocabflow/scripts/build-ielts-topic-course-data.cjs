@@ -585,7 +585,10 @@ function loadLegacyCourse() {
       const topics = existing.topics
         .filter((topic) => topic.legacyLesson)
         .map((topic) => ({
-          id: topic.id,
+          id: topic.legacyLesson.id.replace(
+            "ielts-topic-vocabulary-v1-",
+            "",
+          ),
           title: topic.title,
           terms: topic.legacyLesson.questions.map((question) => question.term),
         }));
@@ -611,7 +614,13 @@ function loadLegacyCourse() {
       const lessons = new Map(
         existing.topics
           .filter((topic) => topic.legacyLesson)
-          .map((topic) => [topic.id, topic.legacyLesson]),
+          .map((topic) => [
+            topic.legacyLesson.id.replace(
+              "ielts-topic-vocabulary-v1-",
+              "",
+            ),
+            topic.legacyLesson,
+          ]),
       );
       lessons.set("society-work", LEGACY_SOCIETY_LESSON);
       return {

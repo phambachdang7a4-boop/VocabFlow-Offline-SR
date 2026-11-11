@@ -5,13 +5,17 @@ description: Yêu cầu sản phẩm và cách triển khai do người dùng qu
 
 VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, offline-first; không bắt buộc đăng nhập. Khách dùng SQLite cục bộ, còn đăng nhập là tùy chọn để đồng bộ thiết bị; không gọi API trả phí. SQLite cục bộ là nguồn dữ liệu chính cho từ và tiến độ. Không thêm dữ liệu mẫu hay từ khởi tạo. Giao diện tiếng Việt.
 
-Ví dụ trong các khóa học phải lấy nguyên văn từ SQLite từ điển offline; không tự tạo câu mới.
+Ưu tiên lấy ví dụ nguyên văn từ SQLite từ điển offline. Khi người dùng yêu cầu, có thể biên soạn ví dụ riêng cho khóa học nếu từ điển thiếu ví dụ phù hợp; không tự ghi nội dung khóa học vào từ điển gốc nếu chưa được yêu cầu.
 
 Từ đã lưu chỉ được xem, đóng băng/bỏ đóng băng hoặc xóa; không cho người dùng sửa nội dung. Form thêm từ không có trường ghi chú. Ghi chú cũ được giữ trong dữ liệu, không xóa khi ẩn trường.
 
 **Why:** Người dùng yêu cầu app dùng được không cần tài khoản và chỉ đồng bộ sau khi đăng nhập; trước đó họ yêu cầu offline-first và SQLite. Người dùng cũng quy định từ đã lưu không được chỉnh sửa và yêu cầu bỏ ghi chú. Giữ ghi chú cũ tránh xóa dữ liệu ngoài yêu cầu.
 
 **How to apply:** Trước khi viết code phải tóm tắt kế hoạch tối đa 10 dòng và chờ đồng ý. Sau đó làm từng bước nhỏ chạy được; sau mỗi bước báo cách kiểm tra trên điện thoại. Giữ giao diện từ đã lưu ở chế độ chỉ đọc; không hiển thị trường ghi chú, không xóa ghi chú cũ nếu chưa được yêu cầu rõ. Trong Sổ từ, từ đã đóng băng không xuất hiện khi lọc Cấp 1–6 nhưng vẫn tính vào tổng số từ; bỏ lọc thì có thể tra cứu từ đó. Không tự thêm truyện, nội dung từ điển, hay kế hoạch thu phí nếu chưa được yêu cầu. Phạm vi sản phẩm và các lựa chọn hiện tại được ghi trong `replit.md`.
+
+**Why:** Người dùng yêu cầu ưu tiên nội dung từ điển offline nhưng cho phép tự biên soạn câu ví dụ còn thiếu cho khóa IELTS.
+
+**How to apply:** Giữ nội dung biên soạn trong khóa học, ghi rõ nguồn, và chỉ sửa SQLite từ điển gốc khi người dùng yêu cầu trực tiếp.
 
 ## Corvi
 Corvi là linh vật chính thức của VocabFlow. Hình pixel-art người dùng gửi là mẫu tham chiếu: quạ đen đeo kính, mặc áo vest/nơ đỏ và đứng trong thư viện. Phẩm chất rương cao nhất mang tên Corvi, chủ đề Hắc Diệu Thạch màu đen.

@@ -12,6 +12,11 @@ const linkingAdverbDomain = loadTs(
 );
 const ieltsTopicDomain = loadTs(
   join(__dirname, "../domain/ielts-topic-course.ts"),
+  {
+    "./ielts-topic-course-data.json": require(
+      "../domain/ielts-topic-course-data.json",
+    ),
+  },
 );
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});

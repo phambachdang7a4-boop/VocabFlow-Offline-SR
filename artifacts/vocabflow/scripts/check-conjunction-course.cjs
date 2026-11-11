@@ -21,6 +21,11 @@ const linkingAdverbCourse = loadTs(
 );
 const ieltsTopicCourse = loadTs(
   join(__dirname, "../domain/ielts-topic-course.ts"),
+  {
+    "./ielts-topic-course-data.json": require(
+      "../domain/ielts-topic-course-data.json",
+    ),
+  },
 );
 const dictionaryDomain = loadDictionaryDomain();
 const { applyLocalDictionaryAdditions } = loadTs(
@@ -182,29 +187,51 @@ async function checkCourseContentAndProgress() {
     ieltsTopicCourse.IELTS_TOPIC_COURSE_TITLE,
     "Từ vựng IELTS theo chủ đề",
   );
-  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 5);
-  assert.equal(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length, 5);
-  assert.equal(ieltsTerms.length, 25);
-  assert.equal(new Set(ieltsTerms).size, 25);
+  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 29);
+  assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length > 50);
+  assert.ok(ieltsTerms.length >= 1300 && ieltsTerms.length <= 2000);
+  assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
+  assert.equal(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_WORD_COUNT,
+    ieltsTerms.length,
+  );
   assert.deepEqual(
     [...ieltsQuestions.map((question) => question.term)].sort(),
     [...ieltsTerms].sort(),
-    "Every curated IELTS word has one exercise.",
+    "Every IELTS word has one exercise.",
   );
   assert.deepEqual(
     Object.keys(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).sort(),
     [...ieltsTerms].sort(),
-    "Every curated IELTS word has course feedback content.",
+    "Every IELTS word has course feedback content.",
   );
   assert.equal(
     Object.values(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).filter(
       (entry) => entry.dictionarySource === "authored",
     ).length,
     1,
-    "Only a missing offline dictionary entry is authored.",
+    "Only the previously missing offline dictionary entry is authored.",
+  );
+  assert.deepEqual(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS
+      .filter(
+        (lesson) =>
+          lesson.id.startsWith("ielts-topic-vocabulary-v1-") &&
+          !lesson.id.includes("-lesson-"),
+      )
+      .slice(0, 5)
+      .map((lesson) => lesson.id),
+    [
+      "ielts-topic-vocabulary-v1-education",
+      "ielts-topic-vocabulary-v1-environment",
+      "ielts-topic-vocabulary-v1-technology",
+      "ielts-topic-vocabulary-v1-health",
+      "ielts-topic-vocabulary-v1-society-work",
+    ],
+    "Existing lesson IDs remain stable so saved progress remains visible.",
   );
   for (const lesson of ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS) {
-    assert.equal(lesson.questions.length, 5);
+    assert.ok(lesson.questions.length > 0 && lesson.questions.length <= 35);
     for (const question of lesson.questions) {
       assert.ok(question.prompt.includes("_____"));
       assert.equal(new Set(question.choices).size, 4);
@@ -212,6 +239,12 @@ async function checkCourseContentAndProgress() {
       assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES[question.term]);
     }
   }
+  assert.ok(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS
+      .filter((lesson) => lesson.id.includes("-lesson-"))
+      .every((lesson) => lesson.questions.length >= 15),
+    "New lessons use substantial word groups.",
+  );
 
   const root = mkdtempSync(join(tmpdir(), "vocabflow-conjunction-progress-"));
   const repository = createRepository(root);
