@@ -447,8 +447,8 @@ const COURSE_EXAMPLE_OVERRIDES = {
     exampleTranslation: "Từ religioner ít được dùng; trong tiếng Anh hiện đại, religious person rõ nghĩa hơn.",
   },
   methodize: {
-    example: "Before the exam, she methodizes her notes into clear topic sections.",
-    exampleTranslation: "Trước kỳ thi, cô ấy sắp xếp ghi chú thành các phần chủ đề rõ ràng.",
+    example: "Researchers methodize their observations before comparing results.",
+    exampleTranslation: "Các nhà nghiên cứu hệ thống hóa những quan sát trước khi so sánh kết quả.",
   },
   fossilise: {
     example: "The remains may fossilise in sediment over millions of years.",
@@ -495,8 +495,8 @@ const COURSE_EXAMPLE_OVERRIDES = {
     exampleTranslation: "Đứa trẻ được hưởng lợi từ tình yêu thương và sự nuôi dưỡng của một gia đình luôn hỗ trợ em.",
   },
   maternalize: {
-    example: "The novel maternalizes its main character by presenting her as a protective mother figure.",
-    exampleTranslation: "Cuốn tiểu thuyết khắc họa nhân vật chính với những phẩm chất của một người mẹ luôn chở che.",
+    example: "The author chose to maternalize the heroine as a protective figure for younger characters.",
+    exampleTranslation: "Tác giả chọn khắc họa nữ chính như một người mẹ chở che cho các nhân vật trẻ hơn.",
   },
   functionate: {
     example: "The word functionate is uncommon; duty or responsibility is clearer in modern English.",
@@ -511,8 +511,8 @@ const COURSE_EXAMPLE_OVERRIDES = {
     exampleTranslation: "Phòng khám sẽ tiêm vắc-xin phòng bệnh sởi cho trẻ em trước khi năm học bắt đầu.",
   },
   enroll: {
-    example: "The court enrolled the case in its official register.",
-    exampleTranslation: "Tòa án đã ghi vụ việc vào sổ đăng ký chính thức.",
+    example: "Students can enroll in the course online before classes begin.",
+    exampleTranslation: "Học sinh có thể đăng ký khóa học trực tuyến trước khi lớp bắt đầu.",
   },
   renews: {
     example: "The city renews its public transport fleet every year.",
@@ -535,8 +535,8 @@ const COURSE_EXAMPLE_OVERRIDES = {
     exampleTranslation: "Salarying có nghĩa là trả lương cho ai đó, dù từ này ngày nay ít được sử dụng.",
   },
   skill: {
-    example: "The training program skills workers for jobs in renewable energy.",
-    exampleTranslation: "Chương trình đào tạo trang bị kỹ năng cho người lao động để làm các công việc trong lĩnh vực năng lượng tái tạo.",
+    example: "Practical skill can help workers adapt to new technology.",
+    exampleTranslation: "Kỹ năng thực tế có thể giúp người lao động thích nghi với công nghệ mới.",
   },
   productivity: {
     example: "Higher productivity helped the factory meet rising demand.",
@@ -597,6 +597,18 @@ const COURSE_EXAMPLE_OVERRIDES = {
   jobs: {
     example: "The company jobs out its customer-support work to a specialist provider.",
     exampleTranslation: "Công ty thuê một đơn vị chuyên môn bên ngoài thực hiện công việc hỗ trợ khách hàng.",
+  },
+  city: {
+    example: "The city invested in reliable public transport to reduce traffic congestion.",
+    exampleTranslation: "Thành phố đã đầu tư vào hệ thống giao thông công cộng đáng tin cậy để giảm ùn tắc.",
+  },
+  punish: {
+    example: "Schools should punish serious misconduct fairly and consistently.",
+    exampleTranslation: "Nhà trường nên xử phạt hành vi sai trái nghiêm trọng một cách công bằng và nhất quán.",
+  },
+  engineer: {
+    example: "The engineer designed a flood-resistant bridge for the coastal community.",
+    exampleTranslation: "Kỹ sư đã thiết kế một cây cầu chống lũ cho cộng đồng ven biển.",
   },
 };
 
@@ -723,6 +735,65 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function headwordForms(term) {
+  const forms = new Set([term]);
+  const add = (form) => {
+    if (form) forms.add(form);
+  };
+
+  if (term.endsWith("y")) {
+    if (/[^aeiou]y$/.test(term)) {
+      const stem = term.slice(0, -1);
+      add(`${stem}ies`);
+      add(`${stem}ied`);
+    } else {
+      add(`${term}s`);
+    }
+    add(`${term}ing`);
+  } else if (term.endsWith("e")) {
+    const stem = term.slice(0, -1);
+    add(`${stem}ing`);
+    add(`${term}s`);
+    add(`${term}d`);
+  } else {
+    add(`${term}s`);
+    add(`${term}ed`);
+    add(`${term}ing`);
+    if (/(?:s|x|z|ch|sh|o)$/.test(term)) add(`${term}es`);
+  }
+  if (/[^aeiou][aeiou][bcdfghjklmnpqrstvz]$/.test(term)) {
+    const doubledStem = `${term}${term.at(-1)}`;
+    add(`${doubledStem}ed`);
+    add(`${doubledStem}ing`);
+  }
+
+  return [...forms];
+}
+
+function containsHeadword(term, example) {
+  return headwordForms(term).some((form) =>
+    new RegExp(`\\b${escapeRegExp(form)}\\b`, "i").test(example),
+  );
+}
+
+function containsExactHeadword(term, example) {
+  return new RegExp(`\\b${escapeRegExp(term)}\\b`, "i").test(example);
+}
+
+function hasSentenceTemplatePlaceholder(example) {
+  return (
+    /_{2,}/.test(example) ||
+    /\{\{[^{}]*\}\}|\{(?:word|term|blank|answer|insert|placeholder)\}/i.test(
+      example,
+    ) ||
+    /\[(?:\s*(?:word|term|blank|answer|insert|placeholder)\s*|_{2,})\]/i.test(
+      example,
+    ) ||
+    /<\s*(?:word|term|blank|answer|insert|placeholder)\s*>/i.test(example) ||
+    /\b(?:TBD|TODO)\b/i.test(example)
+  );
+}
+
 function usableExample(term, value) {
   const example = String(value ?? "").trim();
   if (example.length < 24 || example.length > 190 || !/^[\x20-\x7E]+$/.test(example)) {
@@ -730,10 +801,43 @@ function usableExample(term, value) {
   }
   const words = example.match(/[A-Za-z]+/g) ?? [];
   if (words.length < 5 || words.length > 30) return false;
+  if (hasSentenceTemplatePlaceholder(example)) return false;
   if (/\b(the word|the term|old form|is used in english|another spelling)\b/i.test(example)) {
     return false;
   }
   return new RegExp(`\\b${escapeRegExp(term)}\\b`, "i").test(example);
+}
+
+function validateCourseExamples(entries) {
+  const errors = [];
+  for (const [term, entry] of Object.entries(entries)) {
+    const example = String(entry.example ?? "").trim();
+    const translation = String(entry.exampleTranslation ?? "").trim();
+    const issues = [];
+
+    if (!example) {
+      issues.push("missing English example");
+    } else if (hasSentenceTemplatePlaceholder(example)) {
+      issues.push("unfilled sentence-template placeholder");
+    }
+    if (example && !containsHeadword(term, example)) {
+      issues.push("example does not use the headword or a regular inflection");
+    } else if (example && !containsExactHeadword(term, example)) {
+      issues.push("example must include the exact headword for the lesson blank");
+    }
+    if (!translation) {
+      issues.push("missing Vietnamese translation");
+    }
+    if (issues.length) {
+      errors.push(`- ${term}: ${issues.join("; ")}`);
+    }
+  }
+
+  if (errors.length) {
+    throw new Error(
+      `IELTS course examples failed validation:\n${errors.join("\n")}`,
+    );
+  }
 }
 
 function rowScore(row, term) {
@@ -970,10 +1074,9 @@ function main() {
       if (!entries[term]) {
         throw new Error(`Không tìm thấy từ để áp dụng ví dụ IELTS đã biên soạn: ${term}`);
       }
-      if (!example.example?.trim() || !example.exampleTranslation?.trim()) {
-        throw new Error(`Ví dụ IELTS đã biên soạn cần có câu tiếng Anh và bản dịch: ${term}`);
-      }
     }
+
+    validateCourseExamples(entries);
 
     const totalWords = topics.reduce((sum, topic) => sum + topic.words.length, 0);
     const output = {
@@ -1000,4 +1103,13 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  containsHeadword,
+  hasSentenceTemplatePlaceholder,
+  usableExample,
+  validateCourseExamples,
+};
