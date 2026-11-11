@@ -632,102 +632,114 @@ export default function SettingsScreen() {
           <MaterialSheen radius={c.radius} />
           {user ? (
             <>
-          <View style={styles.accountHeader}>
-            <View
-              style={[styles.accountIcon, { backgroundColor: c.secondary }]}
-            >
-              <Feather name="user" size={19} color={c.primary} />
-            </View>
-            <View style={{ flex: 1, gap: 3 }}>
-              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
-                Đang đăng nhập
-              </Text>
+              <View style={styles.accountHeader}>
+                <View
+                  style={[styles.accountIcon, { backgroundColor: c.secondary }]}
+                >
+                  <Feather name="user" size={19} color={c.primary} />
+                </View>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text
+                    style={[styles.appearanceTitle, { color: c.foreground }]}
+                  >
+                    Đang đăng nhập
+                  </Text>
+                  <Text
+                    style={[
+                      styles.appearanceDetail,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    {user?.primaryEmailAddress?.emailAddress ??
+                      "Tài khoản VocabFlow"}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.syncRow, { borderTopColor: c.border }]}>
+                {sync.state === "syncing" || sync.state === "checking" ? (
+                  <ActivityIndicator size="small" color={c.primary} />
+                ) : (
+                  <Feather
+                    name={
+                      sync.state === "synced"
+                        ? "check-circle"
+                        : sync.state === "error"
+                          ? "alert-circle"
+                          : "cloud"
+                    }
+                    size={18}
+                    color={sync.state === "error" ? "#C0392B" : c.primary}
+                  />
+                )}
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text
+                    accessibilityLiveRegion="polite"
+                    style={[styles.appearanceTitle, { color: c.foreground }]}
+                  >
+                    {syncStatus}
+                  </Text>
+                  {sync.lastSyncedAt ? (
+                    <Text
+                      style={[
+                        styles.appearanceDetail,
+                        { color: c.mutedForeground },
+                      ]}
+                    >
+                      Lần gần nhất:{" "}
+                      {new Date(sync.lastSyncedAt).toLocaleString("vi-VN")}
+                    </Text>
+                  ) : null}
+                </View>
+                {sync.state === "error" ||
+                sync.state === "pending" ||
+                sync.state === "offline" ? (
+                  <Pressable
+                    testID="sync-retry"
+                    accessibilityRole="button"
+                    accessibilityLabel="Thử đồng bộ lại"
+                    onPress={() => {
+                      void sync.retry();
+                    }}
+                    style={[
+                      styles.smallAction,
+                      { backgroundColor: c.secondary },
+                    ]}
+                  >
+                    <Feather name="refresh-cw" size={16} color={c.primary} />
+                    <Text
+                      style={[styles.smallActionText, { color: c.primary }]}
+                    >
+                      Thử lại
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+              {sync.state === "error" || accountError ? (
+                <Text
+                  accessibilityRole="alert"
+                  style={[styles.accountError, { color: "#C0392B" }]}
+                >
+                  {accountError ?? sync.message}
+                </Text>
+              ) : null}
+              <Pressable
+                testID="account-sign-out"
+                accessibilityRole="button"
+                onPress={() => {
+                  void handleSignOut();
+                }}
+                style={[styles.signOutButton, { borderColor: c.border }]}
+              >
+                <Feather name="log-out" size={17} color={c.primary} />
+                <Text style={[styles.signOutText, { color: c.primary }]}>
+                  Đăng xuất
+                </Text>
+              </Pressable>
               <Text
                 style={[styles.appearanceDetail, { color: c.mutedForeground }]}
               >
-                {user?.primaryEmailAddress?.emailAddress ??
-                  "Tài khoản VocabFlow"}
+                Đăng xuất không xóa sổ từ hoặc dữ liệu trên máy.
               </Text>
-            </View>
-          </View>
-          <View style={[styles.syncRow, { borderTopColor: c.border }]}>
-            {sync.state === "syncing" || sync.state === "checking" ? (
-              <ActivityIndicator size="small" color={c.primary} />
-            ) : (
-              <Feather
-                name={
-                  sync.state === "synced"
-                    ? "check-circle"
-                    : sync.state === "error"
-                      ? "alert-circle"
-                      : "cloud"
-                }
-                size={18}
-                color={sync.state === "error" ? "#C0392B" : c.primary}
-              />
-            )}
-            <View style={{ flex: 1, gap: 3 }}>
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[styles.appearanceTitle, { color: c.foreground }]}
-              >
-                {syncStatus}
-              </Text>
-              {sync.lastSyncedAt ? (
-                <Text
-                  style={[
-                    styles.appearanceDetail,
-                    { color: c.mutedForeground },
-                  ]}
-                >
-                  Lần gần nhất:{" "}
-                  {new Date(sync.lastSyncedAt).toLocaleString("vi-VN")}
-                </Text>
-              ) : null}
-            </View>
-            {sync.state === "error" ||
-            sync.state === "pending" ||
-            sync.state === "offline" ? (
-              <Pressable
-                testID="sync-retry"
-                accessibilityRole="button"
-                accessibilityLabel="Thử đồng bộ lại"
-                onPress={() => {
-                  void sync.retry();
-                }}
-                style={[styles.smallAction, { backgroundColor: c.secondary }]}
-              >
-                <Feather name="refresh-cw" size={16} color={c.primary} />
-                <Text style={[styles.smallActionText, { color: c.primary }]}>
-                  Thử lại
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-          {sync.state === "error" || accountError ? (
-            <Text
-              accessibilityRole="alert"
-              style={[styles.accountError, { color: "#C0392B" }]}
-            >
-              {accountError ?? sync.message}
-            </Text>
-          ) : null}
-          <Pressable
-            testID="account-sign-out"
-            accessibilityRole="button"
-            onPress={() => {
-              void handleSignOut();
-            }}
-            style={[styles.signOutButton, { borderColor: c.border }]}
-          >
-            <Feather name="log-out" size={17} color={c.primary} />
-            <Text style={[styles.signOutText, { color: c.primary }]}>
-              Đăng xuất
-            </Text>
-          </Pressable>
-          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            Đăng xuất không xóa sổ từ hoặc dữ liệu trên máy.
-          </Text>
             </>
           ) : (
             <>
@@ -754,11 +766,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
               <View style={[styles.syncRow, { borderTopColor: c.border }]}>
-                <Feather
-                  name="cloud-off"
-                  size={18}
-                  color={c.mutedForeground}
-                />
+                <Feather name="cloud-off" size={18} color={c.mutedForeground} />
                 <Text
                   style={[
                     styles.appearanceDetail,

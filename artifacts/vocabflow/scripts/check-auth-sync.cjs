@@ -474,6 +474,11 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     "Guest mode opens local storage and mounts app data providers without cloud sync.",
   );
   assert.match(
+    rootLayout,
+    /unstable_settings\s*=\s*\{\s*anchor:\s*["']\(tabs\)["']/,
+    "The root navigator opens the guest tab group by default.",
+  );
+  assert.match(
     settings,
     /Chế độ khách[\s\S]*Đăng nhập để đồng bộ giữa các thiết bị[\s\S]*testID="guest-sign-in"/,
     "Guest settings explain local-only storage and offer optional account access.",
