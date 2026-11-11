@@ -627,6 +627,20 @@ function loadLegacyCourse() {
         topics,
         entries,
         lessons,
+        exampleTranslations: Object.fromEntries(
+          Object.entries(existing.entries)
+            .filter(
+              ([, entry]) =>
+                entry.exampleTranslation?.trim() && entry.example?.trim(),
+            )
+            .map(([term, entry]) => [
+              term,
+              {
+                example: entry.example,
+                translation: entry.exampleTranslation,
+              },
+            ]),
+        ),
       };
     }
   }
@@ -692,10 +706,15 @@ function main() {
         if (!word.entry) {
           throw new Error(`Không có mục từ điển cho từ cũ: ${word.term}`);
         }
+        const savedTranslation = legacy.exampleTranslations[word.term];
         entries[word.term] = {
           definition: word.entry.definition,
           example: word.entry.example,
-          exampleTranslation: word.entry.exampleTranslation ?? "",
+          exampleTranslation:
+            word.entry.exampleTranslation ||
+            (savedTranslation?.example === word.entry.example
+              ? savedTranslation.translation
+              : ""),
           dictionarySource: word.entry.dictionarySource ?? "offline",
           exampleSource: word.entry.exampleSource ?? "offline",
           partOfSpeech: word.pos,

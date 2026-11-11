@@ -213,6 +213,20 @@ async function checkCourseContentAndProgress() {
     [...ieltsTerms].sort(),
     "Every IELTS word has course feedback content.",
   );
+  for (const [term, entry] of Object.entries(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES,
+  )) {
+    assert.ok(entry.example.trim(), `${term} has an English example.`);
+    assert.ok(
+      entry.exampleTranslation.trim(),
+      `${term} has a Vietnamese example translation.`,
+    );
+    assert.notEqual(
+      entry.exampleTranslation,
+      entry.example,
+      `${term} keeps its English example separate from the translation.`,
+    );
+  }
   assert.equal(
     Object.values(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).filter(
       (entry) => entry.dictionarySource === "authored",

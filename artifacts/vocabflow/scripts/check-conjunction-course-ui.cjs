@@ -182,12 +182,39 @@ function mount() {
   screen.byId("ielts-lesson-1").props.onPress();
   for (let index = 0; index < ieltsLesson.questions.length; index++) {
     const question = ieltsLesson.questions[index];
+    const courseEntry =
+      ieltsTopicDomain.IELTS_TOPIC_COURSE_ENTRIES[question.term];
+    const savedTranslation = courseEntry.exampleTranslation;
+    const simulateMissingTranslation = index === 1;
+    if (simulateMissingTranslation) courseEntry.exampleTranslation = "";
     assert.deepEqual(
       screen.byId("ielts-question-prompt").props.children,
       [question.prompt],
     );
     screen.byId(`ielts-choice-${question.term}`).props.onPress();
     assert.ok(screen.byId("ielts-answer-feedback"));
+    const translation =
+      ieltsTopicDomain.IELTS_TOPIC_COURSE_ENTRIES[question.term]
+        .exampleTranslation;
+    const translationText = translation
+      ? find(
+          screen.byId("ielts-answer-feedback"),
+          (node) => node.props?.children?.includes?.(translation),
+        )
+      : undefined;
+    if (simulateMissingTranslation) {
+      assert.equal(
+        translationText,
+        undefined,
+        "IELTS feedback omits the Vietnamese line when it is unavailable.",
+      );
+      courseEntry.exampleTranslation = savedTranslation;
+    } else {
+      assert.ok(
+        translationText,
+        "IELTS feedback shows the available Vietnamese example translation.",
+      );
+    }
     screen.byId("ielts-next").props.onPress();
     await screen.settle();
   }
