@@ -7,6 +7,9 @@ const courseDomain = loadTs(join(__dirname, "../domain/conjunction-course.ts"), 
     join(__dirname, "../domain/dictionary-local-additions.ts"),
   ),
 });
+const linkingAdverbDomain = loadTs(
+  join(__dirname, "../domain/linking-adverb-course.ts"),
+);
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});
   return { type, props: { ...props, children } };
@@ -70,8 +73,10 @@ function mount() {
       MaterialSheen: "MaterialSheen",
     },
     "@/domain/conjunction-course": courseDomain,
+    "@/domain/linking-adverb-course": linkingAdverbDomain,
     "@/data/vocabulary": {
-      getCourseLessonCompletions: async () => [...completed],
+      getCourseLessonCompletions: async (courseId) =>
+        completed.filter((lessonId) => lessonId.startsWith(courseId)),
       markCourseLessonCompleted: async (lessonId) => completed.push(lessonId),
     },
     "@/hooks/useColors": {
@@ -108,6 +113,9 @@ function mount() {
 (async () => {
   const screen = mount();
   await screen.focus();
+  assert.ok(screen.byId("conjunction-course-card"));
+  assert.ok(screen.byId("linking-adverb-course-card"));
+  screen.byId("conjunction-course-card").props.onPress();
   assert.ok(screen.byId("conjunction-lesson-1"));
   const lesson = courseDomain.CONJUNCTION_COURSE_LESSONS[0];
   screen.byId("conjunction-lesson-1").props.onPress();
@@ -129,7 +137,26 @@ function mount() {
     screen.byId("conjunction-lesson-complete").props.testID,
     "conjunction-lesson-complete",
   );
-  console.log("Conjunction course screen completion flow passed.");
+  screen.byId("conjunction-return").props.onPress();
+  screen.byId("return-to-course-list").props.onPress();
+  screen.byId("linking-adverb-course-card").props.onPress();
+  const linkingLesson = linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS[0];
+  screen.byId("linking-adverb-lesson-1").props.onPress();
+  for (let index = 0; index < linkingLesson.questions.length; index++) {
+    const question = linkingLesson.questions[index];
+    assert.deepEqual(
+      screen.byId("linking-adverb-question-prompt").props.children,
+      [question.prompt],
+    );
+    screen
+      .byId(`linking-adverb-choice-${question.term}`)
+      .props.onPress();
+    assert.ok(screen.byId("linking-adverb-answer-feedback"));
+    screen.byId("linking-adverb-next").props.onPress();
+    await screen.settle();
+  }
+  assert.ok(screen.byId("linking-adverb-lesson-complete"));
+  console.log("Course catalog and both lesson flows passed.");
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

@@ -16,6 +16,9 @@ const course = loadTs(
   join(__dirname, "../domain/conjunction-course.ts"),
   { "./dictionary-local-additions": additions },
 );
+const linkingAdverbCourse = loadTs(
+  join(__dirname, "../domain/linking-adverb-course.ts"),
+);
 const dictionaryDomain = loadDictionaryDomain();
 const { applyLocalDictionaryAdditions } = loadTs(
   join(__dirname, "../data/dictionary-local-additions.ts"),
@@ -134,6 +137,34 @@ async function checkCourseContentAndProgress() {
   assert.equal(courseTerms.length, entries.size, "Every new entry appears in one exercise.");
   assert.equal(new Set(courseTerms).size, entries.size);
   assert.equal(course.CONJUNCTION_COURSE_TITLE, "Liên từ trong câu");
+
+  const linkingTerms = Object.keys(
+    linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+  );
+  const linkedQuestions = linkingAdverbCourse.LINKING_ADVERB_COURSE_LESSONS.flatMap(
+    (lesson) => lesson.questions,
+  );
+  assert.equal(
+    linkingAdverbCourse.LINKING_ADVERB_COURSE_TITLE,
+    "Trạng từ liên kết",
+  );
+  assert.equal(linkingAdverbCourse.LINKING_ADVERB_COURSE_LESSONS.length, 3);
+  assert.equal(linkedQuestions.length, linkingTerms.length);
+  assert.deepEqual(
+    [...linkedQuestions.map((question) => question.term)].sort(),
+    [...linkingTerms].sort(),
+    "Every linking adverb has one exercise.",
+  );
+  for (const lesson of linkingAdverbCourse.LINKING_ADVERB_COURSE_LESSONS) {
+    for (const question of lesson.questions) {
+      assert.ok(question.prompt.includes("_____"));
+      assert.equal(new Set(question.choices).size, 4);
+      assert.ok(question.choices.includes(question.term));
+      assert.ok(
+        linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES[question.term],
+      );
+    }
+  }
 
   const root = mkdtempSync(join(tmpdir(), "vocabflow-conjunction-progress-"));
   const repository = createRepository(root);

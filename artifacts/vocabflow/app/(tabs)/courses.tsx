@@ -18,11 +18,67 @@ import {
   CONJUNCTION_COURSE_ID,
   CONJUNCTION_COURSE_LESSONS,
   CONJUNCTION_COURSE_TITLE,
-  type ConjunctionCourseLesson,
-  type ConjunctionCourseQuestion,
 } from "@/domain/conjunction-course";
+import {
+  LINKING_ADVERB_COURSE_ENTRIES,
+  LINKING_ADVERB_COURSE_ID,
+  LINKING_ADVERB_COURSE_LESSONS,
+  LINKING_ADVERB_COURSE_TITLE,
+} from "@/domain/linking-adverb-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
 import { useColors } from "@/hooks/useColors";
+
+type CourseQuestion = {
+  term: string;
+  prompt: string;
+  choices: readonly string[];
+};
+
+type CourseLesson = {
+  id: string;
+  title: string;
+  focus: string;
+  questions: readonly CourseQuestion[];
+};
+
+type CourseAnswer = {
+  definition: string;
+  example: string;
+  exampleTranslation: string;
+};
+
+type CourseCatalogItem = {
+  id: string;
+  title: string;
+  description: string;
+  lessons: readonly CourseLesson[];
+  entriesByTerm: ReadonlyMap<string, CourseAnswer>;
+  icon: React.ComponentProps<typeof Feather>["name"];
+  testIdPrefix: string;
+};
+
+const COURSE_CATALOG: readonly CourseCatalogItem[] = [
+  {
+    id: CONJUNCTION_COURSE_ID,
+    title: CONJUNCTION_COURSE_TITLE,
+    description:
+      "Học 18 cụm liên từ phụ thuộc qua câu ví dụ có ngữ cảnh rõ ràng. Mỗi bài giúp bạn phân biệt thời gian, điều kiện và mục đích.",
+    lessons: CONJUNCTION_COURSE_LESSONS,
+    entriesByTerm: CONJUNCTION_COURSE_ENTRY_BY_TERM,
+    icon: "git-merge",
+    testIdPrefix: "conjunction",
+  },
+  {
+    id: LINKING_ADVERB_COURSE_ID,
+    title: LINKING_ADVERB_COURSE_TITLE,
+    description:
+      "Luyện 9 trạng từ liên kết qua ví dụ ngắn, dễ nhận ra cách bổ sung ý, thể hiện đối lập, thời gian và kết quả.",
+    lessons: LINKING_ADVERB_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(LINKING_ADVERB_COURSE_ENTRIES)),
+    icon: "align-left",
+    testIdPrefix: "linking-adverb",
+  },
+];
 
 export default function CoursesScreen() {
   const c = useColors();
@@ -30,8 +86,8 @@ export default function CoursesScreen() {
   const insets = useSafeAreaInsets();
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
-  const [activeLesson, setActiveLesson] =
-    useState<ConjunctionCourseLesson | null>(null);
+  const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
+  const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -40,12 +96,18 @@ export default function CoursesScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const activeCourse =
+    COURSE_CATALOG.find((course) => course.id === activeCourseId) ?? null;
+
   const loadProgress = useCallback(async () => {
     setLoading(true);
     try {
-      setCompletedLessons(
-        await getCourseLessonCompletions(CONJUNCTION_COURSE_ID),
+      const progress = await Promise.all(
+        COURSE_CATALOG.map((course) =>
+          getCourseLessonCompletions(course.id),
+        ),
       );
+      setCompletedLessons(progress.flat());
       setError(null);
     } catch (failure) {
       setError(
@@ -64,7 +126,7 @@ export default function CoursesScreen() {
     }, [loadProgress]),
   );
 
-  const startLesson = (lesson: ConjunctionCourseLesson) => {
+  const startLesson = (lesson: CourseLesson) => {
     setActiveLesson(lesson);
     setQuestionIndex(0);
     setSelectedAnswer(null);
@@ -74,6 +136,14 @@ export default function CoursesScreen() {
   };
 
   const leaveLesson = () => {
+    setActiveLesson(null);
+    setFinishedLessonId(null);
+    setSelectedAnswer(null);
+    setError(null);
+  };
+
+  const returnToCourseList = () => {
+    setActiveCourseId(null);
     setActiveLesson(null);
     setFinishedLessonId(null);
     setSelectedAnswer(null);
@@ -115,6 +185,11 @@ export default function CoursesScreen() {
 
   const currentQuestion =
     activeLesson?.questions[questionIndex] ?? null;
+  const activeCourseCompleted = activeCourse
+    ? completedLessons.filter((lessonId) =>
+        activeCourse.lessons.some((lesson) => lesson.id === lessonId),
+      )
+    : [];
   const isLessonFinished =
     activeLesson !== null && finishedLessonId === activeLesson.id;
 
@@ -132,19 +207,27 @@ export default function CoursesScreen() {
             {activeLesson ? "BÀI HỌC NGOẠI TUYẾN" : "KHÓA HỌC NGOẠI TUYẾN"}
           </Text>
           <Text style={[styles.pageTitle, { color: c.headerForeground }]}>
-            {activeLesson?.title ?? CONJUNCTION_COURSE_TITLE}
+            {activeLesson?.title ?? activeCourse?.title ?? "Khóa học"}
           </Text>
         </View>
-        {activeLesson ? (
+        {activeLesson || activeCourse ? (
           <Pressable
-            testID="leave-conjunction-lesson"
+            testID={
+              activeLesson
+                ? `${activeCourse?.testIdPrefix ?? "course"}-leave-lesson`
+                : "return-to-course-list"
+            }
             accessibilityRole="button"
-            accessibilityLabel="Quay lại danh sách bài học"
-            onPress={leaveLesson}
+            accessibilityLabel={
+              activeLesson
+                ? "Quay lại danh sách bài học"
+                : "Quay lại danh sách khóa học"
+            }
+            onPress={activeLesson ? leaveLesson : returnToCourseList}
             hitSlop={10}
             style={styles.headerButton}
           >
-            <Feather name="x" size={23} color={c.headerForeground} />
+            <Feather name="arrow-left" size={23} color={c.headerForeground} />
           </Pressable>
         ) : null}
       </View>
@@ -183,6 +266,7 @@ export default function CoursesScreen() {
         {activeLesson && currentQuestion ? (
           isLessonFinished ? (
             <LessonComplete
+              testIdPrefix={activeCourse?.testIdPrefix ?? "course"}
               lesson={activeLesson}
               correctCount={correctCount}
               onReturn={leaveLesson}
@@ -190,8 +274,10 @@ export default function CoursesScreen() {
             />
           ) : (
             <QuestionView
+              testIdPrefix={activeCourse?.testIdPrefix ?? "course"}
               lesson={activeLesson}
               question={currentQuestion}
+              entriesByTerm={activeCourse?.entriesByTerm ?? new Map()}
               questionIndex={questionIndex}
               selectedAnswer={selectedAnswer}
               correctCount={correctCount}
@@ -205,7 +291,7 @@ export default function CoursesScreen() {
               onAdvance={advance}
             />
           )
-        ) : (
+        ) : activeCourse ? (
           <View style={styles.courseIntro}>
             <View
               style={[
@@ -215,16 +301,24 @@ export default function CoursesScreen() {
             >
               <MaterialSheen tone="navy" radius={22} />
               <View style={[styles.heroIcon, { backgroundColor: c.accent }]}>
-                <Feather name="git-merge" size={25} color={c.accentForeground} />
+                <Feather
+                  name={activeCourse.icon}
+                  size={25}
+                  color={c.accentForeground}
+                />
               </View>
               <Text style={[styles.heroDescription, { color: c.mutedForeground }]}>
-                Học 18 cụm liên từ phụ thuộc qua câu ví dụ có ngữ cảnh rõ ràng.
-                Mỗi bài giúp bạn phân biệt thời gian, điều kiện và mục đích.
+                {activeCourse.description}
               </Text>
               <View style={styles.courseStats}>
                 <Feather name="wifi-off" size={15} color={c.primary} />
                 <Text style={[styles.courseStatsText, { color: c.primary }]}>
-                  3 bài · 18 câu · học ngoại tuyến
+                  {activeCourse.lessons.length} bài ·{" "}
+                  {activeCourse.lessons.reduce(
+                    (count, lesson) => count + lesson.questions.length,
+                    0,
+                  )}{" "}
+                  câu · học ngoại tuyến
                 </Text>
               </View>
             </View>
@@ -234,7 +328,7 @@ export default function CoursesScreen() {
                 Các bài học
               </Text>
               <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
-                {completedLessons.length}/{CONJUNCTION_COURSE_LESSONS.length} đã hoàn thành
+                {activeCourseCompleted.length}/{activeCourse.lessons.length} đã hoàn thành
               </Text>
             </View>
             {loading ? (
@@ -245,12 +339,12 @@ export default function CoursesScreen() {
                 </Text>
               </View>
             ) : (
-              CONJUNCTION_COURSE_LESSONS.map((lesson, index) => {
+              activeCourse.lessons.map((lesson, index) => {
                 const completed = completedLessons.includes(lesson.id);
                 return (
                   <Pressable
                     key={lesson.id}
-                    testID={`conjunction-lesson-${index + 1}`}
+                    testID={`${activeCourse.testIdPrefix}-lesson-${index + 1}`}
                     accessibilityRole="button"
                     accessibilityLabel={`${lesson.title}, ${lesson.questions.length} câu${completed ? ", đã hoàn thành" : ""}`}
                     onPress={() => startLesson(lesson)}
@@ -323,6 +417,63 @@ export default function CoursesScreen() {
               })
             )}
           </View>
+        ) : (
+          <View style={styles.courseIntro}>
+            <Text style={[styles.catalogDescription, { color: c.mutedForeground }]}>
+              Chọn một khóa học để xem bài và tiến độ của bạn.
+            </Text>
+            {COURSE_CATALOG.map((course) => {
+              const completedCount = completedLessons.filter((lessonId) =>
+                course.lessons.some((lesson) => lesson.id === lessonId),
+              ).length;
+              const questionCount = course.lessons.reduce(
+                (count, lesson) => count + lesson.questions.length,
+                0,
+              );
+              return (
+                <Pressable
+                  key={course.id}
+                  testID={`${course.testIdPrefix}-course-card`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${course.title}, ${course.lessons.length} bài học, ${questionCount} câu`}
+                  onPress={() => setActiveCourseId(course.id)}
+                  style={({ pressed }) => [
+                    styles.catalogCard,
+                    {
+                      backgroundColor: c.card,
+                      borderColor: c.border,
+                      opacity: pressed ? 0.86 : 1,
+                    },
+                  ]}
+                >
+                  <MaterialSheen tone="navy" radius={18} />
+                  <View style={[styles.catalogIcon, { backgroundColor: c.accent }]}>
+                    <Feather
+                      name={course.icon}
+                      size={23}
+                      color={c.accentForeground}
+                    />
+                  </View>
+                  <View style={styles.lessonCopy}>
+                    <Text style={[styles.lessonTitle, { color: c.foreground }]}>
+                      {course.title}
+                    </Text>
+                    <Text
+                      style={[styles.lessonFocus, { color: c.mutedForeground }]}
+                      numberOfLines={2}
+                    >
+                      {course.description}
+                    </Text>
+                    <Text style={[styles.lessonCount, { color: c.primary }]}>
+                      {course.lessons.length} bài · {questionCount} câu ·{" "}
+                      {completedCount}/{course.lessons.length} hoàn thành
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={22} color={c.primary} />
+                </Pressable>
+              );
+            })}
+          </View>
         )}
       </ScrollView>
     </View>
@@ -330,8 +481,10 @@ export default function CoursesScreen() {
 }
 
 function QuestionView({
+  testIdPrefix,
   lesson,
   question,
+  entriesByTerm,
   questionIndex,
   selectedAnswer,
   correctCount,
@@ -339,8 +492,10 @@ function QuestionView({
   onSelect,
   onAdvance,
 }: {
-  lesson: ConjunctionCourseLesson;
-  question: ConjunctionCourseQuestion;
+  testIdPrefix: string;
+  lesson: CourseLesson;
+  question: CourseQuestion;
+  entriesByTerm: ReadonlyMap<string, CourseAnswer>;
   questionIndex: number;
   selectedAnswer: string | null;
   correctCount: number;
@@ -349,7 +504,7 @@ function QuestionView({
   onAdvance: () => void;
 }) {
   const c = useColors();
-  const answer = CONJUNCTION_COURSE_ENTRY_BY_TERM.get(question.term);
+  const answer = entriesByTerm.get(question.term);
   const isCorrect = selectedAnswer === question.term;
   const progress = ((questionIndex + 1) / lesson.questions.length) * 100;
 
@@ -375,7 +530,7 @@ function QuestionView({
         {lesson.title}
       </Text>
       <Text style={[styles.questionTitle, { color: c.foreground }]}>
-        Chọn cụm phù hợp nhất để hoàn thành câu
+        Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu
       </Text>
       <View
         style={[
@@ -384,7 +539,7 @@ function QuestionView({
         ]}
       >
         <Text
-          testID="conjunction-question-prompt"
+          testID={`${testIdPrefix}-question-prompt`}
           style={[styles.promptText, { color: c.foreground }]}
         >
           {question.prompt}
@@ -397,7 +552,7 @@ function QuestionView({
           return (
             <Pressable
               key={choice}
-              testID={`conjunction-choice-${choice}`}
+              testID={`${testIdPrefix}-choice-${choice}`}
               accessibilityRole="button"
               accessibilityState={{ selected, disabled: selectedAnswer !== null }}
               disabled={selectedAnswer !== null}
@@ -444,7 +599,7 @@ function QuestionView({
       </View>
       {selectedAnswer !== null && answer ? (
         <View
-          testID="conjunction-answer-feedback"
+          testID={`${testIdPrefix}-answer-feedback`}
           style={[
             styles.feedback,
             {
@@ -474,7 +629,7 @@ function QuestionView({
       ) : null}
       {selectedAnswer !== null ? (
         <Button
-          testID="conjunction-next"
+          testID={`${testIdPrefix}-next`}
           onPress={onAdvance}
           disabled={saving}
           style={styles.nextButton}
@@ -490,12 +645,14 @@ function QuestionView({
 }
 
 function LessonComplete({
+  testIdPrefix,
   lesson,
   correctCount,
   onReturn,
   onRetry,
 }: {
-  lesson: ConjunctionCourseLesson;
+  testIdPrefix: string;
+  lesson: CourseLesson;
   correctCount: number;
   onReturn: () => void;
   onRetry: () => void;
@@ -503,7 +660,7 @@ function LessonComplete({
   const c = useColors();
   return (
     <View
-      testID="conjunction-lesson-complete"
+      testID={`${testIdPrefix}-lesson-complete`}
       style={[
         styles.completeCard,
         { backgroundColor: c.successSoft, borderColor: c.success },
@@ -522,13 +679,13 @@ function LessonComplete({
         Đúng {correctCount}/{lesson.questions.length} câu
       </Text>
       <Button
-        testID="conjunction-return"
+        testID={`${testIdPrefix}-return`}
         onPress={onReturn}
         style={styles.completeButton}
         label="Về danh sách bài"
       />
       <Pressable
-        testID="conjunction-retry"
+        testID={`${testIdPrefix}-retry`}
         accessibilityRole="button"
         onPress={onRetry}
         style={styles.retryLesson}
@@ -559,6 +716,30 @@ const styles = StyleSheet.create({
   pageTitle: { fontFamily: F.b, fontSize: 24, letterSpacing: -0.4 },
   headerButton: { padding: 6, marginBottom: 4 },
   courseIntro: { gap: 14 },
+  catalogDescription: {
+    fontFamily: F.r,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 2,
+  },
+  catalogCard: {
+    position: "relative",
+    overflow: "hidden",
+    minHeight: 126,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 15,
+  },
+  catalogIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   courseHero: {
     position: "relative",
     overflow: "hidden",
