@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -245,7 +246,8 @@ export function ReviewCard({
     Array.from(word.term)
       .map((char) => (/[\p{L}\p{N}]/u.test(char) ? "_" : char))
       .join("");
-  const sentenceAnswer = exercise.kind === "cloze";
+  const dialogueAnswer = exercise.kind === "idiom-dialogue";
+  const sentenceAnswer = exercise.kind === "cloze" || dialogueAnswer;
   const choiceAnswer = exercise.kind === "multiple-choice";
   const characters = Array.from(displayReviewAnswer(word.term));
   const hintCharacters = Array.from(displayReviewAnswer(hintPattern));
@@ -437,11 +439,13 @@ export function ReviewCard({
     <View style={[styles.root, styles.inlineRoot]}>
       <View
         testID={
-          sentenceAnswer
-            ? "review-inline-question"
-            : choiceAnswer
-              ? "review-choice-question"
-              : "review-inline-meaning"
+          dialogueAnswer
+            ? "review-dialogue-question"
+            : sentenceAnswer
+              ? "review-inline-question"
+              : choiceAnswer
+                ? "review-choice-question"
+                : "review-inline-meaning"
         }
         style={styles.inlineQuestion}
       >
@@ -459,7 +463,46 @@ export function ReviewCard({
             <Feather name="volume-2" size={23} color={c.primary} />
           </Pressable>
         ) : null}
-        {sentenceAnswer || choiceAnswer ? (
+        {dialogueAnswer ? (
+          <View testID="review-dialogue" style={styles.dialogue}>
+            <View style={styles.dialogueMessage}>
+              <Image
+                testID="review-dialogue-corvi-avatar"
+                source={require("../assets/images/corvi-app-icon.png")}
+                accessibilityLabel="Corvi"
+                style={[styles.dialogueAvatar, { borderColor: c.accent }]}
+                resizeMode="cover"
+              />
+              <View
+                style={[
+                  styles.dialogueBubble,
+                  styles.dialogueCorviBubble,
+                  { backgroundColor: c.secondary, borderColor: c.border },
+                ]}
+              >
+                <Text style={[styles.dialogueSpeaker, { color: c.primary }]}>
+                  Corvi
+                </Text>
+                <Text style={[styles.dialogueText, { color: c.secondaryForeground }]}>
+                  {exercise.dialoguePrompt}
+                </Text>
+              </View>
+            </View>
+            <View
+              testID="review-dialogue-reply"
+              style={[
+                styles.dialogueBubble,
+                styles.dialogueReplyBubble,
+                { backgroundColor: c.card, borderColor: c.border },
+              ]}
+            >
+              <Text style={[styles.dialogueSpeaker, { color: c.primary }]}>
+                Bạn
+              </Text>
+              <View style={styles.sentenceFlow}>{inlinePrompt()}</View>
+            </View>
+          </View>
+        ) : sentenceAnswer || choiceAnswer ? (
           <View testID="review-inline-sentence" style={styles.sentenceFlow}>
             {inlinePrompt()}
           </View>
@@ -654,6 +697,7 @@ export function ReviewCard({
                 </Pressable>
               </View>
               {exercise.kind === "cloze" ||
+              exercise.kind === "idiom-dialogue" ||
               exercise.kind === "multiple-choice" ? (
                 <Text style={[styles.small, { color: c.foreground }]}>
                   {word.meaning}
@@ -873,6 +917,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingTop: 8,
   },
+  dialogue: { width: "100%", gap: 12, alignItems: "stretch" },
+  dialogueMessage: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 9,
+  },
+  dialogueAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+  },
+  dialogueBubble: {
+    flexShrink: 1,
+    padding: 14,
+    borderWidth: 1,
+    borderRadius: 18,
+  },
+  dialogueCorviBubble: { flex: 1, borderBottomLeftRadius: 5 },
+  dialogueReplyBubble: {
+    alignSelf: "flex-end",
+    maxWidth: "88%",
+    borderBottomRightRadius: 5,
+  },
+  dialogueSpeaker: { fontFamily: F.b, fontSize: 12, marginBottom: 4 },
+  dialogueText: { fontFamily: F.m, fontSize: 15, lineHeight: 22 },
   speakerButton: {
     width: 42,
     height: 42,

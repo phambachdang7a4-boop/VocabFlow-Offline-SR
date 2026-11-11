@@ -26,12 +26,21 @@ const toeicTopicDomain = loadTs(
     ),
   },
 );
+const idiomCourseData = require("../domain/idiom-course-data.json");
+const dictionaryDomain = require("./test-support.cjs").loadDictionaryDomain();
+const idiomCourseDomain = loadTs(
+  join(__dirname, "../domain/idiom-course.ts"),
+  {
+    "./idiom-course-data.json": idiomCourseData,
+    "./dictionary": dictionaryDomain,
+  },
+);
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});
   return { type, props: { ...props, children } };
 };
 const native = Object.fromEntries(
-  ["View", "Text", "Pressable", "ScrollView", "ActivityIndicator"].map(
+  ["View", "Text", "Image", "Pressable", "ScrollView", "ActivityIndicator"].map(
     (name) => [name, name],
   ),
 );
@@ -92,6 +101,8 @@ function mount() {
     "@/domain/linking-adverb-course": linkingAdverbDomain,
     "@/domain/ielts-topic-course": ieltsTopicDomain,
     "@/domain/toeic-topic-course": toeicTopicDomain,
+    "@/domain/idiom-course": idiomCourseDomain,
+    "../../assets/images/corvi-app-icon.png": "corvi-avatar-asset",
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
@@ -131,6 +142,7 @@ function mount() {
 (async () => {
   const screen = mount();
   await screen.focus();
+  assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
   assert.ok(screen.byId("linking-adverb-course-card"));
   screen.byId("conjunction-course-card").props.onPress();
@@ -156,6 +168,28 @@ function mount() {
     "conjunction-lesson-complete",
   );
   screen.byId("conjunction-return").props.onPress();
+  screen.byId("return-to-course-list").props.onPress();
+  screen.byId("idioms-course-card").props.onPress();
+  const idiomLesson = idiomCourseDomain.IDIOM_COURSE_LESSONS[0];
+  assert.ok(screen.byId("idioms-lesson-1"));
+  screen.byId("idioms-lesson-1").props.onPress();
+  const idiomQuestion = idiomLesson.questions[0];
+  assert.deepEqual(
+    screen.byId("idioms-question-prompt").props.children,
+    [idiomQuestion.prompt],
+  );
+  assert.equal(screen.byId("idioms-dialogue-corvi-avatar").props.source, "corvi-avatar-asset");
+  assert.ok(screen.byId("idioms-dialogue"));
+  screen.byId(`idioms-choice-${idiomQuestion.term}`).props.onPress();
+  assert.ok(screen.byId("idioms-answer-feedback"));
+  screen.byId("idioms-next").props.onPress();
+  await screen.settle();
+  assert.deepEqual(
+    screen.byId("idioms-question-prompt").props.children,
+    [idiomLesson.questions[1].prompt],
+    "The learner advances through the offline idiom lesson.",
+  );
+  screen.byId("idioms-leave-lesson").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
   screen.byId("linking-adverb-course-card").props.onPress();
   const linkingLesson = linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS[0];

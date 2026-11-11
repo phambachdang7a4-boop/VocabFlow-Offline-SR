@@ -8,7 +8,7 @@ const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
-const native = Object.fromEntries(['View', 'Text', 'Pressable', 'ScrollView', 'TextInput', 'Modal'].map(type => [type, type]));
+const native = Object.fromEntries(['View', 'Text', 'Image', 'Pressable', 'ScrollView', 'TextInput', 'Modal'].map(type => [type, type]));
 native.StyleSheet = { create: value => value, hairlineWidth: 1 };
 native.Platform = { OS: 'android' };
 native.Keyboard = { dismiss() {} };
@@ -75,6 +75,7 @@ function mount(file, properties = {}, initial = {}) {
     '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,
     '@/domain/review-session': reviewSession,
     '@/domain/sound-cues': soundCues,
+    '../assets/images/corvi-app-icon.png': 'corvi-avatar-asset',
     '@/components/KeyboardAwareScrollViewCompat': { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' },
     '@/components/ui': { Button: 'Button', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },
@@ -129,6 +130,51 @@ async function startReview(screen) {
 }
 
 (async () => {
+  const savedIdiom = {
+    ...word,
+    id: 81,
+    term: 'break the ice',
+    meaning: '(idiom) phá tan bầu không khí ngượng ngùng',
+    example: 'She told a joke to break the ice.',
+  };
+  const idiomMode = mount('../app/(tabs)/review.tsx', {}, {
+    words: [savedIdiom, { ...word, id: 82, term: 'ordinary' }],
+  });
+  idiomMode.byId('review-idiom-start').props.onPress();
+  await idiomMode.settle();
+  assert.equal(idiomMode.byType('ReviewCard').props.word.id, savedIdiom.id);
+  assert.equal(idiomMode.byType('ReviewCard').props.exercise.kind, 'idiom-dialogue');
+  assert.equal(idiomMode.byId('review-session-count').props.children.join(''), '0/1',
+    'The dedicated session queue includes due idioms only.');
+  idiomMode.byType('ReviewCard').props.onCommitted(savedIdiom.id, true);
+  idiomMode.byType('ReviewCard').props.onNext();
+  await idiomMode.settle();
+  assert.equal(idiomMode.byId('review-summary-reviewed').props.children.join(''), '1/1');
+  assert.equal(idiomMode.byId('review-summary-correct').props.children.join(''), '1/1',
+    'Idiom answers use the same normal review result and SRS path.');
+  idiomMode.unmount();
+
+  const idiomOnly = mount('../app/(tabs)/review.tsx', {}, {
+    words: [savedIdiom],
+  });
+  assert.equal(idiomOnly.byId('review-start'), undefined,
+    'Idiom-only due words cannot enter the ordinary review mode.');
+  assert.ok(idiomOnly.byId('review-idiom-start'),
+    'Due idioms remain available in their dedicated dialogue mode.');
+  idiomOnly.byId('review-idiom-start').props.onPress();
+  await idiomOnly.settle();
+  assert.equal(idiomOnly.byType('ReviewCard').props.exercise.kind, 'idiom-dialogue');
+  idiomOnly.unmount();
+
+  const mixedDue = mount('../app/(tabs)/review.tsx', {}, {
+    words: [savedIdiom, { ...word, id: 83, term: 'ordinary' }],
+  });
+  await startReview(mixedDue);
+  assert.equal(mixedDue.byType('ReviewCard').props.word.term, 'ordinary',
+    'The ordinary review session excludes due idioms.');
+  assert.notEqual(mixedDue.byType('ReviewCard').props.exercise.kind, 'idiom-dialogue');
+  mixedDue.unmount();
+
   const screen = mount('../app/(tabs)/review.tsx');
   const settingsButton = () => screen.byId('review-open-settings');
   assert.equal(settingsButton().props.accessibilityLabel, 'Mở cài đặt');
@@ -515,6 +561,35 @@ async function startReview(screen) {
   assert.equal(cloze.byId('review-letter-value-0').props.children.join(''), 'a');
   assert.equal(cloze.byId('review-letter-value-1').props.children.join(''), '',
     'Typing in one slot must not remove or replace hints in other slots');
+  const idiomDialogExercise = exercises.createIdiomDialogueExercise(savedIdiom);
+  const idiomAnswerCalls = [];
+  const idiomCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(savedIdiom),
+    exercise: idiomDialogExercise,
+  }, {
+    recordReview: async (...args) => idiomAnswerCalls.push(args),
+  });
+  assert.ok(idiomCard.byId('review-dialogue-question'));
+  assert.ok(idiomCard.byId('review-dialogue-reply'));
+  assert.equal(idiomCard.byId('review-dialogue-corvi-avatar').props.source, 'corvi-avatar-asset',
+    'Show the bundled Corvi portrait as the speaker avatar.');
+  assert.ok(find(idiomCard.byId('review-dialogue-question'), node =>
+    node.type === 'Text' && String(node.props?.children ?? '') === 'Corvi'),
+  'Label Corvi as the first speaker.');
+  assert.ok(find(idiomCard.byId('review-dialogue-reply'), node =>
+    node.type === 'Text' && String(node.props?.children ?? '') === 'Bạn'),
+  'Render the learner as the second speaker.');
+  assert.ok(find(idiomCard.byId('review-dialogue-question'), node =>
+    node.type === 'Text' && String(node.props?.children ?? '').includes('phá tan bầu không khí ngượng ngùng')),
+  'The dialogue prompt states the Vietnamese meaning as a recall cue.');
+  idiomCard.byId('review-answer-input').props.onChangeText('break the ice');
+  idiomCard.byId('review-check').props.onPress();
+  await idiomCard.settle();
+  assert.deepEqual(idiomAnswerCalls, [[savedIdiom.id, true, 0]],
+    'Dialogue idioms grade through the normal SRS review callback.');
+  assert.ok(find(idiomCard.byId('review-result'), node =>
+    node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === savedIdiom.meaning),
+  'The idiom meaning is shown after answering.');
   const freezeCalls = [];
   const freezeCard = mount('../components/ReviewCard.tsx', makeProps(), {
     setWordFrozen: async (...args) => { freezeCalls.push(args); },

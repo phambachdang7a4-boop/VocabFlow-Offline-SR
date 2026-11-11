@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -41,11 +42,19 @@ import {
   TOEIC_TOPIC_COURSE_WORD_COUNT,
   TOEIC_TOPIC_WORD_LIST,
 } from "@/domain/toeic-topic-course";
+import {
+  IDIOM_COURSE_ENTRIES,
+  IDIOM_COURSE_ID,
+  IDIOM_COURSE_LESSONS,
+  IDIOM_COURSE_TITLE,
+  IDIOM_COURSE_WORD_COUNT,
+} from "@/domain/idiom-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
 import { useColors } from "@/hooks/useColors";
 
 type CourseQuestion = {
   term: string;
+  dialoguePrompt?: string;
   prompt: string;
   choices: readonly string[];
 };
@@ -78,6 +87,17 @@ type CourseCatalogItem = {
 };
 
 const COURSE_CATALOG: readonly CourseCatalogItem[] = [
+  {
+    id: IDIOM_COURSE_ID,
+    title: IDIOM_COURSE_TITLE,
+    description:
+      `Học ${IDIOM_COURSE_WORD_COUNT.toLocaleString("vi-VN")} thành ngữ có nghĩa tiếng Việt từ từ điển offline, qua câu ví dụ và bài chọn cụm phù hợp.`,
+    lessons: IDIOM_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(IDIOM_COURSE_ENTRIES)),
+    icon: "book-open",
+    testIdPrefix: "idioms",
+    wordCount: IDIOM_COURSE_WORD_COUNT,
+  },
   {
     id: CONJUNCTION_COURSE_ID,
     title: CONJUNCTION_COURSE_TITLE,
@@ -319,6 +339,7 @@ export default function CoursesScreen() {
           ) : (
             <QuestionView
               testIdPrefix={activeCourse?.testIdPrefix ?? "course"}
+                isIdiomCourse={activeCourse?.id === IDIOM_COURSE_ID}
               lesson={activeLesson}
               question={currentQuestion}
               entriesByTerm={activeCourse?.entriesByTerm ?? new Map()}
@@ -576,6 +597,7 @@ export default function CoursesScreen() {
 
 function QuestionView({
   testIdPrefix,
+  isIdiomCourse,
   lesson,
   question,
   entriesByTerm,
@@ -587,6 +609,7 @@ function QuestionView({
   onAdvance,
 }: {
   testIdPrefix: string;
+  isIdiomCourse: boolean;
   lesson: CourseLesson;
   question: CourseQuestion;
   entriesByTerm: ReadonlyMap<string, CourseAnswer>;
@@ -626,19 +649,65 @@ function QuestionView({
       <Text style={[styles.questionTitle, { color: c.foreground }]}>
         Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu
       </Text>
-      <View
-        style={[
-          styles.promptCard,
-          { backgroundColor: c.card, borderColor: c.border },
-        ]}
-      >
-        <Text
-          testID={`${testIdPrefix}-question-prompt`}
-          style={[styles.promptText, { color: c.foreground }]}
+      {isIdiomCourse ? (
+        <View testID="idioms-dialogue" style={styles.idiomDialogue}>
+          <View style={styles.idiomDialogueMessage}>
+            <Image
+              testID="idioms-dialogue-corvi-avatar"
+              source={require("../../assets/images/corvi-app-icon.png")}
+              accessibilityLabel="Corvi"
+              resizeMode="cover"
+              style={[styles.idiomDialogueAvatar, { borderColor: c.accent }]}
+            />
+            <View
+              style={[
+                styles.idiomDialogueBubble,
+                styles.idiomCorviBubble,
+                { backgroundColor: c.secondary, borderColor: c.border },
+              ]}
+            >
+              <Text style={[styles.idiomDialogueSpeaker, { color: c.primary }]}>
+                Corvi
+              </Text>
+              <Text style={[styles.idiomDialogueText, { color: c.secondaryForeground }]}>
+                {question.dialoguePrompt}
+              </Text>
+            </View>
+          </View>
+          <View
+            testID="idioms-dialogue-reply"
+            style={[
+              styles.idiomDialogueBubble,
+              styles.idiomReplyBubble,
+              { backgroundColor: c.card, borderColor: c.border },
+            ]}
+          >
+            <Text style={[styles.idiomDialogueSpeaker, { color: c.primary }]}>
+              Bạn
+            </Text>
+            <Text
+              testID={`${testIdPrefix}-question-prompt`}
+              style={[styles.promptText, { color: c.foreground }]}
+            >
+              {question.prompt}
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.promptCard,
+            { backgroundColor: c.card, borderColor: c.border },
+          ]}
         >
-          {question.prompt}
-        </Text>
-      </View>
+          <Text
+            testID={`${testIdPrefix}-question-prompt`}
+            style={[styles.promptText, { color: c.foreground }]}
+          >
+            {question.prompt}
+          </Text>
+        </View>
+      )}
       <View style={styles.choices}>
         {question.choices.map((choice) => {
           const selected = selectedAnswer === choice;
@@ -919,6 +988,34 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   promptText: { fontFamily: F.s, fontSize: 17, lineHeight: 25 },
+  idiomDialogue: { width: "100%", gap: 12 },
+  idiomDialogueMessage: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 9,
+  },
+  idiomDialogueAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+  },
+  idiomDialogueBubble: {
+    flexShrink: 1,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 14,
+  },
+  idiomCorviBubble: { flex: 1, borderBottomLeftRadius: 5 },
+  idiomReplyBubble: {
+    alignSelf: "flex-end",
+    maxWidth: "88%",
+    borderBottomRightRadius: 5,
+    gap: 3,
+  },
+  idiomDialogueSpeaker: { fontFamily: F.b, fontSize: 12 },
+  idiomDialogueText: { fontFamily: F.r, fontSize: 15, lineHeight: 22 },
   choices: { gap: 10 },
   choice: {
     minHeight: 56,

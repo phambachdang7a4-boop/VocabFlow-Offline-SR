@@ -2,12 +2,13 @@ import type { VocabularyWord } from '../data/types';
 import { exampleSegments } from './dictionary';
 
 export interface ReviewExercise {
-  kind: 'meaning' | 'cloze' | 'multiple-choice';
+  kind: 'meaning' | 'cloze' | 'multiple-choice' | 'idiom-dialogue';
   prompt: string;
   fallback: boolean;
   fallbackNote?: string;
   hint: string | null;
   choices?: string[];
+  dialoguePrompt?: string;
 }
 
 // Tune these independently of SRS dates/levels. Always leave a character hidden.
@@ -34,6 +35,11 @@ export function normalizeReviewAnswer(value: string): string {
 export function checkReviewAnswer(answer: string, term: string): boolean {
   const actual = normalizeReviewAnswer(answer);
   return !!actual && actual === normalizeReviewAnswer(term);
+}
+
+/** Dictionary idioms are saved with their POS marker at the start of meaning. */
+export function isIdiomVocabularyWord(word: Pick<VocabularyWord, 'meaning'>): boolean {
+  return /^\s*\(idioms?\b[^)]*\)\s*/iu.test(word.meaning);
 }
 
 function hash(value: string): number {
@@ -146,6 +152,29 @@ export function createReviewExercise(
     kind: 'meaning',
     prompt: exampleSegments(word.meaning, word.term).map(part => part.underline ? '________' : part.text).join(''),
     fallback: false,
+    hint: letterHint(word),
+  };
+}
+
+/** Build a dialogue-style recall prompt without changing the stored example or SRS. */
+export function createIdiomDialogueExercise(
+  word: VocabularyWord,
+): ReviewExercise {
+  if (!isIdiomVocabularyWord(word)) {
+    throw new Error('Chỉ có thể tạo bài hội thoại cho từ được đánh dấu là idiom.');
+  }
+  const meaning = word.meaning.replace(/^\s*\(idioms?\b[^)]*\)\s*/iu, '').trim();
+  const sentence = clozeSentence(word.example, word.term);
+  return {
+    kind: 'idiom-dialogue',
+    dialoguePrompt: meaning
+      ? `Tớ đang nghĩ đến một idiom có nghĩa là “${meaning}”. Cậu đoán được không?`
+      : 'Tớ đang tìm một idiom để hoàn thành câu này. Cậu giúp tớ nhé.',
+    prompt: sentence ?? 'Mình đoán là ________.',
+    fallback: sentence === null,
+    fallbackNote: sentence
+      ? undefined
+      : 'Chưa có câu ví dụ phù hợp; dùng câu hội thoại ngắn để luyện idiom.',
     hint: letterHint(word),
   };
 }

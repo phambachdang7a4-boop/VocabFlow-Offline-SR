@@ -17,6 +17,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import {
   createReviewExercise,
+  createIdiomDialogueExercise,
+  isIdiomVocabularyWord,
   type ReviewExercise,
 } from "@/domain/review-exercises";
 import type { VocabularyWord } from "@/data/types";
@@ -73,6 +75,7 @@ import * as Crypto from "expo-crypto";
 type Session = {
   token: number;
   sessionId: string;
+  mode: "standard" | "idiom";
   queue: number[];
   processed: number[];
   answered: number[];
@@ -135,7 +138,14 @@ export default function ReviewScreen() {
   const activeClockRef = useRef<SessionActiveClock | null>(null);
   sessionRef.current = session;
   const overview = useMemo(() => reviewOverview(words, day), [words, day]);
-  const card = overview.dueWords[0];
+  const standardDueWords = useMemo(
+    () => overview.dueWords.filter((word) => !isIdiomVocabularyWord(word)),
+    [overview.dueWords],
+  );
+  const dueIdioms = useMemo(
+    () => overview.dueWords.filter(isIdiomVocabularyWord),
+    [overview.dueWords],
+  );
   const inSession = !!session || !!gameWords || sessionFinalizing;
 
   useEffect(() => {
@@ -221,8 +231,9 @@ export default function ReviewScreen() {
     speech.stopSpeaking,
   ]);
 
-  const start = async () => {
-    const first = overview.dueWords[0];
+  const start = async (mode: Session["mode"] = "standard") => {
+    const queueWords = mode === "idiom" ? dueIdioms : standardDueWords;
+    const first = queueWords[0];
     if (!first || error || loading || startingRef.current) return;
     startingRef.current = true;
     sound.unlockFromGesture();
@@ -245,7 +256,8 @@ export default function ReviewScreen() {
       setSession({
         token: ++sequence.current,
         sessionId,
-        queue: overview.dueWords.map((w) => w.id),
+        mode,
+        queue: queueWords.map((w) => w.id),
         processed: [],
         answered: [],
         correct: [],
@@ -257,7 +269,10 @@ export default function ReviewScreen() {
         index: 0,
         formatOffset: first.reviewCount,
         word: first,
-        exercise: createReviewExercise(first, 0, first.reviewCount, words),
+        exercise:
+          mode === "idiom"
+            ? createIdiomDialogueExercise(first)
+            : createReviewExercise(first, 0, first.reviewCount, words),
       });
     } catch {
       setStartError(
@@ -450,7 +465,9 @@ export default function ReviewScreen() {
       !s.processed.includes(s.word.id)
     )
       return;
-    const due = new Map(overview.dueWords.map((w) => [w.id, w]));
+    const availableWords =
+      s.mode === "idiom" ? dueIdioms : standardDueWords;
+    const due = new Map(availableWords.map((w) => [w.id, w]));
     const id = s.queue.find((q) => !s.processed.includes(q) && due.has(q));
     if (id === undefined) {
       finishSession(s, true);
@@ -461,30 +478,48 @@ export default function ReviewScreen() {
       ...s,
       index: s.index + 1,
       word: w,
-      exercise: createReviewExercise(w, s.index + 1, s.formatOffset, words),
+      exercise:
+        s.mode === "idiom"
+          ? createIdiomDialogueExercise(w)
+          : createReviewExercise(w, s.index + 1, s.formatOffset, words),
     });
   };
 
   let action: React.ReactNode;
-  if (card) {
+  if (standardDueWords.length > 0 || dueIdioms.length > 0) {
     action = (
       <View style={{ gap: 14, alignItems: "stretch" }}>
         <Text testID="due-count" style={[styles.due, { color: c.foreground }]}>
           Đến giờ ôn tập:{" "}
           <Text style={{ color: c.primary }}>
-            {overview.dueWords.length.toLocaleString("vi-VN")} từ
+            {(standardDueWords.length + dueIdioms.length).toLocaleString("vi-VN")} từ
           </Text>
         </Text>
-        <Button
-          testID="review-start"
-          label="Ôn tập ngay"
-          icon="play"
-          onPress={() => {
-            void start();
-          }}
-          loading={starting}
-          disabled={starting}
-        />
+        {standardDueWords.length > 0 ? (
+          <Button
+            testID="review-start"
+            label={`Ôn tập từ thường · ${standardDueWords.length} từ`}
+            icon="play"
+            onPress={() => {
+              void start();
+            }}
+            loading={starting}
+            disabled={starting}
+          />
+        ) : null}
+        {dueIdioms.length ? (
+          <Button
+            testID="review-idiom-start"
+            label={`Ôn idiom qua hội thoại · ${dueIdioms.length} từ`}
+            icon="message-circle"
+            variant="ghost"
+            onPress={() => {
+              void start("idiom");
+            }}
+            loading={starting}
+            disabled={starting}
+          />
+        ) : null}
         {startError ? <ErrorBanner message={startError} /> : null}
       </View>
     );
@@ -625,7 +660,9 @@ export default function ReviewScreen() {
           <Text style={[styles.sessionTitle, { color: c.foreground }]}>
             {session.exercise.kind === "multiple-choice"
               ? "Chọn từ đúng"
-              : "Điền từ"}
+              : session.exercise.kind === "idiom-dialogue"
+                ? "Hoàn thành hội thoại"
+                : "Điền từ"}
           </Text>
         </View>
       ) : null}

@@ -44,8 +44,8 @@
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-srs.cjs`
 - `TZ=America/New_York node artifacts/vocabflow/scripts/check-srs.cjs`
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review.cjs` (cũng chạy với `TZ=America/New_York` để kiểm tra DST): tổng 6 cấp, lịch gần nhất, chuyển ngày, vòng đời đồng hồ.
-- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-ui.cjs`: tổng quan, bắt đầu/quay lại/kết thúc phiên, hết đếm ngược, tỉ lệ cột và khóa lưu/chấm điểm/đóng băng.
-- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-exercises.cjs`: hai dạng câu, gợi ý 1–3/không gợi ý 4–6, so đáp án, SQLite chống chấm trùng.
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-ui.cjs`: tổng quan, ôn idiom bằng hội thoại, bắt đầu/quay lại/kết thúc phiên, hết đếm ngược, tỉ lệ cột và khóa lưu/chấm điểm/đóng băng.
+- `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-review-exercises.cjs`: dạng câu ôn thường và hội thoại idiom, gợi ý 1–3/không gợi ý 4–6, so đáp án, SQLite chống chấm trùng.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-independent-senses.cjs`: nhiều nghĩa cùng từ, SRS/đóng băng/xóa riêng, chuyển dữ liệu cũ không mất tiến độ, rollback khi lỗi và giữ ID.
 - `TZ=Asia/Ho_Chi_Minh node artifacts/vocabflow/scripts/check-freeze.cjs`
 - `node artifacts/vocabflow/scripts/prepare-dictionary.cjs`: chuẩn bị tệp nguồn cho kiểm tra (nằm ngoài Git); `--upload` chỉ dùng khi cần cấp lại asset công khai trong App Storage.
@@ -56,6 +56,8 @@
 - `pnpm --filter @workspace/vocabflow run course:generate`: tạo lại khóa học cơ bản và B1/B2 từ các manifest đã ghim; chỉ tải danh sách LexiCore trong lúc tạo dữ liệu, app không cần mạng/API để học.
 - `pnpm --filter @workspace/vocabflow run check:course`: kiểm tra khóa cơ bản 49 bài/978 mục, B1/B2, ID và nghĩa nguyên văn từ SQLite, nguồn trích dẫn và chống trùng nghĩa.
 - `pnpm --filter @workspace/vocabflow run check:course-storage`: kiểm tra lưu/khôi phục tiến độ, checklist và thêm đúng mục đã chọn vào SQLite.
+- `pnpm --filter @workspace/vocabflow run course:build-idioms`: tái tạo danh sách Idioms từ đúng bản SQLite từ điển đã ghim; khóa học đóng gói sẵn để học ngoại tuyến.
+- `pnpm --filter @workspace/vocabflow run check:idiom-course`: kiểm tra đủ idiom, ví dụ/đáp án, chia bài và luồng học.
 - `node artifacts/vocabflow/scripts/check-sqlite-connection.cjs`: kiểm tra mở SQLite tuần tự giữa các kho, quyền sở hữu một tab trên web và phục hồi hàng đợi khi lỗi.
 - App tải tệp tham chiếu trực tiếp từ nguồn GitHub công khai đã ghim commit, không phụ thuộc đăng nhập máy chủ preview. Chỉ nạp sau xác nhận rõ ràng ở Tra Từ; kho tra cứu luôn ở máy. Sổ từ và tiến độ lưu SQLite trước, chỉ đồng bộ qua `/api/sync` sau khi đăng nhập. API `/api/dictionary/asset` giữ bản mirror App Storage nhưng không phải đường tải mặc định của app.
 - Workflow Canvas là scaffold có sẵn, không cần cho chức năng app.

@@ -17,6 +17,33 @@ const notebookWords = [
   { ...word, id: 4, term: 'serious' },
 ];
 assert.equal(exercises.createReviewExercise(word, 0).kind, 'meaning');
+const idiomWord = {
+  ...word,
+  term: 'break the ice',
+  meaning: '(idiom) phá tan bầu không khí ngượng ngùng',
+  example: 'She told a joke to break the ice.',
+};
+assert.equal(exercises.isIdiomVocabularyWord(idiomWord), true);
+assert.equal(exercises.isIdiomVocabularyWord({ ...word, meaning: '(verb) break the ice' }), false);
+const idiomDialogue = exercises.createIdiomDialogueExercise(idiomWord);
+assert.equal(idiomDialogue.kind, 'idiom-dialogue');
+assert.equal(idiomDialogue.dialoguePrompt,
+  'Tớ đang nghĩ đến một idiom có nghĩa là “phá tan bầu không khí ngượng ngùng”. Cậu đoán được không?');
+assert.equal(idiomDialogue.prompt, 'She told a joke to ________.');
+assert.ok(!idiomDialogue.prompt.includes(idiomWord.term), 'The dialogue reply must hide the idiom.');
+assert.ok(!idiomDialogue.dialoguePrompt.includes(idiomWord.term),
+  'Corvi’s message must not reveal the answer.');
+assert.equal(exercises.checkReviewAnswer('breaktheice', idiomWord.term), true);
+const idiomFallback = exercises.createIdiomDialogueExercise({ ...idiomWord, example: '' });
+assert.equal(idiomFallback.kind, 'idiom-dialogue');
+assert.equal(idiomFallback.prompt, 'Mình đoán là ________.');
+assert.match(idiomFallback.dialoguePrompt, /idiom/u);
+assert.equal(idiomFallback.fallback, true);
+assert.throws(
+  () => exercises.createIdiomDialogueExercise(word),
+  /đánh dấu là idiom/,
+  'Do not turn ordinary saved words into idiom dialogue questions.',
+);
 const cloze = exercises.createReviewExercise(word, 1, 0, notebookWords);
 assert.equal(cloze.kind, 'multiple-choice');
 assert.equal(cloze.prompt, '________ paintings are ________.');
