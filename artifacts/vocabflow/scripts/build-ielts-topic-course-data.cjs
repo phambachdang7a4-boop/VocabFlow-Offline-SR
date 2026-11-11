@@ -612,6 +612,46 @@ const COURSE_EXAMPLE_OVERRIDES = {
   },
 };
 
+const COURSE_DEFINITION_OVERRIDES = {
+  graduation: "Lễ tốt nghiệp; việc hoàn thành một chương trình học.",
+  emission: "Lượng chất hoặc khí được thải ra, thường là chất gây ô nhiễm.",
+  carbon: "Cacbon; nguyên tố hóa học có trong than đá và khí thải carbon.",
+  drought: "Đợt hạn hán kéo dài do thiếu mưa.",
+  forests: "Trồng cây gây rừng trên một khu vực đất.",
+  desert: "Sa mạc; vùng đất khô cằn có rất ít mưa.",
+  social: "Thuộc về xã hội hoặc các mối quan hệ giữa người với người.",
+  recession: "Suy thoái kinh tế; giai đoạn hoạt động kinh tế giảm sút.",
+  inflation: "Lạm phát; tình trạng giá cả hàng hóa và dịch vụ tăng lên.",
+  bank: "Ngân hàng; tổ chức cung cấp dịch vụ tài chính.",
+  import: "Việc nhập khẩu hàng hóa từ nước ngoài vào một quốc gia.",
+  profit: "Lợi nhuận; khoản tiền còn lại sau khi trừ chi phí.",
+  road: "Đường bộ; lối đi dành cho phương tiện và người đi lại.",
+  arts: "Nghệ thuật hoặc các hoạt động sáng tạo như âm nhạc và hội họa.",
+  planning: "Việc lập kế hoạch để xác định trước cách thực hiện một việc.",
+  sculpt: "Tạc hoặc tạo hình một vật thể bằng cách đục, nặn hay gọt vật liệu.",
+  religioner: "Người theo một tôn giáo; từ hiếm dùng, thường thay bằng religious person.",
+  functionate: "Hoạt động hoặc thực hiện một chức năng; từ hiếm dùng trong tiếng Anh hiện đại.",
+  fossilise: "Hóa thạch; được bảo tồn thành hóa thạch qua thời gian địa chất.",
+  coaled: "Đã được tiếp hoặc nạp than làm nhiên liệu.",
+  coaling: "Việc tiếp than hoặc đang nạp than làm nhiên liệu.",
+  coals: "Tiếp than hoặc nạp than làm nhiên liệu.",
+  naturalise: "Khôi phục trạng thái tự nhiên cho một khu vực, thường bằng cây bản địa.",
+  crops: "Gieo trồng hoặc canh tác đất để thu hoạch nông sản.",
+  diet: "Quốc hội Nhật Bản; cơ quan lập pháp của Nhật Bản.",
+  corporation: "Công ty hoặc tập đoàn được thành lập để kinh doanh.",
+  foreigner: "Người đến từ hoặc mang quốc tịch của một quốc gia khác.",
+  nurture: "Sự chăm sóc và nuôi dưỡng giúp một người hoặc vật phát triển.",
+  salarying: "Trả lương cho ai đó; từ hiếm dùng trong tiếng Anh hiện đại.",
+  victimise: "Đối xử bất công hoặc gây hại cho ai, biến họ thành nạn nhân.",
+  victimize: "Đối xử bất công hoặc gây hại cho ai, biến họ thành nạn nhân.",
+  murdering: "Sát hại; hành động giết người một cách trái pháp luật.",
+  artificially: "Bằng cách nhân tạo hoặc do con người tạo ra, không phải tự nhiên.",
+  psychologise: "Giải thích hoặc phân tích một vấn đề theo góc độ tâm lý.",
+  corruptly: "Một cách tham nhũng hoặc bất chính, thường để trục lợi.",
+  inclusively: "Theo cách bao gồm mọi người và không loại trừ nhóm nào.",
+  jobs: "Thuê ngoài; giao công việc cho một cá nhân hoặc đơn vị bên ngoài.",
+};
+
 const POS_GROUPS = {
   n: "noun",
   noun: "noun",
@@ -837,6 +877,21 @@ function validateCourseExamples(entries) {
     throw new Error(
       `IELTS course examples failed validation:\n${errors.join("\n")}`,
     );
+  }
+}
+
+function applyCourseDefinitionOverrides(entries) {
+  for (const [term, definition] of Object.entries(
+    COURSE_DEFINITION_OVERRIDES,
+  )) {
+    if (!entries[term]) {
+      throw new Error(`Không tìm thấy từ để áp dụng định nghĩa IELTS đã biên soạn: ${term}`);
+    }
+    if (!definition.trim()) {
+      throw new Error(`Định nghĩa IELTS đã biên soạn đang để trống: ${term}`);
+    }
+    entries[term].definition = definition;
+    entries[term].dictionarySource = "authored";
   }
 }
 
@@ -1076,6 +1131,7 @@ function main() {
       }
     }
 
+    applyCourseDefinitionOverrides(entries);
     validateCourseExamples(entries);
 
     const totalWords = topics.reduce((sum, topic) => sum + topic.words.length, 0);
@@ -1112,4 +1168,5 @@ module.exports = {
   hasSentenceTemplatePlaceholder,
   usableExample,
   validateCourseExamples,
+  applyCourseDefinitionOverrides,
 };
