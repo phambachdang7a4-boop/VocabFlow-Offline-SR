@@ -266,7 +266,7 @@ export default function DictionaryScreen() {
   );
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: c.dictPage }}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1, backgroundColor: c.dictPage }}>
       <View style={[styles.band, {
         backgroundColor: c.dictBand,
         paddingTop: top + 10,

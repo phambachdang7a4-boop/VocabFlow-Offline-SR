@@ -132,7 +132,7 @@ export default function CoursesScreen() {
             {activeLesson ? "BÀI HỌC NGOẠI TUYẾN" : "KHÓA HỌC NGOẠI TUYẾN"}
           </Text>
           <Text style={[styles.pageTitle, { color: c.headerForeground }]}>
-            {CONJUNCTION_COURSE_TITLE}
+            {activeLesson?.title ?? CONJUNCTION_COURSE_TITLE}
           </Text>
         </View>
         {activeLesson ? (
@@ -217,9 +217,6 @@ export default function CoursesScreen() {
               <View style={[styles.heroIcon, { backgroundColor: c.accent }]}>
                 <Feather name="git-merge" size={25} color={c.accentForeground} />
               </View>
-              <Text style={[styles.heroTitle, { color: c.foreground }]}>
-                {CONJUNCTION_COURSE_TITLE}
-              </Text>
               <Text style={[styles.heroDescription, { color: c.mutedForeground }]}>
                 Học 18 cụm liên từ phụ thuộc qua câu ví dụ có ngữ cảnh rõ ràng.
                 Mỗi bài giúp bạn phân biệt thời gian, điều kiện và mục đích.
@@ -578,7 +575,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  heroTitle: { fontFamily: F.b, fontSize: 24, lineHeight: 30 },
   heroDescription: { fontFamily: F.r, fontSize: 14, lineHeight: 21 },
   courseStats: { flexDirection: "row", alignItems: "center", gap: 7 },
   courseStatsText: { fontFamily: F.s, fontSize: 12 },

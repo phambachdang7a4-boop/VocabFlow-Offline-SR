@@ -9,6 +9,7 @@ import {
   View,
   type ImageSourcePropType,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
@@ -47,6 +48,7 @@ function rarityDisplayLabel(rarity: ChestRarity): string {
 
 export default function CollectionScreen() {
   const c = useColors();
+  const insets = useSafeAreaInsets();
   const [overview, setOverview] = useState<MissionCollectionOverview | null>(
     null,
   );
@@ -97,7 +99,11 @@ export default function CollectionScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: c.background }}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        { paddingBottom: Math.max(30, insets.bottom + 24) },
+      ]}
+      showsVerticalScrollIndicator={false}
     >
       <Text style={[styles.intro, { color: c.mutedForeground }]}>
         Mỗi bức tranh cần 100 mảnh cùng phẩm chất. Mảnh được lưu offline và đồng

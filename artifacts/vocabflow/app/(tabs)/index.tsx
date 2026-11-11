@@ -219,7 +219,6 @@ export default function VocabularyScreen() {
           data={filtered}
           keyExtractor={(w) => String(w.id)}
           renderItem={renderItem}
-          scrollEnabled={filtered.length > 0}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           ListHeaderComponent={listHeader}
