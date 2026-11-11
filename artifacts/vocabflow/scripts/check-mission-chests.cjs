@@ -147,6 +147,46 @@ assert.match(
 );
 assert.match(
   chestScreen,
+  /Còn \$\{remainingAttempts\}\/\$\{attemptLimit\} lượt nâng cấp/,
+  "The screen tells learners how many upgrade attempts remain.",
+);
+assert.match(
+  chestScreen,
+  /const chanceDescription =/,
+  "The screen shows the current upgrade chance without changing it.",
+);
+assert.match(
+  chestScreen,
+  /\$\{chance\}% lên \$\{rarityDisplayLabel\(nextRarity\)\}/,
+  "The displayed upgrade chance is paired with the next chest tier.",
+);
+assert.match(
+  chestScreen,
+  /Lượt này: \{currentChanceDescription\}/,
+  "The current chance is visible before upgrading.",
+);
+assert.match(
+  chestScreen,
+  /55% lên Silver · 45% chốt Copper/,
+  "Legacy chests explain the first attempt's existing outcomes.",
+);
+assert.match(
+  chestScreen,
+  /40% lên Gold · 60% chốt Silver/,
+  "Legacy chests explain the second attempt's existing outcomes.",
+);
+assert.match(
+  chestScreen,
+  /20% lên Platinum · 5% lên Corvi · 75% chốt Gold/,
+  "Legacy chests explain the third attempt's existing outcomes.",
+);
+assert.match(
+  chestScreen,
+  /Bạn nhận \$\{result\.awardedStone\} Stone và \$\{fragmentRewardLabel\(result\.awardedFragments\)\}/,
+  "The chest result reports the Stone and fragments actually awarded.",
+);
+assert.match(
+  chestScreen,
   /Mỗi lần chạm là một lượt/,
   "Animation beats do not create extra upgrade attempts.",
 );

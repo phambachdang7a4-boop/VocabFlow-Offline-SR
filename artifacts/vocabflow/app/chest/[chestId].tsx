@@ -53,6 +53,13 @@ function fragmentRewardLabel(
   );
 }
 
+function legacyUpgradeOdds(attempt: number): string | null {
+  if (attempt === 1) return "55% lên Silver · 45% chốt Copper";
+  if (attempt === 2) return "40% lên Gold · 60% chốt Silver";
+  if (attempt === 3) return "20% lên Platinum · 5% lên Corvi · 75% chốt Gold";
+  return null;
+}
+
 export default function MissionChestScreen() {
   const c = useColors();
   const { chestId } = useLocalSearchParams<{ chestId: string }>();
@@ -88,12 +95,26 @@ export default function MissionChestScreen() {
   const superUpgrade = chest?.superUpgrade ?? false;
   const attemptLimit = maxChestUpgradeAttempts(ruleSet, superUpgrade);
   const nextAttempt = (chest?.upgradeAttempts ?? 0) + 1;
+  const remainingAttempts = Math.max(
+    0,
+    attemptLimit - (chest?.upgradeAttempts ?? 0),
+  );
   const tierIndex = chest ? CHEST_RARITIES.indexOf(chest.rarity) : -1;
   const nextRarity = tierIndex >= 0 ? CHEST_RARITIES[tierIndex + 1] : undefined;
   const chance = chest
     ? chestUpgradeChance(chest.rarity, nextAttempt, ruleSet, superUpgrade)
     : null;
   const specialAttempt = superUpgrade && nextAttempt === 4;
+  const chanceDescription =
+    ruleSet === 1
+      ? legacyUpgradeOdds(nextAttempt)
+      : chance === null || !nextRarity
+        ? null
+        : `${chance}% lên ${rarityDisplayLabel(nextRarity)}`;
+  const currentChanceDescription =
+    specialAttempt && nextRarity
+      ? `100% lên ${rarityDisplayLabel(nextRarity)}`
+      : chanceDescription;
   const currentStoneReward = chest
     ? chestStoneReward(chest.baseStone, chest.rarity, ruleSet)
     : 0;
@@ -239,8 +260,10 @@ export default function MissionChestScreen() {
               accessibilityLabel={
                 chest.opened
                   ? `Rương đã mở, phẩm chất ${rarityDisplayLabel(chest.rarity)}`
-                  : `Chạm để nâng rương ${rarityDisplayLabel(chest.rarity)}. ${
-                      chance === null ? "" : `Tỉ lệ ${chance}%`
+                  : `Chạm để nâng rương ${rarityDisplayLabel(chest.rarity)}. Còn ${remainingAttempts} lượt nâng cấp. ${
+                      currentChanceDescription
+                        ? `Lượt này: ${currentChanceDescription}.`
+                        : ""
                     }`
               }
               accessibilityHint="Mỗi lần chạm là một lượt nâng cấp; hoạt ảnh không tạo thêm lượt."
@@ -342,7 +365,9 @@ export default function MissionChestScreen() {
               </Text>
             ) : null}
             <Text style={[styles.detail, { color: c.mutedForeground }]}>
-              Lượt nâng cấp: {chest.upgradeAttempts}/{attemptLimit}
+              {chest.opened
+                ? `Đã dùng ${chest.upgradeAttempts}/${attemptLimit} lượt nâng cấp`
+                : `Còn ${remainingAttempts}/${attemptLimit} lượt nâng cấp`}
             </Text>
             <View
               style={styles.attemptRow}
@@ -389,7 +414,7 @@ export default function MissionChestScreen() {
                   ? `${chest.finalStone} Stone · ${fragmentRewardLabel(openedFragments)}`
                   : `${currentStoneReward} Stone · ${
                       ruleSet >= 4
-                        ? "mảnh ngẫu nhiên theo phẩm chất"
+                        ? "mảnh ngẫu nhiên theo phẩm chất, có thể nhiều mảnh"
                         : `1 mảnh ${rarityDisplayLabel(chest.rarity)}`
                     }`}
               </Text>
@@ -397,7 +422,7 @@ export default function MissionChestScreen() {
                 <Text style={[styles.rewardNote, { color: c.mutedForeground }]}>
                   Nếu nâng thành công: {nextStoneReward} Stone ·{" "}
                   {ruleSet >= 4
-                    ? `mảnh ngẫu nhiên theo phẩm chất ${rarityDisplayLabel(nextRarity)}`
+                    ? `mảnh ngẫu nhiên theo phẩm chất ${rarityDisplayLabel(nextRarity)}, có thể nhiều mảnh`
                     : `1 mảnh ${rarityDisplayLabel(nextRarity)}`}
                 </Text>
               ) : null}
@@ -465,9 +490,9 @@ export default function MissionChestScreen() {
                     ? "Lượt đặc biệt này chắc chắn nâng rương lên bậc kế tiếp."
                     : "Mỗi lần chạm thử nâng một bậc. Nếu trượt, rương chốt thưởng ở phẩm chất hiện tại."}
               </Text>
-              {chance !== null && nextRarity ? (
+              {currentChanceDescription ? (
                 <Text style={[styles.chanceText, { color: c.primary }]}>
-                  Tỉ lệ lên {rarityDisplayLabel(nextRarity)}: {chance}%
+                  Lượt này: {currentChanceDescription}
                 </Text>
               ) : null}
               <Pressable

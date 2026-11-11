@@ -145,21 +145,25 @@ export default function BlankScreen() {
               100,
               (mission.progress / mission.target) * 100,
             );
-            const progressLabel =
-              mission.type === "grade"
-                ? mission.completed
-                  ? "Đã đạt hạng yêu cầu"
-                  : "Chưa đạt hạng yêu cầu"
-                : `${mission.progress} trên ${mission.target}`;
             const displayProgressLabel =
               mission.type === "time"
-                ? `${mission.progress} trên ${mission.target} phút`
-                : progressLabel;
+                ? `${mission.progress}/${mission.target} phút`
+                : mission.type === "combo"
+                  ? `${mission.progress}/${mission.target} câu`
+                  : mission.type === "grade"
+                    ? mission.completed
+                      ? "Đạt"
+                      : "Chưa đạt"
+                    : `${mission.progress}/${mission.target} từ`;
             return (
               <View
                 key={mission.id}
                 testID={`daily-mission-${mission.id}`}
-                accessibilityLabel={`${mission.title}. ${displayProgressLabel}. ${finished ? "Đã nhận phần thưởng." : "Phần thưởng sắp nhận."}`}
+                accessibilityLabel={`${mission.title}. Tiến độ: ${displayProgressLabel}. Rương ${
+                  CHEST_RARITY_LABELS[rewardRarity]
+                } khi hoàn thành. ${
+                  finished ? "Đã nhận phần thưởng." : "Phần thưởng sắp nhận."
+                }`}
                 style={[
                   styles.missionCard,
                   {
@@ -216,6 +220,15 @@ export default function BlankScreen() {
                     >
                       {mission.description}
                     </Text>
+                    <Text
+                      testID={`daily-mission-chest-${mission.id}`}
+                      style={[
+                        styles.missionChestLabel,
+                        { color: CHEST_RARITY_TEXT_COLORS[rewardRarity] },
+                      ]}
+                    >
+                      Rương {CHEST_RARITY_LABELS[rewardRarity]} khi hoàn thành
+                    </Text>
                   </View>
                   <View
                     style={[
@@ -267,13 +280,7 @@ export default function BlankScreen() {
                       { color: finished ? c.successText : c.primary },
                     ]}
                   >
-                    {mission.type === "grade"
-                      ? mission.completed
-                        ? "Đạt"
-                        : "Chưa đạt"
-                      : mission.type === "time"
-                        ? `${mission.progress}/${mission.target} phút`
-                        : `${mission.progress}/${mission.target}`}
+                    {displayProgressLabel}
                   </Text>
                 </View>
               </View>
@@ -362,6 +369,12 @@ function ChestCard({
     chest.ruleSet ?? 1,
     chest.superUpgrade ?? false,
   );
+  const attemptsLeft = Math.max(0, attemptLimit - chest.upgradeAttempts);
+  const currentStone = chestStoneReward(
+    chest.baseStone,
+    chest.rarity,
+    chest.ruleSet ?? 1,
+  );
   return (
     <View
       style={[
@@ -400,18 +413,14 @@ function ChestCard({
         <Text
           style={[styles.chestDescription, { color: colors.mutedForeground }]}
         >
-          {chestStoneReward(chest.baseStone, chest.rarity, chest.ruleSet ?? 1)}{" "}
-          Stone khi mở · {chest.upgradeAttempts}/{attemptLimit} lượt đã dùng
+          Nếu chốt ở bậc này: {currentStone} Stone · Còn {attemptsLeft}/
+          {attemptLimit} lượt nâng cấp
         </Text>
       </View>
       <Pressable
         testID={`open-chest-${chest.chestId}`}
         accessibilityRole="button"
-        accessibilityLabel={`Mở rương ${rarityLabel}, ${chestStoneReward(
-          chest.baseStone,
-          chest.rarity,
-          chest.ruleSet ?? 1,
-        )} Stone khi mở`}
+        accessibilityLabel={`Mở rương ${rarityLabel}. Nếu chốt ở bậc này nhận ${currentStone} Stone. Còn ${attemptsLeft} trên ${attemptLimit} lượt nâng cấp.`}
         onPress={() =>
           router.push({
             pathname: "/chest/[chestId]",
@@ -508,6 +517,7 @@ const styles = StyleSheet.create({
   level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },
   missionTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   missionDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
+  missionChestLabel: { fontFamily: F.s, fontSize: 11, lineHeight: 15 },
   rewardPill: {
     position: "relative",
     overflow: "hidden",
@@ -554,7 +564,7 @@ const styles = StyleSheet.create({
   track: { flex: 1, height: 8, borderRadius: 5, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 5 },
   progressText: {
-    minWidth: 34,
+    minWidth: 58,
     textAlign: "right",
     fontFamily: F.b,
     fontSize: 12,

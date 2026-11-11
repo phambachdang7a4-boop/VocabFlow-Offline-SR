@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 
@@ -27,6 +28,30 @@ assert.equal(
   new Set([1, 2, 3].map((level) => CHEST_RARITY_TEXT_COLORS[DAILY_MISSION_CHEST_RARITY[level]])).size,
   3,
   "Each mission chest tier has a distinct metallic edge.",
+);
+const missionScreen = readFileSync(
+  join(__dirname, "../app/(tabs)/blank.tsx"),
+  "utf8",
+);
+assert.match(
+  missionScreen,
+  /Rương \{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn thành/,
+  "Each mission tells learners which chest tier it awards.",
+);
+assert.match(
+  missionScreen,
+  /mission\.type === "combo"[\s\S]*?`\$\{mission\.progress\}\/\$\{mission\.target\} câu`/,
+  "Combo progress includes its unit.",
+);
+assert.match(
+  missionScreen,
+  /`\$\{mission\.progress\}\/\$\{mission\.target\} từ`/,
+  "Word-count progress includes its unit.",
+);
+assert.match(
+  missionScreen,
+  /Nếu chốt ở bậc này: \{currentStone\} Stone · Còn \{attemptsLeft\}/,
+  "The unopened chest card explains its current payout and remaining attempts.",
 );
 
 const dates = [
