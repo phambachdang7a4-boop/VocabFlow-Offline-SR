@@ -18,6 +18,14 @@ const ieltsTopicDomain = loadTs(
     ),
   },
 );
+const toeicTopicDomain = loadTs(
+  join(__dirname, "../domain/toeic-topic-course.ts"),
+  {
+    "./toeic-topic-course-data.json": require(
+      "../domain/toeic-topic-course-data.json",
+    ),
+  },
+);
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});
   return { type, props: { ...props, children } };
@@ -83,6 +91,7 @@ function mount() {
     "@/domain/conjunction-course": courseDomain,
     "@/domain/linking-adverb-course": linkingAdverbDomain,
     "@/domain/ielts-topic-course": ieltsTopicDomain,
+    "@/domain/toeic-topic-course": toeicTopicDomain,
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
@@ -183,6 +192,24 @@ function mount() {
     await screen.settle();
   }
   assert.ok(screen.byId("ielts-lesson-complete"));
+  screen.byId("ielts-leave-lesson").props.onPress();
+  screen.byId("return-to-course-list").props.onPress();
+  assert.ok(screen.byId("toeic-course-card"));
+  screen.byId("toeic-course-card").props.onPress();
+  const toeicLesson = toeicTopicDomain.TOEIC_TOPIC_COURSE_LESSONS[0];
+  screen.byId("toeic-lesson-1").props.onPress();
+  for (let index = 0; index < toeicLesson.questions.length; index++) {
+    const question = toeicLesson.questions[index];
+    assert.deepEqual(
+      screen.byId("toeic-question-prompt").props.children,
+      [question.prompt],
+    );
+    screen.byId(`toeic-choice-${question.term}`).props.onPress();
+    assert.ok(screen.byId("toeic-answer-feedback"));
+    screen.byId("toeic-next").props.onPress();
+    await screen.settle();
+  }
+  assert.ok(screen.byId("toeic-lesson-complete"));
   console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {
   console.error(error);

@@ -27,6 +27,14 @@ const ieltsTopicCourse = loadTs(
     ),
   },
 );
+const toeicTopicCourse = loadTs(
+  join(__dirname, "../domain/toeic-topic-course.ts"),
+  {
+    "./toeic-topic-course-data.json": require(
+      "../domain/toeic-topic-course-data.json",
+    ),
+  },
+);
 const dictionaryDomain = loadDictionaryDomain();
 const { applyLocalDictionaryAdditions } = loadTs(
   join(__dirname, "../data/dictionary-local-additions.ts"),
@@ -246,6 +254,45 @@ async function checkCourseContentAndProgress() {
     "New lessons use substantial word groups.",
   );
 
+  const toeicTerms = toeicTopicCourse.TOEIC_TOPIC_WORD_LIST.flatMap(
+    (topic) => topic.terms,
+  );
+  const toeicQuestions = toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.flatMap(
+    (lesson) => lesson.questions,
+  );
+  assert.equal(
+    toeicTopicCourse.TOEIC_TOPIC_COURSE_TITLE,
+    "Từ vựng TOEIC theo chủ đề",
+  );
+  assert.equal(toeicTopicCourse.TOEIC_TOPIC_WORD_LIST.length, 25);
+  assert.ok(toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.length >= 35);
+  assert.ok(toeicTerms.length >= 850 && toeicTerms.length <= 1000);
+  assert.equal(new Set(toeicTerms).size, toeicTerms.length);
+  assert.equal(
+    toeicTopicCourse.TOEIC_TOPIC_COURSE_WORD_COUNT,
+    toeicTerms.length,
+  );
+  assert.deepEqual(
+    [...toeicQuestions.map((question) => question.term)].sort(),
+    [...toeicTerms].sort(),
+    "Every TOEIC word has one exercise.",
+  );
+  assert.deepEqual(
+    Object.keys(toeicTopicCourse.TOEIC_TOPIC_COURSE_ENTRIES).sort(),
+    [...toeicTerms].sort(),
+    "Every TOEIC word has course feedback content.",
+  );
+  for (const lesson of toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS) {
+    assert.ok(lesson.questions.length >= 10 && lesson.questions.length <= 35);
+    assert.ok(lesson.topicTitle);
+    for (const question of lesson.questions) {
+      assert.ok(question.prompt.includes("_____"));
+      assert.equal(new Set(question.choices).size, 4);
+      assert.ok(question.choices.includes(question.term));
+      assert.ok(toeicTopicCourse.TOEIC_TOPIC_COURSE_ENTRIES[question.term]);
+    }
+  }
+
   const root = mkdtempSync(join(tmpdir(), "vocabflow-conjunction-progress-"));
   const repository = createRepository(root);
   const { repo } = repository;
@@ -266,12 +313,22 @@ async function checkCourseContentAndProgress() {
       [lessonId],
       "Completing a lesson repeatedly does not duplicate its progress.",
     );
+    const toeicLessonId =
+      `${toeicTopicCourse.TOEIC_TOPIC_COURSE_ID}-office-operations-lesson-1`;
+    await repo.markCourseLessonCompleted(toeicLessonId);
+    assert.deepEqual(
+      await repo.getCourseLessonCompletions(
+        toeicTopicCourse.TOEIC_TOPIC_COURSE_ID,
+      ),
+      [toeicLessonId],
+      "TOEIC lesson completion is stored separately from other courses.",
+    );
     const db = repository.db;
     assert.equal(
       db
         .prepare("SELECT COUNT(*) AS count FROM course_lesson_progress")
         .get().count,
-      1,
+      2,
     );
   } finally {
     repository.db?.close();

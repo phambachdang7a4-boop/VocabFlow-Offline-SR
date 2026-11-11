@@ -31,7 +31,16 @@ import {
   IELTS_TOPIC_COURSE_LESSONS,
   IELTS_TOPIC_COURSE_TITLE,
   IELTS_TOPIC_COURSE_WORD_COUNT,
+  IELTS_TOPIC_WORD_LIST,
 } from "@/domain/ielts-topic-course";
+import {
+  TOEIC_TOPIC_COURSE_ENTRIES,
+  TOEIC_TOPIC_COURSE_ID,
+  TOEIC_TOPIC_COURSE_LESSONS,
+  TOEIC_TOPIC_COURSE_TITLE,
+  TOEIC_TOPIC_COURSE_WORD_COUNT,
+  TOEIC_TOPIC_WORD_LIST,
+} from "@/domain/toeic-topic-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
 import { useColors } from "@/hooks/useColors";
 
@@ -64,6 +73,8 @@ type CourseCatalogItem = {
   entriesByTerm: ReadonlyMap<string, CourseAnswer>;
   icon: React.ComponentProps<typeof Feather>["name"];
   testIdPrefix: string;
+  wordCount?: number;
+  topicCount?: number;
 };
 
 const COURSE_CATALOG: readonly CourseCatalogItem[] = [
@@ -91,11 +102,25 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: IELTS_TOPIC_COURSE_ID,
     title: IELTS_TOPIC_COURSE_TITLE,
     description:
-      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua 28 chủ đề IELTS, chia thành những bài học vừa sức.`,
+      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS, chia thành những bài học vừa sức.`,
     lessons: IELTS_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
     icon: "globe",
     testIdPrefix: "ielts",
+    wordCount: IELTS_TOPIC_COURSE_WORD_COUNT,
+    topicCount: IELTS_TOPIC_WORD_LIST.length,
+  },
+  {
+    id: TOEIC_TOPIC_COURSE_ID,
+    title: TOEIC_TOPIC_COURSE_TITLE,
+    description:
+      `Học ${TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC, từ văn phòng đến công tác.`,
+    lessons: TOEIC_TOPIC_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(TOEIC_TOPIC_COURSE_ENTRIES)),
+    icon: "briefcase",
+    testIdPrefix: "toeic",
+    wordCount: TOEIC_TOPIC_COURSE_WORD_COUNT,
+    topicCount: TOEIC_TOPIC_WORD_LIST.length,
   },
 ];
 
@@ -338,8 +363,8 @@ export default function CoursesScreen() {
                     0,
                   )}{" "}
                   câu
-                  {activeCourse.id === IELTS_TOPIC_COURSE_ID
-                    ? ` · ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ`
+                  {activeCourse.wordCount
+                    ? ` · ${activeCourse.wordCount.toLocaleString("vi-VN")} từ`
                     : ""}{" "}
                   · học ngoại tuyến
                 </Text>
@@ -365,7 +390,7 @@ export default function CoursesScreen() {
               activeCourse.lessons.map((lesson, index) => {
                 const completed = completedLessons.includes(lesson.id);
                 const startsTopic =
-                  activeCourse.id === IELTS_TOPIC_COURSE_ID &&
+                  activeCourse.topicCount !== undefined &&
                   lesson.topicId !==
                     activeCourse.lessons[index - 1]?.topicId;
                 const topicLessonCount = startsTopic
