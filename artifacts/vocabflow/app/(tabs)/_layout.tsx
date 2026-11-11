@@ -8,8 +8,8 @@ import { NativeTabs } from "expo-router/native-tabs";
 import { SymbolView } from "expo-symbols";
 import { MaterialSheen } from "@/components/ui";
 
-// Keep Sổ từ (/) as the landing tab.
-export const unstable_settings = { anchor: "index" };
+// Start guests on Tra Từ; they can reach the notebook from its tab.
+export const unstable_settings = { anchor: "dictionary" };
 
 function NativeTabLayout() {
   return (

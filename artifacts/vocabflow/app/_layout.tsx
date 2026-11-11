@@ -19,7 +19,6 @@ import { tokenCache } from "@clerk/expo/token-cache";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import {
   activateGuestDatabase,
-  getDatabaseScope,
   initializeAccountDatabase,
 } from "@/data/vocabulary-sync";
 import {
@@ -37,6 +36,8 @@ import { Redirect, router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
 SplashScreen.preventAutoHideAsync();
+
+export const unstable_settings = { anchor: "(tabs)" };
 
 const queryClient = new QueryClient();
 const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -133,17 +134,15 @@ function RootLayoutNav() {
   }, [getToken, isSignedIn]);
 
   useEffect(() => {
-    if (!isLoaded) return;
     let active = true;
-    const nextUserId = isSignedIn ? (userId ?? null) : null;
+    const nextUserId =
+      isLoaded && isSignedIn ? (userId ?? null) : null;
     setScopedUserId(undefined);
     setScopeError(null);
 
     const setup = nextUserId
       ? initializeAccountDatabase(nextUserId)
-      : getDatabaseScope() === null
-        ? Promise.resolve()
-        : activateGuestDatabase();
+      : activateGuestDatabase();
 
     void setup
       .then(() => {
@@ -161,10 +160,6 @@ function RootLayoutNav() {
     };
   }, [isLoaded, isSignedIn, scopeAttempt, userId]);
 
-  if (!isLoaded) {
-    if (inAuthFlow) return <RootStack />;
-    return <Redirect href="/(auth)/sign-in" />;
-  }
   if (isLoaded && isSignedIn === undefined) {
     return (
       <View
@@ -188,66 +183,66 @@ function RootLayoutNav() {
       </View>
     );
   }
-  if (!isSignedIn && !inAuthFlow) return <Redirect href="/(auth)/sign-in" />;
-  if (isSignedIn && inAuthFlow) return <Redirect href="/(tabs)" />;
+  if (isLoaded && isSignedIn && inAuthFlow) return <Redirect href="/(tabs)" />;
 
-  if (isSignedIn) {
-    if (scopeError) {
-      return (
-        <View
+  if (scopeError) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          padding: 28,
+          backgroundColor: c.background,
+        }}
+      >
+        <Text
           style={{
-            flex: 1,
-            justifyContent: "center",
-            padding: 28,
-            backgroundColor: c.background,
+            color: c.foreground,
+            fontFamily: "Inter_600SemiBold",
+            fontSize: 20,
+            textAlign: "center",
+          }}
+        >
+          Chưa mở được sổ từ
+        </Text>
+        <Text
+          accessibilityRole="alert"
+          style={{
+            color: c.mutedForeground,
+            fontFamily: "Inter_400Regular",
+            fontSize: 15,
+            lineHeight: 22,
+            textAlign: "center",
+            marginTop: 10,
+          }}
+        >
+          {scopeError}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setScopeAttempt((value) => value + 1)}
+          style={{
+            backgroundColor: c.accent,
+            borderRadius: 14,
+            padding: 16,
+            marginTop: 22,
           }}
         >
           <Text
             style={{
               color: c.foreground,
               fontFamily: "Inter_600SemiBold",
-              fontSize: 20,
               textAlign: "center",
             }}
           >
-            Chưa mở được sổ từ
+            Thử lại
           </Text>
-          <Text
-            accessibilityRole="alert"
-            style={{
-              color: c.mutedForeground,
-              fontFamily: "Inter_400Regular",
-              fontSize: 15,
-              lineHeight: 22,
-              textAlign: "center",
-              marginTop: 10,
-            }}
-          >
-            {scopeError}
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setScopeAttempt((value) => value + 1)}
-            style={{
-              backgroundColor: c.accent,
-              borderRadius: 14,
-              padding: 16,
-              marginTop: 22,
-            }}
-          >
-            <Text
-              style={{
-                color: c.foreground,
-                fontFamily: "Inter_600SemiBold",
-                textAlign: "center",
-              }}
-            >
-              Thử lại
-            </Text>
-          </Pressable>
-        </View>
-      );
-    }
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (isSignedIn) {
     if (scopedUserId !== userId) {
       return (
         <View
@@ -280,7 +275,37 @@ function RootLayoutNav() {
     );
   }
 
-  return <RootStack />;
+  if (scopedUserId !== null) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: c.background,
+        }}
+      >
+        <ActivityIndicator color={c.primary} />
+        <Text
+          style={{
+            color: c.mutedForeground,
+            fontFamily: "Inter_400Regular",
+            marginTop: 12,
+          }}
+        >
+          Đang chuẩn bị dữ liệu trên thiết bị…
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <SyncProvider key="guest" userId="">
+      <VocabularyProvider key="guest">
+        <RootStack />
+      </VocabularyProvider>
+    </SyncProvider>
+  );
 }
 
 function AppearanceFrame() {

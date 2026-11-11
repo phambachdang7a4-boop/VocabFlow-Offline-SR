@@ -630,6 +630,8 @@ export default function SettingsScreen() {
           ]}
         >
           <MaterialSheen radius={c.radius} />
+          {user ? (
+            <>
           <View style={styles.accountHeader}>
             <View
               style={[styles.accountIcon, { backgroundColor: c.secondary }]}
@@ -726,6 +728,54 @@ export default function SettingsScreen() {
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
             Đăng xuất không xóa sổ từ hoặc dữ liệu trên máy.
           </Text>
+            </>
+          ) : (
+            <>
+              <View style={styles.accountHeader}>
+                <View
+                  style={[styles.accountIcon, { backgroundColor: c.secondary }]}
+                >
+                  <Feather name="smartphone" size={19} color={c.primary} />
+                </View>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text
+                    style={[styles.appearanceTitle, { color: c.foreground }]}
+                  >
+                    Chế độ khách
+                  </Text>
+                  <Text
+                    style={[
+                      styles.appearanceDetail,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    Từ và tiến độ chỉ lưu trên thiết bị này.
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.syncRow, { borderTopColor: c.border }]}>
+                <Feather
+                  name="cloud-off"
+                  size={18}
+                  color={c.mutedForeground}
+                />
+                <Text
+                  style={[
+                    styles.appearanceDetail,
+                    { flex: 1, color: c.mutedForeground },
+                  ]}
+                >
+                  Đăng nhập để đồng bộ giữa các thiết bị.
+                </Text>
+              </View>
+              <Button
+                testID="guest-sign-in"
+                label="Đăng nhập hoặc tạo tài khoản"
+                icon="log-in"
+                onPress={() => router.push("/(auth)/sign-in")}
+              />
+            </>
+          )}
         </View>
         <Text style={[styles.section, { color: c.mutedForeground }]}>
           SAO LƯU & KHÔI PHỤC

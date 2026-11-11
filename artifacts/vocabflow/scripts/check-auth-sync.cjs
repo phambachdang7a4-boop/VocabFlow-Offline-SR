@@ -55,9 +55,9 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     sessionId: "session-account-a",
     startedAt: Date.parse("2026-11-08T08:00:00.000Z"),
     activeDurationMs: 45_000,
-    maxCombo: 12,
+    maxCombo: 20,
     reviewedCount: 30,
-    correctCount: 12,
+    correctCount: 20,
     grade: "C",
     completed: true,
   });
@@ -65,7 +65,7 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     sessionId: "session-account-a",
     startedAt: Date.parse("2026-11-08T08:00:00.000Z"),
     comboIndex: 1,
-    comboLength: 12,
+    comboLength: 20,
   });
   const reviewTotals = await repo.getReviewStatistics("2026-01-01");
   assert.equal(reviewTotals.totalSessions, 1);
@@ -83,9 +83,9 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     45_000,
     "Active review time is included in the sync snapshot.",
   );
-  assert.equal(snapshot.payload.reviewSessions[0].maxCombo, 12);
+  assert.equal(snapshot.payload.reviewSessions[0].maxCombo, 20);
   assert.equal(snapshot.payload.reviewComboRewards.length, 1);
-  assert.equal(snapshot.payload.reviewComboRewards[0].comboLength, 12);
+  assert.equal(snapshot.payload.reviewComboRewards[0].comboLength, 20);
   assert.equal(
     Object.hasOwn(snapshot.payload, "userId"),
     false,
@@ -449,6 +449,10 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     "utf8",
   );
   const settings = readFileSync(join(__dirname, "../app/settings.tsx"), "utf8");
+  const tabsLayout = readFileSync(
+    join(__dirname, "../app/(tabs)/_layout.tsx"),
+    "utf8",
+  );
   assert.match(
     rootLayout,
     /ClerkProvider[\s\S]*tokenCache/,
@@ -458,6 +462,26 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     rootLayout,
     /Platform\.OS !== ["']web["'] && isSignedIn/,
     "Native API calls use bearer tokens while web uses same-origin Clerk cookies.",
+  );
+  assert.doesNotMatch(
+    rootLayout,
+    /if\s*\(!isSignedIn\s*&&\s*!inAuthFlow\)\s*return\s*<Redirect/,
+    "An unauthenticated user is not redirected away from the app.",
+  );
+  assert.match(
+    rootLayout,
+    /activateGuestDatabase[\s\S]*<SyncProvider key="guest" userId="">\s*<VocabularyProvider key="guest">/,
+    "Guest mode opens local storage and mounts app data providers without cloud sync.",
+  );
+  assert.match(
+    settings,
+    /Chế độ khách[\s\S]*Đăng nhập để đồng bộ giữa các thiết bị[\s\S]*testID="guest-sign-in"/,
+    "Guest settings explain local-only storage and offer optional account access.",
+  );
+  assert.match(
+    tabsLayout,
+    /unstable_settings\s*=\s*\{\s*anchor:\s*["']dictionary["']/,
+    "Guests land on the dictionary tab rather than a sign-in form.",
   );
   assert.match(
     signIn,
