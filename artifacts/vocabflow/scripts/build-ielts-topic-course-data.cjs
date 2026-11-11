@@ -365,6 +365,241 @@ const LEGACY_SOCIETY_LESSON = {
   ],
 };
 
+const COURSE_EXAMPLE_OVERRIDES = {
+  graduation: {
+    example: "She celebrated her graduation after completing her degree.",
+    exampleTranslation: "Cô ấy ăn mừng lễ tốt nghiệp sau khi hoàn thành chương trình học.",
+  },
+  emission: {
+    example: "The factory reduced its carbon emission by switching to renewable energy.",
+    exampleTranslation: "Nhà máy đã giảm lượng khí thải carbon bằng cách chuyển sang năng lượng tái tạo.",
+  },
+  carbon: {
+    example: "Reducing carbon emissions is essential to limit climate change.",
+    exampleTranslation: "Giảm lượng khí thải carbon là điều cần thiết để hạn chế biến đổi khí hậu.",
+  },
+  waste: {
+    example: "The council converted the waste land into a public park.",
+    exampleTranslation: "Hội đồng đã chuyển vùng đất hoang thành công viên công cộng.",
+  },
+  drought: {
+    example: "The region suffered a severe drought after months without rain.",
+    exampleTranslation: "Khu vực này đã trải qua một đợt hạn hán nghiêm trọng sau nhiều tháng không có mưa.",
+  },
+  forests: {
+    example: "The city forests its hillsides to reduce soil erosion.",
+    exampleTranslation: "Thành phố trồng rừng trên các sườn đồi để giảm xói mòn đất.",
+  },
+  desert: {
+    example: "Farmers in the region must adapt to the harsh desert climate.",
+    exampleTranslation: "Nông dân trong khu vực phải thích nghi với khí hậu sa mạc khắc nghiệt.",
+  },
+  social: {
+    example: "Social inequality can limit access to education and healthcare.",
+    exampleTranslation: "Bất bình đẳng xã hội có thể hạn chế khả năng tiếp cận giáo dục và chăm sóc sức khỏe.",
+  },
+  recession: {
+    example: "During the recession, many small businesses struggled to stay open.",
+    exampleTranslation: "Trong thời kỳ suy thoái, nhiều doanh nghiệp nhỏ chật vật để tiếp tục hoạt động.",
+  },
+  inflation: {
+    example: "Rising inflation has made food and housing less affordable.",
+    exampleTranslation: "Lạm phát gia tăng khiến thực phẩm và nhà ở trở nên khó chi trả hơn.",
+  },
+  bank: {
+    example: "The central bank raised interest rates to control inflation.",
+    exampleTranslation: "Ngân hàng trung ương đã tăng lãi suất để kiểm soát lạm phát.",
+  },
+  import: {
+    example: "The import of essential medicines increased during the health crisis.",
+    exampleTranslation: "Việc nhập khẩu các loại thuốc thiết yếu đã tăng lên trong cuộc khủng hoảng y tế.",
+  },
+  capitally: {
+    example: "The word capitally is an uncommon adverb meaning chiefly or mainly.",
+    exampleTranslation: "Capitally là một trạng từ ít dùng, có nghĩa là chủ yếu hoặc phần lớn.",
+  },
+  profit: {
+    example: "The company made a modest profit by reducing energy costs.",
+    exampleTranslation: "Công ty đã thu được một khoản lợi nhuận vừa phải nhờ giảm chi phí năng lượng.",
+  },
+  road: {
+    example: "The new road connects the village to the nearest city.",
+    exampleTranslation: "Con đường mới nối ngôi làng với thành phố gần nhất.",
+  },
+  buss: {
+    example: "He gave her a quick buss before saying goodbye.",
+    exampleTranslation: "Anh ấy hôn nhanh cô ấy trước khi nói lời tạm biệt.",
+  },
+  arts: {
+    example: "Public funding helps local arts programs reach more young people.",
+    exampleTranslation: "Nguồn tài trợ công giúp các chương trình nghệ thuật địa phương tiếp cận nhiều bạn trẻ hơn.",
+  },
+  planning: {
+    example: "Careful planning helped the city reduce traffic congestion.",
+    exampleTranslation: "Việc quy hoạch cẩn thận đã giúp thành phố giảm ùn tắc giao thông.",
+  },
+  sculpt: {
+    example: "Local artists sculpt figures from clay for the annual festival.",
+    exampleTranslation: "Các nghệ sĩ địa phương tạc tượng đất sét cho lễ hội hằng năm.",
+  },
+  religioner: {
+    example: "The word religioner is uncommon; religious person is clearer in modern English.",
+    exampleTranslation: "Từ religioner ít được dùng; trong tiếng Anh hiện đại, religious person rõ nghĩa hơn.",
+  },
+  methodize: {
+    example: "Before the exam, she methodizes her notes into clear topic sections.",
+    exampleTranslation: "Trước kỳ thi, cô ấy sắp xếp ghi chú thành các phần chủ đề rõ ràng.",
+  },
+  fossilise: {
+    example: "The remains may fossilise in sediment over millions of years.",
+    exampleTranslation: "Các di hài có thể hóa thạch trong trầm tích qua hàng triệu năm.",
+  },
+  coaled: {
+    example: "The steam locomotive was coaled before its long journey.",
+    exampleTranslation: "Đầu máy hơi nước được tiếp than trước chuyến đi dài.",
+  },
+  coaling: {
+    example: "Coaling the ship took several hours before it left port.",
+    exampleTranslation: "Việc tiếp than cho con tàu mất vài giờ trước khi nó rời cảng.",
+  },
+  coals: {
+    example: "The worker coals the furnace before the night shift begins.",
+    exampleTranslation: "Người công nhân tiếp than cho lò trước khi ca đêm bắt đầu.",
+  },
+  naturalise: {
+    example: "The local council will naturalise the riverbank by restoring native plants.",
+    exampleTranslation: "Hội đồng địa phương sẽ khôi phục vẻ tự nhiên của bờ sông bằng cách trồng lại các loài cây bản địa.",
+  },
+  crops: {
+    example: "The farm crops its fields twice a year.",
+    exampleTranslation: "Trang trại gieo trồng trên các cánh đồng của mình hai lần mỗi năm.",
+  },
+  diet: {
+    example: "The Japanese Diet debated a bill on food safety.",
+    exampleTranslation: "Quốc hội Nhật Bản đã thảo luận một dự luật về an toàn thực phẩm.",
+  },
+  dietary: {
+    example: "The clinic gave patients dietary advice for managing high blood pressure.",
+    exampleTranslation: "Phòng khám đưa ra lời khuyên về chế độ ăn uống cho bệnh nhân để kiểm soát huyết áp cao.",
+  },
+  corporation: {
+    example: "The corporation opened a new office to serve customers in the region.",
+    exampleTranslation: "Tập đoàn đã mở một văn phòng mới để phục vụ khách hàng trong khu vực.",
+  },
+  foreigner: {
+    example: "A foreigner living in a new country may need time to learn local customs.",
+    exampleTranslation: "Một người nước ngoài sống ở quốc gia mới có thể cần thời gian để tìm hiểu phong tục địa phương.",
+  },
+  nurture: {
+    example: "The child benefited from the love and nurture of a supportive family.",
+    exampleTranslation: "Đứa trẻ được hưởng lợi từ tình yêu thương và sự nuôi dưỡng của một gia đình luôn hỗ trợ em.",
+  },
+  maternalize: {
+    example: "The novel maternalizes its main character by presenting her as a protective mother figure.",
+    exampleTranslation: "Cuốn tiểu thuyết khắc họa nhân vật chính với những phẩm chất của một người mẹ luôn chở che.",
+  },
+  functionate: {
+    example: "The word functionate is uncommon; duty or responsibility is clearer in modern English.",
+    exampleTranslation: "Từ functionate ít được dùng; duty hoặc responsibility rõ nghĩa hơn trong tiếng Anh hiện đại.",
+  },
+  sexuality: {
+    example: "The study examines how culture and social expectations shape sexuality.",
+    exampleTranslation: "Nghiên cứu xem xét cách văn hóa và kỳ vọng xã hội định hình tính dục.",
+  },
+  vaccinate: {
+    example: "The clinic will vaccinate children against measles before the school year begins.",
+    exampleTranslation: "Phòng khám sẽ tiêm vắc-xin phòng bệnh sởi cho trẻ em trước khi năm học bắt đầu.",
+  },
+  enroll: {
+    example: "The court enrolled the case in its official register.",
+    exampleTranslation: "Tòa án đã ghi vụ việc vào sổ đăng ký chính thức.",
+  },
+  renews: {
+    example: "The city renews its public transport fleet every year.",
+    exampleTranslation: "Thành phố đổi mới đội xe giao thông công cộng mỗi năm.",
+  },
+  artificially: {
+    example: "The lake's water level was artificially maintained during the drought.",
+    exampleTranslation: "Mực nước hồ được duy trì nhân tạo trong đợt hạn hán.",
+  },
+  psychologise: {
+    example: "Some researchers psychologise social problems instead of examining their economic causes.",
+    exampleTranslation: "Một số nhà nghiên cứu lý giải các vấn đề xã hội bằng tâm lý thay vì xem xét nguyên nhân kinh tế.",
+  },
+  ethic: {
+    example: "A strong ethic of fairness should guide every public decision.",
+    exampleTranslation: "Tinh thần đề cao sự công bằng nên định hướng mọi quyết định công.",
+  },
+  salarying: {
+    example: "Salarying means paying someone a salary, though the word is rarely used today.",
+    exampleTranslation: "Salarying có nghĩa là trả lương cho ai đó, dù từ này ngày nay ít được sử dụng.",
+  },
+  skill: {
+    example: "The training program skills workers for jobs in renewable energy.",
+    exampleTranslation: "Chương trình đào tạo trang bị kỹ năng cho người lao động để làm các công việc trong lĩnh vực năng lượng tái tạo.",
+  },
+  productivity: {
+    example: "Higher productivity helped the factory meet rising demand.",
+    exampleTranslation: "Năng suất cao hơn đã giúp nhà máy đáp ứng nhu cầu ngày càng tăng.",
+  },
+  entrepreneur: {
+    example: "The entrepreneur opened a small café that quickly became popular.",
+    exampleTranslation: "Nhà khởi nghiệp mở một quán cà phê nhỏ nhanh chóng trở nên nổi tiếng.",
+  },
+  publicize: {
+    example: "The charity used local media to publicize its clean-water campaign.",
+    exampleTranslation: "Tổ chức từ thiện đã sử dụng truyền thông địa phương để quảng bá chiến dịch nước sạch.",
+  },
+  victimise: {
+    example: "The policy could victimise low-income families who rely on public transport.",
+    exampleTranslation: "Chính sách này có thể khiến các gia đình thu nhập thấp phụ thuộc vào phương tiện công cộng trở thành nạn nhân.",
+  },
+  victimize: {
+    example: "The policy could victimize low-income families who rely on public transport.",
+    exampleTranslation: "Chính sách này có thể khiến các gia đình thu nhập thấp phụ thuộc vào phương tiện công cộng trở thành nạn nhân.",
+  },
+  murdering: {
+    example: "He was arrested for murdering a local shopkeeper.",
+    exampleTranslation: "Anh ta bị bắt vì sát hại một chủ cửa hàng địa phương.",
+  },
+  expression: {
+    example: "Cold expression is used to extract oil from seeds without heat.",
+    exampleTranslation: "Phương pháp ép lạnh được dùng để chiết xuất dầu từ hạt mà không cần nhiệt.",
+  },
+  hobby: {
+    example: "In the story, the child rode a hobby, an old term for a small horse.",
+    exampleTranslation: "Trong câu chuyện, đứa trẻ cưỡi một con hobby, từ cổ chỉ một con ngựa nhỏ.",
+  },
+  programer: {
+    example: "The programer designed an app to help patients book appointments.",
+    exampleTranslation: "Lập trình viên đã thiết kế một ứng dụng giúp bệnh nhân đặt lịch hẹn.",
+  },
+  socially: {
+    example: "Volunteering helps people connect socially with their neighbors.",
+    exampleTranslation: "Hoạt động tình nguyện giúp mọi người kết nối với hàng xóm.",
+  },
+  corruptly: {
+    example: "The official acted corruptly by accepting payments from a contractor.",
+    exampleTranslation: "Viên chức đã hành động tham nhũng khi nhận tiền từ một nhà thầu.",
+  },
+  historically: {
+    example: "Historically, many families relied on farming for their income.",
+    exampleTranslation: "Trong lịch sử, nhiều gia đình dựa vào nghề nông để kiếm sống.",
+  },
+  inclusively: {
+    example: "The school designed its lessons inclusively so every student could participate.",
+    exampleTranslation: "Nhà trường thiết kế bài học theo hướng hòa nhập để mọi học sinh đều có thể tham gia.",
+  },
+  commercially: {
+    example: "The product was not commercially successful despite its innovative design.",
+    exampleTranslation: "Sản phẩm không thành công về mặt thương mại dù có thiết kế sáng tạo.",
+  },
+  jobs: {
+    example: "The company jobs out its customer-support work to a specialist provider.",
+    exampleTranslation: "Công ty thuê một đơn vị chuyên môn bên ngoài thực hiện công việc hỗ trợ khách hàng.",
+  },
+};
+
 const POS_GROUPS = {
   n: "noun",
   noun: "noun",
@@ -721,6 +956,22 @@ function main() {
           posGroup: normalizePos(word.pos),
           family: word.family,
         };
+        const authoredExample = COURSE_EXAMPLE_OVERRIDES[word.term];
+        if (authoredExample) {
+          entries[word.term].example = authoredExample.example;
+          entries[word.term].exampleTranslation =
+            authoredExample.exampleTranslation;
+          entries[word.term].exampleSource = "authored";
+        }
+      }
+    }
+
+    for (const [term, example] of Object.entries(COURSE_EXAMPLE_OVERRIDES)) {
+      if (!entries[term]) {
+        throw new Error(`Không tìm thấy từ để áp dụng ví dụ IELTS đã biên soạn: ${term}`);
+      }
+      if (!example.example?.trim() || !example.exampleTranslation?.trim()) {
+        throw new Error(`Ví dụ IELTS đã biên soạn cần có câu tiếng Anh và bản dịch: ${term}`);
       }
     }
 
