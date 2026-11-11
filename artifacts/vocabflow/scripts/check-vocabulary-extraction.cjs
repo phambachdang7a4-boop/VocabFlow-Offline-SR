@@ -67,6 +67,11 @@ async function checkLemmasAndAggregation() {
   assert.deepEqual(extraction.candidateLemmas("went").slice(0, 2), ["went", "go"]);
   assert.deepEqual(extraction.candidateLemmas("children").slice(0, 2), ["children", "child"]);
   assert.deepEqual(extraction.candidateLemmas("better").slice(0, 2), ["better", "good"]);
+  assert.deepEqual(
+    extraction.candidateLemmas("does"),
+    ["does"],
+    "Ambiguous does is not guessed as either do or doe.",
+  );
   assert.ok(!extraction.candidateLemmas("saw").includes("see"), "Ambiguous saw is not guessed as see.");
   assert.ok(!extraction.candidateLemmas("left").includes("leave"), "Ambiguous left is not guessed as leave.");
   assert.ok(!extraction.candidateLemmas("rose").includes("rise"), "Ambiguous rose is not guessed as rise.");

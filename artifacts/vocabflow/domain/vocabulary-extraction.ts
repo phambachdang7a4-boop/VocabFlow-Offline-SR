@@ -12,7 +12,6 @@ const IRREGULAR_LEMMAS: Readonly<Record<string, string>> = {
   gone: "go",
   ran: "run",
   did: "do",
-  does: "do",
   done: "do",
   had: "have",
   has: "have",
@@ -163,6 +162,10 @@ export function candidateLemmas(value: string): string[] {
   const token = value.toLocaleLowerCase("en");
   const candidates = [token];
   const add = (candidate: string) => addCandidate(candidates, candidate);
+
+  // "Does" can be either a form of "do" or the plural of "doe".
+  // Without context, keep only the exact form rather than guessing.
+  if (token === "does") return candidates;
 
   const irregularLemma = Object.prototype.hasOwnProperty.call(
     IRREGULAR_LEMMAS,
