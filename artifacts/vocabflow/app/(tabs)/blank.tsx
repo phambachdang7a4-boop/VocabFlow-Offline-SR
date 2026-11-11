@@ -27,6 +27,12 @@ import {
   type MissionChest,
 } from "@/domain/mission-chests";
 
+const MISSION_REWARD_RARITY = {
+  1: "common",
+  2: "uncommon",
+  3: "rare",
+} as const;
+
 export default function BlankScreen() {
   const c = useColors();
   const bottom = useBottomPad();
@@ -128,6 +134,7 @@ export default function BlankScreen() {
         ) : (
           overview?.missions.map((mission) => {
             const finished = mission.rewarded;
+            const rewardRarity = MISSION_REWARD_RARITY[mission.level];
             const iconName =
               mission.type === "review"
                 ? "layers"
@@ -217,13 +224,21 @@ export default function BlankScreen() {
                   <View
                     style={[
                       styles.rewardPill,
-                      { backgroundColor: finished ? c.success : c.accent },
+                      {
+                        backgroundColor: finished
+                          ? c.success
+                          : CHEST_RARITY_COLORS[rewardRarity],
+                      },
                     ]}
                   >
                     <Feather
                       name={finished ? "check" : "gift"}
                       size={finished ? 21 : 27}
-                      color={finished ? "#FFFFFF" : c.buttonForeground}
+                      color={
+                        finished
+                          ? "#FFFFFF"
+                          : CHEST_RARITY_ICON_COLORS[rewardRarity]
+                      }
                     />
                   </View>
                 </View>
