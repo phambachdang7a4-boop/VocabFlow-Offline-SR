@@ -72,7 +72,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: LINKING_ADVERB_COURSE_ID,
     title: LINKING_ADVERB_COURSE_TITLE,
     description:
-      "Luyện 9 trạng từ liên kết qua ví dụ ngắn, dễ nhận ra cách bổ sung ý, thể hiện đối lập, thời gian và kết quả.",
+      "Luyện 17 trạng từ liên kết qua ví dụ ngắn, dễ nhận ra cách bổ sung ý, thể hiện đối lập, thời gian và kết quả.",
     lessons: LINKING_ADVERB_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(LINKING_ADVERB_COURSE_ENTRIES)),
     icon: "align-left",

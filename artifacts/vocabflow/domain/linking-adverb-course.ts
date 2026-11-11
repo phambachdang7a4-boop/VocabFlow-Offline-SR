@@ -23,50 +23,123 @@ export const LINKING_ADVERB_COURSE_TITLE = "Trạng từ liên kết";
 export const LINKING_ADVERB_COURSE_ENTRIES: Readonly<
   Record<string, LinkingAdverbCourseEntry>
 > = {
-  however: {
-    definition: "Tuy nhiên; nối hai ý tương phản.",
-    example: "The test was difficult; however, Mina finished it on time.",
-    exampleTranslation: "Bài kiểm tra khó; tuy nhiên, Mina đã làm xong đúng giờ.",
+  accordingly: {
+    definition: "Theo đó; điều chỉnh hành động cho phù hợp với tình huống.",
+    example:
+      "The opening hours changed, so we adjusted our schedule accordingly.",
+    exampleTranslation:
+      "Giờ mở cửa đã thay đổi, vì vậy chúng tôi điều chỉnh lịch trình cho phù hợp.",
   },
-  conversely: {
-    definition: "Ngược lại; giới thiệu một ý đối lập theo chiều ngược.",
-    example: "The north side is sunny; conversely, the south side stays cool.",
-    exampleTranslation: "Phía bắc có nắng; ngược lại, phía nam vẫn mát.",
+  consequently: {
+    definition: "Do đó; nêu kết quả trực tiếp của sự việc trước.",
+    example:
+      "Leo left his passport at home; consequently, he could not board the flight.",
+    exampleTranslation:
+      "Leo để quên hộ chiếu ở nhà; vì vậy, cậu ấy không thể lên máy bay.",
   },
-  instead: {
-    definition: "Thay vào đó; dùng một lựa chọn để thay cho lựa chọn khác.",
-    example: "The bus did not arrive, so we walked instead.",
-    exampleTranslation: "Xe buýt không đến, vì vậy chúng tôi đi bộ thay vào đó.",
-  },
-  moreover: {
-    definition: "Hơn nữa; bổ sung thêm một ý hỗ trợ.",
-    example: "The library is quiet; moreover, it stays open late.",
-    exampleTranslation: "Thư viện yên tĩnh; hơn nữa, nơi này còn mở cửa đến muộn.",
-  },
-  meanwhile: {
-    definition: "Trong lúc đó; nối hai việc diễn ra cùng thời điểm.",
-    example: "The soup is cooling; meanwhile, set the table.",
-    exampleTranslation: "Món súp đang nguội; trong lúc đó, hãy dọn bàn ăn.",
-  },
-  subsequently: {
-    definition: "Sau đó; chỉ một việc xảy ra tiếp theo theo trình tự thời gian.",
-    example: "She completed her degree and subsequently joined a research team.",
-    exampleTranslation: "Cô ấy hoàn thành bằng cấp rồi sau đó gia nhập một nhóm nghiên cứu.",
+  hence: {
+    definition: "Vì vậy; nối một lý do với kết luận hoặc kết quả.",
+    example:
+      "The bridge is closed; hence, we must take another route.",
+    exampleTranslation:
+      "Cây cầu đã đóng; vì vậy, chúng ta phải đi đường khác.",
   },
   therefore: {
-    definition: "Vì vậy; nêu kết quả hợp lý từ ý phía trước.",
-    example: "The roads were icy; therefore, school closed for the day.",
-    exampleTranslation: "Đường đóng băng; vì vậy, trường học đóng cửa trong ngày.",
+    definition: "Do đó; đưa ra kết luận hợp lý từ thông tin trước.",
+    example:
+      "Every safety test passed; therefore, the device is ready to ship.",
+    exampleTranslation:
+      "Mọi bài kiểm tra an toàn đều đạt; vì vậy, thiết bị đã sẵn sàng để giao.",
   },
-  otherwise: {
-    definition: "Nếu không thì; nêu kết quả có thể xảy ra nếu không làm việc trước đó.",
-    example: "Save your work now; otherwise, you may lose it.",
-    exampleTranslation: "Hãy lưu bài ngay; nếu không thì bạn có thể mất bài.",
+  then: {
+    definition: "Sau đó; chỉ bước tiếp theo trong một trình tự.",
+    example: "Label each jar; then, place it on the correct shelf.",
+    exampleTranslation:
+      "Hãy dán nhãn từng lọ; sau đó, đặt lọ lên đúng kệ.",
   },
-  accordingly: {
-    definition: "Theo đó; chỉ cách điều chỉnh hành động cho phù hợp với tình huống.",
-    example: "The opening hours changed, so we adjusted our schedule accordingly.",
-    exampleTranslation: "Giờ mở cửa đã thay đổi, vì vậy chúng tôi điều chỉnh lịch trình cho phù hợp.",
+  finally: {
+    definition: "Cuối cùng; chỉ bước cuối sau một chuỗi hành động.",
+    example:
+      "We checked every page and finally found the missing signature.",
+    exampleTranslation:
+      "Chúng tôi kiểm tra từng trang và cuối cùng tìm thấy chữ ký còn thiếu.",
+  },
+  furthermore: {
+    definition: "Hơn nữa; bổ sung một lý do hoặc thông tin hỗ trợ.",
+    example:
+      "The bike is affordable; furthermore, its battery lasts all day.",
+    exampleTranslation:
+      "Chiếc xe đạp có giá phải chăng; hơn nữa, pin dùng được cả ngày.",
+  },
+  moreover: {
+    definition: "Hơn nữa; thêm một ý hỗ trợ cho nhận định trước.",
+    example:
+      "The museum is free; moreover, it is open every Sunday.",
+    exampleTranslation:
+      "Bảo tàng miễn phí; hơn nữa, nơi này mở cửa vào mỗi Chủ nhật.",
+  },
+  meanwhile: {
+    definition: "Trong lúc đó; hai việc diễn ra đồng thời.",
+    example:
+      "The rice is cooking; meanwhile, chop the vegetables.",
+    exampleTranslation:
+      "Cơm đang nấu; trong lúc đó, hãy cắt rau củ.",
+  },
+  however: {
+    definition: "Tuy nhiên; nêu một ý trái với điều người đọc có thể mong đợi.",
+    example:
+      "The forecast promised sunshine; however, it rained all afternoon.",
+    exampleTranslation:
+      "Dự báo nói trời sẽ nắng; tuy nhiên, trời mưa suốt buổi chiều.",
+  },
+  nevertheless: {
+    definition: "Dù vậy; nhấn mạnh kết quả vẫn xảy ra bất chấp trở ngại.",
+    example:
+      "The path was steep; nevertheless, the hikers continued to the summit.",
+    exampleTranslation:
+      "Con đường dốc; dù vậy, nhóm đi bộ vẫn tiếp tục lên đỉnh.",
+  },
+  nonetheless: {
+    definition: "Mặc dù thế; cho biết sự việc vẫn xảy ra dù có trở ngại.",
+    example:
+      "The instructions looked complicated; nonetheless, Ava built the desk.",
+    exampleTranslation:
+      "Hướng dẫn trông có vẻ phức tạp; mặc dù thế, Ava vẫn lắp được chiếc bàn.",
+  },
+  instead: {
+    definition: "Thay vào đó; chọn một hành động khác để thay thế.",
+    example:
+      "The café had no tables, so we ordered takeaway instead.",
+    exampleTranslation:
+      "Quán cà phê không còn bàn, vì vậy chúng tôi gọi đồ mang đi thay vào đó.",
+  },
+  rather: {
+    definition: "Đúng hơn là; sửa lại hoặc nói chính xác hơn ý vừa nêu.",
+    example:
+      "The problem was not the price; rather, the delivery was too slow.",
+    exampleTranslation:
+      "Vấn đề không nằm ở giá; đúng hơn là khâu giao hàng quá chậm.",
+  },
+  indeed: {
+    definition: "Quả thật; nhấn mạnh hoặc củng cố ý vừa nêu.",
+    example:
+      "The hike was demanding; indeed, we climbed for six hours.",
+    exampleTranslation:
+      "Chuyến đi bộ thật vất vả; quả thật, chúng tôi đã leo suốt sáu tiếng.",
+  },
+  likewise: {
+    definition: "Tương tự như vậy; nối một trường hợp có cách làm giống trường hợp trước.",
+    example:
+      "Mai volunteered at the shelter; likewise, her brother gave up weekends to help.",
+    exampleTranslation:
+      "Mai tình nguyện ở mái ấm; tương tự, anh trai cô cũng dành cuối tuần để giúp đỡ.",
+  },
+  similarly: {
+    definition: "Tương tự; chỉ ra rằng trường hợp tiếp theo có điểm giống trường hợp trước.",
+    example:
+      "The first class improved its scores. Similarly, the second class made progress.",
+    exampleTranslation:
+      "Lớp đầu tiên cải thiện điểm số. Tương tự, lớp thứ hai cũng tiến bộ.",
   },
 };
 
@@ -74,76 +147,127 @@ export const LINKING_ADVERB_COURSE_LESSONS: readonly LinkingAdverbCourseLesson[]
   [
     {
       id: `${LINKING_ADVERB_COURSE_ID}-contrast`,
-      title: "Đối lập và thay thế",
+      title: "Nguyên nhân, kết quả và trình tự",
       focus:
-        "Phân biệt ý tương phản, ý ngược chiều và một lựa chọn được dùng thay thế.",
+        "Nhận ra cách điều chỉnh theo tình huống, kết quả của một nguyên nhân và bước tiếp theo.",
       questions: [
         {
-          term: "however",
+          term: "accordingly",
           prompt:
-            "The test was difficult; _____, Mina finished it on time.",
-          choices: ["however", "instead", "meanwhile", "otherwise"],
+            "The opening hours changed, so we adjusted our schedule _____.",
+          choices: ["accordingly", "however", "meanwhile", "instead"],
         },
         {
-          term: "conversely",
+          term: "consequently",
           prompt:
-            "The north side is sunny; _____, the south side stays cool.",
-          choices: ["conversely", "moreover", "subsequently", "therefore"],
+            "Leo left his passport at home; _____, he could not board the flight.",
+          choices: ["consequently", "meanwhile", "nonetheless", "rather"],
         },
         {
-          term: "instead",
-          prompt: "The bus did not arrive, so we walked _____.",
-          choices: ["instead", "however", "meanwhile", "accordingly"],
+          term: "hence",
+          prompt:
+            "The bridge is closed; _____, we must take another route.",
+          choices: ["hence", "indeed", "instead", "meanwhile"],
+        },
+        {
+          term: "therefore",
+          prompt:
+            "Every safety test passed; _____, the device is ready to ship.",
+          choices: ["therefore", "moreover", "likewise", "rather"],
+        },
+        {
+          term: "then",
+          prompt:
+            "Label each jar; _____, place it on the correct shelf.",
+          choices: ["then", "however", "indeed", "accordingly"],
+        },
+        {
+          term: "finally",
+          prompt:
+            "We checked every page and _____ found the missing signature.",
+          choices: ["finally", "meanwhile", "therefore", "instead"],
         },
       ],
     },
     {
       id: `${LINKING_ADVERB_COURSE_ID}-addition-time`,
-      title: "Bổ sung và thời gian",
+      title: "Bổ sung và so sánh",
       focus:
-        "Nhận ra ý bổ sung, hai việc cùng lúc và sự việc xảy ra tiếp theo.",
+        "Phân biệt ý bổ sung, sự nhấn mạnh và hai trường hợp có điểm tương đồng.",
       questions: [
+        {
+          term: "furthermore",
+          prompt:
+            "The bike is affordable; _____, its battery lasts all day.",
+          choices: ["furthermore", "instead", "then", "hence"],
+        },
         {
           term: "moreover",
           prompt:
-            "The library is quiet; _____, it stays open late.",
-          choices: ["moreover", "meanwhile", "otherwise", "subsequently"],
+            "The museum is free; _____, it is open every Sunday.",
+          choices: ["moreover", "meanwhile", "rather", "therefore"],
         },
         {
           term: "meanwhile",
           prompt:
-            "The soup is cooling; _____, set the table.",
-          choices: ["meanwhile", "moreover", "therefore", "instead"],
+            "The rice is cooking; _____, chop the vegetables.",
+          choices: ["meanwhile", "accordingly", "however", "indeed"],
         },
         {
-          term: "subsequently",
+          term: "indeed",
           prompt:
-            "She completed her degree and _____ joined a research team.",
-          choices: ["subsequently", "conversely", "otherwise", "moreover"],
+            "The hike was demanding; _____, we climbed for six hours.",
+          choices: ["indeed", "instead", "then", "however"],
+        },
+        {
+          term: "likewise",
+          prompt:
+            "Mai volunteered at the shelter; _____, her brother gave up weekends to help.",
+          choices: ["likewise", "then", "however", "consequently"],
+        },
+        {
+          term: "similarly",
+          prompt:
+            "The first class improved its scores. _____, the second class made progress.",
+          choices: ["similarly", "meanwhile", "instead", "therefore"],
         },
       ],
     },
     {
       id: `${LINKING_ADVERB_COURSE_ID}-result-action`,
-      title: "Kết quả và cách ứng phó",
+      title: "Đối lập, nhượng bộ và thay thế",
       focus:
-        "Chọn từ chỉ kết quả, cảnh báo nếu không làm, hoặc hành động cho phù hợp.",
+        "Phân biệt ý trái với dự đoán, kết quả bất chấp trở ngại, và cách sửa hoặc thay thế ý.",
       questions: [
         {
-          term: "therefore",
-          prompt: "The roads were icy; _____, school closed for the day.",
-          choices: ["therefore", "instead", "meanwhile", "conversely"],
-        },
-        {
-          term: "otherwise",
-          prompt: "Save your work now; _____, you may lose it.",
-          choices: ["otherwise", "moreover", "subsequently", "however"],
-        },
-        {
-          term: "accordingly",
+          term: "however",
           prompt:
-            "The opening hours changed, so we adjusted our schedule _____.",
-          choices: ["accordingly", "conversely", "meanwhile", "instead"],
+            "The forecast promised sunshine; _____, it rained all afternoon.",
+          choices: ["however", "accordingly", "rather", "indeed"],
+        },
+        {
+          term: "nevertheless",
+          prompt:
+            "The path was steep; _____, the hikers continued to the summit.",
+          choices: ["nevertheless", "hence", "meanwhile", "therefore"],
+        },
+        {
+          term: "nonetheless",
+          prompt:
+            "The instructions looked complicated; _____, Ava built the desk.",
+          choices: ["nonetheless", "moreover", "then", "accordingly"],
+        },
+        {
+          term: "instead",
+          prompt:
+            "The café had no tables, so we ordered takeaway _____.",
+          choices: ["instead", "meanwhile", "consequently", "indeed"],
+        },
+        {
+          term: "rather",
+          prompt:
+            "The problem was not the price; _____, the delivery was too slow.",
+          choices: ["rather", "accordingly", "finally", "likewise"],
         },
       ],
     },

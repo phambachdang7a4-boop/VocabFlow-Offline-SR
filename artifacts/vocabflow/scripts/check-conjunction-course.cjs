@@ -149,6 +149,9 @@ async function checkCourseContentAndProgress() {
     "Trạng từ liên kết",
   );
   assert.equal(linkingAdverbCourse.LINKING_ADVERB_COURSE_LESSONS.length, 3);
+  assert.equal(linkingTerms.length, 17);
+  assert.ok(!linkingTerms.includes("first"));
+  assert.ok(!linkingTerms.includes("next"));
   assert.equal(linkedQuestions.length, linkingTerms.length);
   assert.deepEqual(
     [...linkedQuestions.map((question) => question.term)].sort(),
