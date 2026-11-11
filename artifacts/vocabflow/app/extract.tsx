@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -20,15 +19,12 @@ import { Feather } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { router } from "expo-router";
-import { Button, F, MaterialSheen } from "@/components/ui";
+import { Button, F } from "@/components/ui";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useColors } from "@/hooks/useColors";
 import { useDictionary } from "@/hooks/useDictionary";
 import { getDictionaryDraft } from "@/data/dictionary";
 import {
-  FREE_WORD_LIMIT,
-  getAddableWordCount,
-  getFreeWordSlots,
   MAX_EXTRACTION_TEXT_CHARACTERS,
   MAX_EXTRACTION_TEXT_BYTES,
   extractVocabularyFromText,
@@ -72,13 +68,11 @@ export default function ExtractVocabularyScreen() {
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [upgradeMessage, setUpgradeMessage] = useState<string | null>(null);
 
   const savedTerms = useMemo(
     () => new Set(words.map((word) => normalizedTerm(word.term))),
     [words],
   );
-  const remainingSlots = getFreeWordSlots(words.length);
   const visibleResults = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase("en");
     const filtered = results.filter((result) => {
@@ -219,21 +213,11 @@ export default function ExtractVocabularyScreen() {
     setError(null);
     setNotice(null);
     if (selectedResults.length === 0) return;
-    if (remainingSlots === 0) {
-      setUpgradeMessage(
-        "Sổ từ đã đạt giới hạn 100 từ của gói Free. Chưa có chức năng nâng cấp trong ứng dụng.",
-      );
-      return;
-    }
 
-    const addNow = selectedResults.slice(
-      0,
-      getAddableWordCount(words.length, selectedResults.length),
-    );
     let added = 0;
     setIsAdding(true);
     try {
-      for (const result of addNow) {
+      for (const result of selectedResults) {
         const sense = result.entry.senses[0];
         if (!sense) continue;
         const draft = await getDictionaryDraft(result.entry.id, sense.id);
@@ -242,11 +226,6 @@ export default function ExtractVocabularyScreen() {
       }
       setSelectedTerms(new Set());
       setNotice(`Đã thêm ${added} từ vào Sổ ở cấp 1.`);
-      if (selectedResults.length > addNow.length) {
-        setUpgradeMessage(
-          `Đã thêm ${added} từ và đạt giới hạn 100 từ của gói Free. Các từ còn lại chưa được thêm; chức năng nâng cấp chưa có trong ứng dụng.`,
-        );
-      }
     } catch (failure) {
       setError(
         failure instanceof Error
@@ -387,12 +366,6 @@ export default function ExtractVocabularyScreen() {
         </Text>
         <View style={styles.slotLine}>
           <Feather name="bookmark" size={16} color={c.primary} />
-          <Text
-            testID="extract-free-slots"
-            style={[styles.slotText, { color: c.foreground }]}
-          >
-            Còn {remainingSlots}/100 chỗ
-          </Text>
           <Text style={[styles.currentCount, { color: c.mutedForeground }]}>
             {words.length} từ trong Sổ
           </Text>
@@ -694,7 +667,7 @@ export default function ExtractVocabularyScreen() {
         ]}
       >
         <Text style={[styles.footerCount, { color: c.mutedForeground }]}>
-          {selectedResults.length} đã chọn · còn {remainingSlots}/100 chỗ
+          {selectedResults.length} từ đã chọn
         </Text>
         <Button
           testID="extract-add-selected"
@@ -705,45 +678,6 @@ export default function ExtractVocabularyScreen() {
           loading={isAdding}
         />
       </View>
-      <Modal
-        transparent
-        visible={upgradeMessage !== null}
-        animationType="fade"
-        onRequestClose={() => setUpgradeMessage(null)}
-      >
-        <Pressable
-          style={[styles.modalOverlay, { backgroundColor: c.overlay }]}
-          onPress={() => setUpgradeMessage(null)}
-        >
-          <Pressable
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: c.card,
-                borderColor: c.border,
-                borderRadius: c.radius + 6,
-              },
-            ]}
-            onPress={() => {}}
-          >
-            <MaterialSheen />
-            <View style={[styles.modalIcon, { backgroundColor: c.accent }]}>
-              <Feather name="award" size={23} color={c.primary} />
-            </View>
-            <Text style={[styles.modalTitle, { color: c.foreground }]}>
-              Đã chạm giới hạn Free
-            </Text>
-            <Text style={[styles.modalMessage, { color: c.mutedForeground }]}>
-              {upgradeMessage}
-            </Text>
-            <Button
-              testID="extract-upgrade-dismiss"
-              label="Đóng"
-              onPress={() => setUpgradeMessage(null)}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -765,7 +699,6 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
   offlineNote: { fontFamily: F.r, fontSize: 14, lineHeight: 21 },
   slotLine: { flexDirection: "row", alignItems: "center", gap: 8 },
-  slotText: { fontFamily: F.s, fontSize: 14 },
   currentCount: { marginLeft: "auto", fontFamily: F.r, fontSize: 12 },
   inputCard: { borderWidth: 1, padding: 14, gap: 10 },
   fieldLabel: { fontFamily: F.s, fontSize: 14 },
@@ -873,28 +806,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   footerCount: { fontFamily: F.m, fontSize: 12, textAlign: "center" },
-  modalOverlay: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: 420,
-    borderWidth: 1,
-    padding: 22,
-    alignItems: "center",
-    overflow: "hidden",
-    gap: 14,
-  },
-  modalIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalTitle: { fontFamily: F.b, fontSize: 19, textAlign: "center" },
-  modalMessage: { fontFamily: F.r, fontSize: 14, lineHeight: 21, textAlign: "center" },
 });

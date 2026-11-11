@@ -69,7 +69,7 @@ async function checkLemmasAndAggregation() {
   assert.equal(extraction.utf8ByteLength("Corvi 🐦"), 10);
 }
 
-async function checkSavedWordsProgressAndLimits() {
+async function checkSavedWordsProgressAndInputLimits() {
   const student = makeEntry(1, "student", "Học sinh");
   const lookup = async (candidates) =>
     new Map(candidates.includes("student") ? [["student", student]] : []);
@@ -94,13 +94,6 @@ async function checkSavedWordsProgressAndLimits() {
   assert.equal(longResult[0].count, 251);
   assert.equal(longResult[0].sentence.length, 200, "Source sentence is capped at 200 characters.");
   assert.ok(progress.some((item) => item.stage === "tokenizing"));
-
-  assert.equal(extraction.getFreeWordSlots(0), 100);
-  assert.equal(extraction.getFreeWordSlots(92), 8);
-  assert.equal(extraction.getFreeWordSlots(104), 0);
-  assert.equal(extraction.getAddableWordCount(92, 15), 8);
-  assert.equal(extraction.getAddableWordCount(92, 4), 4);
-  assert.equal(extraction.getAddableWordCount(100, 4), 0);
 
   await assert.rejects(
     extraction.extractVocabularyFromText(
@@ -193,9 +186,11 @@ function checkScreenWiring() {
   assert.match(screen, /MAX_EXTRACTION_FILE_BYTES/);
   assert.match(screen, /utf8ByteLength\(contents\)/);
   assert.match(screen, /saveWord\(\{ \.\.\.draft, example: result\.sentence \}\)/);
+  assert.match(screen, /for \(const result of selectedResults\)/);
   assert.match(screen, /getDictionaryDraft/);
   assert.match(screen, /lookupDictionaryExtractionCandidates/);
-  assert.match(screen, /Chưa có chức năng nâng cấp/);
+  assert.doesNotMatch(screen, /100 từ của gói Free|\/100 chỗ|upgradeMessage|extract-upgrade/);
+  assert.doesNotMatch(screen, /getAddableWordCount|FREE_WORD_LIMIT/);
   assert.match(screen, /không tự tải dữ liệu/);
   assert.match(screen, /không xử lý PDF/);
   assert.doesNotMatch(screen, /\bfetch\s*\(|axios|api-client|approveDownload/);
@@ -208,7 +203,7 @@ async function main() {
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size >= 290);
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size <= 330);
   await checkLemmasAndAggregation();
-  await checkSavedWordsProgressAndLimits();
+  await checkSavedWordsProgressAndInputLimits();
   await checkLocalDictionaryLookup();
   checkScreenWiring();
   console.log(

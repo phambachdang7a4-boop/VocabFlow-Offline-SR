@@ -2,7 +2,6 @@ import { ENGLISH_STOP_WORDS } from "./english-stopwords";
 
 export const MAX_EXTRACTION_TEXT_CHARACTERS = 1_000_000;
 export const MAX_EXTRACTION_TEXT_BYTES = 1_048_576;
-export const FREE_WORD_LIMIT = 100;
 const SENTENCE_PATTERN = /[^.!?\r\n]+(?:[.!?]+)?|[.!?]+/gu;
 const TOKEN_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
 const WORK_BATCH_SIZE = 250;
@@ -41,20 +40,6 @@ export interface ExtractionProgress {
 export type ExtractionLookup = (
   candidates: readonly string[],
 ) => Promise<ReadonlyMap<string, ExtractionDictionaryEntry>>;
-
-export function getFreeWordSlots(savedWordCount: number): number {
-  return Math.max(0, FREE_WORD_LIMIT - Math.max(0, savedWordCount));
-}
-
-export function getAddableWordCount(
-  savedWordCount: number,
-  selectedWordCount: number,
-): number {
-  return Math.min(
-    getFreeWordSlots(savedWordCount),
-    Math.max(0, selectedWordCount),
-  );
-}
 
 interface RawWordCount {
   count: number;
