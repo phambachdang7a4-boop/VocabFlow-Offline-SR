@@ -414,10 +414,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "The import of essential medicines increased during the health crisis.",
     exampleTranslation: "Việc nhập khẩu các loại thuốc thiết yếu đã tăng lên trong cuộc khủng hoảng y tế.",
   },
-  capitally: {
-    example: "The word capitally is an uncommon adverb meaning chiefly or mainly.",
-    exampleTranslation: "Capitally là một trạng từ ít dùng, có nghĩa là chủ yếu hoặc phần lớn.",
-  },
   profit: {
     example: "The company made a modest profit by reducing energy costs.",
     exampleTranslation: "Công ty đã thu được một khoản lợi nhuận vừa phải nhờ giảm chi phí năng lượng.",
@@ -442,9 +438,17 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "Local artists sculpt figures from clay for the annual festival.",
     exampleTranslation: "Các nghệ sĩ địa phương tạc tượng đất sét cho lễ hội hằng năm.",
   },
-  religioner: {
-    example: "The word religioner is uncommon; religious person is clearer in modern English.",
-    exampleTranslation: "Từ religioner ít được dùng; trong tiếng Anh hiện đại, religious person rõ nghĩa hơn.",
+  capital: {
+    example: "Small businesses often need extra capital to expand.",
+    exampleTranslation: "Các doanh nghiệp nhỏ thường cần thêm vốn để mở rộng.",
+  },
+  religious: {
+    example: "Religious traditions can shape how communities celebrate important events.",
+    exampleTranslation: "Truyền thống tôn giáo có thể định hình cách cộng đồng kỷ niệm những sự kiện quan trọng.",
+  },
+  functionality: {
+    example: "The new building combines energy efficiency with practical functionality.",
+    exampleTranslation: "Tòa nhà mới kết hợp hiệu quả năng lượng với tính ứng dụng thực tế.",
   },
   methodize: {
     example: "Researchers methodize their observations before comparing results.",
@@ -498,10 +502,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "The author chose to maternalize the heroine as a protective figure for younger characters.",
     exampleTranslation: "Tác giả chọn khắc họa nữ chính như một người mẹ chở che cho các nhân vật trẻ hơn.",
   },
-  functionate: {
-    example: "The word functionate is uncommon; duty or responsibility is clearer in modern English.",
-    exampleTranslation: "Từ functionate ít được dùng; duty hoặc responsibility rõ nghĩa hơn trong tiếng Anh hiện đại.",
-  },
   sexuality: {
     example: "The study examines how culture and social expectations shape sexuality.",
     exampleTranslation: "Nghiên cứu xem xét cách văn hóa và kỳ vọng xã hội định hình tính dục.",
@@ -529,10 +529,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
   ethic: {
     example: "A strong ethic of fairness should guide every public decision.",
     exampleTranslation: "Tinh thần đề cao sự công bằng nên định hướng mọi quyết định công.",
-  },
-  salarying: {
-    example: "Salarying means paying someone a salary, though the word is rarely used today.",
-    exampleTranslation: "Salarying có nghĩa là trả lương cho ai đó, dù từ này ngày nay ít được sử dụng.",
   },
   skill: {
     example: "Practical skill can help workers adapt to new technology.",
@@ -567,8 +563,8 @@ const COURSE_EXAMPLE_OVERRIDES = {
     exampleTranslation: "Phương pháp ép lạnh được dùng để chiết xuất dầu từ hạt mà không cần nhiệt.",
   },
   hobby: {
-    example: "In the story, the child rode a hobby, an old term for a small horse.",
-    exampleTranslation: "Trong câu chuyện, đứa trẻ cưỡi một con hobby, từ cổ chỉ một con ngựa nhỏ.",
+    example: "Many people take up a hobby to relax after work.",
+    exampleTranslation: "Nhiều người bắt đầu một sở thích để thư giãn sau giờ làm.",
   },
   programer: {
     example: "The programer designed an app to help patients book appointments.",
@@ -629,8 +625,10 @@ const COURSE_DEFINITION_OVERRIDES = {
   arts: "Nghệ thuật hoặc các hoạt động sáng tạo như âm nhạc và hội họa.",
   planning: "Việc lập kế hoạch để xác định trước cách thực hiện một việc.",
   sculpt: "Tạc hoặc tạo hình một vật thể bằng cách đục, nặn hay gọt vật liệu.",
-  religioner: "Người theo một tôn giáo; từ hiếm dùng, thường thay bằng religious person.",
-  functionate: "Hoạt động hoặc thực hiện một chức năng; từ hiếm dùng trong tiếng Anh hiện đại.",
+  capital: "Vốn; tiền hoặc tài sản dùng để thành lập hay phát triển một hoạt động kinh doanh.",
+  religious: "Thuộc về tôn giáo hoặc niềm tin tôn giáo.",
+  functionality: "Tính năng hoặc khả năng hoạt động của một thiết kế hay sản phẩm.",
+  hobby: "Sở thích hoặc hoạt động thường làm trong thời gian rảnh.",
   fossilise: "Hóa thạch; được bảo tồn thành hóa thạch qua thời gian địa chất.",
   coaled: "Đã được tiếp hoặc nạp than làm nhiên liệu.",
   coaling: "Việc tiếp than hoặc đang nạp than làm nhiên liệu.",
@@ -641,7 +639,6 @@ const COURSE_DEFINITION_OVERRIDES = {
   corporation: "Công ty hoặc tập đoàn được thành lập để kinh doanh.",
   foreigner: "Người đến từ hoặc mang quốc tịch của một quốc gia khác.",
   nurture: "Sự chăm sóc và nuôi dưỡng giúp một người hoặc vật phát triển.",
-  salarying: "Trả lương cho ai đó; từ hiếm dùng trong tiếng Anh hiện đại.",
   victimise: "Đối xử bất công hoặc gây hại cho ai, biến họ thành nạn nhân.",
   victimize: "Đối xử bất công hoặc gây hại cho ai, biến họ thành nạn nhân.",
   murdering: "Sát hại; hành động giết người một cách trái pháp luật.",
@@ -650,6 +647,37 @@ const COURSE_DEFINITION_OVERRIDES = {
   corruptly: "Một cách tham nhũng hoặc bất chính, thường để trục lợi.",
   inclusively: "Theo cách bao gồm mọi người và không loại trừ nhóm nào.",
   jobs: "Thuê ngoài; giao công việc cho một cá nhân hoặc đơn vị bên ngoài.",
+};
+
+const COURSE_HEADWORD_REPLACEMENTS = {
+  capitally: "capital",
+  religioner: "religious",
+  functionate: "functionality",
+  salarying: "salary",
+};
+
+const CURATED_TOPIC_ENTRIES = {
+  capital: {
+    topicId: "economy",
+    pos: "N",
+    definition: "Vốn; tiền hoặc tài sản dùng để thành lập hay phát triển một hoạt động kinh doanh.",
+    example: "Small businesses often need extra capital to expand.",
+    exampleTranslation: "Các doanh nghiệp nhỏ thường cần thêm vốn để mở rộng.",
+  },
+  religious: {
+    topicId: "culture",
+    pos: "A",
+    definition: "Thuộc về tôn giáo hoặc niềm tin tôn giáo.",
+    example: "Religious traditions can shape how communities celebrate important events.",
+    exampleTranslation: "Truyền thống tôn giáo có thể định hình cách cộng đồng kỷ niệm những sự kiện quan trọng.",
+  },
+  functionality: {
+    topicId: "architecture",
+    pos: "N",
+    definition: "Tính năng hoặc khả năng hoạt động của một thiết kế hay sản phẩm.",
+    example: "The new building combines energy efficiency with practical functionality.",
+    exampleTranslation: "Tòa nhà mới kết hợp hiệu quả năng lượng với tính ứng dụng thực tế.",
+  },
 };
 
 const POS_GROUPS = {
@@ -764,6 +792,10 @@ const EXCLUDED_HEADWORDS = new Set(
     "cleanable",
     "contaminator",
     "transportable",
+    "capitally",
+    "religioner",
+    "functionate",
+    "salarying",
   ],
 );
 
@@ -901,6 +933,17 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
 
   if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
     throw new Error("IELTS course data is missing its entries object.");
+  }
+
+  for (const [oldTerm, replacement] of Object.entries(
+    COURSE_HEADWORD_REPLACEMENTS,
+  )) {
+    if (entries[oldTerm]) {
+      errors.push(`- ${oldTerm}: outdated or uncommon headword remains in the course`);
+    }
+    if (!entries[replacement]) {
+      errors.push(`- ${oldTerm}: replacement headword ${replacement} is missing`);
+    }
   }
 
   for (const [term, expectedDefinition] of Object.entries(
@@ -1109,6 +1152,7 @@ function main() {
       const words = [];
       if (oldTopic) {
         for (const term of oldTopic.terms) {
+          if (COURSE_HEADWORD_REPLACEMENTS[term]) continue;
           if (!usedTerms.has(term)) {
             usedTerms.add(term);
             words.push({
@@ -1133,6 +1177,23 @@ function main() {
           entry: dictionary.get(candidate.term),
           pos: dictionary.get(candidate.term)?.pos ?? "",
           source: "offline",
+        });
+      }
+      for (const [term, entry] of Object.entries(CURATED_TOPIC_ENTRIES)) {
+        if (entry.topicId !== topic.id || usedTerms.has(term)) continue;
+        usedTerms.add(term);
+        words.push({
+          term,
+          family: topic.id,
+          entry: {
+            definition: entry.definition,
+            example: entry.example,
+            exampleTranslation: entry.exampleTranslation,
+            dictionarySource: "authored",
+            exampleSource: "authored",
+          },
+          pos: entry.pos,
+          source: "authored",
         });
       }
       return {
