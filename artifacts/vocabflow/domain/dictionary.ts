@@ -1,4 +1,5 @@
 import type { WordInput } from '../data/types';
+import { LOCAL_DICTIONARY_ADDITIONS } from './dictionary-local-additions';
 
 export const DICTIONARY = {
   commit: '388adc0826300912e5b0311c089e0e70494b065f',
@@ -22,6 +23,7 @@ export const DICTIONARY_PARTS = [
   { id: 'noun', label: 'Noun', codes: ['n', 'noun'] },
   { id: 'adjective', label: 'Adjective', codes: ['a', 'adj', 'adjective'] },
   { id: 'adverb', label: 'Adverb', codes: ['d', 'adv', 'adverb'] },
+  { id: 'conjunction', label: 'Conjunction', codes: ['conj', 'conjunction'] },
   { id: 'idiom', label: 'Idiom', codes: ['idiom', 'idioms'] },
   { id: 'other', label: 'Others', codes: [] },
 ] as const;
@@ -72,6 +74,9 @@ export function exampleSegments(example: string, term: string): { text: string; 
 
 export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
   const kind = [sense.pos, sense.subPos].filter(Boolean).join(' · ');
+  const isLocalAddition = LOCAL_DICTIONARY_ADDITIONS.some(
+    (item) => item.term === entry.term,
+  );
   return {
     term: entry.term,
     dictionaryEntryId: entry.id,
@@ -79,7 +84,9 @@ export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pr
     meaning: `${kind ? `(${kind}) ` : ''}${sense.definition}`,
     ipa: entry.pronunciations[0]?.ipa ?? '',
     example: sense.example ?? '',
-    note: `Nguồn: Skypedia / MinhQND, CC BY-SA 4.0. ${DICTIONARY.repository}`,
+    note: isLocalAddition
+      ? 'Nguồn: Nội dung bổ sung biên soạn cho VocabFlow.'
+      : `Nguồn: Skypedia / MinhQND, CC BY-SA 4.0. ${DICTIONARY.repository}`,
   };
 }
 

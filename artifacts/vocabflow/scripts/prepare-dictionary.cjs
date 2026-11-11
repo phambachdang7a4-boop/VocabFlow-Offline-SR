@@ -18,7 +18,13 @@ function configFromTs(path, dependencies = {}) {
 }
 
 (async () => {
-  const { DICTIONARY } = configFromTs(join(__dirname, '../domain/dictionary.ts'));
+  const localDictionaryAdditions = configFromTs(
+    join(__dirname, '../domain/dictionary-local-additions.ts'),
+  );
+  const { DICTIONARY } = configFromTs(
+    join(__dirname, '../domain/dictionary.ts'),
+    { './dictionary-local-additions': localDictionaryAdditions },
+  );
   const root = resolve(__dirname, '../../..');
   const directory = join(root, 'generated-artifacts/dictionary');
   const filename = join(directory, 'dictionary_en_vi.db');

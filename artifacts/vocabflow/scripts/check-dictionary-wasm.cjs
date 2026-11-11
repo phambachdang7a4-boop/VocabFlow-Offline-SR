@@ -3,10 +3,10 @@ const { readFileSync } = require('node:fs');
 const { createHash } = require('node:crypto');
 const { dirname, join, resolve } = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { loadTs } = require('./test-support.cjs');
+const { loadTs, loadDictionaryDomain } = require('./test-support.cjs');
 
 (async () => {
-  const { DICTIONARY } = loadTs(join(__dirname, '../domain/dictionary.ts'));
+  const { DICTIONARY } = loadDictionaryDomain();
   const { dictionaryImportBytes } = loadTs(join(__dirname, '../domain/dictionary-import.ts'));
   const original = readFileSync(resolve(__dirname, '../../../generated-artifacts/dictionary/dictionary_en_vi.db'));
   const hash = bytes => createHash('sha256').update(bytes).digest('hex');

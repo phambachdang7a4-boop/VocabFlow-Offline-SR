@@ -1280,6 +1280,46 @@ export function listWords(): Promise<VocabularyWord[]> {
   });
 }
 
+export function getCourseLessonCompletions(
+  lessonPrefix: string,
+): Promise<string[]> {
+  if (!/^[a-z0-9-]{1,80}$/i.test(lessonPrefix))
+    return Promise.reject(new Error("Mã khóa học không hợp lệ."));
+  return serialize(async () => {
+    const rows = await (await database()).getAllAsync<{ lessonId: string }>(
+      `SELECT lesson_id AS lessonId FROM course_lesson_progress
+       WHERE lesson_id LIKE ? AND stage = 'completed'`,
+      `${lessonPrefix}%`,
+    );
+    return rows.map((row) => row.lessonId);
+  });
+}
+
+export function markCourseLessonCompleted(lessonId: string): Promise<void> {
+  if (!/^[a-z0-9-]{1,120}$/i.test(lessonId))
+    return Promise.reject(new Error("Mã bài học không hợp lệ."));
+  return serialize(async () => {
+    const db = await database();
+    const now = new Date().toISOString();
+    await db.withTransactionAsync(async () => {
+      await db.runAsync(
+        `INSERT INTO course_lesson_progress
+          (lesson_id, current_index, stage, completed_at, updated_at)
+         VALUES (?, 0, 'completed', ?, ?)
+         ON CONFLICT(lesson_id) DO UPDATE SET
+           stage = 'completed',
+           completed_at = COALESCE(course_lesson_progress.completed_at, excluded.completed_at),
+           updated_at = excluded.updated_at`,
+        lessonId,
+        now,
+        now,
+      );
+      await markSyncDirty(db);
+    });
+    notifySyncListeners();
+  });
+}
+
 export function getReviewStatistics(
   today = localDay(new Date()),
   selectedMonth = `${today.slice(0, 7)}-01`,

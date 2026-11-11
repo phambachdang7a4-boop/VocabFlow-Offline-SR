@@ -14,6 +14,11 @@ import {
   DICTIONARY_EXAMPLE_UPDATES,
 } from "../domain/dictionary-example-updates";
 import {
+  LOCAL_DICTIONARY_ADDITIONS,
+  LOCAL_DICTIONARY_ADDITIONS_REVISION,
+} from "../domain/dictionary-local-additions";
+import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
+import {
   draftInDictionary,
   entryInDictionary,
   searchInDictionary,
@@ -23,6 +28,8 @@ import type { DictionaryPartOfSpeech } from "../domain/dictionary";
 import { openDatabaseSafely, storageFailureMessage } from "./sqlite-connection";
 
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
+const DICTIONARY_CONTENT_REVISION =
+  `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}`;
 let connection: Promise<SQLiteDatabase> | undefined;
 
 export class DictionaryDownloadConsentRequired extends Error {
@@ -138,7 +145,15 @@ async function initialize(
         );
         if (check?.quick_check !== "ok")
           throw new Error("Kho từ điển bị lỗi. Hãy tải lại.");
+        const sourceWordCount = await imported.getFirstAsync<{
+          count: number;
+        }>("SELECT COUNT(*) AS count FROM words");
+        if (sourceWordCount?.count !== DICTIONARY.wordCount)
+          throw new Error(
+            "Số lượng từ điển gốc không khớp phiên bản đã kiểm tra.",
+          );
         await applyExampleUpdates(imported);
+        await applyLocalDictionaryAdditions(imported);
         await backupDatabaseAsync({
           sourceDatabase: imported,
           destDatabase: db,
@@ -152,7 +167,10 @@ async function initialize(
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
-      if (count?.count !== DICTIONARY.wordCount)
+      if (
+        count?.count !==
+        DICTIONARY.wordCount + LOCAL_DICTIONARY_ADDITIONS.length
+      )
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       await db.withTransactionAsync(async () => {
         await db.execAsync(`CREATE TABLE IF NOT EXISTS vocabflow_dictionary_meta (
@@ -162,10 +180,10 @@ async function initialize(
         await db.runAsync(
           "INSERT INTO vocabflow_dictionary_meta (source_hash, example_revision) VALUES (?, ?)",
           DICTIONARY.sha256,
-          DICTIONARY_EXAMPLE_REVISION,
+          DICTIONARY_CONTENT_REVISION,
         );
       });
-    } else if (cached.example_revision !== DICTIONARY_EXAMPLE_REVISION) {
+    } else if (cached.example_revision !== DICTIONARY_CONTENT_REVISION) {
       // Upgrade an already-downloaded offline copy in place: no second 44 MB download.
       const check = await db.getFirstAsync<{ quick_check: string }>(
         "PRAGMA quick_check",
@@ -174,9 +192,18 @@ async function initialize(
         throw new Error("Kho từ điển bị lỗi. Hãy tải lại.");
       await db.execAsync("PRAGMA query_only = OFF;");
       await applyExampleUpdates(db);
+      await applyLocalDictionaryAdditions(db);
+      const count = await db.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM words",
+      );
+      if (
+        count?.count !==
+        DICTIONARY.wordCount + LOCAL_DICTIONARY_ADDITIONS.length
+      )
+        throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       await db.runAsync(
         "UPDATE vocabflow_dictionary_meta SET example_revision = ?",
-        DICTIONARY_EXAMPLE_REVISION,
+        DICTIONARY_CONTENT_REVISION,
       );
     }
     // No application query may mutate the reference dictionary after setup.

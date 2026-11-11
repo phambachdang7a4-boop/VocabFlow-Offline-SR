@@ -2,8 +2,8 @@ const assert = require('node:assert/strict');
 const { mkdtempSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
-const { loadTs, srs, createRepository } = require('./test-support.cjs');
-const dictionary = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const { loadTs, loadDictionaryDomain, srs, createRepository } = require('./test-support.cjs');
+const dictionary = loadDictionaryDomain();
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const word = {
   id: 1, term: 'whimsical', meaning: 'kỳ quặc, giàu tưởng tượng', ipa: '', note: '',

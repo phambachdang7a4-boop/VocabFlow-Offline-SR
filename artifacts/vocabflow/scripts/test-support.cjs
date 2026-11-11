@@ -31,6 +31,15 @@ function loadTs(filePath, dependencies = {}, globals = {}) {
   return module.exports;
 }
 
+function loadDictionaryDomain() {
+  const localAdditions = loadTs(
+    join(__dirname, "../domain/dictionary-local-additions.ts"),
+  );
+  return loadTs(join(__dirname, "../domain/dictionary.ts"), {
+    "./dictionary-local-additions": localAdditions,
+  });
+}
+
 const srs = loadTs(join(__dirname, "../domain/srs.ts"));
 const dailyMissions = loadTs(join(__dirname, "../domain/daily-missions.ts"));
 const reviewSession = loadTs(join(__dirname, "../domain/review-session.ts"));
@@ -126,4 +135,5 @@ module.exports = {
   loadTs,
   missionChests,
   collectionArtworks,
+  loadDictionaryDomain,
 };

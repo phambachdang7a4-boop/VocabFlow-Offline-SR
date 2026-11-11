@@ -19,7 +19,8 @@
     "check:review-session": "node scripts/check-review-session.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
-    "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs"
+    "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
+    "check:conjunction-course": "node scripts/check-conjunction-course.cjs && node scripts/check-conjunction-course-ui.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

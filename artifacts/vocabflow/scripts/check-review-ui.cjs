@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
 const { join } = require('node:path');
-const { loadTs, srs } = require('./test-support.cjs');
+const { loadTs, loadDictionaryDomain, srs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
-const dictionary = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const dictionary = loadDictionaryDomain();
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));

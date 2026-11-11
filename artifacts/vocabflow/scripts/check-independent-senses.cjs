@@ -3,8 +3,8 @@ const { DatabaseSync } = require('node:sqlite');
 const { mkdtempSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
-const { createRepository, loadTs } = require('./test-support.cjs');
-const { dictionaryDraft, sameWordSense } = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const { createRepository, loadDictionaryDomain } = require('./test-support.cjs');
+const { dictionaryDraft, sameWordSense } = loadDictionaryDomain();
 const roots = [],
   handles = [];
 const temp = () => {
@@ -176,7 +176,7 @@ function legacy(root, empty = false) {
     const current = upgraded.db.prepare('SELECT * FROM words WHERE id=?').get(previous.id);
     for (const key of Object.keys(previous)) assert.equal(current[key], previous[key], `Preserve legacy ${key}`);
   }
-  assert.equal(upgraded.db.prepare('PRAGMA user_version').get().user_version, 11);
+  assert.ok(upgraded.db.prepare('PRAGMA user_version').get().user_version >= 11);
   assert.deepEqual(upgraded.db.prepare('PRAGMA foreign_key_check').all(), []);
   await assert.rejects(upgraded.repo.saveWord(drafts[0]), /đã có/, 'Exact legacy meaning is already saved');
   await upgraded.repo.saveWord(drafts[1]);

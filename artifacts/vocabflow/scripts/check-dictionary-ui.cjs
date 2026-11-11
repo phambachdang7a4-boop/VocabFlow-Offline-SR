@@ -1,9 +1,9 @@
 const assert = require('node:assert/strict');
 const { join } = require('node:path');
 const { readFileSync, existsSync } = require('node:fs');
-const { loadTs } = require('./test-support.cjs');
+const { loadTs, loadDictionaryDomain } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
-const dictionaryDomain = loadTs(join(__dirname, '../domain/dictionary.ts'));
+const dictionaryDomain = loadDictionaryDomain();
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const { exampleSegments } = dictionaryDomain;
 const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
@@ -371,7 +371,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.deepEqual(adverbView.byType('PartOfSpeechFilter').props.selected, ['adverb'], 'A different entry gets its own first type');
   assert.ok(!readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8').includes('Bấm Lưu từ ở nghĩa'));
   const tabs = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
-  for (const pattern of [/NativeTabs\.Trigger name="([^"]+)"/g, /Tabs\.Screen name="([^"]+)"/g]) {
+  for (const pattern of [/NativeTabs\.Trigger name="([^"]+)"/g, /Tabs\.Screen\s+name="([^"]+)"/g]) {
     assert.deepEqual([...tabs.matchAll(pattern)].map(match => match[1]), ['dictionary', 'courses', 'review', 'index', 'blank']);
   }
   assert.equal(existsSync(join(__dirname, '../app/(tabs)/settings.tsx')), false, 'Settings must not be auto-discovered as a sixth tab');

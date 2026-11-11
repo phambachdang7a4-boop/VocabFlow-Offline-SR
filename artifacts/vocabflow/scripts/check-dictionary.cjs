@@ -4,7 +4,7 @@ const { readFileSync, mkdtempSync, rmSync, writeFileSync } = require("node:fs");
 const { join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
 const { createHash } = require("node:crypto");
-const { createRepository, loadTs, srs } = require("./test-support.cjs");
+const { createRepository, loadTs, loadDictionaryDomain, srs } = require("./test-support.cjs");
 const sqliteConnection = loadTs(
   join(__dirname, "../data/sqlite-connection.ts"),
 );
@@ -25,7 +25,13 @@ function adapter(filename, readOnly = false) {
     execAsync: async (sql) => handle.exec(sql),
     getFirstAsync: async (sql, ...params) => handle.prepare(sql).get(...params),
     getAllAsync: async (sql, ...params) => handle.prepare(sql).all(...params),
-    runAsync: async (sql, ...params) => handle.prepare(sql).run(...params),
+    runAsync: async (sql, ...params) => {
+      const result = handle.prepare(sql).run(...params);
+      return {
+        ...result,
+        lastInsertRowId: Number(result.lastInsertRowid),
+      };
+    },
     closeAsync: async () => {
       handles.delete(handle);
       handle.close();
@@ -44,7 +50,7 @@ function adapter(filename, readOnly = false) {
 }
 
 (async () => {
-  const domain = loadTs(join(__dirname, "../domain/dictionary.ts"));
+  const domain = loadDictionaryDomain();
   const download = loadTs(join(__dirname, "../domain/dictionary-download.ts"), {
     "./dictionary": domain,
   });
@@ -55,6 +61,13 @@ function adapter(filename, readOnly = false) {
     {
       "../data/basic-family-example-overrides.json": familyExamples,
     },
+  );
+  const localAdditionData = loadTs(
+    join(__dirname, "../domain/dictionary-local-additions.ts"),
+  );
+  const localAdditions = loadTs(
+    join(__dirname, "../data/dictionary-local-additions.ts"),
+    { "../domain/dictionary-local-additions": localAdditionData },
   );
   const spelling = loadTs(
     join(__dirname, "../domain/dictionary-suggestions.ts"),
@@ -419,6 +432,8 @@ function adapter(filename, readOnly = false) {
         "../domain/dictionary-download": download,
         "../domain/dictionary-import": importer,
         "../domain/dictionary-example-updates": exampleUpdates,
+        "../domain/dictionary-local-additions": localAdditionData,
+        "./dictionary-local-additions": localAdditions,
         "./dictionary-queries": queries,
         "./sqlite-connection": sqliteConnection,
       },
@@ -624,8 +639,15 @@ function adapter(filename, readOnly = false) {
   );
   assert.equal(
     revision.example_revision,
-    exampleUpdates.DICTIONARY_EXAMPLE_REVISION,
+    `${exampleUpdates.DICTIONARY_EXAMPLE_REVISION}+${localAdditionData.LOCAL_DICTIONARY_ADDITIONS_REVISION}`,
   );
+  for (const entry of localAdditionData.LOCAL_DICTIONARY_ADDITIONS) {
+    const result = await repo.searchDictionary(entry.term);
+    assert.ok(
+      result.items.some((item) => item.term === entry.term),
+      `The offline dictionary includes ${entry.term}.`,
+    );
+  }
   assert.ok(
     (await repo.searchDictionary("hello")).items.some(
       (row) => row.id === hello.id,
