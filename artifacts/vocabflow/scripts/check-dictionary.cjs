@@ -364,6 +364,7 @@ function adapter(filename, readOnly = false) {
     },
   };
   function repository(fetch, pageOrigin) {
+    const isWeb = Boolean(pageOrigin);
     const files = new Map();
     const pathFor = (parts) =>
       parts
@@ -378,6 +379,9 @@ function adapter(filename, readOnly = false) {
     }
     class MockFile {
       constructor(...parts) {
+        if (isWeb) {
+          throw new Error("expo-file-system is not supported on web");
+        }
         this.path = pathFor(parts);
       }
       get uri() {
@@ -436,6 +440,7 @@ function adapter(filename, readOnly = false) {
         "./dictionary-local-additions": localAdditions,
         "./dictionary-queries": queries,
         "./sqlite-connection": sqliteConnection,
+        "react-native": { Platform: { OS: isWeb ? "web" : "android" } },
       },
       {
         fetch,
@@ -456,13 +461,19 @@ function adapter(filename, readOnly = false) {
     );
     assert.equal(
       options.credentials,
-      undefined,
-      "Native file downloads do not send browser credentials",
+      "omit",
+      "Public browser dictionary downloads do not send account cookies",
     );
     downloads++;
     return new Response(bytes);
   }, "https://phone.expo.example");
   const waiting = [];
+  assert.deepEqual(
+    await repo.getOfflineDictionaryStatus(),
+    { state: "missing", bytes: 0 },
+    "Browser status checks use SQLite and never construct unsupported Expo File objects",
+  );
+  assert.equal(downloads, 0, "Checking browser status does not download");
   await assert.rejects(
     repo.openDictionary((stage) => waiting.push(stage)),
     /Cần xác nhận/,
@@ -501,6 +512,11 @@ function adapter(filename, readOnly = false) {
     "ready",
   ]);
   assert.equal(downloads, 1);
+  assert.deepEqual(
+    await repo.getOfflineDictionaryStatus(),
+    { state: "installed", bytes: DICTIONARY.bytes },
+    "An installed browser SQLite dictionary is recognized without FileSystem",
+  );
   for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
     const stored = await loaded.getFirstAsync(
       "SELECT example FROM word_definitions WHERE id = ? AND word_id = ?",

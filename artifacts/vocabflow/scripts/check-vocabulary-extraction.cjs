@@ -220,6 +220,38 @@ async function checkLocalDictionaryLookup() {
   assert.doesNotMatch(dataSource, /\bfetch\s*\(|axios|api-client/i);
 }
 
+function checkSenseSelection() {
+  const senses = [
+    { id: 1, definition: "Nghĩa một" },
+    { id: 2, definition: "Nghĩa hai" },
+    { id: 3, definition: "Nghĩa ba" },
+  ];
+  assert.deepEqual(
+    extraction.chooseExtractionSenses(senses, new Set([1, 3]), new Set()),
+    [senses[0], senses[2]],
+    "Multiple selected senses are returned in dictionary order.",
+  );
+  assert.deepEqual(
+    extraction.chooseExtractionSenses(
+      senses,
+      new Set([1, 3]),
+      new Set([1]),
+    ),
+    [senses[2]],
+    "Already-saved senses are not added again.",
+  );
+  assert.deepEqual(
+    extraction.chooseExtractionSenses(senses, undefined, new Set([1])),
+    [senses[1]],
+    "Selecting a whole word defaults to its first unsaved sense.",
+  );
+  assert.deepEqual(
+    extraction.chooseExtractionSenses(senses, undefined, new Set([1, 2, 3])),
+    [],
+    "No sense is returned when all senses are already saved.",
+  );
+}
+
 function checkScreenWiring() {
   const screen = readFileSync(join(root, "app/extract.tsx"), "utf8");
   const dictionaryScreen = readFileSync(join(root, "app/(tabs)/dictionary.tsx"), "utf8");
@@ -230,6 +262,20 @@ function checkScreenWiring() {
   assert.match(screen, /utf8ByteLength\(contents\)/);
   assert.match(screen, /saveWord\(\{ \.\.\.draft, example: result\.sentence \}\)/);
   assert.match(screen, /for \(const result of selectedResults\)/);
+  assert.match(screen, /const saveSenseNow = async/);
+  assert.match(screen, /testID=\{`extract-save-sense-\$\{key\}-\$\{sense\.id\}`\}/);
+  assert.match(screen, /onPress=\{\(\) => void saveSenseNow\(item, sense\)\}/);
+  assert.match(screen, /accessibilityRole="checkbox"/);
+  assert.match(screen, /borderBottomWidth:\s*index < item\.entry\.senses\.length - 1/);
+  assert.match(screen, /Mỗi nghĩa có nút lưu riêng/);
+  assert.match(screen, /Lưu nghĩa này/);
+  assert.match(screen, /styles\.senseSelectionControl/);
+  assert.match(screen, /chooseExtractionSenses\(/);
+  assert.match(screen, /senseStorageKey\(result\.entry\.id, sense\.id\)/);
+  assert.match(screen, /hasAvailableSense\(result, manuallySavedTerms, savedSenseKeys\)/);
+  assert.match(screen, /Đã lưu nghĩa vào Sổ ở cấp 1/);
+  assert.match(screen, /Đã thêm \$\{added\} từ vào Sổ ở cấp 1/);
+  assert.match(screen, /getDictionaryDraft\(result\.entry\.id, sense\.id\)/);
   assert.match(screen, /getDictionaryDraft/);
   assert.match(screen, /lookupDictionaryExtractionCandidates/);
   assert.doesNotMatch(screen, /100 từ của gói Free|\/100 chỗ|upgradeMessage|extract-upgrade/);
@@ -249,6 +295,7 @@ async function main() {
   await checkIrregularFormsAndExactMatchPriority();
   await checkSavedWordsProgressAndInputLimits();
   await checkLocalDictionaryLookup();
+  checkSenseSelection();
   checkScreenWiring();
   console.log(
     `PASS: offline vocabulary extraction, lookup, progress, filtering, senses, and the ${stopWords.ENGLISH_STOP_WORDS.size}-word stop list.`,

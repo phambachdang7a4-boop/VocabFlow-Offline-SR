@@ -107,6 +107,21 @@ export interface ExtractedVocabularyTerm {
   entry: ExtractionDictionaryEntry;
 }
 
+export function chooseExtractionSenses(
+  senses: readonly ExtractionDictionarySense[],
+  selectedSenseIds: ReadonlySet<number> | undefined,
+  savedSenseIds: ReadonlySet<number>,
+): ExtractionDictionarySense[] {
+  if (selectedSenseIds?.size) {
+    return senses.filter(
+      (sense) =>
+        selectedSenseIds.has(sense.id) && !savedSenseIds.has(sense.id),
+    );
+  }
+  const firstAvailable = senses.find((sense) => !savedSenseIds.has(sense.id));
+  return firstAvailable ? [firstAvailable] : [];
+}
+
 export interface ExtractionProgress {
   stage: "tokenizing" | "looking-up" | "complete";
   percent: number;

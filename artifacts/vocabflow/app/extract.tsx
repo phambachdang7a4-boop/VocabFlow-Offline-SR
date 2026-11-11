@@ -27,6 +27,7 @@ import { getDictionaryDraft } from "@/data/dictionary";
 import {
   MAX_EXTRACTION_TEXT_CHARACTERS,
   MAX_EXTRACTION_TEXT_BYTES,
+  chooseExtractionSenses,
   extractVocabularyFromText,
   utf8ByteLength,
 } from "@/domain/vocabulary-extraction";
@@ -35,9 +36,25 @@ import { lookupDictionaryExtractionCandidates } from "@/data/vocabulary-extracti
 const MAX_EXTRACTION_FILE_BYTES = MAX_EXTRACTION_TEXT_BYTES;
 
 type ResultRow = Awaited<ReturnType<typeof extractVocabularyFromText>>[number];
+const EMPTY_SENSE_IDS: ReadonlySet<number> = new Set();
 
 function normalizedTerm(term: string): string {
   return term.normalize("NFKC").trim().toLocaleLowerCase("en");
+}
+
+function senseStorageKey(entryId: number, senseId: number): string {
+  return `${entryId}:${senseId}`;
+}
+
+function hasAvailableSense(
+  result: ResultRow,
+  manuallySavedTerms: ReadonlySet<string>,
+  savedSenseKeys: ReadonlySet<string>,
+): boolean {
+  if (manuallySavedTerms.has(normalizedTerm(result.term))) return false;
+  return result.entry.senses.some(
+    (sense) => !savedSenseKeys.has(senseStorageKey(result.entry.id, sense.id)),
+  );
 }
 
 function partOfSpeechLabel(pos: string | null): string {
@@ -59,6 +76,9 @@ export default function ExtractVocabularyScreen() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [results, setResults] = useState<ResultRow[]>([]);
   const [selectedTerms, setSelectedTerms] = useState<Set<string>>(new Set());
+  const [savingSenseKeys, setSavingSenseKeys] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [hideExisting, setHideExisting] = useState(true);
@@ -69,18 +89,43 @@ export default function ExtractVocabularyScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const savedTerms = useMemo(
-    () => new Set(words.map((word) => normalizedTerm(word.term))),
+  const manuallySavedTerms = useMemo(
+    () =>
+      new Set(
+        words
+          .filter(
+            (word) =>
+              word.dictionaryEntryId == null ||
+              word.dictionarySenseId == null,
+          )
+          .map((word) => normalizedTerm(word.term)),
+      ),
+    [words],
+  );
+  const savedSenseKeys = useMemo(
+    () =>
+      new Set(
+        words.flatMap((word) =>
+          word.dictionaryEntryId != null && word.dictionarySenseId != null
+            ? [senseStorageKey(word.dictionaryEntryId, word.dictionarySenseId)]
+            : [],
+        ),
+      ),
     [words],
   );
   const visibleResults = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase("en");
     const filtered = results.filter((result) => {
-      if (hideExisting && savedTerms.has(normalizedTerm(result.term))) return false;
+      if (
+        hideExisting &&
+        !hasAvailableSense(result, manuallySavedTerms, savedSenseKeys)
+      ) {
+        return false;
+      }
       if (!query) return true;
       return [
         result.term,
-        result.entry.senses[0]?.definition ?? "",
+        ...result.entry.senses.map((sense) => sense.definition),
         result.sentence,
       ].some((value) => value.toLocaleLowerCase("en").includes(query));
     });
@@ -89,15 +134,24 @@ export default function ExtractVocabularyScreen() {
         ? left.term.localeCompare(right.term, "en")
         : right.count - left.count || left.term.localeCompare(right.term, "en"),
     );
-  }, [hideExisting, results, savedTerms, searchQuery, sortAlphabetically]);
+  }, [
+    hideExisting,
+    manuallySavedTerms,
+    results,
+    savedSenseKeys,
+    searchQuery,
+    sortAlphabetically,
+  ]);
   const selectedResults = useMemo(
     () =>
-      results.filter(
-        (result) =>
-          selectedTerms.has(normalizedTerm(result.term)) &&
-          !savedTerms.has(normalizedTerm(result.term)),
-      ),
-    [results, savedTerms, selectedTerms],
+      results.filter((result) => {
+        const key = normalizedTerm(result.term);
+        return (
+          selectedTerms.has(key) &&
+          hasAvailableSense(result, manuallySavedTerms, savedSenseKeys)
+        );
+      }),
+    [manuallySavedTerms, results, savedSenseKeys, selectedTerms],
   );
 
   const chooseTextFile = async () => {
@@ -195,19 +249,60 @@ export default function ExtractVocabularyScreen() {
     });
   };
 
+  const saveSenseNow = async (
+    result: ResultRow,
+    sense: ResultRow["entry"]["senses"][number],
+  ) => {
+    const key = senseStorageKey(result.entry.id, sense.id);
+    const termKey = normalizedTerm(result.term);
+    if (
+      savingSenseKeys.has(key) ||
+      savedSenseKeys.has(key) ||
+      manuallySavedTerms.has(termKey)
+    ) {
+      return;
+    }
+    setError(null);
+    setNotice(null);
+    setSavingSenseKeys((current) => new Set(current).add(key));
+    try {
+      const draft = await getDictionaryDraft(result.entry.id, sense.id);
+      await saveWord({ ...draft, example: result.sentence });
+      setSelectedTerms((current) => {
+        if (!current.has(termKey)) return current;
+        const next = new Set(current);
+        next.delete(termKey);
+        return next;
+      });
+      setNotice("Đã lưu nghĩa vào Sổ ở cấp 1.");
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Không thể lưu nghĩa vào Sổ. Hãy thử lại.",
+      );
+    } finally {
+      setSavingSenseKeys((current) => {
+        const next = new Set(current);
+        next.delete(key);
+        return next;
+      });
+    }
+  };
+
+  const clearSelection = () => setSelectedTerms(new Set());
+
   const selectVisible = () => {
     setSelectedTerms((current) => {
       const next = new Set(current);
       for (const result of visibleResults) {
-        if (!savedTerms.has(normalizedTerm(result.term))) {
+        if (hasAvailableSense(result, manuallySavedTerms, savedSenseKeys)) {
           next.add(normalizedTerm(result.term));
         }
       }
       return next;
     });
   };
-
-  const clearSelection = () => setSelectedTerms(new Set());
 
   const addSelected = async () => {
     setError(null);
@@ -218,7 +313,20 @@ export default function ExtractVocabularyScreen() {
     setIsAdding(true);
     try {
       for (const result of selectedResults) {
-        const sense = result.entry.senses[0];
+        const savedIds = new Set(
+          result.entry.senses
+            .filter((sense) =>
+              savedSenseKeys.has(
+                senseStorageKey(result.entry.id, sense.id),
+              ),
+            )
+            .map((sense) => sense.id),
+        );
+        const sense = chooseExtractionSenses(
+          result.entry.senses,
+          undefined,
+          savedIds,
+        )[0];
         if (!sense) continue;
         const draft = await getDictionaryDraft(result.entry.id, sense.id);
         await saveWord({ ...draft, example: result.sentence });
@@ -239,8 +347,15 @@ export default function ExtractVocabularyScreen() {
 
   const renderResult = ({ item }: { item: ResultRow }) => {
     const key = normalizedTerm(item.term);
-    const isSaved = savedTerms.has(key);
+    const isSaved = !hasAvailableSense(
+      item,
+      manuallySavedTerms,
+      savedSenseKeys,
+    );
     const isSelected = selectedTerms.has(key);
+    const savedSenseCount = item.entry.senses.filter((sense) =>
+      savedSenseKeys.has(senseStorageKey(item.entry.id, sense.id)),
+    ).length;
     const expanded = expandedTerm === key;
     const firstSense = item.entry.senses[0];
     return (
@@ -312,6 +427,10 @@ export default function ExtractVocabularyScreen() {
             <Text style={[styles.savedLabel, { color: c.mutedForeground }]}>
               Đã có trong Sổ
             </Text>
+          ) : savedSenseCount ? (
+            <Text style={[styles.savedLabel, { color: c.mutedForeground }]}>
+              Đã lưu {savedSenseCount}/{item.entry.senses.length} nghĩa
+            </Text>
           ) : null}
           <Text style={[styles.expandHint, { color: c.mutedForeground }]}>
             {expanded ? "Thu gọn" : `${item.entry.senses.length} nghĩa · xem câu gốc`}
@@ -319,17 +438,99 @@ export default function ExtractVocabularyScreen() {
         </Pressable>
         {expanded ? (
           <View style={[styles.expanded, { borderTopColor: c.border }]}>
-            {item.entry.senses.map((sense, index) => (
-              <View key={sense.id} style={styles.senseItem}>
-                <Text style={[styles.sensePos, { color: c.primary }]}>
-                  {index + 1}. {partOfSpeechLabel(sense.pos)}
-                  {sense.subPos ? ` · ${sense.subPos}` : ""}
-                </Text>
-                <Text style={[styles.definition, { color: c.foreground }]}>
-                  {sense.definition}
-                </Text>
-              </View>
-            ))}
+            <Text style={[styles.senseSelectionHint, { color: c.mutedForeground }]}>
+              Mỗi nghĩa có nút lưu riêng
+            </Text>
+            {item.entry.senses.map((sense, index) => {
+              const senseSaved = savedSenseKeys.has(
+                senseStorageKey(item.entry.id, sense.id),
+              );
+              const senseKey = senseStorageKey(item.entry.id, sense.id);
+              const senseSaving = savingSenseKeys.has(senseKey);
+              const senseDisabled =
+                manuallySavedTerms.has(key) ||
+                senseSaved ||
+                senseSaving ||
+                isAdding ||
+                isExtracting;
+              return (
+                <View
+                  key={sense.id}
+                  style={[
+                    styles.senseChoice,
+                    {
+                      borderBottomColor: c.border,
+                      borderBottomWidth:
+                        index < item.entry.senses.length - 1
+                          ? StyleSheet.hairlineWidth
+                          : 0,
+                    },
+                  ]}
+                >
+                  <View>
+                    <Text style={[styles.sensePos, { color: c.primary }]}>
+                      {index + 1}. {partOfSpeechLabel(sense.pos)}
+                      {sense.subPos ? ` · ${sense.subPos}` : ""}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.definition,
+                        styles.senseDefinition,
+                        { color: c.foreground },
+                      ]}
+                    >
+                      {sense.definition}
+                    </Text>
+                  </View>
+                  <Pressable
+                    testID={`extract-save-sense-${key}-${sense.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      senseSaved
+                        ? `Nghĩa ${index + 1} của ${item.term} đã có trong Sổ`
+                        : `Lưu nghĩa ${index + 1} của ${item.term} vào Sổ`
+                    }
+                    accessibilityState={{ disabled: senseDisabled }}
+                    disabled={senseDisabled}
+                    onPress={() => void saveSenseNow(item, sense)}
+                    style={[
+                      styles.senseSelectionControl,
+                      {
+                        borderColor: senseSaved ? c.border : c.primary,
+                        backgroundColor: senseSaved ? c.muted : c.card,
+                        opacity: senseDisabled && !senseSaved ? 0.6 : 1,
+                      },
+                    ]}
+                  >
+                    {senseSaving ? (
+                      <ActivityIndicator size="small" color={c.primary} />
+                    ) : (
+                      <Feather
+                        name={senseSaved ? "check-square" : "plus-square"}
+                        size={20}
+                        color={senseSaved ? c.mutedForeground : c.primary}
+                      />
+                    )}
+                    <Text
+                      style={[
+                        styles.senseSelectionLabel,
+                        {
+                          color: senseSaved ? c.mutedForeground : c.foreground,
+                        },
+                      ]}
+                    >
+                      {manuallySavedTerms.has(key)
+                        ? "Từ đã có trong Sổ"
+                        : senseSaving
+                          ? "Đang lưu nghĩa…"
+                          : senseSaved
+                            ? "Đã có trong Sổ"
+                            : "Lưu nghĩa này"}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
             <Text style={[styles.sentenceLabel, { color: c.mutedForeground }]}>
               Câu gốc
             </Text>
@@ -524,7 +725,7 @@ export default function ExtractVocabularyScreen() {
                 Kết quả · {visibleResults.length} từ
               </Text>
               <Text style={[styles.subtitle, { color: c.mutedForeground }]}>
-                Chọn nghĩa đầu tiên để thêm vào lịch ôn cấp 1.
+                Chọn cả từ để thêm nghĩa đầu tiên chưa lưu; hoặc dùng nút lưu bên dưới từng nghĩa.
               </Text>
             </View>
             <View style={styles.sortActions}>
@@ -631,10 +832,15 @@ export default function ExtractVocabularyScreen() {
               <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
                 {hideExisting &&
                 !searchQuery.trim() &&
-                results.every((item) =>
-                  savedTerms.has(normalizedTerm(item.term)),
+                results.every(
+                  (item) =>
+                    !hasAvailableSense(
+                      item,
+                      manuallySavedTerms,
+                      savedSenseKeys,
+                    ),
                 )
-                  ? "Các từ này đã có trong Sổ. Tắt “Ẩn từ đã có” để xem."
+                  ? "Các nghĩa này đã có trong Sổ. Tắt “Ẩn từ đã có” để xem."
                   : "Không có từ phù hợp bộ lọc."}
               </Text>
             </View>
@@ -793,8 +999,24 @@ const styles = StyleSheet.create({
   savedLabel: { fontFamily: F.s, fontSize: 11, marginTop: 5 },
   expandHint: { fontFamily: F.m, fontSize: 11, marginTop: 6 },
   expanded: { marginTop: 10, paddingTop: 8, borderTopWidth: 1 },
-  senseItem: { marginBottom: 8 },
+  senseChoice: {
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+  },
+  senseSelectionControl: {
+    minHeight: 42,
+    marginTop: 8,
+    paddingHorizontal: 11,
+    borderWidth: 1,
+    borderRadius: 9,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  senseSelectionLabel: { fontFamily: F.s, fontSize: 12 },
+  senseSelectionHint: { fontFamily: F.s, fontSize: 12, marginBottom: 3 },
   sensePos: { fontFamily: F.s, fontSize: 12 },
+  senseDefinition: { marginTop: 3 },
   sentenceLabel: { fontFamily: F.s, fontSize: 12, marginTop: 3 },
   sentence: { fontFamily: F.r, fontSize: 13, lineHeight: 19, marginTop: 3 },
   emptyResults: { alignItems: "center", gap: 8, padding: 24 },

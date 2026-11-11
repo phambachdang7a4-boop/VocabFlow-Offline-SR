@@ -6,6 +6,8 @@ import {
   type SQLiteDatabase,
 } from "expo-sqlite";
 import { File, FileMode, Paths } from "expo-file-system";
+import { Platform } from "react-native";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { DICTIONARY, type DictionaryStage } from "../domain/dictionary";
 import { dictionaryDownloadUrl } from "../domain/dictionary-download";
 import { dictionaryImportBytes } from "../domain/dictionary-import";
@@ -31,6 +33,11 @@ const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
 const DICTIONARY_CONTENT_REVISION =
   `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}`;
 let connection: Promise<SQLiteDatabase> | undefined;
+
+function sha256Hex(bytes: Uint8Array): string {
+  return Array.from(sha256(bytes), (byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export class DictionaryDownloadConsentRequired extends Error {
   constructor() {
@@ -97,43 +104,91 @@ async function initialize(
         throw new DictionaryDownloadConsentRequired();
       }
       onStage?.("downloading");
-      const downloadFile = new File(Paths.cache, `${filename}.download`);
       let buffer: Uint8Array;
-      try {
-        if (downloadFile.exists) downloadFile.delete();
-        const downloaded = await File.downloadFileAsync(
-          dictionaryDownloadUrl(),
-          downloadFile,
-          {
-            idempotent: true,
-            onProgress: (progress) =>
-              onProgress?.(progress.bytesWritten, progress.totalBytes),
-          },
-        );
-        if (downloaded.size !== DICTIONARY.bytes) {
+      let hash: string;
+      if (Platform.OS === "web") {
+        const response = await fetch(dictionaryDownloadUrl(), {
+          credentials: "omit",
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Không thể tải tệp từ điển (HTTP ${response.status}). Hãy thử lại.`,
+          );
+        }
+        const contentLength = Number(response.headers.get("content-length"));
+        if (contentLength > DICTIONARY.bytes) {
+          throw new Error("Tệp từ điển vượt quá kích thước đã kiểm tra.");
+        }
+        const reader = response.body?.getReader();
+        if (reader) {
+          buffer = new Uint8Array(DICTIONARY.bytes);
+          let bytesWritten = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (bytesWritten + value.byteLength > buffer.byteLength) {
+              await reader.cancel();
+              throw new Error("Tệp từ điển vượt quá kích thước đã kiểm tra.");
+            }
+            buffer.set(value, bytesWritten);
+            bytesWritten += value.byteLength;
+            onProgress?.(bytesWritten, DICTIONARY.bytes);
+          }
+          if (bytesWritten !== buffer.byteLength) {
+            throw new Error(
+              "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
+            );
+          }
+        } else {
+          buffer = new Uint8Array(await response.arrayBuffer());
+          onProgress?.(buffer.byteLength, DICTIONARY.bytes);
+        }
+        if (buffer.byteLength !== DICTIONARY.bytes) {
           throw new Error(
             "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
           );
         }
         onStage?.("verifying");
-        const hash = await downloaded.digest("SHA-256");
-        if (hash.toLowerCase() !== DICTIONARY.sha256)
-          throw new Error(
-            "Tệp từ điển không đúng phiên bản hoặc bị hỏng. Hãy tải lại.",
-          );
-        const handle = downloaded.open(FileMode.ReadOnly);
+        hash = sha256Hex(buffer);
+      } else {
+        const downloadFile = new File(Paths.cache, `${filename}.download`);
         try {
-          buffer = await handle.readBytes(DICTIONARY.bytes);
+          if (downloadFile.exists) downloadFile.delete();
+          const downloaded = await File.downloadFileAsync(
+            dictionaryDownloadUrl(),
+            downloadFile,
+            {
+              idempotent: true,
+              onProgress: (progress) =>
+                onProgress?.(progress.bytesWritten, progress.totalBytes),
+            },
+          );
+          if (downloaded.size !== DICTIONARY.bytes) {
+            throw new Error(
+              "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
+            );
+          }
+          onStage?.("verifying");
+          hash = await downloaded.digest("SHA-256");
+          const handle = downloaded.open(FileMode.ReadOnly);
+          try {
+            buffer = await handle.readBytes(DICTIONARY.bytes);
+          } finally {
+            handle.close();
+            downloaded.delete();
+          }
         } finally {
-          handle.close();
-          downloaded.delete();
+          if (downloadFile.exists) downloadFile.delete();
         }
-      } finally {
-        if (downloadFile.exists) downloadFile.delete();
       }
       if (buffer.byteLength !== DICTIONARY.bytes)
         throw new Error(
           "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
+        );
+      if (hash.toLowerCase() !== DICTIONARY.sha256)
+        throw new Error(
+          "Tệp từ điển không đúng phiên bản hoặc bị hỏng. Hãy tải lại.",
         );
       onStage?.("importing");
       const imported = await deserializeDatabaseAsync(
@@ -255,6 +310,25 @@ export async function getOfflineDictionaryStatus(): Promise<{
   state: "missing" | "installed" | "damaged";
   bytes: number;
 }> {
+  if (Platform.OS === "web") {
+    try {
+      const db = await openDictionary();
+      const count = await db.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM words",
+      );
+      if (
+        count?.count !==
+        DICTIONARY.wordCount + ALL_LOCAL_DICTIONARY_ADDITIONS.length
+      ) {
+        return { state: "damaged", bytes: DICTIONARY.bytes };
+      }
+      return { state: "installed", bytes: DICTIONARY.bytes };
+    } catch (error) {
+      if (error instanceof DictionaryDownloadConsentRequired)
+        return { state: "missing", bytes: 0 };
+      return { state: "damaged", bytes: DICTIONARY.bytes };
+    }
+  }
   const file = new File(Paths.document, "SQLite", filename);
   if (!file.exists) return { state: "missing", bytes: 0 };
   const bytes = file.size ?? 0;
@@ -283,6 +357,10 @@ export async function deleteOfflineDictionary(): Promise<void> {
     } catch {
       // The database may already have closed after a failed download.
     }
+  }
+  if (Platform.OS === "web") {
+    await deleteDatabaseAsync(filename);
+    return;
   }
   const file = new File(Paths.document, "SQLite", filename);
   if (file.exists) await deleteDatabaseAsync(filename);
