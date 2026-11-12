@@ -46,6 +46,16 @@ assert.throws(
   "Changed curated example translations must fail the check.",
 );
 
+const changedReviewedTranslation = cloneCourseData();
+changedReviewedTranslation.entries.fertilization.exampleTranslation =
+  "Sự thụ phấn diễn ra sau khi phấn hoa đến được hoa.";
+assert.throws(
+  () =>
+    validateCourseDataAgainstAuthoredOverrides(changedReviewedTranslation),
+  /fertilization: authored IELTS example translation changed/,
+  "Reviewed translation corrections must fail if a meaning mismatch returns.",
+);
+
 console.log(
-  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, examples are valid, and authored definitions and examples match the builder.`,
+  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, examples are valid, authored definitions and examples match the builder, and reviewed translations stay corrected.`,
 );

@@ -365,6 +365,8 @@ const LEGACY_SOCIETY_LESSON = {
   ],
 };
 
+// Reviewed IELTS example pairs are pinned here so regeneration cannot restore
+// a previously identified English/Vietnamese meaning mismatch.
 const COURSE_EXAMPLE_OVERRIDES = {
   graduation: {
     example: "She celebrated her graduation after completing her degree.",
@@ -605,6 +607,38 @@ const COURSE_EXAMPLE_OVERRIDES = {
   engineer: {
     example: "The engineer designed a flood-resistant bridge for the coastal community.",
     exampleTranslation: "Kỹ sư đã thiết kế một cây cầu chống lũ cho cộng đồng ven biển.",
+  },
+  treat: {
+    example: "Please let me give you a treat today.",
+    exampleTranslation: "Hôm nay, hãy để tôi đãi bạn một món nhé.",
+  },
+  treater: {
+    example: "The treater helped both sides reach an agreement.",
+    exampleTranslation: "Người thương lượng đã giúp cả hai bên đạt được thỏa thuận.",
+  },
+  hospitalisation: {
+    example: "The hospitalisation was useful in class.",
+    exampleTranslation: "Việc nhập viện có ích trong lớp học.",
+  },
+  hospitalism: {
+    example: "Bad hospitalism made the ward feel unsafe.",
+    exampleTranslation: "Vệ sinh bệnh viện kém khiến khu điều trị có cảm giác không an toàn.",
+  },
+  fertilization: {
+    example: "Fertilization happens after the pollen reaches the flower.",
+    exampleTranslation: "Sự thụ tinh diễn ra sau khi phấn hoa đến được hoa.",
+  },
+  afford: {
+    example: "I cannot afford to lose my job right now.",
+    exampleTranslation: "Lúc này tôi không thể để mất việc.",
+  },
+  industrially: {
+    example: "She answered industrially and smiled.",
+    exampleTranslation: "Cô ấy trả lời về mặt công nghiệp rồi mỉm cười.",
+  },
+  biologically: {
+    example: "He moved biologically through the crowd.",
+    exampleTranslation: "Anh ấy di chuyển qua đám đông theo cách thức sinh học.",
   },
 };
 
