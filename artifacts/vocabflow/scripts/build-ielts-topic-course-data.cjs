@@ -1223,13 +1223,100 @@ function openingVietnameseSubjectPronoun(translation) {
   );
 }
 
-function hasOpeningSubjectPronounConflict(example, translation) {
+function subjectPronounCategory(pronoun) {
+  const value = String(pronoun ?? "").toLowerCase();
+  if (/^(?:he|anh ấy|anh ta|ông ấy|ông ta|cậu ấy|cậu ta|hắn)$/.test(value)) {
+    return "male";
+  }
+  if (/^(?:she|cô ấy|cô ta|chị ấy|chị ta|bà ấy|bà ta|nàng)$/.test(value)) {
+    return "female";
+  }
+  if (/^(?:they|bọn họ|chúng nó|họ)$/.test(value)) return "third-person";
+  if (
+    /^(?:i|we|chúng tôi|chúng ta|chúng mình|chúng em|tôi|mình|ta)$/.test(
+      value,
+    )
+  ) {
+    return "first-person";
+  }
+  return null;
+}
+
+function laterEnglishClauseSubjects(example) {
+  const text = String(example ?? "");
+  const pronoun = "(I|we|he|she|they)";
+  const clauseMarkers =
+    "(?:that|whether|if|when|while|because|although|though|unless|until|once|after|before|since|whereas|where|as|and|but|or|so|yet)";
+  const reportingVerbs =
+    "(?:say|says|said|think|thinks|thought|know|knows|knew|believe|believes|believed|claim|claims|claimed|report|reports|reported|explain|explains|explained|mention|mentions|mentioned|promise|promises|promised|expect|expects|expected|hope|hopes|hoped|feel|feels|felt|hear|hears|heard|see|sees|saw|notice|notices|noticed|realize|realizes|realized|remember|remembers|remembered|tell|tells|told)";
+  const subjects = [];
+  const patterns = [
+    new RegExp(`\\b${clauseMarkers}\\s+${pronoun}\\b`, "gi"),
+    new RegExp(`\\b${reportingVerbs}\\s+${pronoun}\\b`, "gi"),
+  ];
+  for (const pattern of patterns) {
+    for (const match of text.matchAll(pattern)) {
+      subjects.push({
+        index: match.index,
+        category: subjectPronounCategory(match[1]),
+      });
+    }
+  }
+  return subjects
+    .sort((left, right) => left.index - right.index)
+    .filter((subject, index, all) => subject.index !== all[index - 1]?.index)
+    .map(({ category }) => category);
+}
+
+function laterVietnameseClauseSubjects(translation) {
+  const text = String(translation ?? "");
+  const pronoun =
+    "(chúng tôi|chúng ta|chúng mình|chúng em|bọn họ|chúng nó|anh ấy|anh ta|ông ấy|ông ta|cậu ấy|cậu ta|hắn|cô ấy|cô ta|chị ấy|chị ta|bà ấy|bà ta|nàng|họ|tôi|mình|ta)";
+  const clauseMarkers =
+    "(?:rằng|là|nếu|khi|trong khi|mặc dù|dù|bởi vì|vì|sau khi|trước khi|cho dù|và|nhưng|hoặc|nên)";
+  const reportingVerbs =
+    "(?:nói|bảo|nghĩ|biết|tin|kể|khẳng định|nhận ra|cho biết|giải thích|hy vọng|mong|cảm thấy|nhận thấy)";
+  const subjects = [];
+  const patterns = [
+    new RegExp(`${clauseMarkers}\\s+${pronoun}(?=\\s|[,.:;!?]|$)`, "gi"),
+    new RegExp(`${reportingVerbs}\\s+${pronoun}(?=\\s|[,.:;!?]|$)`, "gi"),
+  ];
+  for (const pattern of patterns) {
+    for (const match of text.matchAll(pattern)) {
+      const matchedPronoun = match[1];
+      subjects.push({
+        index: match.index + match[0].lastIndexOf(matchedPronoun),
+        category: subjectPronounCategory(matchedPronoun),
+      });
+    }
+  }
+  return subjects
+    .sort((left, right) => left.index - right.index)
+    .filter((subject, index, all) => subject.index !== all[index - 1]?.index)
+    .map(({ category }) => category);
+}
+
+function hasSubjectPronounConflict(example, translation) {
   const englishSubject = openingEnglishSubjectPronoun(example);
   const vietnameseSubject = openingVietnameseSubjectPronoun(translation);
-  return Boolean(
+  if (
     englishSubject &&
-      vietnameseSubject &&
-      englishSubject !== vietnameseSubject,
+    vietnameseSubject &&
+    englishSubject !== vietnameseSubject
+  ) {
+    return true;
+  }
+
+  const englishClauseSubjects = laterEnglishClauseSubjects(example);
+  const vietnameseClauseSubjects = laterVietnameseClauseSubjects(translation);
+  if (
+    englishClauseSubjects.length === 0 ||
+    englishClauseSubjects.length !== vietnameseClauseSubjects.length
+  ) {
+    return false;
+  }
+  return englishClauseSubjects.some(
+    (subject, index) => subject !== vietnameseClauseSubjects[index],
   );
 }
 
@@ -1266,7 +1353,7 @@ function validateCourseExamples(entries) {
     }
     if (!translation) {
       issues.push("missing Vietnamese translation");
-    } else if (hasOpeningSubjectPronounConflict(example, translation)) {
+    } else if (hasSubjectPronounConflict(example, translation)) {
       issues.push("English subject pronoun conflicts with Vietnamese subject pronoun");
     }
     if (issues.length) {
@@ -1872,7 +1959,7 @@ module.exports = {
   spellingNoteForTerm,
   containsHeadword,
   hasSentenceTemplatePlaceholder,
-  hasOpeningSubjectPronounConflict,
+  hasSubjectPronounConflict,
   usableExample,
   validateCourseExamples,
   applyCourseDefinitionOverrides,

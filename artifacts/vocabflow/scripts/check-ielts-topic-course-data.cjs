@@ -10,7 +10,7 @@ const {
   COURSE_POS_OVERRIDES,
   spellingNoteForTerm,
   validateCourseExamples,
-  hasOpeningSubjectPronounConflict,
+  hasSubjectPronounConflict,
   validateCourseDataAgainstAuthoredOverrides,
   validateDictionaryDefinitionReview,
   validateDictionaryPosReview,
@@ -24,7 +24,7 @@ function cloneCourseData() {
 
 validateCourseExamples(courseData.entries);
 assert.equal(
-  hasOpeningSubjectPronounConflict(
+  hasSubjectPronounConflict(
     "She coached him through the interview.",
     "Cô ấy đã hướng dẫn anh ấy vượt qua buổi phỏng vấn.",
   ),
@@ -32,12 +32,31 @@ assert.equal(
   "A different-gender object pronoun must not conflict with the English subject.",
 );
 assert.equal(
-  hasOpeningSubjectPronounConflict(
+  hasSubjectPronounConflict(
     "The recruiter called her about the job.",
     "Người tuyển dụng đã gọi anh ấy về công việc.",
   ),
   false,
   "An object pronoun must not be mistaken for the English sentence subject.",
+);
+assert.equal(
+  hasSubjectPronounConflict(
+    "She said he coached her through the interview.",
+    "Cô ấy nói anh ấy đã hướng dẫn cô ấy vượt qua buổi phỏng vấn.",
+  ),
+  false,
+  "A different subject and object pronoun in a later clause must remain valid.",
+);
+assert.throws(
+  () =>
+    validateCourseExamples({
+      studied: {
+        example: "She said he studied biology at college.",
+        exampleTranslation: "Cô ấy nói cô ấy đã học sinh học ở trường đại học.",
+      },
+    }),
+  /studied: English subject pronoun conflicts with Vietnamese subject pronoun/,
+  "A mismatched explicit subject pronoun in a later clause must fail validation.",
 );
 assert.throws(
   () =>
