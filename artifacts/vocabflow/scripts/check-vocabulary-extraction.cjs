@@ -56,6 +56,31 @@ async function checkLemmasAndAggregation() {
   assert.equal(progress.at(-1).percent, 100);
   assert.equal(progress.at(-1).stage, "complete");
 
+  const fragmentEntries = new Map([
+    ["grudge", makeEntry(9, "grudge", "Mối hận thù")],
+    ["terrific", makeEntry(10, "terrific", "Tuyệt vời", "adj")],
+  ]);
+  const fragmentLookup = async (candidates) =>
+    new Map(candidates.flatMap((candidate) => {
+      const entry = fragmentEntries.get(candidate);
+      return entry ? [[candidate, entry]] : [];
+    }));
+  const fragmentOnly = await extraction.extractVocabularyFromText(
+    "Grudge terrific",
+    fragmentLookup,
+  );
+  assert.equal(fragmentOnly.find((item) => item.term === "terrific")?.sentence, "",
+    "A two-word note fragment is not stored as an example.");
+  const laterSentence = await extraction.extractVocabularyFromText(
+    "Grudge terrific. The meal was terrific and fresh.",
+    fragmentLookup,
+  );
+  assert.equal(
+    laterSentence.find((item) => item.term === "terrific")?.sentence,
+    "The meal was terrific and fresh.",
+    "Use the first complete context if a later valid sentence contains the word.",
+  );
+
   assert.ok(extraction.candidateLemmas("studies").includes("study"));
   assert.ok(extraction.candidateLemmas("studied").includes("study"));
   assert.ok(extraction.candidateLemmas("running").includes("run"));
@@ -265,7 +290,8 @@ function checkScreenWiring() {
   assert.match(screen, /FileSystem\.EncodingType\.UTF8/);
   assert.match(screen, /MAX_EXTRACTION_FILE_BYTES/);
   assert.match(screen, /utf8ByteLength\(contents\)/);
-  assert.match(screen, /saveWord\(\{ \.\.\.draft, example: result\.sentence \}\)/);
+  assert.match(screen, /saveWord\(\{ \.\.\.draft, example: result\.sentence \|\| draft\.example \}\)/);
+  assert.match(screen, /Không tìm thấy câu ví dụ đủ dài trong văn bản hoặc từ điển/u);
   assert.match(screen, /for \(const result of selectedResults\)/);
   assert.match(screen, /const saveSenseNow = async/);
   assert.match(screen, /testID=\{`extract-save-sense-\$\{key\}-\$\{sense\.id\}`\}/);

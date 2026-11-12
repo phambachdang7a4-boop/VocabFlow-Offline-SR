@@ -4,6 +4,7 @@ export const MAX_EXTRACTION_TEXT_CHARACTERS = 1_000_000;
 export const MAX_EXTRACTION_TEXT_BYTES = 1_048_576;
 const SENTENCE_PATTERN = /[^.!?\r\n]+(?:[.!?]+)?|[.!?]+/gu;
 const TOKEN_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
+const CONTEXT_WORD_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
 const WORK_BATCH_SIZE = 250;
 const LOOKUP_BATCH_SIZE = 120;
 
@@ -135,6 +136,10 @@ export type ExtractionLookup = (
 interface RawWordCount {
   count: number;
   sentence: string;
+}
+
+function usableExampleContext(sentence: string): boolean {
+  return [...sentence.matchAll(CONTEXT_WORD_PATTERN)].length >= 3;
 }
 
 function addCandidate(candidates: string[], candidate: string): void {
@@ -311,8 +316,19 @@ export async function extractVocabularyFromText(
       tokenizedCount += 1;
       if (!ENGLISH_STOP_WORDS.has(token)) {
         const current = rawCounts.get(token);
-        if (current) current.count += 1;
-        else rawCounts.set(token, { count: 1, sentence: sentence.slice(0, 200) });
+        if (current) {
+          current.count += 1;
+          if (!current.sentence && usableExampleContext(sentence)) {
+            current.sentence = sentence.slice(0, 200);
+          }
+        } else {
+          rawCounts.set(token, {
+            count: 1,
+            sentence: usableExampleContext(sentence)
+              ? sentence.slice(0, 200)
+              : "",
+          });
+        }
       }
 
       if (tokenizedCount % WORK_BATCH_SIZE === 0) {
@@ -363,7 +379,10 @@ export async function extractVocabularyFromText(
       const key = entry.term.toLocaleLowerCase("en");
       const raw = rawCounts.get(rawWord)!;
       const current = resolved.get(key);
-      if (current) current.count += raw.count;
+      if (current) {
+        current.count += raw.count;
+        if (!current.sentence && raw.sentence) current.sentence = raw.sentence;
+      }
       else {
         resolved.set(key, {
           term: entry.term,

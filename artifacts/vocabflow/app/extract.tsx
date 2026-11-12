@@ -267,7 +267,7 @@ export default function ExtractVocabularyScreen() {
     setSavingSenseKeys((current) => new Set(current).add(key));
     try {
       const draft = await getDictionaryDraft(result.entry.id, sense.id);
-      await saveWord({ ...draft, example: result.sentence });
+      await saveWord({ ...draft, example: result.sentence || draft.example });
       setSelectedTerms((current) => {
         if (!current.has(termKey)) return current;
         const next = new Set(current);
@@ -329,7 +329,7 @@ export default function ExtractVocabularyScreen() {
         )[0];
         if (!sense) continue;
         const draft = await getDictionaryDraft(result.entry.id, sense.id);
-        await saveWord({ ...draft, example: result.sentence });
+        await saveWord({ ...draft, example: result.sentence || draft.example });
         added += 1;
       }
       setSelectedTerms(new Set());
@@ -532,10 +532,12 @@ export default function ExtractVocabularyScreen() {
               );
             })}
             <Text style={[styles.sentenceLabel, { color: c.mutedForeground }]}>
-              Câu gốc
+              {item.sentence ? "Câu gốc trong văn bản" : "Ví dụ"}
             </Text>
             <Text style={[styles.sentence, { color: c.foreground }]}>
-              {item.sentence}
+              {item.sentence ||
+                item.entry.senses.find((sense) => sense.example)?.example ||
+                "Không tìm thấy câu ví dụ đủ dài trong văn bản hoặc từ điển."}
             </Text>
           </View>
         ) : null}
