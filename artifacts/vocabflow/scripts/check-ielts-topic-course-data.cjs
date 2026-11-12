@@ -93,6 +93,14 @@ assert.throws(
   "A headword assigned to multiple IELTS topics must fail validation.",
 );
 
+const emptyTopic = cloneCourseData();
+emptyTopic.topics[0].terms = [];
+assert.throws(
+  () => validateCourseDataAgainstAuthoredOverrides(emptyTopic),
+  /education: topic has no terms/,
+  "An IELTS topic without vocabulary must fail course validation.",
+);
+
 for (const [term, review] of Object.entries(
   COURSE_POS_OVERRIDES,
 )) {

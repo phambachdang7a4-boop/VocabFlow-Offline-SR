@@ -1339,6 +1339,9 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
 
   const topicByTerm = new Map();
   for (const topic of courseData.topics ?? []) {
+    if (!topic.terms?.length) {
+      errors.push(`- ${topic.id}: topic has no terms`);
+    }
     for (const rawTerm of topic.terms ?? []) {
       const term = rawTerm.trim().toLowerCase();
       const previousTopic = topicByTerm.get(term);
