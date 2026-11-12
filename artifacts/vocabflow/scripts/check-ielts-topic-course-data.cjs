@@ -13,6 +13,7 @@ const {
   hasOpeningSubjectPronounConflict,
   validateCourseDataAgainstAuthoredOverrides,
   validateDictionaryDefinitionReview,
+  validateDictionaryPosReview,
   validateDictionarySenseReview,
   validateOfflineExampleSources,
 } = require("./build-ielts-topic-course-data.cjs");
@@ -85,7 +86,7 @@ assert.throws(
   "A headword assigned to multiple IELTS topics must fail validation.",
 );
 
-for (const [term, expectedPartOfSpeech] of Object.entries(
+for (const [term, review] of Object.entries(
   COURSE_POS_OVERRIDES,
 )) {
   assert.ok(
@@ -94,13 +95,13 @@ for (const [term, expectedPartOfSpeech] of Object.entries(
   );
   assert.equal(
     courseData.entries[term].partOfSpeech,
-    expectedPartOfSpeech,
+    review.partOfSpeech,
     `${term} must keep the part-of-speech label supported by its lesson example.`,
   );
 
   const changedLessonLabel = cloneCourseData();
   changedLessonLabel.entries[term].partOfSpeech =
-    expectedPartOfSpeech === "N" ? "V" : "N";
+    review.partOfSpeech === "N" ? "V" : "N";
   assert.throws(
     () => validateCourseDataAgainstAuthoredOverrides(changedLessonLabel),
     new RegExp(`${term}: reviewed lesson part-of-speech label changed`),
@@ -113,6 +114,14 @@ for (const [term, expectedPartOfSpeech] of Object.entries(
     () => validateCourseDataAgainstAuthoredOverrides(removedReviewedHeadword),
     new RegExp(`${term}: reviewed headword was removed`),
     `${term} must remain available after its lesson label is corrected.`,
+  );
+
+  const changedLessonExample = cloneCourseData();
+  changedLessonExample.entries[term].example += " The wording changed.";
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(changedLessonExample),
+    new RegExp(`${term}: reviewed source example changed`),
+    `${term} must be reviewed again if the lesson's supporting source example changes.`,
   );
 }
 
@@ -162,6 +171,38 @@ for (const term of Object.keys(DICTIONARY_SENSE_REVIEW)) {
     `${term} must stay out of IELTS lessons when its dictionary example uses an unrelated sense.`,
   );
 }
+
+const reviewedPosDictionaryRows = Object.entries(COURSE_POS_OVERRIDES).map(
+  ([word, review]) => ({
+    word,
+    example: review.sourceExample,
+  }),
+);
+assert.doesNotThrow(
+  () => validateDictionaryPosReview(reviewedPosDictionaryRows),
+  "Unchanged source examples must keep their reviewed lesson labels.",
+);
+assert.doesNotThrow(
+  () =>
+    validateDictionaryPosReview([
+      ...reviewedPosDictionaryRows,
+      {
+        word: "flooding",
+        example: "The flooding damaged many homes.",
+      },
+    ]),
+  "Another dictionary example must not invalidate a still-present reviewed source sentence.",
+);
+const changedPosSourceExample = reviewedPosDictionaryRows.map((row) =>
+  row.word === "flooding"
+    ? { ...row, example: "The flooding damaged many homes." }
+    : row,
+);
+assert.throws(
+  () => validateDictionaryPosReview(changedPosSourceExample),
+  /flooding: dictionary example changed; review its lesson part-of-speech label/,
+  "A changed dictionary example must require a fresh lesson-label review.",
+);
 for (const term of REQUIRED_RELATED_HEADWORDS) {
   assert.ok(
     courseData.entries[term],

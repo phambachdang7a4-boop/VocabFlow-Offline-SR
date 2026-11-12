@@ -970,9 +970,18 @@ const CURATED_TOPIC_ENTRIES = {
 // Review the displayed label against how the headword is used in its lesson
 // example. Keep the dictionary word; only correct its lesson-specific POS.
 const COURSE_POS_OVERRIDES = {
-  schools: "N",
-  flooding: "N",
-  computed: "V",
+  schools: {
+    partOfSpeech: "N",
+    sourceExample: "Many local schools offer free lunch to students.",
+  },
+  flooding: {
+    partOfSpeech: "N",
+    sourceExample: "Flooding washed mud across the road.",
+  },
+  computed: {
+    partOfSpeech: "V",
+    sourceExample: "The answer was computed correctly.",
+  },
 };
 
 const POS_GROUPS = {
@@ -1272,13 +1281,13 @@ function applyCourseDefinitionOverrides(entries) {
 }
 
 function applyCoursePosOverrides(entries) {
-  for (const [term, partOfSpeech] of Object.entries(COURSE_POS_OVERRIDES)) {
+  for (const [term, review] of Object.entries(COURSE_POS_OVERRIDES)) {
     const entry = entries[term];
     if (!entry) {
       throw new Error(`Không tìm thấy từ để áp dụng nhãn từ loại IELTS đã xem xét: ${term}`);
     }
-    entry.partOfSpeech = partOfSpeech;
-    entry.posGroup = normalizePos(partOfSpeech);
+    entry.partOfSpeech = review.partOfSpeech;
+    entry.posGroup = normalizePos(review.partOfSpeech);
   }
 }
 
@@ -1318,19 +1327,20 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
     }
   }
 
-  for (const [term, expectedPartOfSpeech] of Object.entries(
-    COURSE_POS_OVERRIDES,
-  )) {
+  for (const [term, review] of Object.entries(COURSE_POS_OVERRIDES)) {
     const entry = entries[term];
     if (!entry) {
       errors.push(`- ${term}: reviewed headword was removed`);
       continue;
     }
     if (
-      entry.partOfSpeech !== expectedPartOfSpeech ||
-      entry.posGroup !== normalizePos(expectedPartOfSpeech)
+      entry.partOfSpeech !== review.partOfSpeech ||
+      entry.posGroup !== normalizePos(review.partOfSpeech)
     ) {
       errors.push(`- ${term}: reviewed lesson part-of-speech label changed`);
+    }
+    if (entry.example !== review.sourceExample) {
+      errors.push(`- ${term}: reviewed source example changed; review its lesson part-of-speech label`);
     }
   }
 
@@ -1558,6 +1568,33 @@ function validateDictionarySenseReview(dictionary) {
   }
 }
 
+function validateDictionaryPosReview(dictionaryRows) {
+  const sourceExamplesByTerm = new Map();
+  for (const row of dictionaryRows) {
+    const term = String(row.word ?? "").trim().toLowerCase();
+    const example = String(row.example ?? "").trim();
+    if (!term || !example) continue;
+    if (!sourceExamplesByTerm.has(term)) {
+      sourceExamplesByTerm.set(term, new Set());
+    }
+    sourceExamplesByTerm.get(term).add(example);
+  }
+
+  const errors = [];
+  for (const [term, review] of Object.entries(COURSE_POS_OVERRIDES)) {
+    if (!sourceExamplesByTerm.get(term)?.has(review.sourceExample)) {
+      errors.push(
+        `- ${term}: dictionary example changed; review its lesson part-of-speech label`,
+      );
+    }
+  }
+  if (errors.length) {
+    throw new Error(
+      `IELTS dictionary-example part-of-speech review failed:\n${errors.join("\n")}`,
+    );
+  }
+}
+
 function validateDictionaryDefinitionReview(dictionary) {
   const errors = [];
   for (const [term, review] of Object.entries(
@@ -1659,6 +1696,7 @@ function main() {
     const dictionaryRows = getDictionaryRows(db);
     const dictionary = dictionaryEntryIndex(dictionaryRows);
     validateDictionarySenseReview(dictionary);
+    validateDictionaryPosReview(dictionaryRows);
     validateDictionaryDefinitionReview(dictionary);
     const sortedTerms = [...dictionary.keys()].sort();
     const legacy = loadLegacyCourse();
@@ -1817,6 +1855,7 @@ module.exports = {
   REQUIRED_COMMON_INFLECTIONS,
   RARE_HEADWORD_REVIEW,
   validateDictionarySenseReview,
+  validateDictionaryPosReview,
   validateDictionaryDefinitionReview,
   COURSE_DEFINITION_OVERRIDES,
   COURSE_EXAMPLE_OVERRIDES,
