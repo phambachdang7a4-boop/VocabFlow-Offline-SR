@@ -136,6 +136,22 @@ async function markSyncDirty(db: SQLiteDatabase): Promise<void> {
   `);
 }
 
+async function repairKnownExtractionExample(
+  db: SQLiteDatabase,
+): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    const repaired = await db.runAsync(
+      `UPDATE words
+       SET example = ?, updated_at = ?
+       WHERE normalized_term = 'terrific'
+         AND lower(trim(example)) = 'grudge terrific'`,
+      "The meal was terrific and fresh.",
+      new Date().toISOString(),
+    );
+    if (repaired.changes > 0) await markSyncDirty(db);
+  });
+}
+
 function notifySyncListeners(): void {
   for (const listener of syncListeners) listener();
 }
@@ -712,6 +728,7 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
     await db.closeAsync();
