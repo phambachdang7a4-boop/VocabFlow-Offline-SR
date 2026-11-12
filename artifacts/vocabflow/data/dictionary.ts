@@ -31,6 +31,7 @@ import {
 import {
   draftInDictionary,
   entryInDictionary,
+  randomUnlearnedInDictionary,
   searchInDictionary,
   suggestInDictionary,
 } from "./dictionary-queries";
@@ -379,6 +380,11 @@ export async function searchDictionary(query: string, offset = 0) {
 }
 export async function suggestDictionary(query: string) {
   return suggestInDictionary(await openDictionary(), query);
+}
+export async function getRandomUnlearnedDictionaryWord(
+  learnedTerms: ReadonlySet<string>,
+) {
+  return randomUnlearnedInDictionary(await openDictionary(), learnedTerms);
 }
 export async function getDictionaryEntry(
   id: number,

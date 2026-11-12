@@ -148,6 +148,17 @@ function adapter(filename, readOnly = false) {
   const hello = result.items.find((row) => row.term === "hello");
   assert.ok(hello);
   assert.ok(hello.meaning.length);
+  const recommended = await queries.randomUnlearnedInDictionary(
+    reference,
+    new Set(["hello"]),
+  );
+  assert.ok(recommended, "An unsaved word with a definition is suggested.");
+  assert.ok(recommended.meaning);
+  assert.notEqual(
+    recommended.term.toLocaleLowerCase("en"),
+    "hello",
+    "The suggested word excludes a word already in the learner's notebook.",
+  );
   assert.deepEqual(await queries.searchInDictionary(reference, ""), {
     items: [],
     hasMore: false,

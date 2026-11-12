@@ -71,6 +71,8 @@ const light = {
   dictAddPressed: '#D9A632',
   dictSaved: '#2E6B44',
   dictSuggest: NAVY,
+  corviEyelid: '#252630',
+  corviEyelidLine: '#11121A',
   // Review chart
   chartBar: '#7C94C2',
   chartBarStrong: NAVY,
@@ -151,6 +153,8 @@ const dark: typeof light = {
   dictAddPressed: '#D9A632',
   dictSaved: '#9FDBB2',
   dictSuggest: '#C9D8F2',
+  corviEyelid: '#252630',
+  corviEyelidLine: '#11121A',
   chartBar: '#7C94C2',
   chartBarStrong: '#C9D8F2',
   chartBase: '#4A5274',

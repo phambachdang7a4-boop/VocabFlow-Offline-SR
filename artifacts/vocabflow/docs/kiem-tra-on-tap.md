@@ -1,6 +1,6 @@
 # Kiểm tra trang Ôn tập trên điện thoại
 
-Thanh dưới có thứ tự **Tra Từ · Khóa Học · Ôn tập · Sổ từ · Trống**. Khóa Học chưa có khóa nào; Trống chưa có nội dung. Bấm bánh răng góc trên phải Ôn tập để vào Cài đặt, dùng nút quay lại để trở về. Cài đặt không còn chiếm một tab.
+Thanh dưới có thứ tự **Thư Viện · Khóa Học · Ôn tập · Sổ từ · Trống**. Khóa Học chưa có khóa nào; Trống chưa có nội dung. Bấm bánh răng góc trên phải Ôn tập để vào Cài đặt, dùng nút quay lại để trở về. Cài đặt không còn chiếm một tab.
 
 1. Trong Chrome Android, tải lại trang rồi chọn tab **Ôn tập**. Trong Expo Go, mở lại tab sau khi bản cập nhật tải xong. Không xóa dữ liệu ứng dụng hoặc tải lại kho từ điển.
 2. Trang đầu là tổng quan, không tự mở thẻ. Tổng **Sổ từ đã có** phải bằng số từ cá nhân đã lưu; sáu cột ghi số từ ở cấp 1–6. Không tính kho tra cứu vào tổng này.

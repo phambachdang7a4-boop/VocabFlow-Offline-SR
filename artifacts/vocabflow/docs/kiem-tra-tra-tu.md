@@ -1,4 +1,4 @@
-# Tra Từ — từ điển Anh–Việt trên thiết bị
+# Thư Viện — từ điển Anh–Việt trên thiết bị
 
 ## Các phần đã hoàn thiện
 
@@ -11,8 +11,8 @@
 
 ### 1. Nạp lần đầu và tra cứu
 
-- Mở app qua mã QR dự án như trước, chọn tab **Tra Từ** ở thanh dưới.
-- Nếu đang dùng Chrome Android, tải lại trang để nhận bản mới, sau đó chọn **Tra Từ**; không cần chuyển sang Expo Go hoặc xóa dữ liệu trình duyệt.
+- Mở app qua mã QR dự án như trước, chọn tab **Thư Viện** ở thanh dưới.
+- Nếu đang dùng Chrome Android, tải lại trang để nhận bản mới, sau đó chọn **Thư Viện**; không cần chuyển sang Expo Go hoặc xóa dữ liệu trình duyệt.
 - Tệp tải trực tiếp từ nguồn GitHub công khai, ghim commit và kiểm SHA-256. Không cần đăng nhập cho tệp từ điển; không tải qua API preview riêng tư. Bản mirror App Storage vẫn được giữ cho người phát triển.
 - Trước khi tải, app hỏi **Tải kho từ điển về máy?**, nêu dung lượng **42,2 MiB (khoảng 44,2 MB)** và cảnh báo cước 3G/4G/5G. Chưa nhấn **Đồng ý tải** thì không gửi yêu cầu tải tệp, trên cả Wi-Fi lẫn dữ liệu di động. Chọn **Để sau** để về Sổ từ; vẫn thêm từ và ôn tập bình thường.
 - Lần đầu cần có mạng và đủ dung lượng trống. Chỉ sau khi đồng ý, app mới tải 42,2 MiB và cần thêm dung lượng tạm để xác minh/nhập SQLite, không chỉ đúng 42,2 MiB. Nên có ít nhất vài trăm MB trống.
@@ -26,7 +26,7 @@
 
 ### 2. Lưu để ôn và chống trùng
 
-- Chọn kết quả để xem nghĩa ngay trong tab **Tra Từ** (tab ngoài cùng bên trái). Bấm **Lưu từ** cạnh đúng nghĩa muốn học: lưu ngay từ, nghĩa được chọn, IPA, ví dụ và ghi chú nguồn vào SQLite. Hiện **Đã lưu vào Sổ từ**, vẫn ở màn Tra Từ, không mở Từ mới để xác nhận.
+- Chọn kết quả để xem nghĩa ngay trong tab **Thư Viện** (tab ngoài cùng bên trái). Bấm **Lưu từ** cạnh đúng nghĩa muốn học: lưu ngay từ, nghĩa được chọn, IPA, ví dụ và ghi chú nguồn vào SQLite. Hiện **Đã lưu vào Sổ từ**, vẫn ở màn Thư Viện, không mở Từ mới để xác nhận.
 - Ngay dưới thanh tìm kiếm khi mở mục từ có ô **Từ loại**: mặc định chọn loại của nghĩa đầu tiên theo thứ tự nguồn (nếu nghĩa đầu tiên là động từ thì chọn Verb), và chỉ hiện các nghĩa thuộc loại đó. Mở checklist chọn **Verb, Noun, Adjective, Adverb, Idiom, Others**; các loại có trong từ cũng theo thứ tự xuất hiện. Chọn nhiều loại để xem hợp các nghĩa; **Tất cả** bỏ bộ lọc. Loại không có trong mục từ bị vô hiệu hóa; các lựa chọn được tính trên toàn bộ nghĩa, không chỉ trang đầu.
 - Thử mục từ nhiều nghĩa như `work`, đổi giữa Noun và Verb rồi chọn cả hai, tải thêm và lưu một nghĩa. Từ/định nghĩa/IPA/ví dụ phải đúng nghĩa được chọn. Bộ lọc không sửa nội dung nguồn hay tiến độ trong sổ; đổi sang mục từ mới phải chọn loại của nghĩa đầu tiên của từ mới, không kế thừa bộ lọc trước. Dòng hướng dẫn “Bấm Lưu từ…” không còn hiển thị.
 - Dùng nút kính lúp hoặc phím tìm kiếm để tra ngay; nếu có từ khớp chính xác, app mở mục từ đó. **Kết quả tra cứu** quay về danh sách; sửa/xóa nội dung tìm kiếm cũng trở về kết quả, không để phản hồi cũ mở nhầm từ.

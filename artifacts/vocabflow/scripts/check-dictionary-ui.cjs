@@ -8,6 +8,7 @@ const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const { exampleSegments, pronunciationAccent } = dictionaryDomain;
 const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
 const dictionaryTabSource = readFileSync(join(__dirname, '../app/(tabs)/dictionary.tsx'), 'utf8');
+const tabLayoutSource = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
 const dictionarySourcesSource = readFileSync(join(__dirname, '../app/dictionary-sources.tsx'), 'utf8');
 for (const tab of ['courses', 'index', 'review', 'blank']) {
   const source = readFileSync(join(__dirname, `../app/(tabs)/${tab}.tsx`), 'utf8');
@@ -19,6 +20,10 @@ assert.match(dictionaryTabSource, /dictionary-open-sources/,
   'A compact info button still provides access to the attribution page.');
 assert.doesNotMatch(dictionaryTabSource, /VocabFlow · Anh – Việt ngoại tuyến|<Text[^>]*>Tra Từ<\/Text>/,
   'The redundant dictionary title above the search field is removed.');
+assert.match(tabLayoutSource, /NativeTabs\.Trigger\.Label>Thư Viện<\/NativeTabs\.Trigger\.Label>/,
+  'Native navigation names the dictionary tab Thư Viện.');
+assert.match(tabLayoutSource, /title: "Thư Viện"/,
+  'Classic navigation names the dictionary tab Thư Viện.');
 assert.match(dictionarySourcesSource, /Nguồn từ điển/,
   'The full dictionary attribution page remains available in the app.');
 assert.match(dictionaryEntrySource, /entry-regional-ipa-install/,
@@ -41,8 +46,30 @@ assert.equal(pronunciationAccent('Received-Pronunciation'), 'uk');
 assert.equal(pronunciationAccent('NAmE'), 'us');
 assert.equal(pronunciationAccent('General-American'), 'us');
 assert.equal(pronunciationAccent(null), null);
-const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator', 'Image'].map(key => [key, key]));
-Object.assign(native, { Platform: { OS: 'web' }, StyleSheet: { create: value => value }, Keyboard: { dismiss() {} } });
+const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator', 'Image', 'Modal'].map(key => [key, key]));
+Object.assign(native, {
+  Platform: { OS: 'web' },
+  StyleSheet: { create: value => value, absoluteFill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }, hairlineWidth: 1 },
+  Keyboard: { dismiss() {} },
+});
+const animationCalls = [];
+const sharedValues = [];
+let reducedMotionEnabled = false;
+const reanimated = {
+  default: { View: 'AnimatedView' },
+  cancelAnimation() {},
+  useAnimatedStyle: fn => fn(),
+  useSharedValue: value => { const shared = { value }; sharedValues.push(shared); return shared; },
+  withDelay: (delay, animation) => ({ type: 'delay', delay, animation }),
+  withRepeat: (animation, count, reverse) => {
+    const call = { type: 'repeat', animation, count, reverse };
+    animationCalls.push(call);
+    return call;
+  },
+  withSequence: (...animations) => ({ type: 'sequence', animations }),
+  withTiming: (value, options) => ({ type: 'timing', value, options }),
+  useReducedMotion: () => reducedMotionEnabled,
+};
 const normalizeTerm = value => value.trim().toLowerCase();
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -55,7 +82,7 @@ function find(node, predicate) {
 // Exercise real screen callbacks/effects without a private-preview login or
 // native UI dependency. This is a logic regression test, not a touch/E2E test.
 function mount(file, services, personalWords = [], properties = {}) {
-  const slots = [], effects = [], timers = new Map();
+  const slots = [], effects = [], timers = new Map(), intervals = new Map();
   let cursor, dirty = true, tree, timerId = 0;
   const react = {
     createElement: element,
@@ -85,7 +112,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/data/offline-regional-pronunciations': {
       getOfflineRegionalIpaStatus: async () => ({ state: 'missing', bytes: 0, entryCount: 0 }),
     },
-    react: { ...react, default: react }, 'react-native': native,
+    react: { ...react, default: react }, 'react-native': native, 'react-native-reanimated': reanimated,
     '@expo/vector-icons': { Feather: 'Feather' },
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
@@ -106,6 +133,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/data/vocabulary': { normalizeTerm }, '@/data/dictionary': services,
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
     '@/components/DictionaryEntryView': { DictionaryEntryView: 'DictionaryEntryView' },
+    '@/components/CorviBlinkingArtwork': { CorviBlinkingArtwork: 'CorviBlinkingArtwork' },
     '@/components/DictionarySuggestions': { DictionarySuggestions: 'DictionarySuggestions' },
     '@/components/PartOfSpeechFilter': { PartOfSpeechFilter: 'PartOfSpeechFilter' },
     '@/hooks/useDictionary': { useDictionary: () => ({ ready: true }) },
@@ -118,8 +146,10 @@ function mount(file, services, personalWords = [], properties = {}) {
   const loaded = loadTs(join(__dirname, file), dependencies, {
     setTimeout: fn => { const id = ++timerId; timers.set(id, fn); return id; },
     clearTimeout: id => timers.delete(id),
+    setInterval: fn => { const id = ++timerId; intervals.set(id, fn); return id; },
+    clearInterval: id => intervals.delete(id),
   });
-  const Component = loaded.default ?? loaded.DictionaryEntryView ?? loaded.DictionarySuggestions ?? loaded.PartOfSpeechFilter;
+  const Component = loaded.default ?? loaded.DictionaryEntryView ?? loaded.DictionarySuggestions ?? loaded.PartOfSpeechFilter ?? loaded.CorviBlinkingArtwork;
   const props = { id: 42, bottomPad: 100, onBack() {}, ...properties };
   const render = () => {
     for (let limit = 0; dirty; limit++) {
@@ -134,6 +164,12 @@ function mount(file, services, personalWords = [], properties = {}) {
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     timers() { for (const fn of [...timers.values()]) fn(); timers.clear(); render(); },
+    tickIntervals(count = 1) {
+      for (let tick = 0; tick < count; tick++) {
+        for (const fn of [...intervals.values()]) fn();
+      }
+      render();
+    },
     async settle() { render(); await tick(); render(); },
   };
   render();
@@ -147,9 +183,149 @@ function mount(file, services, personalWords = [], properties = {}) {
     searchDictionary: (term, offset) => new Promise(resolve => calls.push({ term, offset, resolve })),
     suggestDictionary: term => new Promise((resolve, reject) => suggestionCalls.push({ term, resolve, reject })),
   });
+  const animatedArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
+    source: 1, testID: 'corvi-blink-test', artSize: 236, style: { width: 236, height: 236 },
+  });
+  assert.ok(animatedArt.byId('corvi-blink-test'), 'The animated artwork retains the original Corvi illustration.');
+  assert.ok(animatedArt.byId('corvi-blink-test-blink'), 'Corvi’s blinking eyelid is rendered above the eye.');
+  assert.ok(animatedArt.byId('corvi-blink-test-gaze'), 'A pixel-sized pupil overlay provides the gaze motion.');
+  assert.ok(animatedArt.byId('corvi-blink-test-page-turn'), 'A restrained page overlay is rendered over the open book.');
+  assert.equal(animatedArt.byId('corvi-blink-test-page-turn').props.style.at(-1).opacity, 0,
+    'The turning-page layer stays invisible between page turns.');
+  const gazeCycle = animationCalls.find(call => call.type === 'repeat'
+    && call.animation.type === 'sequence'
+    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 2500)
+    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 3200));
+  assert.ok(gazeCycle, 'Idle gaze repeatedly shifts between the user and the book with pauses.');
+  const pageCycle = animationCalls.find(call => call.type === 'repeat'
+    && call.animation.type === 'sequence'
+    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 5200)
+    && call.animation.animations.some(part => part.type === 'timing' && part.options?.duration === 420));
+  assert.ok(pageCycle, 'The book page turns occasionally and settles back in a short, restrained motion.');
+  animationCalls.length = 0;
+  const eyeContactArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
+    source: 1, testID: 'corvi-eye-contact-test', artSize: 210, gazeToUser: true,
+  });
+  assert.ok(eyeContactArt.byId('corvi-eye-contact-test-gaze'));
+  assert.ok(!animationCalls.some(call => call.animation?.type === 'sequence'
+    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 2500)),
+  'Locked eye contact replaces idle gaze cycling with a direct gaze.');
+  assert.equal(sharedValues.at(-2).value?.type, 'timing');
+  assert.equal(sharedValues.at(-2).value?.value, 1, 'Conversation gaze animates toward the learner and remains there.');
+  reducedMotionEnabled = true;
+  animationCalls.length = 0;
+  const reducedArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
+    source: 1, testID: 'corvi-reduced-motion-test', artSize: 210, gazeToUser: true,
+  });
+  assert.ok(reducedArt.byId('corvi-reduced-motion-test-page-turn'));
+  assert.equal(animationCalls.length, 0, 'Reduced motion disables all repeating character animations.');
+  assert.deepEqual(sharedValues.slice(-4).map(value => value.value), [0, 0, 1, 0],
+    'Reduced motion keeps blink, float, and page static while preserving choice-state eye contact.');
+  reducedMotionEnabled = false;
   assert.ok(screen.byId('dictionary-search-idle'), 'Dictionary shows a welcoming idle state before a search');
   assert.ok(screen.byId('dictionary-search-idle-scroll'), 'The empty state can scroll when it exceeds the viewport');
   assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi artwork is visible before a search');
+  assert.equal(
+    screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel,
+    'Xin chào cậu chủ, ngài muốn tìm từ vựng nào? Xin hãy bấm vào thanh tìm kiếm ở trên.',
+    'Corvi greets the learner before any taps.',
+  );
+  screen.tickIntervals(1);
+  assert.equal(screen.byId('dictionary-corvi-dialogue').props.children[0], 'X',
+    'Corvi’s line appears one character at a time.');
+  screen.byId('dictionary-corvi-talk').props.onPress();
+  assert.ok(screen.byId('dictionary-corvi-options'), 'Tapping Corvi opens dialogue choices.');
+  assert.equal(screen.byId('dictionary-corvi-idle-art').props.gazeToUser, true,
+    'Visible conversation choices lock Corvi into eye contact.');
+  for (const choice of ['lookup', 'extract', 'guide', 'review']) {
+    assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`), `Corvi offers the ${choice} reply choice.`);
+  }
+  screen.byId('dictionary-corvi-choice-guide').props.onPress();
+  assert.equal(screen.byId('dictionary-corvi-idle-art').props.gazeToUser, false,
+    'Eye contact unlocks when the choice list closes.');
+  assert.equal(screen.byId('dictionary-corvi-action-guide'), undefined,
+    'The destination action waits until Corvi finishes typing his reply.');
+  assert.notEqual(screen.byId('dictionary-corvi-dialogue').props.children[0],
+    screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel,
+    'Corvi’s chosen reply begins as typed dialogue before the action appears.');
+  screen.tickIntervals(200);
+  assert.ok(screen.byId('dictionary-corvi-action-guide'), 'An explicit action follows the typed guide reply.');
+  screen.byId('dictionary-corvi-action-guide').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-modal').props.visible, true, 'The guidebook opens from Corvi’s dialogue.');
+  assert.ok(screen.byId('dictionary-guide-content'), 'The guidebook contains practical instructions.');
+  screen.byId('dictionary-guide-close').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-modal').props.visible, false, 'The guidebook can be dismissed.');
+  screen.byId('dictionary-corvi-talk').props.onPress();
+  const normalLineOne = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
+  screen.byId('dictionary-corvi-talk').props.onPress();
+  const normalLineTwo = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
+  assert.notEqual(normalLineTwo, normalLineOne, 'Normal Corvi greetings do not repeat consecutively.');
+  screen.byId('dictionary-corvi-talk').props.onPress();
+  assert.ok(
+    [
+      'Ngài hãy bấm vào thanh tìm kiếm, không phải vào tôi.',
+      'Cậu chủ ơi, ô tìm kiếm ở ngay phía trên kìa!',
+      'Muốn tra từ thì xin ngài gõ vào thanh tìm kiếm nhé.',
+      'Tôi chỉ là quạ thôi ạ; thanh tìm kiếm mới giúp ngài tra từ.',
+      'Xin đừng chạm lông tôi nữa, cậu chủ. Hãy dùng ô tìm kiếm phía trên nhé.',
+      'Nếu đang tìm một từ, ngài hãy nhập từ ấy vào ô phía trên giúp tôi.',
+      'Ta xin phép nhắc nhẹ: thanh tìm kiếm sẽ tra từ nhanh hơn, thưa cậu chủ.',
+    ].includes(screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel),
+    'Corvi reminds the learner to use search after the fourth tap.',
+  );
+  screen.tickIntervals(200);
+  assert.ok(screen.byId('dictionary-corvi-action-search'), 'Repeated taps lead to an explicit search action.');
+  screen.byId('dictionary-corvi-action-search').props.onPress();
+  assert.equal(screen.byId('dictionary-corvi-options'), undefined, 'The search reminder action closes the dialogue choices.');
+  screen.byId('dictionary-corvi-talk').props.onPress();
+  const reminderLineOne = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
+  screen.byId('dictionary-corvi-talk').props.onPress();
+  const reminderLineTwo = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
+  assert.notEqual(reminderLineTwo, reminderLineOne, 'Search reminders also avoid consecutive repeats.');
+
+  for (const [choice, action, route] of [
+    ['lookup', 'search', null],
+    ['extract', 'extract', '/extract'],
+    ['review', 'review', '/review'],
+  ]) {
+    const choiceScreen = mount('../app/(tabs)/dictionary.tsx', {
+      searchDictionary: async () => ({ items: [], hasMore: false }),
+      suggestDictionary: async () => [],
+    });
+    choiceScreen.byId('dictionary-corvi-talk').props.onPress();
+    choiceScreen.byId(`dictionary-corvi-choice-${choice}`).props.onPress();
+    const actionTestID = action === 'extract' ? 'dictionary-open-extract' : `dictionary-corvi-action-${action}`;
+    assert.equal(choiceScreen.byId(actionTestID), undefined,
+      `${choice} destination is not opened before Corvi replies.`);
+    choiceScreen.tickIntervals(200);
+    choiceScreen.byId(actionTestID).props.onPress();
+    if (route) {
+      assert.equal(choiceScreen.routes.at(-1), route, `Corvi opens the existing ${route} destination after the reply.`);
+    } else {
+      assert.deepEqual(choiceScreen.routes, [], 'The lookup choice stays on the dictionary screen and focuses search.');
+    }
+  }
+  const recommendationScreen = mount('../app/(tabs)/dictionary.tsx', {
+    searchDictionary: async () => ({ items: [], hasMore: false }),
+    suggestDictionary: async () => [],
+    getRandomUnlearnedDictionaryWord: async (learnedTerms) => {
+      assert.ok(learnedTerms.has('hello'), 'Corvi receives the saved-word set to exclude.');
+      return { id: 9301, term: 'serendipity', meaning: 'sự tình cờ may mắn' };
+    },
+  }, [{ term: 'hello' }]);
+  recommendationScreen.byId('dictionary-corvi-talk').props.onPress();
+  recommendationScreen.byId('dictionary-corvi-choice-recommend').props.onPress();
+  assert.equal(recommendationScreen.byId('dictionary-corvi-action-recommend'), undefined,
+    'Corvi does not reveal the recommendation action before finishing the reply.');
+  recommendationScreen.tickIntervals(200);
+  await recommendationScreen.byId('dictionary-corvi-action-recommend').props.onPress();
+  assert.equal(recommendationScreen.byType('DictionaryEntryView').props.id, 9301,
+    'The recommendation opens its real offline dictionary entry.');
+  assert.equal(recommendationScreen.byType('DictionaryEntryView').props.backLabel, 'Về cuộc trò chuyện',
+    'Returning from a suggestion returns to Corvi.');
+  recommendationScreen.byType('DictionaryEntryView').props.onBack();
+  assert.ok(recommendationScreen.byId('dictionary-corvi-options'),
+    'The learner can continue the conversation after viewing a suggested word.');
   screen.byId('dictionary-search').props.onChangeText('job');
   screen.byId('dictionary-submit').props.onPress();
   await screen.settle();

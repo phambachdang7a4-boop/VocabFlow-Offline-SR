@@ -8,7 +8,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 import { SymbolView } from "expo-symbols";
 import { MaterialSheen } from "@/components/ui";
 
-// Start guests on Tra Từ; they can reach the notebook from its tab.
+// Start guests in the Thư Viện; they can reach the notebook from its tab.
 export const unstable_settings = { anchor: "dictionary" };
 
 function NativeTabLayout() {
@@ -17,11 +17,11 @@ function NativeTabLayout() {
       <NativeTabs.Trigger name="dictionary">
         <NativeTabs.Trigger.Icon
           sf={{
-            default: "character.book.closed",
-            selected: "character.book.closed.fill",
+            default: "books.vertical",
+            selected: "books.vertical.fill",
           }}
         />
-        <NativeTabs.Trigger.Label>Tra Từ</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Thư Viện</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="courses">
         <NativeTabs.Trigger.Icon
@@ -53,7 +53,7 @@ function NativeTabLayout() {
 
 const ICONS = {
   index: { sf: "book", fe: "book-open" },
-  dictionary: { sf: "character.book.closed", fe: "search" },
+  dictionary: { sf: "books.vertical", fe: "book-open" },
   courses: { sf: "square.grid.2x2", fe: "grid" },
   review: { sf: "arrow.2.circlepath", fe: "repeat" },
   blank: { sf: "checklist", fe: "check-square" },
@@ -149,7 +149,7 @@ function ClassicTabLayout() {
     >
       <Tabs.Screen
         name="dictionary"
-        options={{ title: "Tra Từ", tabBarIcon: icon("dictionary", false) }}
+        options={{ title: "Thư Viện", tabBarIcon: icon("dictionary", false) }}
       />
       <Tabs.Screen
         name="courses"

@@ -92,6 +92,54 @@ export async function suggestInDictionary(db: SQLiteDatabase, query: string): Pr
   return rankSuggestions(term, candidates);
 }
 
+export async function randomUnlearnedInDictionary(
+  db: SQLiteDatabase,
+  learnedTerms: ReadonlySet<string>,
+): Promise<DictionaryMatch | null> {
+  const totalRow = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) AS count FROM words w
+     WHERE EXISTS (SELECT 1 FROM word_definitions wd WHERE wd.word_id = w.id)`,
+  );
+  const total = totalRow?.count ?? 0;
+  if (!total) return null;
+
+  // Start at a random indexed position, then scan bounded batches only if the
+  // learner has already saved every candidate in the current window.
+  const batchSize = 512;
+  let remaining = total;
+  let offset = Math.floor(Math.random() * total);
+  while (remaining > 0) {
+    const limit = Math.min(batchSize, remaining, total - offset);
+    const rows = await db.getAllAsync<DictionaryMatch>(
+      `SELECT w.id, w.word AS term,
+         (SELECT d.definition FROM word_definitions wd
+          JOIN definitions d ON d.id = wd.definition_id
+          WHERE wd.word_id = w.id ORDER BY wd.id LIMIT 1) AS meaning
+       FROM words w
+       WHERE EXISTS (SELECT 1 FROM word_definitions wd WHERE wd.word_id = w.id)
+       ORDER BY w.id LIMIT ? OFFSET ?`,
+      limit,
+      offset,
+    );
+    if (!rows.length) {
+      if (offset === 0) return null;
+      offset = 0;
+      continue;
+    }
+    const unlearned = rows.filter((row) =>
+      !learnedTerms.has(
+        row.term.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en'),
+      ),
+    );
+    if (unlearned.length) {
+      return unlearned[Math.floor(Math.random() * unlearned.length)];
+    }
+    remaining -= rows.length;
+    offset = (offset + rows.length) % total;
+  }
+  return null;
+}
+
 export async function draftInDictionary(db: SQLiteDatabase, id: number, senseId: number) {
   checkId(id);
   checkId(senseId);
