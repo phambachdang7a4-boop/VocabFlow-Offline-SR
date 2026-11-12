@@ -1165,6 +1165,21 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
     throw new Error("IELTS course data is missing its entries object.");
   }
 
+  const topicByTerm = new Map();
+  for (const topic of courseData.topics ?? []) {
+    for (const rawTerm of topic.terms ?? []) {
+      const term = rawTerm.trim().toLowerCase();
+      const previousTopic = topicByTerm.get(term);
+      if (previousTopic && previousTopic !== topic.id) {
+        errors.push(
+          `- ${rawTerm}: headword appears in multiple topics (${previousTopic}, ${topic.id})`,
+        );
+      } else {
+        topicByTerm.set(term, topic.id);
+      }
+    }
+  }
+
   for (const [term, expectedPartOfSpeech] of Object.entries(
     COURSE_POS_OVERRIDES,
   )) {

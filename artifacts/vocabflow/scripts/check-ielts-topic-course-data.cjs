@@ -20,6 +20,14 @@ function cloneCourseData() {
 validateCourseExamples(courseData.entries);
 validateCourseDataAgainstAuthoredOverrides(courseData);
 
+const duplicateTopicTerm = cloneCourseData();
+duplicateTopicTerm.topics[1].terms.push(duplicateTopicTerm.topics[0].terms[0]);
+assert.throws(
+  () => validateCourseDataAgainstAuthoredOverrides(duplicateTopicTerm),
+  /headword appears in multiple topics/,
+  "A headword assigned to multiple IELTS topics must fail validation.",
+);
+
 for (const [term, expectedPartOfSpeech] of Object.entries(
   COURSE_POS_OVERRIDES,
 )) {
