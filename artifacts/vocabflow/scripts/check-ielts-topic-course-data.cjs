@@ -15,6 +15,7 @@ const {
   validateDictionaryDefinitionReview,
   validateDictionaryPosReview,
   validateDictionarySenseReview,
+  findOfflineExampleSourceChanges,
   validateOfflineExampleSources,
 } = require("./build-ielts-topic-course-data.cjs");
 
@@ -360,21 +361,109 @@ assert.doesNotThrow(
     ]),
   "An unchanged dictionary example must keep its reviewed translation.",
 );
+const changedOfflineEntries = {
+  ...translatedOfflineEntry,
+  education: {
+    example: "The school introduced a new course.",
+    exampleTranslation: "Trường học đã giới thiệu một khóa học mới.",
+    exampleSource: "offline",
+  },
+  orphaned: {
+    example: "The term appeared in an older dictionary edition.",
+    exampleTranslation: "",
+    exampleSource: "offline",
+  },
+};
+const changedOfflineEntriesBeforeCheck = JSON.stringify(changedOfflineEntries);
+const changedOfflineRows = [
+  {
+    word: "employment",
+    example: "She found employment after finishing her studies.",
+  },
+  {
+    word: "employment",
+    example: "The company offers employment to local residents.",
+  },
+  {
+    word: "education",
+    example: "The school changed its teaching methods.",
+  },
+];
+assert.deepEqual(
+  findOfflineExampleSourceChanges(changedOfflineEntries, changedOfflineRows),
+  [
+    {
+      term: "employment",
+      savedExample: "She is currently looking for full-time employment.",
+      currentExamples: [
+        "She found employment after finishing her studies.",
+        "The company offers employment to local residents.",
+      ],
+      translation: "Cô ấy hiện đang tìm việc làm toàn thời gian.",
+    },
+    {
+      term: "education",
+      savedExample: "The school introduced a new course.",
+      currentExamples: ["The school changed its teaching methods."],
+      translation: "Trường học đã giới thiệu một khóa học mới.",
+    },
+    {
+      term: "orphaned",
+      savedExample: "The term appeared in an older dictionary edition.",
+      currentExamples: [],
+      translation: "",
+    },
+  ],
+  "Every changed offline example must include its saved and current source sentences and existing translation.",
+);
 assert.throws(
-  () =>
-    validateOfflineExampleSources(translatedOfflineEntry, [
-      {
-        word: "employment",
-        example: "She found employment after finishing her studies.",
-      },
-    ]),
-  /employment: dictionary example changed; review its Vietnamese translation/,
-  "A changed source sentence must require translation review instead of reusing the old pair.",
+  () => validateOfflineExampleSources(changedOfflineEntries, changedOfflineRows),
+  (error) => {
+    assert.match(
+      error.message,
+      /rebuild stopped without changing course data/,
+    );
+    assert.match(
+      error.message,
+      /Saved English source: "She is currently looking for full-time employment\."/,
+    );
+    assert.match(
+      error.message,
+      /Current English sources:\n    - "She found employment after finishing her studies\."\n    - "The company offers employment to local residents\."/,
+    );
+    assert.match(
+      error.message,
+      /Existing Vietnamese translation: "Cô ấy hiện đang tìm việc làm toàn thời gian\."/,
+    );
+    assert.match(
+      error.message,
+      /- education\n  Saved English source: "The school introduced a new course\."/,
+    );
+    assert.match(
+      error.message,
+      /Current English source:\n    - "The school changed its teaching methods\."/,
+    );
+    assert.match(
+      error.message,
+      /Existing Vietnamese translation: "Trường học đã giới thiệu một khóa học mới\."/,
+    );
+    assert.match(
+      error.message,
+      /- orphaned\n  Saved English source: "The term appeared in an older dictionary edition\."\n  Current English sources:\n    - \(no current dictionary example found\)\n  Existing Vietnamese translation: \(none saved\)/,
+    );
+    return true;
+  },
+  "A changed dictionary sentence must produce a complete report for every affected offline example.",
 );
 assert.equal(
   JSON.stringify(translatedOfflineEntry),
   translatedOfflineEntryBeforeCheck,
   "Source-change detection must preserve the existing useful headword and course entry.",
+);
+assert.equal(
+  JSON.stringify(changedOfflineEntries),
+  changedOfflineEntriesBeforeCheck,
+  "The review report must not alter saved examples or translations.",
 );
 
 const missingDefinition = cloneCourseData();

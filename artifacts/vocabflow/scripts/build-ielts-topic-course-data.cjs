@@ -1609,32 +1609,58 @@ function dictionaryEntryIndex(rows) {
   return entries;
 }
 
-function validateOfflineExampleSources(entries, dictionaryRows) {
+function findOfflineExampleSourceChanges(entries, dictionaryRows) {
   const sourceExamplesByTerm = new Map();
   for (const row of dictionaryRows) {
     const term = String(row.word ?? "").trim().toLowerCase();
     const example = String(row.example ?? "").trim();
     if (!term || !example) continue;
     if (!sourceExamplesByTerm.has(term)) {
-      sourceExamplesByTerm.set(term, new Set());
+      sourceExamplesByTerm.set(term, []);
     }
-    sourceExamplesByTerm.get(term).add(example);
+    const examples = sourceExamplesByTerm.get(term);
+    if (!examples.includes(example)) examples.push(example);
   }
 
-  const errors = [];
+  const changes = [];
   for (const [rawTerm, entry] of Object.entries(entries ?? {})) {
     if (entry?.exampleSource !== "offline") continue;
     const term = rawTerm.trim().toLowerCase();
-    const example = String(entry.example ?? "").trim();
-    if (!example || sourceExamplesByTerm.get(term)?.has(example)) continue;
-    errors.push(
-      `- ${term}: dictionary example changed; review its Vietnamese translation`,
-    );
+    const savedExample = String(entry.example ?? "").trim();
+    const currentExamples = sourceExamplesByTerm.get(term) ?? [];
+    if (!savedExample || currentExamples.includes(savedExample)) continue;
+    changes.push({
+      term,
+      savedExample,
+      currentExamples,
+      translation: String(entry.exampleTranslation ?? "").trim(),
+    });
   }
 
-  if (errors.length) {
+  return changes;
+}
+
+function validateOfflineExampleSources(entries, dictionaryRows) {
+  const changes = findOfflineExampleSourceChanges(entries, dictionaryRows);
+  if (changes.length) {
+    const report = changes
+      .map(({ term, savedExample, currentExamples, translation }) => {
+        const currentLines = currentExamples.length
+          ? currentExamples.map((example) => `    - ${JSON.stringify(example)}`)
+          : ["    - (no current dictionary example found)"];
+        return [
+          `- ${term}`,
+          `  Saved English source: ${JSON.stringify(savedExample)}`,
+          `  Current English source${currentExamples.length === 1 ? "" : "s"}:`,
+          ...currentLines,
+          `  Existing Vietnamese translation: ${
+            translation ? JSON.stringify(translation) : "(none saved)"
+          }`,
+        ].join("\n");
+      })
+      .join("\n");
     throw new Error(
-      `IELTS dictionary-example translation review failed:\n${errors.join("\n")}`,
+      `IELTS dictionary-example translation review failed; rebuild stopped without changing course data:\n${report}`,
     );
   }
 }
@@ -1976,5 +2002,6 @@ module.exports = {
   COURSE_EXAMPLE_OVERRIDES,
   COURSE_POS_OVERRIDES,
   applyCoursePosOverrides,
+  findOfflineExampleSourceChanges,
   validateOfflineExampleSources,
 };
