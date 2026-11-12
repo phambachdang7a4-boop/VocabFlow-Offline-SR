@@ -51,6 +51,13 @@ assert.throws(
   "A mismatched explicit subject pronoun must fail course-example validation.",
 );
 validateCourseDataAgainstAuthoredOverrides(courseData);
+const changedTotalWords = cloneCourseData();
+changedTotalWords.totalWords += 1;
+assert.throws(
+  () => validateCourseDataAgainstAuthoredOverrides(changedTotalWords),
+  /totalWords is \d+; topic term lists contain \d+/,
+  "The stored total must match the sum of all topic term lists.",
+);
 assert.equal(
   courseData.spellingConvention,
   IELTS_SPELLING_CONVENTION,

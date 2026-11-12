@@ -1317,6 +1317,15 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
   if (courseData.spellingConvention !== IELTS_SPELLING_CONVENTION) {
     errors.push("- IELTS British-English spelling convention is missing or changed");
   }
+  const topicWordCount = (courseData.topics ?? []).reduce(
+    (sum, topic) => sum + (topic.terms?.length ?? 0),
+    0,
+  );
+  if (courseData.totalWords !== topicWordCount) {
+    errors.push(
+      `- totalWords is ${courseData.totalWords}; topic term lists contain ${topicWordCount}`,
+    );
+  }
   const availableTerms = new Set(Object.keys(entries));
   for (const [term, entry] of Object.entries(entries)) {
     const expectedSpellingNote = spellingNoteForAvailableVariant(
