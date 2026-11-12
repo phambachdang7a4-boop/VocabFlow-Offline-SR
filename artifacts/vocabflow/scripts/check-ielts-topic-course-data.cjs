@@ -3,6 +3,8 @@ const courseData = require("../domain/ielts-topic-course-data.json");
 const {
   DICTIONARY_SENSE_REVIEW,
   DICTIONARY_DEFINITION_REVIEW,
+  RARE_HEADWORD_REVIEW,
+  REQUIRED_COMMON_INFLECTIONS,
   REQUIRED_RELATED_HEADWORDS,
   validateCourseExamples,
   validateCourseDataAgainstAuthoredOverrides,
@@ -16,6 +18,38 @@ function cloneCourseData() {
 
 validateCourseExamples(courseData.entries);
 validateCourseDataAgainstAuthoredOverrides(courseData);
+
+const courseTopicTerms = new Set(
+  courseData.topics.flatMap((topic) => topic.terms),
+);
+for (const term of Object.keys(RARE_HEADWORD_REVIEW)) {
+  assert.equal(
+    courseData.entries[term],
+    undefined,
+    `${term} must stay out of IELTS lesson entries after review.`,
+  );
+  assert.equal(
+    courseTopicTerms.has(term),
+    false,
+    `${term} must stay out of every IELTS topic.`,
+  );
+
+  const reintroducedRareHeadword = cloneCourseData();
+  reintroducedRareHeadword.entries[term] = {};
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(reintroducedRareHeadword),
+    new RegExp(`${term}: reviewed rare or obsolete headword remains in the course`),
+    `${term} must not return without a new review.`,
+  );
+
+  const reintroducedTopicTerm = cloneCourseData();
+  reintroducedTopicTerm.topics[0].terms.push(term);
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(reintroducedTopicTerm),
+    new RegExp(`${term}: reviewed rare or obsolete headword remains in the course`),
+    `${term} must not return in a topic even if its entry is missing.`,
+  );
+}
 
 for (const term of Object.keys(DICTIONARY_DEFINITION_REVIEW)) {
   assert.ok(
@@ -35,6 +69,20 @@ for (const term of REQUIRED_RELATED_HEADWORDS) {
   assert.ok(
     courseData.entries[term],
     `${term} is a valid related headword and must survive exact-word filtering.`,
+  );
+}
+for (const term of REQUIRED_COMMON_INFLECTIONS) {
+  assert.ok(
+    courseData.entries[term],
+    `${term} is a useful common inflection and must remain in the course.`,
+  );
+
+  const removedInflection = cloneCourseData();
+  delete removedInflection.entries[term];
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(removedInflection),
+    new RegExp(`${term}: useful common inflection was removed`),
+    `${term} must not disappear during a future course rebuild.`,
   );
 }
 
@@ -163,5 +211,5 @@ assert.throws(
 );
 
 console.log(
-  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} unrelated dictionary senses are excluded, ${Object.keys(DICTIONARY_DEFINITION_REVIEW).length} definition/example mismatches are corrected without removing headwords, and authored corrections match the builder.`,
+  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} unrelated dictionary senses and ${Object.keys(RARE_HEADWORD_REVIEW).length} rare or obsolete headwords are excluded, ${REQUIRED_COMMON_INFLECTIONS.length} useful inflections remain, and authored corrections match the builder.`,
 );

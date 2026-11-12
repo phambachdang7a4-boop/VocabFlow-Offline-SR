@@ -424,10 +424,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "The new road connects the village to the nearest city.",
     exampleTranslation: "Con đường mới nối ngôi làng với thành phố gần nhất.",
   },
-  buss: {
-    example: "He gave her a quick buss before saying goodbye.",
-    exampleTranslation: "Anh ấy hôn nhanh cô ấy trước khi nói lời tạm biệt.",
-  },
   arts: {
     example: "Public funding helps local arts programs reach more young people.",
     exampleTranslation: "Nguồn tài trợ công giúp các chương trình nghệ thuật địa phương tiếp cận nhiều bạn trẻ hơn.",
@@ -451,10 +447,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
   functionality: {
     example: "The new building combines energy efficiency with practical functionality.",
     exampleTranslation: "Tòa nhà mới kết hợp hiệu quả năng lượng với tính ứng dụng thực tế.",
-  },
-  methodize: {
-    example: "Researchers methodize their observations before comparing results.",
-    exampleTranslation: "Các nhà nghiên cứu hệ thống hóa những quan sát trước khi so sánh kết quả.",
   },
   fossilise: {
     example: "The remains may fossilise in sediment over millions of years.",
@@ -499,10 +491,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
   nurture: {
     example: "The child benefited from the love and nurture of a supportive family.",
     exampleTranslation: "Đứa trẻ được hưởng lợi từ tình yêu thương và sự nuôi dưỡng của một gia đình luôn hỗ trợ em.",
-  },
-  maternalize: {
-    example: "The author chose to maternalize the heroine as a protective figure for younger characters.",
-    exampleTranslation: "Tác giả chọn khắc họa nữ chính như một người mẹ chở che cho các nhân vật trẻ hơn.",
   },
   sexuality: {
     example: "The study examines how culture and social expectations shape sexuality.",
@@ -568,10 +556,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "Many people take up a hobby to relax after work.",
     exampleTranslation: "Nhiều người bắt đầu một sở thích để thư giãn sau giờ làm.",
   },
-  programer: {
-    example: "The programer designed an app to help patients book appointments.",
-    exampleTranslation: "Lập trình viên đã thiết kế một ứng dụng giúp bệnh nhân đặt lịch hẹn.",
-  },
   socially: {
     example: "Volunteering helps people connect socially with their neighbors.",
     exampleTranslation: "Hoạt động tình nguyện giúp mọi người kết nối với hàng xóm.",
@@ -619,10 +603,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
   hospitalisation: {
     example: "The hospitalisation was useful in class.",
     exampleTranslation: "Việc nhập viện có ích trong lớp học.",
-  },
-  hospitalism: {
-    example: "Bad hospitalism made the ward feel unsafe.",
-    exampleTranslation: "Vệ sinh bệnh viện kém khiến khu điều trị có cảm giác không an toàn.",
   },
   fertilization: {
     example: "Fertilization happens after the pollen reaches the flower.",
@@ -698,6 +678,100 @@ const COURSE_HEADWORD_REPLACEMENTS = {
   salarying: "salary",
 };
 
+// Exact dictionary headwords reviewed as too rare, obsolete, or malformed for
+// IELTS lessons. Productive inflections are reviewed separately; do not use
+// broad suffix rules here.
+const RARE_HEADWORD_REVIEW = {
+  academical: "Rare variant of academic.",
+  studentship: "Uncommon term for a scholarship.",
+  tutorship: "Rare term for guardianship.",
+  graduator: "Obscure tool name unrelated to graduation.",
+  pedagogism: "Rare theoretical term.",
+  extinctive: "Rare adjective with an unhelpful example.",
+  forestal: "Rare adjective; forestry is the usual term.",
+  resourceless: "Rare adjective with an unnatural example.",
+  wasteless: "Rare adjective with an unrelated definition.",
+  algorithmical: "Rare variant of algorithmic.",
+  machineless: "Rare adjective not useful for technology lessons.",
+  artificialize: "Rare verb with an unnatural example.",
+  artificialness: "Rare noun; artificiality is the usual form.",
+  programer: "Misspelling of programmer.",
+  mentalism: "Specialist term unrelated to mental health vocabulary.",
+  hospitaler: "Archaic term for a religious order member.",
+  hospitalism: "Obsolete or specialist hospital-administration term.",
+  pharmaceutist: "Rare variant of pharmacist.",
+  psychologism: "Rare theoretical term, not general psychology vocabulary.",
+  epidemical: "Rare variant of epidemic.",
+  vaccinal: "Rare or obsolete adjective with a misleading definition.",
+  sociality: "Rare abstract noun; social interaction is the useful concept.",
+  socialness: "Rare and unnatural abstract noun.",
+  jobation: "Archaic word meaning a scolding.",
+  incomeless: "Rare adjective; low-income is the useful expression.",
+  inflationism: "Rare economic ideology, not core inflation vocabulary.",
+  inflationist: "Rare label for an advocate of inflationism.",
+  roadless: "Rare adjective with little value for transport lessons.",
+  trainless: "Rare adjective with an unnatural example.",
+  motory: "Rare technical adjective.",
+  buss: "Obsolete spelling of a kiss, not a bus.",
+  excursional: "Rare adjective; excursion is the common form.",
+  excursionist: "Uncommon label for a tourist.",
+  artistical: "Rare variant of artistic.",
+  filmize: "Rare verb; make into a film is the usual expression.",
+  craftless: "Rare adjective with an unrelated definition.",
+  religionise: "Rare variant of religionize, itself uncommon.",
+  religionism: "Rare term for religious fanaticism.",
+  religionist: "Uncommon and potentially misleading label.",
+  advertence: "Rare noun; attention is the common word.",
+  advertent: "Rare adjective with an unnatural example.",
+  pressor: "Specialist medical or mechanical term, not media vocabulary.",
+  democratism: "Uncommon ideological term, not core government vocabulary.",
+  presidentship: "Rare term for a president's office.",
+  voteless: "Rare adjective; without voting rights is clearer.",
+  criminalist: "Uncommon specialist occupation.",
+  offenseless: "Rare variant of inoffensive.",
+  prisoned: "Rare or obsolete verb form.",
+  prisoning: "Rare or obsolete verb form.",
+  justiceship: "Rare term for judicial office.",
+  courter: "Rare term for a suitor.",
+  arrestment: "Rare legal noun; arrest is the common term.",
+  arrestor: "Uncommon specialist term for an arresting person or device.",
+  scientistic: "Rare adjective for scientism.",
+  methodism: "Religious denomination, not a research-method term.",
+  methodise: "Uncommon verb; organize systematically is clearer.",
+  methodize: "Uncommon verb; organize systematically is clearer.",
+  fossilate: "Rare verb; fossilize is the usual form.",
+  fossilism: "Rare noun with a misleading example.",
+  fossilist: "Rare or obsolete label for a fossil researcher.",
+  coaler: "Uncommon occupational term, not core energy vocabulary.",
+  farmery: "Rare noun for a farm.",
+  cropful: "Rare adjective unrelated to crop production.",
+  foodless: "Rare adjective; without food is clearer.",
+  organicism: "Specialist philosophical term, not food vocabulary.",
+  animalness: "Rare abstract noun.",
+  irrigational: "Rare adjective; irrigation is the useful headword.",
+  grainer: "Specialist trade term unrelated to grain production.",
+  foreignism: "Rare linguistic term, not globalization vocabulary.",
+  foreignize: "Rare verb with an unnatural example.",
+  integrationist: "Uncommon political label, not core globalization vocabulary.",
+  educationist: "Uncommon variant of educator.",
+  maternalize: "Rare verb with an unnatural example.",
+  expressional: "Rare adjective; expressive is the common form.",
+  sportive: "Uncommon adjective; sporting is more natural.",
+  historicism: "Specialist academic concept, not core history vocabulary.",
+  historicist: "Specialist academic label.",
+  historicize: "Uncommon academic verb.",
+  colonialness: "Rare abstract noun.",
+  revolutionism: "Rare ideological noun.",
+  revolutionist: "Uncommon variant of revolutionary.",
+  poorness: "Rare noun; poverty is the useful headword.",
+  engineership: "Rare term for the profession of engineering.",
+  interiorize: "Specialist psychological verb, not architecture vocabulary.",
+  exteriorise: "Rare variant of exteriorize with a non-architectural sense.",
+  exteriorization: "Specialist psychological term, not architecture vocabulary.",
+  rivered: "Rare or obsolete adjective with an unnatural example.",
+  rivery: "Rare or obsolete adjective with an unnatural example.",
+};
+
 // Dictionary examples are pinned here when a broad topic prefix selects a
 // different sense from the one learners need. Match exact headwords only:
 // related inflections and other members of the word family remain eligible.
@@ -767,6 +841,27 @@ const DICTIONARY_DEFINITION_REVIEW = {
 };
 
 const REQUIRED_RELATED_HEADWORDS = ["plants", "assessed", "graduated", "modernise"];
+
+const REQUIRED_COMMON_INFLECTIONS = [
+  "educating",
+  "learning",
+  "schools",
+  "assessed",
+  "graduated",
+  "enrolled",
+  "polluted",
+  "renewing",
+  "automated",
+  "recruited",
+  "taxed",
+  "transported",
+  "traveling",
+  "advertising",
+  "governing",
+  "punished",
+  "researched",
+  "farming",
+];
 
 const CURATED_TOPIC_ENTRIES = {
   capital: {
@@ -1075,6 +1170,22 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
       errors.push(`- ${term}: valid related headword was removed by sense filtering`);
     }
   }
+  for (const term of REQUIRED_COMMON_INFLECTIONS) {
+    if (!entries[term]) {
+      errors.push(`- ${term}: useful common inflection was removed`);
+    }
+  }
+
+  const topicTerms = new Set(
+    (courseData.topics ?? []).flatMap((topic) => topic.terms ?? []),
+  );
+  for (const term of Object.keys(RARE_HEADWORD_REVIEW)) {
+    if (entries[term] || topicTerms.has(term)) {
+      errors.push(
+        `- ${term}: reviewed rare or obsolete headword remains in the course`,
+      );
+    }
+  }
 
   for (const [oldTerm, replacement] of Object.entries(
     COURSE_HEADWORD_REPLACEMENTS,
@@ -1197,6 +1308,7 @@ function topicCandidates(topic, dictionary, sortedTerms) {
         !seen.has(term) &&
         !LEGACY_WORDS.has(term) &&
         !DICTIONARY_SENSE_REVIEW[term] &&
+        !RARE_HEADWORD_REVIEW[term] &&
         termMatchesPrefix(term, prefix)
       ) {
         seen.add(term);
@@ -1338,6 +1450,7 @@ function main() {
       if (oldTopic) {
         for (const term of oldTopic.terms) {
           if (COURSE_HEADWORD_REPLACEMENTS[term]) continue;
+          if (RARE_HEADWORD_REVIEW[term]) continue;
           if (!usedTerms.has(term)) {
             usedTerms.add(term);
             words.push({
@@ -1446,7 +1559,7 @@ function main() {
     validateCourseDataAgainstAuthoredOverrides(output);
     writeFileSync(OUTPUT_PATH, `${JSON.stringify(output)}\n`, "utf8");
     console.log(
-      `Built IELTS course data: ${totalWords} unique words across ${topics.length} topics; excluded ${Object.keys(DICTIONARY_SENSE_REVIEW).length} reviewed dictionary sense mismatches.`,
+      `Built IELTS course data: ${totalWords} unique words across ${topics.length} topics; excluded ${Object.keys(DICTIONARY_SENSE_REVIEW).length} reviewed dictionary sense mismatches and ${Object.keys(RARE_HEADWORD_REVIEW).length} reviewed rare or obsolete headwords.`,
     );
     for (const topic of topics) {
       console.log(`- ${topic.title}: ${topic.words.length} words`);
@@ -1470,6 +1583,8 @@ module.exports = {
   DICTIONARY_SENSE_REVIEW,
   DICTIONARY_DEFINITION_REVIEW,
   REQUIRED_RELATED_HEADWORDS,
+  REQUIRED_COMMON_INFLECTIONS,
+  RARE_HEADWORD_REVIEW,
   validateDictionarySenseReview,
   validateDictionaryDefinitionReview,
   COURSE_DEFINITION_OVERRIDES,
