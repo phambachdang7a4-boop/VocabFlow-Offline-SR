@@ -1161,6 +1161,53 @@ function hasSentenceTemplatePlaceholder(example) {
   );
 }
 
+function openingEnglishSubjectPronoun(example) {
+  const match = String(example ?? "").match(
+    /^\s*(?:(?:[^,.!?]{1,45}),\s*)?(I|we|he|she|they)\b/i,
+  );
+  if (!match) return null;
+
+  const pronoun = match[1].toLowerCase();
+  if (pronoun === "he") return "male";
+  if (pronoun === "she") return "female";
+  if (pronoun === "they") return "third-person";
+  return "first-person";
+}
+
+function openingVietnameseSubjectPronoun(translation) {
+  const text = String(translation ?? "").trim();
+  const intro = /^(?:(?:hôm nay|ngày mai|lúc này|hiện nay)\s*,?\s*)?/i;
+  const subjectText = text.replace(intro, "");
+  const alternatives = [
+    [
+      "male",
+      /^(?:anh ấy|anh ta|ông ấy|ông ta|cậu ấy|cậu ta|hắn)(?=\s|[,.:;!?]|$)/i,
+    ],
+    [
+      "female",
+      /^(?:cô ấy|cô ta|chị ấy|chị ta|bà ấy|bà ta|nàng)(?=\s|[,.:;!?]|$)/i,
+    ],
+    ["third-person", /^(?:bọn họ|chúng nó|họ)(?=\s|[,.:;!?]|$)/i],
+    [
+      "first-person",
+      /^(?:chúng tôi|chúng ta|chúng mình|chúng em|tôi|mình|ta)(?=\s|[,.:;!?]|$)/i,
+    ],
+  ];
+  return (
+    alternatives.find(([, pattern]) => pattern.test(subjectText))?.[0] ?? null
+  );
+}
+
+function hasOpeningSubjectPronounConflict(example, translation) {
+  const englishSubject = openingEnglishSubjectPronoun(example);
+  const vietnameseSubject = openingVietnameseSubjectPronoun(translation);
+  return Boolean(
+    englishSubject &&
+      vietnameseSubject &&
+      englishSubject !== vietnameseSubject,
+  );
+}
+
 function usableExample(term, value) {
   const example = String(value ?? "").trim();
   if (example.length < 24 || example.length > 190 || !/^[\x20-\x7E]+$/.test(example)) {
@@ -1194,6 +1241,8 @@ function validateCourseExamples(entries) {
     }
     if (!translation) {
       issues.push("missing Vietnamese translation");
+    } else if (hasOpeningSubjectPronounConflict(example, translation)) {
+      issues.push("English subject pronoun conflicts with Vietnamese subject pronoun");
     }
     if (issues.length) {
       errors.push(`- ${term}: ${issues.join("; ")}`);
@@ -1725,6 +1774,7 @@ module.exports = {
   spellingNoteForTerm,
   containsHeadword,
   hasSentenceTemplatePlaceholder,
+  hasOpeningSubjectPronounConflict,
   usableExample,
   validateCourseExamples,
   applyCourseDefinitionOverrides,

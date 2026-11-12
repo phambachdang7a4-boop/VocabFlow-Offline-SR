@@ -10,6 +10,7 @@ const {
   COURSE_POS_OVERRIDES,
   spellingNoteForTerm,
   validateCourseExamples,
+  hasOpeningSubjectPronounConflict,
   validateCourseDataAgainstAuthoredOverrides,
   validateDictionaryDefinitionReview,
   validateDictionarySenseReview,
@@ -20,6 +21,33 @@ function cloneCourseData() {
 }
 
 validateCourseExamples(courseData.entries);
+assert.equal(
+  hasOpeningSubjectPronounConflict(
+    "She coached him through the interview.",
+    "Cô ấy đã hướng dẫn anh ấy vượt qua buổi phỏng vấn.",
+  ),
+  false,
+  "A different-gender object pronoun must not conflict with the English subject.",
+);
+assert.equal(
+  hasOpeningSubjectPronounConflict(
+    "The recruiter called her about the job.",
+    "Người tuyển dụng đã gọi anh ấy về công việc.",
+  ),
+  false,
+  "An object pronoun must not be mistaken for the English sentence subject.",
+);
+assert.throws(
+  () =>
+    validateCourseExamples({
+      studied: {
+        example: "She studied biology at college.",
+        exampleTranslation: "Anh ấy đã học sinh học ở trường đại học.",
+      },
+    }),
+  /studied: English subject pronoun conflicts with Vietnamese subject pronoun/,
+  "A mismatched explicit subject pronoun must fail course-example validation.",
+);
 validateCourseDataAgainstAuthoredOverrides(courseData);
 assert.equal(
   courseData.spellingConvention,
