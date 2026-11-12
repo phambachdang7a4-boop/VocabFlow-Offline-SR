@@ -58,6 +58,40 @@ export function validDictionaryId(id: number): boolean {
   return Number.isSafeInteger(id) && id > 0;
 }
 
+export function formatDictionaryPronunciations(
+  pronunciations: DictionaryPronunciation[],
+): string {
+  const unique = (region: PronunciationAccent | null) => [
+    ...new Set(
+      pronunciations
+        .filter((item) => pronunciationAccent(item.region) === region)
+        .map((item) => item.ipa.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const us = unique("us");
+  const uk = unique("uk");
+  const others = pronunciations
+    .filter((item) => pronunciationAccent(item.region) === null)
+    .filter((item, index, rows) => rows.findIndex(
+      (candidate) => candidate.ipa.trim() === item.ipa.trim() &&
+        candidate.region === item.region,
+    ) === index)
+    .map((item) =>
+      item.region ? `${item.region}: ${item.ipa.trim()}` : item.ipa.trim(),
+    )
+    .filter(Boolean);
+
+  const regions =
+    us.length && uk.length && us.join(" · ") === uk.join(" · ")
+      ? [`Anh-Mỹ/Anh-Anh: ${us.join(" · ")}`]
+      : [
+          ...(us.length ? [`Anh-Mỹ: ${us.join(" · ")}`] : []),
+          ...(uk.length ? [`Anh-Anh: ${uk.join(" · ")}`] : []),
+        ];
+  return [...regions, ...others].join(" · ").slice(0, 200);
+}
+
 /** Preserve the source sentence verbatim; match whole headwords, not substrings. */
 export function exampleSegments(example: string, term: string): { text: string; underline: boolean }[] {
   const headword = term.trim();
@@ -89,7 +123,7 @@ export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pr
     dictionaryEntryId: entry.id,
     dictionarySenseId: sense.id,
     meaning: `${kind ? `(${kind}) ` : ''}${sense.definition}`,
-    ipa: entry.pronunciations[0]?.ipa ?? '',
+    ipa: formatDictionaryPronunciations(entry.pronunciations),
     example: sense.example ?? '',
     note: isLocalAddition
       ? 'Nguồn: Nội dung bổ sung biên soạn cho VocabFlow.'

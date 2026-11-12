@@ -46,8 +46,13 @@ import {
 import {
   deleteOfflineDictionary,
   getOfflineDictionaryStatus,
+  installOfflineRegionalPronunciations,
   openDictionary,
 } from "@/data/dictionary";
+import {
+  deleteOfflineRegionalIpa,
+  getOfflineRegionalIpaStatus,
+} from "@/data/offline-regional-pronunciations";
 import {
   deleteOfflineAudio,
   downloadOfflineAudio,
@@ -55,6 +60,7 @@ import {
 } from "@/data/offline-audio";
 import { DICTIONARY } from "@/domain/dictionary";
 import { OFFLINE_AUDIO_DICTIONARY } from "@/domain/offline-audio";
+import { REGIONAL_IPA_DICTIONARY } from "@/domain/regional-pronunciations";
 
 export default function SettingsScreen() {
   const c = useColors();
@@ -82,11 +88,17 @@ export default function SettingsScreen() {
   const [audioStatus, setAudioStatus] = React.useState<
     "checking" | "missing" | "installed" | "damaged" | "unavailable"
   >("checking");
+  const [regionalIpaStatus, setRegionalIpaStatus] = React.useState<
+    "checking" | "missing" | "installed" | "damaged"
+  >("checking");
+  const [regionalIpaEntryCount, setRegionalIpaEntryCount] = React.useState(0);
   const [offlineAction, setOfflineAction] = React.useState<
     | "dictionary-download"
     | "dictionary-delete"
     | "audio-download"
     | "audio-delete"
+    | "regional-ipa-download"
+    | "regional-ipa-delete"
     | null
   >(null);
   const [offlineStage, setOfflineStage] = React.useState<string | null>(null);
@@ -107,15 +119,19 @@ export default function SettingsScreen() {
     : null;
   const refreshOfflineStatus = React.useCallback(async () => {
     try {
-      const [dictionary, audio] = await Promise.all([
+      const [dictionary, audio, regionalIpa] = await Promise.all([
         getOfflineDictionaryStatus(),
         getOfflineAudioStatus(),
+        getOfflineRegionalIpaStatus(),
       ]);
       setDictionaryStatus(dictionary.state);
       setAudioStatus(audio.state);
+      setRegionalIpaStatus(regionalIpa.state);
+      setRegionalIpaEntryCount(regionalIpa.entryCount);
     } catch {
       setDictionaryStatus("damaged");
       setAudioStatus("damaged");
+      setRegionalIpaStatus("damaged");
     }
   }, []);
   React.useEffect(() => {
@@ -194,20 +210,60 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleDownloadRegionalIpa = async () => {
+    if (offlineAction || syncBusy) return;
+    setOfflineError(null);
+    setOfflineAction("regional-ipa-download");
+    setOfflineStage("Đang chuẩn bị IPA");
+    setOfflineProgress({
+      bytesWritten: 0,
+      totalBytes: REGIONAL_IPA_DICTIONARY.sourceBytes,
+    });
+    try {
+      const result = await installOfflineRegionalPronunciations(
+        (stage, bytesWritten, totalBytes) => {
+          setOfflineStage(stage);
+          setOfflineProgress({ bytesWritten, totalBytes });
+        },
+      );
+      setOfflineStage(
+        `Đã cài ${result.entryCount.toLocaleString("vi-VN")} mục IPA`,
+      );
+    } catch (cause) {
+      setOfflineError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể cài dữ liệu IPA offline.",
+      );
+    } finally {
+      setOfflineAction(null);
+      await refreshOfflineStatus();
+    }
+  };
+
   const handleDeleteOfflineResource = async (
-    resource: "dictionary" | "audio",
+    resource: "dictionary" | "audio" | "regional-ipa",
   ) => {
     if (offlineAction || syncBusy) return;
     setOfflineError(null);
     setOfflineAction(
-      resource === "dictionary" ? "dictionary-delete" : "audio-delete",
+      resource === "dictionary"
+        ? "dictionary-delete"
+        : resource === "audio"
+          ? "audio-delete"
+          : "regional-ipa-delete",
     );
     setOfflineStage(
-      resource === "dictionary" ? "Đang xóa từ điển" : "Đang xóa audio",
+      resource === "dictionary"
+        ? "Đang xóa từ điển"
+        : resource === "audio"
+          ? "Đang xóa audio"
+          : "Đang xóa dữ liệu IPA",
     );
     try {
       if (resource === "dictionary") await deleteOfflineDictionary();
-      else await deleteOfflineAudio();
+      else if (resource === "audio") await deleteOfflineAudio();
+      else await deleteOfflineRegionalIpa();
     } catch (cause) {
       setOfflineError(
         cause instanceof Error ? cause.message : "Không thể xóa gói offline.",
@@ -232,6 +288,7 @@ export default function SettingsScreen() {
     try {
       await sync.resetAccountData(async () => {
         await deleteOfflineAudio();
+        await deleteOfflineRegionalIpa();
         await deleteOfflineDictionary();
       });
       await reload();
@@ -863,8 +920,8 @@ Nội dung tệp:
           DỮ LIỆU OFFLINE
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
-          Từ điển và audio được tải riêng vào bộ nhớ ứng dụng, không nằm trong
-          APK. Audio chiếm khoảng 307 MB; nên tải bằng Wi-Fi.
+          Từ điển, IPA và audio được tải riêng vào bộ nhớ ứng dụng, không nằm
+          trong APK. Audio chiếm khoảng 307 MB; nên tải bằng Wi-Fi.
         </Text>
         <View
           style={[
@@ -932,6 +989,71 @@ Nội dung tệp:
                 syncBusy ||
                 dictionaryStatus === "missing" ||
                 dictionaryStatus === "checking"
+              }
+              style={{ flex: 1 }}
+            />
+          </View>
+          <View style={[styles.offlineDivider, { borderColor: c.border }]} />
+          <View style={styles.offlineResource}>
+            <View
+              style={[styles.offlineIcon, { backgroundColor: c.secondary }]}
+            >
+              <Feather name="globe" size={19} color={c.primary} />
+            </View>
+            <View style={styles.offlineResourceText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Phiên âm IPA Anh-Mỹ/Anh-Anh
+              </Text>
+              <Text
+                testID="offline-regional-ipa-status"
+                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+              >
+                {regionalIpaStatus === "installed"
+                  ? `Đã cài · ${regionalIpaEntryCount.toLocaleString("vi-VN")} mục`
+                  : regionalIpaStatus === "damaged"
+                    ? "Dữ liệu bị lỗi · cần tải lại"
+                    : regionalIpaStatus === "checking"
+                      ? "Đang kiểm tra…"
+                      : `Chưa cài · khoảng ${sizeLabel(REGIONAL_IPA_DICTIONARY.sourceBytes)}`}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+            Bổ sung IPA cho các từ có dữ liệu; tải một lần để tra cứu ngoại tuyến.
+            Cần cài từ điển trước.
+          </Text>
+          <View style={styles.offlineActions}>
+            <Button
+              testID="offline-regional-ipa-download"
+              label={regionalIpaStatus === "damaged" ? "Tải lại IPA" : "Tải IPA"}
+              icon="download"
+              onPress={() => {
+                void handleDownloadRegionalIpa();
+              }}
+              loading={offlineAction === "regional-ipa-download"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                dictionaryStatus !== "installed" ||
+                regionalIpaStatus === "installed" ||
+                regionalIpaStatus === "checking"
+              }
+              style={{ flex: 1 }}
+            />
+            <Button
+              testID="offline-regional-ipa-delete"
+              label="Xóa"
+              icon="trash-2"
+              variant="ghost"
+              onPress={() => {
+                void handleDeleteOfflineResource("regional-ipa");
+              }}
+              loading={offlineAction === "regional-ipa-delete"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                regionalIpaStatus === "missing" ||
+                regionalIpaStatus === "checking"
               }
               style={{ flex: 1 }}
             />
@@ -1027,7 +1149,7 @@ Nội dung tệp:
           <MaterialSheen radius={c.radius} />
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
             Xóa sổ từ, tiến độ và thống kê trên thiết bị này và toàn bộ tài
-            khoản trên các thiết bị khác. Từ điển và audio offline cũng sẽ bị
+            khoản trên các thiết bị khác. Từ điển, IPA và audio offline cũng sẽ bị
             xóa. Không thể hoàn tác; cần Internet để xác nhận xóa cloud.
           </Text>
           <Button
@@ -1062,7 +1184,7 @@ Nội dung tệp:
           visible={resetDialog}
           title="Xóa mọi dữ liệu VocabFlow?"
           message={
-            "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển và audio offline cũng sẽ bị xóa khỏi thiết bị này.\n\nCần Internet. Nếu máy chủ không xác nhận xóa cloud, dữ liệu trên thiết bị và tài nguyên offline sẽ được giữ nguyên. Không thể hoàn tác."
+            "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, IPA và audio offline cũng sẽ bị xóa khỏi thiết bị này.\n\nCần Internet. Nếu máy chủ không xác nhận xóa cloud, dữ liệu trên thiết bị và tài nguyên offline sẽ được giữ nguyên. Không thể hoàn tác."
           }
           confirmLabel="Xóa cloud và thiết bị"
           onCancel={() => {

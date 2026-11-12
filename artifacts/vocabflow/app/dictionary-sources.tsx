@@ -2,6 +2,10 @@ import React from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DICTIONARY } from '@/domain/dictionary';
+import {
+  REGIONAL_IPA_ATTRIBUTION,
+  REGIONAL_IPA_DICTIONARY,
+} from '@/domain/regional-pronunciations';
 import { useColors } from '@/hooks/useColors';
 import { F } from '@/components/ui';
 import notices from '@/assets/dictionary-notices.json';
@@ -32,7 +36,7 @@ export default function DictionarySourcesScreen() {
       <View style={{ gap: 6 }}>
         <Text style={[styles.title, { color: c.foreground }]}>Nguồn từ điển</Text>
         <Text style={[styles.p, { color: c.mutedForeground }]}>
-          Dữ liệu tra cứu lấy từ dự án Skypedia English–Vietnamese Dictionary, dựa trên MinhQND và có tham khảo OVDP. Trang này hiển thị nguyên văn các thông báo, đọc được cả khi ngoại tuyến.
+          Nghĩa tiếng Việt lấy từ Skypedia English–Vietnamese Dictionary; IPA Anh-Mỹ/Anh-Anh bổ sung từ ipa-dict. Trang này hiển thị thông tin nguồn và giấy phép để đối chiếu.
         </Text>
       </View>
       <View style={[styles.block, { backgroundColor: c.secondary, borderColor: c.secondary, borderRadius: c.radius }]}>
@@ -54,6 +58,17 @@ export default function DictionarySourcesScreen() {
       <Block testID="sources-attribution" title="Ghi công (nguyên văn)" body={n.attribution} />
       <Block testID="sources-license" title="Giấy phép (nguyên văn)" body={n.license} />
       <Block testID="sources-upstream-license" title="Tệp LICENSE của MinhQND (nguyên văn)" body={n.upstreamLicense} />
+      <View style={[styles.block, { backgroundColor: c.secondary, borderColor: c.border, borderRadius: c.radius }]}>
+        {row('Kho IPA', REGIONAL_IPA_DICTIONARY.repository)}
+        {row('Phiên bản commit', REGIONAL_IPA_DICTIONARY.commit)}
+        {row('IPA Anh-Mỹ', `MIT · SHA-256 ${REGIONAL_IPA_DICTIONARY.us.sha256}`)}
+        {row('IPA Anh-Anh', `GPL-3.0 · SHA-256 ${REGIONAL_IPA_DICTIONARY.uk.sha256}`)}
+      </View>
+      <Block
+        testID="sources-regional-ipa"
+        title="Ghi công và giấy phép IPA"
+        body={REGIONAL_IPA_ATTRIBUTION}
+      />
     </ScrollView>
   );
 }

@@ -295,7 +295,7 @@ function adapter(filename, readOnly = false) {
   assert.equal(draft.term, hello.term);
   assert.ok(draft.meaning.includes(sense.definition));
   assert.equal(draft.example, sense.example ?? "");
-  assert.equal(draft.ipa, entry.pronunciations[0].ipa);
+  assert.equal(draft.ipa, domain.formatDictionaryPronunciations(entry.pronunciations));
   assert.ok(draft.note.includes("CC BY-SA"));
   await assert.rejects(
     queries.draftInDictionary(reference, hello.id, 1),
@@ -438,6 +438,10 @@ function adapter(filename, readOnly = false) {
         "../domain/dictionary-example-updates": exampleUpdates,
         "../domain/dictionary-local-additions": localAdditionData,
         "./dictionary-local-additions": localAdditions,
+        "./offline-regional-pronunciations": {
+          getRegionalIpaForTerm: async () => [],
+          installOfflineRegionalIpa: async () => ({ entryCount: 0, usCount: 0, ukCount: 0 }),
+        },
         "./dictionary-queries": queries,
         "./sqlite-connection": sqliteConnection,
         "react-native": { Platform: { OS: isWeb ? "web" : "android" } },

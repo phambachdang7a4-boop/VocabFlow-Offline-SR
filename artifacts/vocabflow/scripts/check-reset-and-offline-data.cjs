@@ -173,8 +173,14 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
     join(__dirname, "../data/dictionary.ts"),
     "utf8",
   );
+  const regionalIpa = readFileSync(
+    join(__dirname, "../data/offline-regional-pronunciations.ts"),
+    "utf8",
+  );
   assert.match(settings, /testID="offline-dictionary-download"/);
   assert.match(settings, /testID="offline-audio-download"/);
+  assert.match(settings, /testID="offline-regional-ipa-download"/);
+  assert.match(settings, /deleteOfflineRegionalIpa/);
   assert.match(settings, /testID="reset-app-data"/);
   assert.match(settings, /Xóa cloud và thiết bị/);
   assert.match(context, /resetCloudFirst/);
@@ -182,6 +188,8 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(audio, /digest\(["']SHA-256["']\)/);
   assert.match(audio, /audio_dictionary WHERE entry_id = \?/);
   assert.match(dictionary, /onProgress: \(progress\)/);
+  assert.match(regionalIpa, /sha256Hex\(bytes\)/);
+  assert.match(regionalIpa, /buildRegionalIpaSupplement/);
 
   await sync.activateGuestDatabase();
   harness.db.close();

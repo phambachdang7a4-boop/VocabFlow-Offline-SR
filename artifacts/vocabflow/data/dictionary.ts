@@ -21,6 +21,10 @@ import {
 } from "../domain/dictionary-local-additions";
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
 import {
+  getRegionalIpaForTerm,
+  installOfflineRegionalIpa,
+} from "./offline-regional-pronunciations";
+import {
   draftInDictionary,
   entryInDictionary,
   searchInDictionary,
@@ -377,7 +381,35 @@ export async function getDictionaryEntry(
   offset = 0,
   parts: DictionaryPartOfSpeech[] | "first" = [],
 ) {
-  return entryInDictionary(await openDictionary(), id, offset, parts);
+  const entry = await entryInDictionary(
+    await openDictionary(),
+    id,
+    offset,
+    parts,
+  );
+  const supplemental = await getRegionalIpaForTerm(entry.term);
+  if (!supplemental.length) return entry;
+  const seen = new Set(
+    entry.pronunciations.map(
+      (item) => `${item.region ?? ""}|${item.ipa.trim()}`,
+    ),
+  );
+  const additional = supplemental.filter((item) => {
+    const key = `${item.region}|${item.ipa.trim()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return {
+    ...entry,
+    pronunciations: [...entry.pronunciations, ...additional],
+  };
+}
+
+export async function installOfflineRegionalPronunciations(
+  onProgress?: (stage: string, bytesWritten: number, totalBytes: number) => void,
+) {
+  return installOfflineRegionalIpa(await openDictionary(), onProgress);
 }
 export async function getDictionaryDraft(id: number, senseId: number) {
   return draftInDictionary(await openDictionary(), id, senseId);

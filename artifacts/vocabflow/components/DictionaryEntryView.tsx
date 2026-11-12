@@ -17,6 +17,7 @@ import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import { getDictionaryEntry } from "@/data/dictionary";
+import { getOfflineRegionalIpaStatus } from "@/data/offline-regional-pronunciations";
 import {
   dictionaryDraft,
   exampleSegments,
@@ -78,6 +79,9 @@ export function DictionaryEntryView({
     };
   }, []);
   const [entry, setEntry] = useState<DictionaryEntry | null>(null);
+  const [regionalIpaInstalled, setRegionalIpaInstalled] = useState<
+    boolean | null
+  >(null);
   const [senses, setSenses] = useState<DictionarySense[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -91,6 +95,7 @@ export function DictionaryEntryView({
   const [filterError, setFilterError] = useState<string | null>(null);
   const [filterTick, setFilterTick] = useState(0);
   const reqRef = useRef(0);
+  const hasFocusedOnce = useRef(false);
   const partsRef = useRef(parts);
   partsRef.current = parts;
   const hasEntryRef = useRef(false);
@@ -113,6 +118,21 @@ export function DictionaryEntryView({
       speech.speakWord,
       speech.stopSpeaking,
     ]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      void getOfflineRegionalIpaStatus().then((status) => {
+        if (active) setRegionalIpaInstalled(status.state === "installed");
+      });
+      // Refresh the entry when returning from Settings after installing the IPA pack.
+      if (hasFocusedOnce.current) setTick((value) => value + 1);
+      else hasFocusedOnce.current = true;
+      return () => {
+        active = false;
+      };
+    }, []),
   );
 
   useEffect(() => {
@@ -328,6 +348,21 @@ export function DictionaryEntryView({
     us: entry.pronunciations.filter((p) => pronunciationAccent(p.region) === "us"),
     uk: entry.pronunciations.filter((p) => pronunciationAccent(p.region) === "uk"),
   };
+  const accentIpa = {
+    us: [
+      ...new Set(
+        accentPronunciations.us.map((p) => p.ipa.trim()).filter(Boolean),
+      ),
+    ],
+    uk: [
+      ...new Set(
+        accentPronunciations.uk.map((p) => p.ipa.trim()).filter(Boolean),
+      ),
+    ],
+  };
+  const sameRegionalIpa =
+    accentIpa.us.length > 0 &&
+    accentIpa.us.join(" · ") === accentIpa.uk.join(" · ");
   const otherPronunciations = entry.pronunciations.filter(
     (p) => pronunciationAccent(p.region) === null,
   );
@@ -367,30 +402,55 @@ export function DictionaryEntryView({
             <Feather name="volume-2" size={23} color={c.dictHead} />
           </Pressable>
         </View>
-        {(["us", "uk"] as const).map((accent) => (
+        {sameRegionalIpa ? (
           <View
-            key={accent}
-            testID={`entry-pronunciation-${accent}`}
+            testID="entry-pronunciation-shared"
             style={styles.ipaRow}
           >
             <Text style={[styles.region, { color: c.dictMuted }]}>
-              {accent === "us" ? "Anh-Mỹ" : "Anh-Anh"}
+              Anh-Mỹ · Anh-Anh
             </Text>
             <Text
-              testID={`entry-ipa-${accent}`}
+              testID="entry-ipa-shared"
               style={[styles.ipa, { color: c.dictInk }]}
               selectable
             >
-              {[
-                ...new Set(
-                  accentPronunciations[accent]
-                    .map((p) => p.ipa.trim())
-                    .filter(Boolean),
-                ),
-              ].join(" · ")}
+              {accentIpa.us.join(" · ")}
             </Text>
           </View>
-        ))}
+        ) : (
+          (["us", "uk"] as const).map((accent) => (
+            <View
+              key={accent}
+              testID={`entry-pronunciation-${accent}`}
+              style={styles.ipaRow}
+            >
+              <Text style={[styles.region, { color: c.dictMuted }]}>
+                {accent === "us" ? "Anh-Mỹ" : "Anh-Anh"}
+              </Text>
+              <Text
+                testID={`entry-ipa-${accent}`}
+                style={[styles.ipa, { color: c.dictInk }]}
+                selectable
+              >
+                {accentIpa[accent].join(" · ")}
+              </Text>
+            </View>
+          ))
+        )}
+        {regionalIpaInstalled === false ? (
+          <Pressable
+            testID="entry-regional-ipa-install"
+            accessibilityRole="button"
+            onPress={() => router.push("/settings")}
+            style={styles.ipaInstallHint}
+          >
+            <Feather name="download" size={14} color={c.dictMuted} />
+            <Text style={[styles.ipaInstallText, { color: c.dictMuted }]}>
+              Tải thêm IPA Anh-Mỹ/Anh-Anh trong Cài đặt
+            </Text>
+          </Pressable>
+        ) : null}
         {otherPronunciations.map((p, i) => (
           <View key={`${p.ipa}-${i}`} style={styles.ipaRow}>
             {p.region ? (
@@ -667,6 +727,8 @@ const styles = StyleSheet.create({
   },
   region: { fontFamily: F.s, fontSize: 12, letterSpacing: 1, minWidth: 36 },
   ipa: { fontFamily: F.m, fontSize: 16 },
+  ipaInstallHint: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 3 },
+  ipaInstallText: { fontFamily: F.s, fontSize: 12 },
   notice: { padding: 14, gap: 6 },
   noticeTitle: { fontFamily: F.s, fontSize: 15 },
   small: { fontFamily: F.r, fontSize: 14, lineHeight: 20 },

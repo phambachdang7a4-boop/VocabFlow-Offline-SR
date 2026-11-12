@@ -80,6 +80,9 @@ function mount(file, services, personalWords = [], properties = {}) {
   const routes = [];
   const dependencies = {
     '@/domain/dictionary': dictionaryDomain,
+    '@/data/offline-regional-pronunciations': {
+      getOfflineRegionalIpaStatus: async () => ({ state: 'missing', bytes: 0, entryCount: 0 }),
+    },
     react: { ...react, default: react }, 'react-native': native,
     '@expo/vector-icons': { Feather: 'Feather' },
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
@@ -301,6 +304,20 @@ function mount(file, services, personalWords = [], properties = {}) {
   await regional.settle();
   assert.equal(find(header(regional), node => node.props?.testID === 'entry-ipa-us').props.children.join(''), '/wɜːrk/');
   assert.equal(find(header(regional), node => node.props?.testID === 'entry-ipa-uk').props.children.join(''), '/wɜːk/');
+  const singleRegional = mount('../components/DictionaryEntryView.tsx', {
+    getDictionaryEntry: async () => ({
+      ...entry,
+      pronunciations: [
+        { ipa: '/tɛst/', region: 'NAmE' },
+        { ipa: '/tɛst/', region: 'BrE' },
+      ],
+    }),
+    saveWord: async () => {},
+  });
+  await singleRegional.settle();
+  assert.equal(find(header(singleRegional), node => node.props?.testID === 'entry-ipa-shared').props.children.join(''), '/tɛst/');
+  assert.equal(find(header(singleRegional), node => node.props?.testID === 'entry-ipa-us'), undefined,
+    'Identical American and British readings appear once, not as a duplicate.');
   let failures = 0;
   const retrySave = mount('../components/DictionaryEntryView.tsx', {
     getDictionaryEntry: async () => entry,
