@@ -1,0 +1,33 @@
+{
+  "emissions": {
+    "example": "Strict limits on vehicle emissions can improve urban air quality.",
+    "exampleTranslation": "Giới hạn nghiêm ngặt khí thải xe cộ có thể cải thiện chất lượng không khí đô thị.",
+    "dictionaryExamples": []
+  },
+  "obesity": {
+    "example": "Regular exercise and healthy meals can reduce the risk of obesity.",
+    "exampleTranslation": "Tập thể dục thường xuyên và ăn uống lành mạnh có thể giảm nguy cơ béo phì.",
+    "dictionaryExamples": [
+      "The word obesity is used in English.",
+      "He kept the obesity on the desk."
+    ]
+  },
+  "inequality": {
+    "example": "The report examines income inequality between rural and urban households.",
+    "exampleTranslation": "Báo cáo xem xét bất bình đẳng thu nhập giữa các hộ gia đình nông thôn và thành thị.",
+    "dictionaryExamples": [
+      "The inequality in education opportunities across Asia was appalling.",
+      "The inequality was mentioned in the report.",
+      "She saw the inequality near the door.",
+      "He kept the inequality in a drawer.",
+      "The inequality was important at work."
+    ]
+  },
+  "urbanization": {
+    "example": "Rapid urbanization can increase the demand for city housing.",
+    "exampleTranslation": "Đô thị hóa nhanh có thể làm tăng nhu cầu nhà ở trong thành phố.",
+    "dictionaryExamples": [
+      "Urbanization changed the quiet town بسرعة."
+    ]
+  }
+}

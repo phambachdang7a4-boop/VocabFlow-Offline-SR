@@ -10,6 +10,13 @@ const OUTPUT_PATH = join(
   __dirname,
   "../domain/ielts-topic-course-data.json",
 );
+const REVIEWED_EXAMPLES_PATH = join(
+  __dirname,
+  "../domain/ielts-reviewed-examples.json",
+);
+const REVIEWED_EXAMPLES = JSON.parse(
+  readFileSync(REVIEWED_EXAMPLES_PATH, "utf8"),
+);
 
 const TOPICS = [
   {
@@ -1550,6 +1557,23 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
     }
   }
 
+  for (const [term, review] of Object.entries(REVIEWED_EXAMPLES)) {
+    const entry = entries[term];
+    if (!entry) {
+      errors.push(`- ${term}: reviewed IELTS example headword was removed`);
+      continue;
+    }
+    if (
+      entry.example !== review.example ||
+      entry.exampleTranslation !== review.exampleTranslation
+    ) {
+      errors.push(`- ${term}: reviewed IELTS example pair changed`);
+    }
+    if (entry.exampleSource !== "authored") {
+      errors.push(`- ${term}: reviewed IELTS example is not marked as authored`);
+    }
+  }
+
   if (errors.length) {
     throw new Error(
       `IELTS course data does not match builder corrections:\n${errors.join("\n")}`,
@@ -1624,8 +1648,13 @@ function findOfflineExampleSourceChanges(entries, dictionaryRows) {
 
   const changes = [];
   for (const [rawTerm, entry] of Object.entries(entries ?? {})) {
-    if (entry?.exampleSource !== "offline") continue;
     const term = rawTerm.trim().toLowerCase();
+    if (
+      entry?.exampleSource !== "offline" ||
+      Object.hasOwn(REVIEWED_EXAMPLES, term)
+    ) {
+      continue;
+    }
     const savedExample = String(entry.example ?? "").trim();
     const currentExamples = sourceExamplesByTerm.get(term) ?? [];
     if (!savedExample || currentExamples.includes(savedExample)) continue;
@@ -1662,6 +1691,83 @@ function validateOfflineExampleSources(entries, dictionaryRows) {
     throw new Error(
       `IELTS dictionary-example translation review failed; rebuild stopped without changing course data:\n${report}`,
     );
+  }
+}
+
+function validateReviewedExamples(reviews, dictionaryRows) {
+  const sourceExamplesByTerm = new Map();
+  for (const row of dictionaryRows) {
+    const term = String(row.word ?? "").trim().toLowerCase();
+    const example = String(row.example ?? "").trim();
+    if (!term || !example) continue;
+    if (!sourceExamplesByTerm.has(term)) {
+      sourceExamplesByTerm.set(term, new Set());
+    }
+    sourceExamplesByTerm.get(term).add(example);
+  }
+
+  const errors = [];
+  for (const [rawTerm, review] of Object.entries(reviews ?? {})) {
+    const term = rawTerm.trim().toLowerCase();
+    if (!/^[a-z]+$/.test(term)) {
+      errors.push(`- ${rawTerm}: reviewed headword must contain only letters`);
+      continue;
+    }
+    if (
+      !review ||
+      typeof review.example !== "string" ||
+      !review.example.trim() ||
+      typeof review.exampleTranslation !== "string" ||
+      !review.exampleTranslation.trim() ||
+      !Array.isArray(review.dictionaryExamples) ||
+      review.dictionaryExamples.some(
+        (example) => typeof example !== "string" || !example.trim(),
+      )
+    ) {
+      errors.push(`- ${term}: reviewed example pair or dictionary snapshot is invalid`);
+      continue;
+    }
+
+    const savedExamples = [
+      ...new Set(review.dictionaryExamples.map((example) => example.trim())),
+    ].sort();
+    const currentExamples = [
+      ...(sourceExamplesByTerm.get(term) ?? []),
+    ].sort();
+    if (JSON.stringify(savedExamples) !== JSON.stringify(currentExamples)) {
+      const formatExamples = (examples) =>
+        examples.length
+          ? examples.map((example) => `    - ${JSON.stringify(example)}`)
+          : ["    - (no dictionary examples found)"];
+      errors.push(
+        [
+          `- ${term}: dictionary examples changed; review the approved IELTS example and translation`,
+          "  Saved dictionary examples:",
+          ...formatExamples(savedExamples),
+          "  Current dictionary examples:",
+          ...formatExamples(currentExamples),
+        ].join("\n"),
+      );
+    }
+  }
+  if (errors.length) {
+    throw new Error(
+      `IELTS reviewed-example source check failed:\n${errors.join("\n")}`,
+    );
+  }
+}
+
+function applyReviewedExamples(entries, reviews = REVIEWED_EXAMPLES) {
+  for (const [term, review] of Object.entries(reviews)) {
+    const entry = entries[term];
+    if (!entry) {
+      throw new Error(
+        `${term}: reviewed IELTS example headword is missing from the course`,
+      );
+    }
+    entry.example = review.example;
+    entry.exampleTranslation = review.exampleTranslation;
+    entry.exampleSource = "authored";
   }
 }
 
@@ -1839,6 +1945,7 @@ function main() {
     validateDictionarySenseReview(dictionary);
     validateDictionaryPosReview(dictionaryRows);
     validateDictionaryDefinitionReview(dictionary);
+    validateReviewedExamples(REVIEWED_EXAMPLES, dictionaryRows);
     const sortedTerms = [...dictionary.keys()].sort();
     const legacy = loadLegacyCourse();
     validateOfflineExampleSources(legacy.entries, dictionaryRows);
@@ -1943,6 +2050,7 @@ function main() {
       }
     }
 
+    applyReviewedExamples(entries);
     applyCourseDefinitionOverrides(entries);
     applyCoursePosOverrides(entries);
     applySpellingVariantNotes(entries);
@@ -2004,4 +2112,7 @@ module.exports = {
   applyCoursePosOverrides,
   findOfflineExampleSourceChanges,
   validateOfflineExampleSources,
+  REVIEWED_EXAMPLES,
+  validateReviewedExamples,
+  applyReviewedExamples,
 };

@@ -17,6 +17,9 @@ const {
   validateDictionarySenseReview,
   findOfflineExampleSourceChanges,
   validateOfflineExampleSources,
+  REVIEWED_EXAMPLES,
+  validateReviewedExamples,
+  applyReviewedExamples,
 } = require("./build-ielts-topic-course-data.cjs");
 
 function cloneCourseData() {
@@ -464,6 +467,87 @@ assert.equal(
   JSON.stringify(changedOfflineEntries),
   changedOfflineEntriesBeforeCheck,
   "The review report must not alter saved examples or translations.",
+);
+
+const reviewedDictionaryRows = Object.entries(REVIEWED_EXAMPLES).flatMap(
+  ([word, review]) =>
+    review.dictionaryExamples.map((example) => ({ word, example })),
+);
+assert.doesNotThrow(
+  () => validateReviewedExamples(REVIEWED_EXAMPLES, reviewedDictionaryRows),
+  "An unchanged dictionary snapshot must keep its reviewed IELTS example pair.",
+);
+const changedReviewedDictionaryRows = [
+  ...reviewedDictionaryRows.filter((row) => row.word !== "obesity"),
+  { word: "obesity", example: "A new dictionary example for obesity." },
+  { word: "unrelated", example: "An unrelated dictionary sentence." },
+];
+assert.throws(
+  () =>
+    validateReviewedExamples(REVIEWED_EXAMPLES, changedReviewedDictionaryRows),
+  /obesity: dictionary examples changed; review the approved IELTS example and translation/,
+  "A changed dictionary example must require review without being hidden by the approved pair.",
+);
+assert.doesNotThrow(
+  () =>
+    validateOfflineExampleSources(
+      {
+        obesity: {
+          example: "An outdated generated example.",
+          exampleTranslation: "Một bản dịch đã cũ.",
+          exampleSource: "offline",
+        },
+      },
+      [{ word: "obesity", example: "A changed dictionary example." }],
+    ),
+  "Reviewed source data, not generated course output, must control checks for reviewed headwords.",
+);
+
+const reviewedExampleEntries = {
+  obesity: {
+    example: "Old dictionary example.",
+    exampleTranslation: "Bản dịch cũ.",
+    exampleSource: "offline",
+  },
+  unrelated: {
+    example: "An unrelated sentence.",
+    exampleTranslation: "Một câu không liên quan.",
+    exampleSource: "offline",
+  },
+};
+const unrelatedEntryBeforeReview = JSON.stringify(
+  reviewedExampleEntries.unrelated,
+);
+applyReviewedExamples(reviewedExampleEntries, {
+  obesity: REVIEWED_EXAMPLES.obesity,
+});
+assert.deepEqual(
+  reviewedExampleEntries.obesity,
+  {
+    example: REVIEWED_EXAMPLES.obesity.example,
+    exampleTranslation: REVIEWED_EXAMPLES.obesity.exampleTranslation,
+    exampleSource: "authored",
+  },
+  "A reviewed pair must replace the generated example and be marked as authored.",
+);
+assert.equal(
+  JSON.stringify(reviewedExampleEntries.unrelated),
+  unrelatedEntryBeforeReview,
+  "Applying a reviewed pair must leave unrelated course entries unchanged.",
+);
+assert.throws(
+  () => applyReviewedExamples({}, { missing: REVIEWED_EXAMPLES.obesity }),
+  /missing: reviewed IELTS example headword is missing from the course/,
+  "A review record must not be silently ignored when its course headword is missing.",
+);
+
+const reviewedCourseEntries = cloneCourseData().entries;
+const reviewedCourseEntriesBeforeApply = JSON.stringify(reviewedCourseEntries);
+applyReviewedExamples(reviewedCourseEntries);
+assert.equal(
+  JSON.stringify(reviewedCourseEntries),
+  reviewedCourseEntriesBeforeApply,
+  "Reapplying durable review records must not change reviewed or unrelated course output.",
 );
 
 const missingDefinition = cloneCourseData();

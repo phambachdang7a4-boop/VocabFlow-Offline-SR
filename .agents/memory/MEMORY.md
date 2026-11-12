@@ -8,3 +8,4 @@
 - [Tần suất cụm từ](collocation-frequency.md) — Chỉ xếp theo số đếm cụm chính xác; không suy ra tần suất từ thành tố.
 - [Gói audio offline](offline-audio-packaging.md) — Từ điển âm thanh lớn được tải riêng từ App Storage, không nhúng vào APK.
 - [Đối chiếu đại từ trong mệnh đề IELTS](ielts-pronoun-clause-checks.md) — Chỉ so sánh các chủ ngữ tường minh khi hai câu có số mệnh đề nhận diện tương ứng.
+- [Cặp ví dụ IELTS đã duyệt](ielts-reviewed-example-sources.md) — Lưu cặp Anh-Việt và ảnh chụp câu từ điển ngoài dữ liệu sinh để phát hiện thay đổi nguồn.
