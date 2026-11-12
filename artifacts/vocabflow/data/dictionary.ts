@@ -8,7 +8,11 @@ import {
 import { File, FileMode, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { DICTIONARY, type DictionaryStage } from "../domain/dictionary";
+import {
+  DICTIONARY,
+  mergeDictionaryPronunciations,
+  type DictionaryStage,
+} from "../domain/dictionary";
 import { dictionaryDownloadUrl } from "../domain/dictionary-download";
 import { dictionaryImportBytes } from "../domain/dictionary-import";
 import {
@@ -389,20 +393,12 @@ export async function getDictionaryEntry(
   );
   const supplemental = await getRegionalIpaForTerm(entry.term);
   if (!supplemental.length) return entry;
-  const seen = new Set(
-    entry.pronunciations.map(
-      (item) => `${item.region ?? ""}|${item.ipa.trim()}`,
-    ),
-  );
-  const additional = supplemental.filter((item) => {
-    const key = `${item.region}|${item.ipa.trim()}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
   return {
     ...entry,
-    pronunciations: [...entry.pronunciations, ...additional],
+    pronunciations: mergeDictionaryPronunciations(
+      entry.pronunciations,
+      supplemental,
+    ),
   };
 }
 

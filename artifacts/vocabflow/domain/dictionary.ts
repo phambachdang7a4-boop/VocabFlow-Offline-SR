@@ -92,6 +92,22 @@ export function formatDictionaryPronunciations(
   return [...regions, ...others].join(" · ").slice(0, 200);
 }
 
+export function mergeDictionaryPronunciations(
+  base: DictionaryPronunciation[],
+  supplemental: DictionaryPronunciation[],
+): DictionaryPronunciation[] {
+  const seen = new Set(
+    base.map((item) => `${pronunciationAccent(item.region) ?? item.region ?? ""}|${item.ipa.trim()}`),
+  );
+  const additions = supplemental.filter((item) => {
+    const key = `${pronunciationAccent(item.region) ?? item.region ?? ""}|${item.ipa.trim()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return [...base, ...additions];
+}
+
 /** Preserve the source sentence verbatim; match whole headwords, not substrings. */
 export function exampleSegments(example: string, term: string): { text: string; underline: boolean }[] {
   const headword = term.trim();

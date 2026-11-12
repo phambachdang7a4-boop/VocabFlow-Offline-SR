@@ -4,6 +4,7 @@ import {
   type SQLiteDatabase,
 } from "expo-sqlite";
 import { sha256 } from "@noble/hashes/sha2.js";
+import { openDatabaseSafely } from "./sqlite-connection";
 import { DICTIONARY, pronunciationAccent } from "../domain/dictionary";
 import {
   buildRegionalIpaSupplement,
@@ -34,7 +35,9 @@ function sourceUrl(file: string): string {
 
 function openSupplementDatabase(): Promise<SQLiteDatabase> {
   if (!databaseConnection) {
-    databaseConnection = openDatabaseAsync(filename).catch((error) => {
+    databaseConnection = openDatabaseSafely(() =>
+      openDatabaseAsync(filename),
+    ).catch((error) => {
       databaseConnection = undefined;
       throw error;
     });

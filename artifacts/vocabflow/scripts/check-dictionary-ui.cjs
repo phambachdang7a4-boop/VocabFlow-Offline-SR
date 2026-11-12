@@ -21,6 +21,8 @@ assert.doesNotMatch(dictionaryTabSource, /VocabFlow · Anh – Việt ngoại tu
   'The redundant dictionary title above the search field is removed.');
 assert.match(dictionarySourcesSource, /Nguồn từ điển/,
   'The full dictionary attribution page remains available in the app.');
+assert.match(dictionaryEntrySource, /entry-regional-ipa-install/,
+  'Dictionary entries link to Settings when the regional IPA pack is missing.');
 for (const [sentence, term, expected] of [
   ['I have not seen him since.', 'since', ['since']],
   ['Since then, since yesterday.', 'since', ['Since', 'since']],

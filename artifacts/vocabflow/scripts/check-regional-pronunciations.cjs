@@ -76,6 +76,20 @@ assert.equal(
   ]),
   "/teɪk/",
 );
+assert.deepEqual(
+  dictionaryDomain.mergeDictionaryPronunciations(
+    [{ ipa: "/wɜːrk/", region: "NAmE" }],
+    [
+      { ipa: "/wɜːrk/", region: "US" },
+      { ipa: "/wɜːk/", region: "BrE" },
+    ],
+  ),
+  [
+    { ipa: "/wɜːrk/", region: "NAmE" },
+    { ipa: "/wɜːk/", region: "BrE" },
+  ],
+  "Existing regional readings are preserved and equivalent source rows are not duplicated.",
+);
 
 const settings = readFileSync(join(__dirname, "../app/settings.tsx"), "utf8");
 const dictionary = readFileSync(join(__dirname, "../data/dictionary.ts"), "utf8");
