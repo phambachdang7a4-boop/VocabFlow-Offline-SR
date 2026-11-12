@@ -39,6 +39,7 @@ import {
   TOEIC_TOPIC_COURSE_ENTRIES,
   TOEIC_TOPIC_COURSE_ID,
   TOEIC_TOPIC_COURSE_LESSONS,
+  TOEIC_TOPIC_COURSE_SPELLING_CONVENTION,
   TOEIC_TOPIC_COURSE_TITLE,
   TOEIC_TOPIC_COURSE_WORD_COUNT,
   TOEIC_TOPIC_WORD_LIST,
@@ -136,7 +137,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: TOEIC_TOPIC_COURSE_ID,
     title: TOEIC_TOPIC_COURSE_TITLE,
     description:
-      `Học ${TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC, từ văn phòng đến công tác.`,
+      `Học ${TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC, từ văn phòng đến công tác. ${TOEIC_TOPIC_COURSE_SPELLING_CONVENTION}`,
     lessons: TOEIC_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(TOEIC_TOPIC_COURSE_ENTRIES)),
     icon: "briefcase",

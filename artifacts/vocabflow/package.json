@@ -25,7 +25,8 @@
     "course:build-idioms": "node scripts/build-idiom-course-data.cjs",
     "check:idiom-course": "node scripts/check-idiom-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "check:vocabulary-extraction": "node scripts/check-vocabulary-extraction.cjs",
-    "check:ielts-topic-course-data": "node scripts/check-ielts-topic-course-data.cjs"
+    "check:ielts-topic-course-data": "node scripts/check-ielts-topic-course-data.cjs",
+    "check:toeic-topic-course-data": "node scripts/check-toeic-topic-course-data.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

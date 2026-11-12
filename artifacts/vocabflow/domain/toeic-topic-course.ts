@@ -19,6 +19,7 @@ export interface ToeicTopicCourseEntry {
   definition: string;
   example: string;
   exampleTranslation: string;
+  spellingNote?: string;
   dictionarySource: "offline" | "authored";
   exampleSource: "offline" | "authored";
   partOfSpeech: string;
@@ -27,6 +28,7 @@ export interface ToeicTopicCourseEntry {
 }
 
 interface ToeicTopicCourseData {
+  spellingConvention: string;
   totalWords: number;
   topics: {
     id: string;
@@ -41,6 +43,8 @@ const data = courseData as ToeicTopicCourseData;
 
 export const TOEIC_TOPIC_COURSE_ID = "toeic-topic-vocabulary-v1";
 export const TOEIC_TOPIC_COURSE_TITLE = "Từ vựng TOEIC theo chủ đề";
+export const TOEIC_TOPIC_COURSE_SPELLING_CONVENTION =
+  data.spellingConvention;
 export const TOEIC_TOPIC_COURSE_WORD_COUNT = data.totalWords;
 export const TOEIC_TOPIC_COURSE_ENTRIES: Readonly<
   Record<string, ToeicTopicCourseEntry>

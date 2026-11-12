@@ -8,6 +8,71 @@ const DATABASE_PATH = join(
 );
 const OUTPUT_PATH = join(__dirname, "../domain/toeic-topic-course-data.json");
 
+const TOEIC_SPELLING_CONVENTION =
+  "Ưu tiên chính tả Anh-Anh; các dạng Anh-Mỹ hữu ích được ghi rõ ở mục từ.";
+
+const US_TO_UK_SPELLING_RULES = [
+  { pattern: /ization$/, britishSuffix: "isation" },
+  { pattern: /izing$/, britishSuffix: "ising" },
+  { pattern: /ized$/, britishSuffix: "ised" },
+  { pattern: /izer$/, britishSuffix: "iser" },
+  { pattern: /ize$/, britishSuffix: "ise" },
+  { pattern: /^traveling$/, british: "travelling" },
+  { pattern: /^traveled$/, british: "travelled" },
+  { pattern: /^license$/, british: "licence" },
+];
+
+function britishEquivalent(term) {
+  for (const rule of US_TO_UK_SPELLING_RULES) {
+    if (rule.british) {
+      if (rule.pattern.test(term)) return rule.british;
+      continue;
+    }
+    if (rule.pattern.test(term)) {
+      return term.replace(rule.pattern, rule.britishSuffix);
+    }
+  }
+  return null;
+}
+
+function spellingNoteFor(term) {
+  const british = britishEquivalent(term);
+  return british ? `Anh-Mỹ; chính tả Anh-Anh: ${british}.` : null;
+}
+
+function applyToeicSpellingLabels(data) {
+  return {
+    ...data,
+    spellingConvention: TOEIC_SPELLING_CONVENTION,
+    entries: Object.fromEntries(
+      Object.entries(data.entries).map(([term, entry]) => {
+        const spellingNote = spellingNoteFor(term);
+        if (!spellingNote) return [term, entry];
+        return [term, { ...entry, spellingNote }];
+      }),
+    ),
+  };
+}
+
+function validateToeicSpellingData(data) {
+  if (data.spellingConvention !== TOEIC_SPELLING_CONVENTION) {
+    throw new Error("TOEIC spelling convention is missing or inconsistent.");
+  }
+  for (const [term, entry] of Object.entries(data.entries ?? {})) {
+    const expectedNote = spellingNoteFor(term);
+    if (expectedNote && entry.spellingNote !== expectedNote) {
+      throw new Error(
+        `TOEIC American spelling "${term}" must be labeled "${expectedNote}".`,
+      );
+    }
+    if (!expectedNote && entry.spellingNote?.startsWith("Anh-Mỹ;")) {
+      throw new Error(
+        `TOEIC entry "${term}" has an American label without a British equivalent.`,
+      );
+    }
+  }
+}
+
 const TOPICS = [
   {
     id: "office-operations",
@@ -431,7 +496,7 @@ function main() {
       for (const word of topic.words) entries[word.term] = word;
     }
     const totalWords = assignedTerms.size;
-    const output = {
+    const output = applyToeicSpellingLabels({
       generatedFrom: "dictionary_en_vi.db",
       totalWords,
       topics: topics.map(({ words, ...topic }) => ({
@@ -439,7 +504,8 @@ function main() {
         terms: words.map((word) => word.term),
       })),
       entries,
-    };
+    });
+    validateToeicSpellingData(output);
     writeFileSync(OUTPUT_PATH, `${JSON.stringify(output)}\n`, "utf8");
     console.log(
       `Built TOEIC course data: ${totalWords} unique words across ${topics.length} topics.`,
@@ -452,4 +518,14 @@ function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  TOEIC_SPELLING_CONVENTION,
+  applyToeicSpellingLabels,
+  britishEquivalent,
+  spellingNoteFor,
+  validateToeicSpellingData,
+};
