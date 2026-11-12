@@ -643,6 +643,14 @@ const COURSE_EXAMPLE_OVERRIDES = {
 };
 
 const COURSE_DEFINITION_OVERRIDES = {
+  tutor: "Gia sư; người dạy kèm cho một cá nhân hoặc nhóm nhỏ.",
+  classroom: "Lớp học; phòng học trong trường.",
+  enroll: "Đăng ký hoặc ghi danh tham gia khóa học, trường học hay chương trình.",
+  scholar: "Học giả; người có kiến thức chuyên sâu, thường tham gia nghiên cứu.",
+  conservative: "Thận trọng, có xu hướng giữ nguyên hiện trạng hoặc truyền thống.",
+  schools: "Trường học; các cơ sở giáo dục dành cho học sinh.",
+  functional: "Có công năng thực tế; hoạt động đúng mục đích.",
+  predatory: "Có tập tính săn bắt con mồi; ăn thịt.",
   graduation: "Lễ tốt nghiệp; việc hoàn thành một chương trình học.",
   emission: "Lượng chất hoặc khí được thải ra, thường là chất gây ô nhiễm.",
   carbon: "Cacbon; nguyên tố hóa học có trong than đá và khí thải carbon.",
@@ -721,6 +729,40 @@ const DICTIONARY_SENSE_REVIEW = {
   plant: {
     example: "This large plant produces thousands of cars every year.",
     reason: "Uses plant to mean factory, not a living organism.",
+  },
+};
+
+// These selected dictionary rows pair an unrelated definition with the
+// example used by the lesson. Keep both source fields pinned so a dictionary
+// refresh cannot silently replace a reviewed mismatch.
+const DICTIONARY_DEFINITION_REVIEW = {
+  tutor: {
+    definition: "Người giám hộ (đứa trẻ vị thành niên).",
+    example: "The tutor met the student after class.",
+  },
+  classroom: {
+    definition: "Phòng đọc.",
+    example: "The students waited quietly in the classroom.",
+  },
+  scholar: {
+    definition: "Môn sinh.",
+    example: "As a scholar, she loved learning new ideas.",
+  },
+  conservative: {
+    definition: "Để giữ gìn, để duy trì, để bảo tồn, để bảo toàn.",
+    example: "The museum used conservative methods to save paper.",
+  },
+  schools: {
+    definition: "Dành cho nhà trường.",
+    example: "Many local schools offer free lunch to students.",
+  },
+  functional: {
+    definition: "Functionary.",
+    example: "The chair is functional, but it is not pretty.",
+  },
+  predatory: {
+    definition: "Ăn cướp, ăn bóc; ăn trộm.",
+    example: "The predatory dog chased the small cat.",
   },
 };
 
@@ -1010,6 +1052,24 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
       errors.push(`- ${term}: dictionary example uses an unrelated IELTS sense`);
     }
   }
+  for (const [term, review] of Object.entries(DICTIONARY_DEFINITION_REVIEW)) {
+    const entry = entries[term];
+    if (!entry) {
+      errors.push(`- ${term}: reviewed headword was removed`);
+      continue;
+    }
+    if (entry.definition !== COURSE_DEFINITION_OVERRIDES[term]) {
+      errors.push(`- ${term}: reviewed definition/example mismatch was not corrected`);
+    }
+    if (entry.dictionarySource !== "authored") {
+      errors.push(`- ${term}: corrected definition is not marked as authored`);
+    }
+    const expectedExample =
+      COURSE_EXAMPLE_OVERRIDES[term]?.example ?? review.example;
+    if (entry.example !== expectedExample) {
+      errors.push(`- ${term}: reviewed example changed`);
+    }
+  }
   for (const term of REQUIRED_RELATED_HEADWORDS) {
     if (!entries[term]) {
       errors.push(`- ${term}: valid related headword was removed by sense filtering`);
@@ -1164,6 +1224,30 @@ function validateDictionarySenseReview(dictionary) {
   }
 }
 
+function validateDictionaryDefinitionReview(dictionary) {
+  const errors = [];
+  for (const [term, review] of Object.entries(
+    DICTIONARY_DEFINITION_REVIEW,
+  )) {
+    const entry = dictionary.get(term);
+    if (!entry) {
+      errors.push(`- ${term}: reviewed dictionary headword is missing`);
+    } else if (
+      entry.definition !== review.definition ||
+      entry.example !== review.example
+    ) {
+      errors.push(
+        `- ${term}: dictionary definition/example changed; review the mismatch`,
+      );
+    }
+  }
+  if (errors.length) {
+    throw new Error(
+      `IELTS dictionary definition/example review failed:\n${errors.join("\n")}`,
+    );
+  }
+}
+
 function loadLegacyCourse() {
   if (existsSync(OUTPUT_PATH)) {
     const existing = JSON.parse(readFileSync(OUTPUT_PATH, "utf8"));
@@ -1240,6 +1324,7 @@ function main() {
   try {
     const dictionary = dictionaryEntryIndex(getDictionaryRows(db));
     validateDictionarySenseReview(dictionary);
+    validateDictionaryDefinitionReview(dictionary);
     const sortedTerms = [...dictionary.keys()].sort();
     const legacy = loadLegacyCourse();
     const legacyTopics = new Map(
@@ -1383,8 +1468,10 @@ module.exports = {
   applyCourseDefinitionOverrides,
   validateCourseDataAgainstAuthoredOverrides,
   DICTIONARY_SENSE_REVIEW,
+  DICTIONARY_DEFINITION_REVIEW,
   REQUIRED_RELATED_HEADWORDS,
   validateDictionarySenseReview,
+  validateDictionaryDefinitionReview,
   COURSE_DEFINITION_OVERRIDES,
   COURSE_EXAMPLE_OVERRIDES,
 };

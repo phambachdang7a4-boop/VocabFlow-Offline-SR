@@ -2,9 +2,11 @@ const assert = require("node:assert/strict");
 const courseData = require("../domain/ielts-topic-course-data.json");
 const {
   DICTIONARY_SENSE_REVIEW,
+  DICTIONARY_DEFINITION_REVIEW,
   REQUIRED_RELATED_HEADWORDS,
   validateCourseExamples,
   validateCourseDataAgainstAuthoredOverrides,
+  validateDictionaryDefinitionReview,
   validateDictionarySenseReview,
 } = require("./build-ielts-topic-course-data.cjs");
 
@@ -14,6 +16,13 @@ function cloneCourseData() {
 
 validateCourseExamples(courseData.entries);
 validateCourseDataAgainstAuthoredOverrides(courseData);
+
+for (const term of Object.keys(DICTIONARY_DEFINITION_REVIEW)) {
+  assert.ok(
+    courseData.entries[term],
+    `${term} is a useful headword and must remain after its definition is corrected.`,
+  );
+}
 
 for (const term of Object.keys(DICTIONARY_SENSE_REVIEW)) {
   assert.equal(
@@ -43,6 +52,45 @@ assert.throws(
   /plant: dictionary example changed; review its IELTS sense/,
   "A changed source example for a reviewed word must trigger a fresh sense review.",
 );
+
+const reviewedDefinitionDictionary = new Map(
+  Object.entries(DICTIONARY_DEFINITION_REVIEW).map(([term, review]) => [
+    term,
+    { definition: review.definition, example: review.example },
+  ]),
+);
+validateDictionaryDefinitionReview(reviewedDefinitionDictionary);
+for (const [term, review] of Object.entries(DICTIONARY_DEFINITION_REVIEW)) {
+  const changedDefinition = new Map(reviewedDefinitionDictionary);
+  changedDefinition.set(term, {
+    definition: `${review.definition} (changed)`,
+    example: review.example,
+  });
+  assert.throws(
+    () => validateDictionaryDefinitionReview(changedDefinition),
+    new RegExp(`${term}: dictionary definition/example changed`),
+    `${term} must be reviewed again when its source definition changes.`,
+  );
+
+  const changedExample = new Map(reviewedDefinitionDictionary);
+  changedExample.set(term, {
+    definition: review.definition,
+    example: `${review.example} The source sentence changed.`,
+  });
+  assert.throws(
+    () => validateDictionaryDefinitionReview(changedExample),
+    new RegExp(`${term}: dictionary definition/example changed`),
+    `${term} must be reviewed again when its source example changes.`,
+  );
+
+  const removedReviewedHeadword = cloneCourseData();
+  delete removedReviewedHeadword.entries[term];
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(removedReviewedHeadword),
+    new RegExp(`${term}: reviewed headword was removed`),
+    `${term} must remain available when its mismatched definition is corrected.`,
+  );
+}
 
 for (const term of Object.keys(DICTIONARY_SENSE_REVIEW)) {
   const reintroducedMismatch = cloneCourseData();
@@ -115,5 +163,5 @@ assert.throws(
 );
 
 console.log(
-  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} mismatched dictionary senses are excluded, related headwords remain, and authored corrections match the builder.`,
+  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} unrelated dictionary senses are excluded, ${Object.keys(DICTIONARY_DEFINITION_REVIEW).length} definition/example mismatches are corrected without removing headwords, and authored corrections match the builder.`,
 );
