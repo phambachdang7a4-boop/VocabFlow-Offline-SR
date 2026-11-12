@@ -3,10 +3,12 @@ const courseData = require("../domain/ielts-topic-course-data.json");
 const {
   DICTIONARY_SENSE_REVIEW,
   DICTIONARY_DEFINITION_REVIEW,
+  IELTS_SPELLING_CONVENTION,
   RARE_HEADWORD_REVIEW,
   REQUIRED_COMMON_INFLECTIONS,
   REQUIRED_RELATED_HEADWORDS,
   COURSE_POS_OVERRIDES,
+  spellingNoteForTerm,
   validateCourseExamples,
   validateCourseDataAgainstAuthoredOverrides,
   validateDictionaryDefinitionReview,
@@ -19,6 +21,32 @@ function cloneCourseData() {
 
 validateCourseExamples(courseData.entries);
 validateCourseDataAgainstAuthoredOverrides(courseData);
+assert.equal(
+  courseData.spellingConvention,
+  IELTS_SPELLING_CONVENTION,
+  "IELTS lessons must declare British English as the preferred spelling convention.",
+);
+
+const availableCourseTerms = new Set(Object.keys(courseData.entries));
+for (const [term, entry] of Object.entries(courseData.entries)) {
+  const expectedSpellingNote = spellingNoteForTerm(term, availableCourseTerms);
+  assert.equal(
+    entry.spellingNote,
+    expectedSpellingNote,
+    `${term} must clearly label its British/American spelling alternative when a matching form is taught.`,
+  );
+
+  if (expectedSpellingNote) {
+    const unlabelledSpellingVariant = cloneCourseData();
+    delete unlabelledSpellingVariant.entries[term].spellingNote;
+    assert.throws(
+      () =>
+        validateCourseDataAgainstAuthoredOverrides(unlabelledSpellingVariant),
+      new RegExp(`${term}: British/American spelling note changed`),
+      `${term} must trigger review if its spelling alternative is no longer labeled.`,
+    );
+  }
+}
 
 const duplicateTopicTerm = cloneCourseData();
 duplicateTopicTerm.topics[1].terms.push(duplicateTopicTerm.topics[0].terms[0]);

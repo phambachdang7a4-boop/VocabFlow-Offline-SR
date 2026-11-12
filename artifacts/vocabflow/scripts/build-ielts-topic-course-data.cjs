@@ -217,6 +217,82 @@ const TOPICS = [
   },
 ];
 
+const IELTS_SPELLING_CONVENTION =
+  "Ưu tiên chính tả Anh-Anh; các dạng Anh-Mỹ hữu ích được ghi chú là biến thể.";
+
+const SPELLING_VARIANTS = {
+  traveler: { british: "traveller", american: "traveler" },
+  traveling: { british: "travelling", american: "traveling" },
+  traveled: { british: "travelled", american: "traveled" },
+  labor: { british: "labour", american: "labor" },
+  neighborhood: { british: "neighbourhood", american: "neighborhood" },
+  neighborly: { british: "neighbourly", american: "neighborly" },
+  offense: { british: "offence", american: "offense" },
+  theater: { british: "theatre", american: "theater" },
+  program: { british: "programme", american: "program" },
+  aging: { british: "ageing", american: "aging" },
+  fertilization: { british: "fertilisation", american: "fertilization" },
+  industrialization: {
+    british: "industrialisation",
+    american: "industrialization",
+  },
+  industrialisation: {
+    british: "industrialisation",
+    american: "industrialization",
+  },
+  urbanization: { british: "urbanisation", american: "urbanization" },
+  urbanisation: { british: "urbanisation", american: "urbanization" },
+};
+
+const BRITISH_VARIANT_SUFFIXES = [
+  { british: "isation", alternate: "ization" },
+  { british: "ising", alternate: "izing" },
+  { british: "ised", alternate: "ized" },
+  { british: "ise", alternate: "ize" },
+];
+
+function spellingNoteForTerm(term, availableTerms = new Set()) {
+  return spellingNoteForAvailableVariant(term, availableTerms);
+}
+
+function spellingNoteForAvailableVariant(term, availableTerms) {
+  const explicitVariant = SPELLING_VARIANTS[term];
+  if (explicitVariant) {
+    return term === explicitVariant.british
+      ? `US spelling: ${explicitVariant.american}.`
+      : `British spelling: ${explicitVariant.british}.`;
+  }
+
+  for (const { british, alternate } of BRITISH_VARIANT_SUFFIXES) {
+    if (term.endsWith(british)) {
+      const alternateTerm =
+        term.slice(0, -british.length) + alternate;
+      if (availableTerms.has(alternateTerm)) {
+        return `Alternate spelling: ${alternateTerm}.`;
+      }
+    }
+    if (term.endsWith(alternate)) {
+      const britishTerm = term.slice(0, -alternate.length) + british;
+      if (availableTerms.has(britishTerm)) {
+        return `British spelling: ${britishTerm}.`;
+      }
+    }
+  }
+  return undefined;
+}
+
+function applySpellingVariantNotes(entries) {
+  const availableTerms = new Set(Object.keys(entries));
+  for (const [term, entry] of Object.entries(entries)) {
+    const spellingNote = spellingNoteForAvailableVariant(term, availableTerms);
+    if (spellingNote) {
+      entry.spellingNote = spellingNote;
+    } else {
+      delete entry.spellingNote;
+    }
+  }
+}
+
 const COMMON_SUFFIXES = new Set(
   [
     "",
@@ -1164,6 +1240,19 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
   if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
     throw new Error("IELTS course data is missing its entries object.");
   }
+  if (courseData.spellingConvention !== IELTS_SPELLING_CONVENTION) {
+    errors.push("- IELTS British-English spelling convention is missing or changed");
+  }
+  const availableTerms = new Set(Object.keys(entries));
+  for (const [term, entry] of Object.entries(entries)) {
+    const expectedSpellingNote = spellingNoteForAvailableVariant(
+      term,
+      availableTerms,
+    );
+    if (entry.spellingNote !== expectedSpellingNote) {
+      errors.push(`- ${term}: British/American spelling note changed`);
+    }
+  }
 
   const topicByTerm = new Map();
   for (const topic of courseData.topics ?? []) {
@@ -1596,11 +1685,13 @@ function main() {
 
     applyCourseDefinitionOverrides(entries);
     applyCoursePosOverrides(entries);
+    applySpellingVariantNotes(entries);
     validateCourseExamples(entries);
 
     const totalWords = topics.reduce((sum, topic) => sum + topic.words.length, 0);
     const output = {
       generatedFrom: "dictionary_en_vi.db",
+      spellingConvention: IELTS_SPELLING_CONVENTION,
       totalWords,
       topics: topics.map((topic) => ({
         id: topic.id,
@@ -1629,6 +1720,9 @@ if (require.main === module) {
 }
 
 module.exports = {
+  IELTS_SPELLING_CONVENTION,
+  SPELLING_VARIANTS,
+  spellingNoteForTerm,
   containsHeadword,
   hasSentenceTemplatePlaceholder,
   usableExample,

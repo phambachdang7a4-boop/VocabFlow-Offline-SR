@@ -30,6 +30,7 @@ import {
   IELTS_TOPIC_COURSE_ENTRIES,
   IELTS_TOPIC_COURSE_ID,
   IELTS_TOPIC_COURSE_LESSONS,
+  IELTS_TOPIC_COURSE_SPELLING_CONVENTION,
   IELTS_TOPIC_COURSE_TITLE,
   IELTS_TOPIC_COURSE_WORD_COUNT,
   IELTS_TOPIC_WORD_LIST,
@@ -72,6 +73,7 @@ type CourseAnswer = {
   definition: string;
   example: string;
   exampleTranslation?: string;
+  spellingNote?: string;
 };
 
 type CourseCatalogItem = {
@@ -122,7 +124,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: IELTS_TOPIC_COURSE_ID,
     title: IELTS_TOPIC_COURSE_TITLE,
     description:
-      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS, chia thành những bài học vừa sức.`,
+      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS, chia thành những bài học vừa sức. ${IELTS_TOPIC_COURSE_SPELLING_CONVENTION}`,
     lessons: IELTS_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
     icon: "globe",
@@ -785,6 +787,17 @@ function QuestionView({
           <Text style={[styles.feedbackExample, { color: c.foreground }]}>
             {answer.example}
           </Text>
+          {answer.spellingNote ? (
+            <Text
+              testID={`${testIdPrefix}-spelling-note`}
+              style={[
+                styles.feedbackTranslation,
+                { color: c.mutedForeground },
+              ]}
+            >
+              {answer.spellingNote}
+            </Text>
+          ) : null}
           {answer.exampleTranslation ? (
             <Text
               style={[

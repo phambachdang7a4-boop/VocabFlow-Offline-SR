@@ -24,9 +24,11 @@ export interface IeltsTopicCourseEntry {
   partOfSpeech: string;
   posGroup: string;
   family: string;
+  spellingNote?: string;
 }
 
 interface IeltsTopicCourseData {
+  spellingConvention: string;
   totalWords: number;
   topics: {
     id: string;
@@ -47,6 +49,8 @@ const data = courseData as IeltsTopicCourseData;
 
 export const IELTS_TOPIC_COURSE_ID = "ielts-topic-vocabulary-v1";
 export const IELTS_TOPIC_COURSE_TITLE = "Từ vựng IELTS theo chủ đề";
+export const IELTS_TOPIC_COURSE_SPELLING_CONVENTION =
+  data.spellingConvention;
 export const IELTS_TOPIC_COURSE_WORD_COUNT = data.totalWords;
 export const IELTS_TOPIC_COURSE_ENTRIES: Readonly<
   Record<string, IeltsTopicCourseEntry>
