@@ -4,12 +4,15 @@ import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useColors } from "@/hooks/useColors";
@@ -32,6 +35,14 @@ export function calendarLabel(day: string) {
 type Outcome =
   { action: "grade"; correct: boolean; typed: string } | { action: "freeze" };
 type Phase = "answering" | "saving" | "saved" | "failed";
+const REPORT_REASONS = [
+  { id: "meaning", label: "Sai nghĩa" },
+  { id: "example", label: "Ví dụ chưa đúng" },
+  { id: "spelling", label: "Lỗi chính tả" },
+  { id: "pronunciation", label: "Phiên âm / phát âm" },
+  { id: "other", label: "Khác" },
+] as const;
+type ReportReason = (typeof REPORT_REASONS)[number]["id"];
 
 export interface ReviewCardProps {
   /** Snapshot of the word captured when the question opened; never swapped mid-question. */
@@ -69,6 +80,11 @@ export function ReviewCard({
   const [freezeBusy, setFreezeBusy] = useState(false);
   const [freezeError, setFreezeError] = useState<string | null>(null);
   const [frozenAfterAnswer, setFrozenAfterAnswer] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState<ReportReason | null>(null);
+  const [reportNote, setReportNote] = useState("");
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportSharing, setReportSharing] = useState(false);
   const lock = useRef(false);
   const inFlight = useRef(false);
   const outcomeRef = useRef<Outcome | null>(null);
@@ -228,6 +244,46 @@ export function ReviewCard({
         );
     } finally {
       if (mounted.current) setFreezeBusy(false);
+    }
+  };
+  const shareWordReport = async () => {
+    if (!reportReason || reportSharing) return;
+    const reasonLabel =
+      REPORT_REASONS.find((reason) => reason.id === reportReason)?.label ??
+      "Khác";
+    setReportSharing(true);
+    setReportError(null);
+    try {
+      const message = [
+        "Báo lỗi từ VocabFlow",
+        `Từ: ${word.term}`,
+        `Loại lỗi: ${reasonLabel}`,
+        word.meaning ? `Nghĩa hiện tại: ${word.meaning}` : "",
+        word.ipa ? `Phiên âm: ${word.ipa}` : "",
+        word.example ? `Câu ví dụ: ${word.example}` : "",
+        word.dictionaryEntryId
+          ? `Mã mục từ điển: ${word.dictionaryEntryId}`
+          : "",
+        word.dictionarySenseId
+          ? `Mã nghĩa từ điển: ${word.dictionarySenseId}`
+          : "",
+        reportNote.trim() ? `Ghi chú: ${reportNote.trim()}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+      const result = await Share.share({
+        title: `Báo lỗi từ ${word.term}`,
+        message,
+      });
+      if (result.action !== Share.dismissedAction) {
+        setReportDialogOpen(false);
+        setReportReason(null);
+        setReportNote("");
+      }
+    } catch {
+      setReportError("Không mở được bảng chia sẻ. Bạn thử lại nhé.");
+    } finally {
+      setReportSharing(false);
     }
   };
 
@@ -615,55 +671,93 @@ export function ReviewCard({
                         : "Đã đánh dấu chưa thuộc"}
                   </Text>
                 </View>
-                <Pressable
-                  testID="review-result-freeze"
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    frozenAfterAnswer ? "Từ đã đóng băng" : "Đóng băng từ này"
-                  }
-                  accessibilityState={{
-                    disabled:
-                      blocked ||
-                      phase !== "saved" ||
-                      freezeBusy ||
-                      frozenAfterAnswer,
-                  }}
-                  onPress={() => setFreezeDialogOpen(true)}
-                  disabled={
-                    blocked ||
-                    phase !== "saved" ||
-                    freezeBusy ||
-                    frozenAfterAnswer
-                  }
-                  hitSlop={8}
-                  style={({ pressed }) => [
-                    styles.resultFreezePressable,
-                    {
-                      opacity:
+                <View testID="review-result-actions" style={styles.resultActions}>
+                  <Pressable
+                    testID="review-result-freeze"
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      frozenAfterAnswer ? "Từ đã đóng băng" : "Đóng băng từ này"
+                    }
+                    accessibilityState={{
+                      disabled:
                         blocked ||
                         phase !== "saved" ||
                         freezeBusy ||
-                        frozenAfterAnswer
-                          ? 0.45
-                          : pressed
-                            ? 0.65
-                            : 1,
-                    },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.resultFreezeCircle,
-                      { borderColor: c.border },
+                        frozenAfterAnswer,
+                    }}
+                    onPress={() => setFreezeDialogOpen(true)}
+                    disabled={
+                      blocked ||
+                      phase !== "saved" ||
+                      freezeBusy ||
+                      frozenAfterAnswer
+                    }
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                      styles.resultFreezePressable,
+                      {
+                        opacity:
+                          blocked ||
+                          phase !== "saved" ||
+                          freezeBusy ||
+                          frozenAfterAnswer
+                            ? 0.45
+                            : pressed
+                              ? 0.65
+                              : 1,
+                      },
                     ]}
                   >
-                    <MaterialCommunityIcons
-                      name="snowflake"
-                      size={20}
-                      color={frozenAfterAnswer ? c.success : c.primary}
-                    />
-                  </View>
-                </Pressable>
+                    <View
+                      style={[
+                        styles.resultFreezeCircle,
+                        { borderColor: c.border },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name="snowflake"
+                        size={20}
+                        color={frozenAfterAnswer ? c.success : c.primary}
+                      />
+                    </View>
+                  </Pressable>
+                  <Pressable
+                    testID="review-result-report"
+                    accessibilityRole="button"
+                    accessibilityLabel="Báo lỗi từ này"
+                    accessibilityState={{
+                      disabled: blocked || phase !== "saved",
+                    }}
+                    onPress={() => {
+                      setReportError(null);
+                      setReportReason(null);
+                      setReportNote("");
+                      setReportDialogOpen(true);
+                    }}
+                    disabled={blocked || phase !== "saved"}
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                      styles.resultFreezePressable,
+                      {
+                        opacity:
+                          blocked || phase !== "saved"
+                            ? 0.45
+                            : pressed
+                              ? 0.65
+                              : 1,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.resultFreezeCircle,
+                        { borderColor: c.border },
+                      ]}
+                    >
+                      <Feather name="flag" size={18} color={c.primary} />
+                    </View>
+                  </Pressable>
+                </View>
               </View>
               <Text style={[styles.small, { color: c.mutedForeground }]}>
                 Đáp án
@@ -897,6 +991,126 @@ export function ReviewCard({
           </View>
         </Modal>
       ) : null}
+      {reportDialogOpen ? (
+        <Modal
+          visible
+          transparent
+          animationType="fade"
+          onRequestClose={() => setReportDialogOpen(false)}
+        >
+          <KeyboardAvoidingView
+            style={[styles.reportModalOverlay, { backgroundColor: c.overlay }]}
+            behavior="padding"
+            keyboardVerticalOffset={0}
+          >
+            <ScrollView
+              contentContainerStyle={styles.reportScrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View
+                testID="review-report-dialog"
+                style={[
+                  styles.reportDialog,
+                  { backgroundColor: c.card, borderColor: c.border },
+                ]}
+              >
+                <View style={styles.reportHeading}>
+                  <View style={[styles.reportIcon, { backgroundColor: c.accent }]}>
+                    <Feather name="flag" size={19} color={c.accentForeground} />
+                  </View>
+                  <View style={styles.reportHeadingText}>
+                    <Text style={[styles.freezeDialogTitle, { color: c.foreground }]}>
+                      Báo lỗi từ này
+                    </Text>
+                    <Text style={[styles.reportTerm, { color: c.primary }]}>
+                      {word.term}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.reportPrompt, { color: c.mutedForeground }]}>
+                  Bạn gặp vấn đề gì? Báo cáo sẽ kèm nghĩa và câu ví dụ để dễ kiểm tra.
+                </Text>
+                <View style={styles.reportReasons}>
+                  {REPORT_REASONS.map((reason) => {
+                    const selected = reportReason === reason.id;
+                    return (
+                      <Pressable
+                        key={reason.id}
+                        testID={`review-report-reason-${reason.id}`}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        onPress={() => setReportReason(reason.id)}
+                        style={[
+                          styles.reportReason,
+                          {
+                            backgroundColor: selected ? c.accentSoft : c.background,
+                            borderColor: selected ? c.primary : c.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.reportReasonText,
+                            { color: selected ? c.primary : c.foreground },
+                          ]}
+                        >
+                          {reason.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <TextInput
+                  testID="review-report-note"
+                  value={reportNote}
+                  onChangeText={setReportNote}
+                  placeholder="Ghi chú thêm (không bắt buộc)"
+                  placeholderTextColor={c.mutedForeground}
+                  maxLength={400}
+                  multiline
+                  textAlignVertical="top"
+                  style={[
+                    styles.reportNote,
+                    {
+                      backgroundColor: c.background,
+                      borderColor: c.border,
+                      color: c.foreground,
+                    },
+                  ]}
+                />
+                <Text style={[styles.reportShareHint, { color: c.mutedForeground }]}>
+                  Chọn email hoặc ứng dụng nhắn tin trong bảng chia sẻ của điện thoại.
+                </Text>
+                {reportError ? (
+                  <Text testID="review-report-error" style={[styles.freezeDialogMessage, { color: c.destructive }]}>
+                    {reportError}
+                  </Text>
+                ) : null}
+                <View style={styles.freezeDialogActions}>
+                  <Button
+                    testID="review-report-cancel"
+                    label="Hủy"
+                    variant="ghost"
+                    onPress={() => setReportDialogOpen(false)}
+                    disabled={reportSharing}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    testID="review-report-share"
+                    label="Chia sẻ báo cáo"
+                    icon="share-2"
+                    onPress={() => void shareWordReport()}
+                    disabled={!reportReason || reportSharing}
+                    loading={reportSharing}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </Modal>
+      ) : null}
     </View>
   );
 }
@@ -1060,6 +1274,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   resultStatus: { flex: 1 },
+  resultActions: { flexDirection: "row", alignItems: "center", gap: 7 },
   resultFreezePressable: { padding: 2 },
   resultFreezeCircle: {
     width: 38,
@@ -1081,6 +1296,53 @@ const styles = StyleSheet.create({
   freezeDialogTitle: { fontFamily: F.b, fontSize: 19 },
   freezeDialogMessage: { fontFamily: F.r, fontSize: 15, lineHeight: 22 },
   freezeDialogActions: { flexDirection: "row", gap: 10, marginTop: 8 },
+  reportModalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  reportScrollContent: { flexGrow: 1, justifyContent: "center", paddingVertical: 20 },
+  reportDialog: {
+    alignSelf: "center",
+    width: "100%",
+    maxWidth: 480,
+    gap: 13,
+    padding: 20,
+    borderWidth: 1,
+    borderRadius: 22,
+  },
+  reportHeading: { flexDirection: "row", alignItems: "center", gap: 11 },
+  reportHeadingText: { flex: 1, gap: 3 },
+  reportIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reportTerm: { fontFamily: F.s, fontSize: 14 },
+  reportPrompt: { fontFamily: F.r, fontSize: 13, lineHeight: 19 },
+  reportReasons: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  reportReason: {
+    width: "48%",
+    minHeight: 42,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderRadius: 13,
+  },
+  reportReasonText: { fontFamily: F.s, fontSize: 12, lineHeight: 17 },
+  reportNote: {
+    minHeight: 82,
+    maxHeight: 132,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    fontFamily: F.r,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  reportShareHint: { fontFamily: F.r, fontSize: 11, lineHeight: 16 },
   resultTitle: { fontFamily: F.b, fontSize: 17 },
   answer: { fontFamily: F.b, fontSize: 26 },
   actions: { gap: 12 },

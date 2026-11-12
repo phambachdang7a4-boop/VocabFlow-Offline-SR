@@ -28,6 +28,15 @@ function mount(file, properties = {}, initial = {}) {
   const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const speechCalls = [];
+  const shareCalls = [];
+  native.Share = {
+    share: async content => {
+      shareCalls.push(content);
+      return { action: 'sharedAction' };
+    },
+    sharedAction: 'sharedAction',
+    dismissedAction: 'dismissedAction',
+  };
   const comboRewardCalls = [];
   const sessionResultCalls = [];
   const speechContext = {
@@ -63,6 +72,7 @@ function mount(file, properties = {}, initial = {}) {
   const calendarLabel = day => day.split('-').reverse().join('/');
   const loaded = loadTs(join(__dirname, file), {
     react: { ...react, default: react }, 'react-native': native,
+    'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
     '@expo/vector-icons': { Feather: 'Feather', MaterialCommunityIcons: 'MaterialCommunityIcons' },
     'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; }, useNavigation: () => navigation },
     'expo-crypto': { randomUUID: () => 'review-session-test' },
@@ -110,6 +120,7 @@ function mount(file, properties = {}, initial = {}) {
     routes,
     tabOptions,
     speechCalls,
+    shareCalls,
     comboRewardCalls,
     sessionResultCalls,
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
@@ -406,6 +417,21 @@ async function startReview(screen) {
   assert.ok(find(sentenceCard.byId('review-result'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
   'Show the dictionary example in the word information after a multiple-choice answer.');
+  assert.ok(sentenceCard.byId('review-result-actions'));
+  sentenceCard.byId('review-result-report').props.onPress();
+  assert.ok(sentenceCard.byId('review-report-dialog'));
+  sentenceCard.byId('review-report-reason-example').props.onPress();
+  sentenceCard.byId('review-report-note').props.onChangeText('The example does not match this meaning.');
+  sentenceCard.byId('review-report-share').props.onPress();
+  await sentenceCard.settle();
+  assert.equal(sentenceCard.shareCalls.length, 1);
+  assert.match(sentenceCard.shareCalls[0].message, /Từ: test/u);
+  assert.match(sentenceCard.shareCalls[0].message, /Loại lỗi: Ví dụ chưa đúng/u);
+  assert.match(sentenceCard.shareCalls[0].message, /Nghĩa hiện tại: kiểm thử/u);
+  assert.match(sentenceCard.shareCalls[0].message, /Câu ví dụ: They test it\./u);
+  assert.match(sentenceCard.shareCalls[0].message, /Ghi chú: The example does not match this meaning\./u);
+  assert.equal(sentenceCard.byId('review-report-dialog'), undefined,
+    'Close the report form after opening the native share sheet.');
   sentenceCard.byId('review-result-speak-word').props.onPress();
   assert.deepEqual(sentenceCard.speechCalls, ['test', 'test'],
     'Keep a manual pronunciation control beside the phonetic transcription.');
