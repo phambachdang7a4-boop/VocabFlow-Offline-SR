@@ -982,6 +982,22 @@ const COURSE_POS_OVERRIDES = {
     partOfSpeech: "V",
     sourceExample: "The answer was computed correctly.",
   },
+  exercise: {
+    partOfSpeech: "V",
+    sourceExample: "You may exercise your right to speak freely.",
+  },
+  press: {
+    partOfSpeech: "V",
+    sourceExample: "Please press the button to start the machine.",
+  },
+  solarize: {
+    partOfSpeech: "V",
+    sourceExample: "Too much light can solarize a photo.",
+  },
+  neighbor: {
+    partOfSpeech: "N",
+    sourceExample: "The house neighbor helps us with repairs.",
+  },
 };
 
 const POS_GROUPS = {

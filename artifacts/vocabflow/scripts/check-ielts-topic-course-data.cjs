@@ -193,16 +193,20 @@ assert.doesNotThrow(
     ]),
   "Another dictionary example must not invalidate a still-present reviewed source sentence.",
 );
-const changedPosSourceExample = reviewedPosDictionaryRows.map((row) =>
-  row.word === "flooding"
-    ? { ...row, example: "The flooding damaged many homes." }
-    : row,
-);
-assert.throws(
-  () => validateDictionaryPosReview(changedPosSourceExample),
-  /flooding: dictionary example changed; review its lesson part-of-speech label/,
-  "A changed dictionary example must require a fresh lesson-label review.",
-);
+for (const [term, review] of Object.entries(COURSE_POS_OVERRIDES)) {
+  const changedPosSourceExample = reviewedPosDictionaryRows.map((row) =>
+    row.word === term
+      ? { ...row, example: `${review.sourceExample} Changed.` }
+      : row,
+  );
+  assert.throws(
+    () => validateDictionaryPosReview(changedPosSourceExample),
+    new RegExp(
+      `${term}: dictionary example changed; review its lesson part-of-speech label`,
+    ),
+    `${term} must require a fresh lesson-label review if its dictionary example changes.`,
+  );
+}
 for (const term of REQUIRED_RELATED_HEADWORDS) {
   assert.ok(
     courseData.entries[term],
