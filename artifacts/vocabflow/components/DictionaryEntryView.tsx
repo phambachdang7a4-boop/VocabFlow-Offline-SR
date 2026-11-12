@@ -20,6 +20,7 @@ import { getDictionaryEntry } from "@/data/dictionary";
 import {
   dictionaryDraft,
   exampleSegments,
+  pronunciationAccent,
   sameWordSense,
   type DictionaryEntry,
   type DictionaryPartOfSpeech,
@@ -323,6 +324,13 @@ export function DictionaryEntryView({
 
   const openWord = (wordId: number) =>
     router.push({ pathname: "/word", params: { id: String(wordId) } });
+  const accentPronunciations = {
+    us: entry.pronunciations.filter((p) => pronunciationAccent(p.region) === "us"),
+    uk: entry.pronunciations.filter((p) => pronunciationAccent(p.region) === "uk"),
+  };
+  const otherPronunciations = entry.pronunciations.filter(
+    (p) => pronunciationAccent(p.region) === null,
+  );
 
   const header = (
     <View style={{ gap: 14, marginBottom: 8 }}>
@@ -359,7 +367,31 @@ export function DictionaryEntryView({
             <Feather name="volume-2" size={23} color={c.dictHead} />
           </Pressable>
         </View>
-        {entry.pronunciations.map((p, i) => (
+        {(["us", "uk"] as const).map((accent) => (
+          <View
+            key={accent}
+            testID={`entry-pronunciation-${accent}`}
+            style={styles.ipaRow}
+          >
+            <Text style={[styles.region, { color: c.dictMuted }]}>
+              {accent === "us" ? "Anh-Mỹ" : "Anh-Anh"}
+            </Text>
+            <Text
+              testID={`entry-ipa-${accent}`}
+              style={[styles.ipa, { color: c.dictInk }]}
+              selectable
+            >
+              {[
+                ...new Set(
+                  accentPronunciations[accent]
+                    .map((p) => p.ipa.trim())
+                    .filter(Boolean),
+                ),
+              ].join(" · ")}
+            </Text>
+          </View>
+        ))}
+        {otherPronunciations.map((p, i) => (
           <View key={`${p.ipa}-${i}`} style={styles.ipaRow}>
             {p.region ? (
               <Text style={[styles.region, { color: c.dictMuted }]}>

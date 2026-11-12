@@ -5,7 +5,7 @@ const { loadTs, loadDictionaryDomain } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const dictionaryDomain = loadDictionaryDomain();
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
-const { exampleSegments } = dictionaryDomain;
+const { exampleSegments, pronunciationAccent } = dictionaryDomain;
 const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
 const dictionaryTabSource = readFileSync(join(__dirname, '../app/(tabs)/dictionary.tsx'), 'utf8');
 const dictionarySourcesSource = readFileSync(join(__dirname, '../app/dictionary-sources.tsx'), 'utf8');
@@ -34,6 +34,11 @@ for (const [sentence, term, expected] of [
   assert.equal(segments.map(part => part.text).join(''), sentence);
   assert.deepEqual(segments.filter(part => part.underline).map(part => part.text), expected);
 }
+assert.equal(pronunciationAccent('BrE'), 'uk');
+assert.equal(pronunciationAccent('Received-Pronunciation'), 'uk');
+assert.equal(pronunciationAccent('NAmE'), 'us');
+assert.equal(pronunciationAccent('General-American'), 'us');
+assert.equal(pronunciationAccent(null), null);
 const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator', 'Image'].map(key => [key, key]));
 Object.assign(native, { Platform: { OS: 'web' }, StyleSheet: { create: value => value }, Keyboard: { dismiss() {} } });
 const normalizeTerm = value => value.trim().toLowerCase();
@@ -265,6 +270,10 @@ function mount(file, services, personalWords = [], properties = {}) {
     saveWord: input => new Promise(resolve => { writes.push(input); completeWrite = resolve; }),
   });
   await direct.settle();
+  assert.equal(find(header(direct), node => node.props?.testID === 'entry-ipa-us').props.children.join(''), '',
+    'Leave the American IPA field blank when the dictionary has no American variant.');
+  assert.equal(find(header(direct), node => node.props?.testID === 'entry-ipa-uk').props.children.join(''), '',
+    'Leave the British IPA field blank when the dictionary has no British variant.');
   const press9 = btn(direct, entry.senses[1], 1).props.onPress;
   press9(); press9(); btn(direct, entry.senses[0]).props.onPress();
   assert.equal(writes.length, 1, 'Pending write lock prevents duplicate taps');
@@ -279,6 +288,19 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.equal(writes.length, 2);
   assert.deepEqual(writes.map(w => [w.dictionaryEntryId, w.dictionarySenseId]), [[42, 9], [42, 7]]);
   assert.deepEqual(direct.routes, []);
+  const regional = mount('../components/DictionaryEntryView.tsx', {
+    getDictionaryEntry: async () => ({
+      ...entry,
+      pronunciations: [
+        { ipa: '/wɜːrk/', region: 'NAmE' },
+        { ipa: '/wɜːk/', region: 'BrE' },
+      ],
+    }),
+    saveWord: async () => {},
+  });
+  await regional.settle();
+  assert.equal(find(header(regional), node => node.props?.testID === 'entry-ipa-us').props.children.join(''), '/wɜːrk/');
+  assert.equal(find(header(regional), node => node.props?.testID === 'entry-ipa-uk').props.children.join(''), '/wɜːk/');
   let failures = 0;
   const retrySave = mount('../components/DictionaryEntryView.tsx', {
     getDictionaryEntry: async () => entry,

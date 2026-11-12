@@ -18,6 +18,13 @@ export interface DictionaryMatch { id: number; term: string; meaning: string }
 export interface DictionarySuggestion { id: number; term: string }
 export interface DictionarySense { id: number; definition: string; pos: string | null; subPos: string | null; example: string | null }
 export interface DictionaryPronunciation { ipa: string; region: string | null }
+export type PronunciationAccent = 'us' | 'uk';
+export function pronunciationAccent(region: string | null): PronunciationAccent | null {
+  const normalized = (region ?? '').trim().toLowerCase().replace(/[^a-z]/g, '');
+  if (['us', 'name', 'generalamerican', 'american'].includes(normalized)) return 'us';
+  if (['uk', 'bre', 'receivedpronunciation', 'british'].includes(normalized)) return 'uk';
+  return null;
+}
 export const DICTIONARY_PARTS = [
   { id: 'verb', label: 'Verb', codes: ['v', 'verb', 'vt', 'vi'] },
   { id: 'noun', label: 'Noun', codes: ['n', 'noun'] },
