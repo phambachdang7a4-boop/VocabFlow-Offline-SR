@@ -6,6 +6,7 @@ const {
   RARE_HEADWORD_REVIEW,
   REQUIRED_COMMON_INFLECTIONS,
   REQUIRED_RELATED_HEADWORDS,
+  COURSE_POS_OVERRIDES,
   validateCourseExamples,
   validateCourseDataAgainstAuthoredOverrides,
   validateDictionaryDefinitionReview,
@@ -18,6 +19,37 @@ function cloneCourseData() {
 
 validateCourseExamples(courseData.entries);
 validateCourseDataAgainstAuthoredOverrides(courseData);
+
+for (const [term, expectedPartOfSpeech] of Object.entries(
+  COURSE_POS_OVERRIDES,
+)) {
+  assert.ok(
+    courseData.entries[term],
+    `${term} is a useful reviewed headword and must remain in the course.`,
+  );
+  assert.equal(
+    courseData.entries[term].partOfSpeech,
+    expectedPartOfSpeech,
+    `${term} must keep the part-of-speech label supported by its lesson example.`,
+  );
+
+  const changedLessonLabel = cloneCourseData();
+  changedLessonLabel.entries[term].partOfSpeech =
+    expectedPartOfSpeech === "N" ? "V" : "N";
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(changedLessonLabel),
+    new RegExp(`${term}: reviewed lesson part-of-speech label changed`),
+    `${term} must trigger review if its lesson label changes.`,
+  );
+
+  const removedReviewedHeadword = cloneCourseData();
+  delete removedReviewedHeadword.entries[term];
+  assert.throws(
+    () => validateCourseDataAgainstAuthoredOverrides(removedReviewedHeadword),
+    new RegExp(`${term}: reviewed headword was removed`),
+    `${term} must remain available after its lesson label is corrected.`,
+  );
+}
 
 const courseTopicTerms = new Set(
   courseData.topics.flatMap((topic) => topic.terms),

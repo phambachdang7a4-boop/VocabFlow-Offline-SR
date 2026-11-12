@@ -891,6 +891,14 @@ const CURATED_TOPIC_ENTRIES = {
   },
 };
 
+// Review the displayed label against how the headword is used in its lesson
+// example. Keep the dictionary word; only correct its lesson-specific POS.
+const COURSE_POS_OVERRIDES = {
+  schools: "N",
+  flooding: "N",
+  computed: "V",
+};
+
 const POS_GROUPS = {
   n: "noun",
   noun: "noun",
@@ -1138,12 +1146,39 @@ function applyCourseDefinitionOverrides(entries) {
   }
 }
 
+function applyCoursePosOverrides(entries) {
+  for (const [term, partOfSpeech] of Object.entries(COURSE_POS_OVERRIDES)) {
+    const entry = entries[term];
+    if (!entry) {
+      throw new Error(`Không tìm thấy từ để áp dụng nhãn từ loại IELTS đã xem xét: ${term}`);
+    }
+    entry.partOfSpeech = partOfSpeech;
+    entry.posGroup = normalizePos(partOfSpeech);
+  }
+}
+
 function validateCourseDataAgainstAuthoredOverrides(courseData) {
   const entries = courseData?.entries;
   const errors = [];
 
   if (!entries || typeof entries !== "object" || Array.isArray(entries)) {
     throw new Error("IELTS course data is missing its entries object.");
+  }
+
+  for (const [term, expectedPartOfSpeech] of Object.entries(
+    COURSE_POS_OVERRIDES,
+  )) {
+    const entry = entries[term];
+    if (!entry) {
+      errors.push(`- ${term}: reviewed headword was removed`);
+      continue;
+    }
+    if (
+      entry.partOfSpeech !== expectedPartOfSpeech ||
+      entry.posGroup !== normalizePos(expectedPartOfSpeech)
+    ) {
+      errors.push(`- ${term}: reviewed lesson part-of-speech label changed`);
+    }
   }
 
   for (const term of Object.keys(DICTIONARY_SENSE_REVIEW)) {
@@ -1545,6 +1580,7 @@ function main() {
     }
 
     applyCourseDefinitionOverrides(entries);
+    applyCoursePosOverrides(entries);
     validateCourseExamples(entries);
 
     const totalWords = topics.reduce((sum, topic) => sum + topic.words.length, 0);
@@ -1593,4 +1629,6 @@ module.exports = {
   validateDictionaryDefinitionReview,
   COURSE_DEFINITION_OVERRIDES,
   COURSE_EXAMPLE_OVERRIDES,
+  COURSE_POS_OVERRIDES,
+  applyCoursePosOverrides,
 };
