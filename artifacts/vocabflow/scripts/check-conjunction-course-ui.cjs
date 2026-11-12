@@ -103,6 +103,7 @@ function mount() {
     "@/domain/toeic-topic-course": toeicTopicDomain,
     "@/domain/idiom-course": idiomCourseDomain,
     "../../assets/images/corvi-app-icon.png": "corvi-avatar-asset",
+    "../../assets/images/pan-avatar.png": "pan-avatar-asset",
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
@@ -179,6 +180,23 @@ function mount() {
     [idiomQuestion.prompt],
   );
   assert.equal(screen.byId("idioms-dialogue-corvi-avatar").props.source, "corvi-avatar-asset");
+  assert.equal(screen.byId("idioms-dialogue-pan-avatar").props.source, "pan-avatar-asset");
+  assert.equal(
+    screen.byId("idioms-dialogue-corvi-avatar").props.style[0].borderRadius,
+    20,
+    "Corvi uses a circular avatar.",
+  );
+  assert.equal(
+    screen.byId("idioms-dialogue-pan-avatar").props.style[0].borderRadius,
+    20,
+    "Pan uses a circular avatar.",
+  );
+  assert.ok(
+    find(screen.byId("idioms-dialogue-reply"), (node) =>
+      node.type === "Text" && String(node.props?.children ?? "") === "Pan",
+    ),
+    "Pan speaks the line with the missing idiom.",
+  );
   assert.ok(screen.byId("idioms-dialogue"));
   screen.byId(`idioms-choice-${idiomQuestion.term}`).props.onPress();
   assert.ok(screen.byId("idioms-answer-feedback"));
@@ -267,6 +285,17 @@ function mount() {
     );
     screen.byId(`toeic-choice-${question.term}`).props.onPress();
     assert.ok(screen.byId("toeic-answer-feedback"));
+    const toeicTranslation =
+      toeicTopicDomain.TOEIC_TOPIC_COURSE_ENTRIES[question.term]
+        .exampleTranslation;
+    assert.ok(toeicTranslation.trim());
+    assert.ok(
+      find(
+        screen.byId("toeic-answer-feedback"),
+        (node) => node.props?.children?.includes?.(toeicTranslation),
+      ),
+      "TOEIC answer feedback shows the Vietnamese example translation.",
+    );
     screen.byId("toeic-next").props.onPress();
     await screen.settle();
   }

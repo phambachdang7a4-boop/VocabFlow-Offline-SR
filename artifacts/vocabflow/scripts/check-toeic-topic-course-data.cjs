@@ -5,6 +5,7 @@ const {
   TOEIC_SPELLING_CONVENTION,
   applyToeicSpellingLabels,
   validateToeicSpellingData,
+  validateToeicExampleTranslations,
 } = require("./build-toeic-topic-course-data.cjs");
 
 const data = JSON.parse(
@@ -12,7 +13,27 @@ const data = JSON.parse(
 );
 
 validateToeicSpellingData(data);
+validateToeicExampleTranslations(data);
 assert.equal(data.spellingConvention, TOEIC_SPELLING_CONVENTION);
+for (const [term, entry] of Object.entries(data.entries)) {
+  assert.ok(entry.example.trim(), `${term} has an English example.`);
+  assert.ok(
+    entry.exampleTranslation.trim(),
+    `${term} has a Vietnamese example translation.`,
+  );
+  assert.notEqual(
+    entry.exampleTranslation.trim(),
+    entry.example.trim(),
+    `${term} keeps the example and translation separate.`,
+  );
+}
+const missingTranslation = structuredClone(data);
+missingTranslation.entries.office.exampleTranslation = "";
+assert.throws(
+  () => validateToeicExampleTranslations(missingTranslation),
+  /office: missing Vietnamese example translation/,
+  "The TOEIC data check must reject a missing example translation.",
+);
 
 for (const [american, british] of [
   ["traveling", "travelling"],

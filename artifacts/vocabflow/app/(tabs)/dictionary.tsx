@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -52,6 +52,73 @@ const CORVI_CHOICES: CorviChoice[] = [
   { action: 'recommend', label: 'Gợi ý một từ mới', icon: 'bookmark', testID: 'dictionary-corvi-choice-recommend' },
 ];
 
+const GUIDE_PAGES = [
+  {
+    eyebrow: 'BẮT ĐẦU',
+    title: 'Học theo nhịp của bạn',
+    intro: 'VocabFlow kết hợp tra từ, học theo chủ đề và ôn lại từ đã lưu. Sau khi cài tài nguyên, bạn có thể học ngoại tuyến.',
+    sections: [
+      ['Bắt đầu bằng ngữ cảnh', 'Đọc một câu hoặc đoạn ngắn, đánh dấu từ chưa biết và thử đoán nghĩa trước khi tra.'],
+      ['Học vừa sức', 'Chọn vài từ hữu ích, lưu đúng nghĩa rồi quay lại tự nhớ trong những lượt ôn sau.'],
+    ],
+  },
+  {
+    eyebrow: 'NĂM Ô Ở THANH DƯỚI',
+    title: 'Mỗi ô có một nhiệm vụ',
+    intro: 'Các mục bổ trợ cho nhau; bạn có thể chuyển qua lại mà không cần học theo một lộ trình cứng.',
+    sections: [
+      ['Thư Viện', 'Tra từ Anh–Việt, xem nghĩa, phiên âm và ví dụ; chọn nghĩa phù hợp rồi lưu vào Sổ từ.'],
+      ['Khóa học', 'Học theo chủ đề và bài học. Khóa Idioms luyện thành ngữ bằng câu thoại có chỗ trống.'],
+      ['Ôn tập', 'Tự nhớ từ đã đến hạn. Câu trả lời đúng hoặc sai sẽ cập nhật cấp ôn theo lịch của app.'],
+      ['Sổ từ', 'Tìm từ đã lưu, lọc theo cấp ôn, đóng băng để tạm ẩn khỏi lượt ôn hoặc xóa từ không cần nữa.'],
+      ['Nhiệm Vụ', 'Theo dõi mục tiêu trong ngày, mở rương nhận thưởng và xem mảnh tranh trong Bộ Sưu Tập.'],
+      ['Corvi', 'Chạm vào quản gia trong Thư Viện để mở lựa chọn tra từ, dùng Mắt Quạ, ôn tập, xin gợi ý từ mới hoặc đọc hướng dẫn.'],
+    ],
+  },
+  {
+    eyebrow: 'ĐỌC, ĐOÁN, TRA TỪ',
+    title: 'Học từ trong ngữ cảnh',
+    intro: 'Đọc đoạn ngắn: “After class, Mina missed the last bus. She walked home beneath the streetlights, carrying a book from the library.”',
+    sections: [
+      ['1 · Đọc và đoán', 'Mina đi bộ về nhà beneath the streetlights. Dựa vào cảnh này, thử đoán beneath có nghĩa là “ở dưới”.'],
+      ['2 · Tra trong Thư Viện', 'Tìm beneath, đọc các nghĩa và ví dụ, rồi chọn nghĩa phù hợp với câu đang đọc.'],
+      ['3 · Dùng Mắt Quạ', 'Dán văn bản hoặc chọn tệp TXT để trích những từ có trong từ điển offline. Mắt Quạ không dịch cả câu.'],
+      ['4 · Lưu và gặp lại', 'Lưu nghĩa bạn chọn vào Sổ từ. Mở Ôn tập khi từ đến hạn để tự nhớ lại thay vì chỉ đọc lại đáp án.'],
+    ],
+  },
+  {
+    eyebrow: 'CÁCH ÔN CỦA VOCABFLOW',
+    title: 'Lặp lại ngắt quãng',
+    intro: 'Thay vì xem lại mọi từ mỗi ngày, bạn tự nhớ lại từ sau những khoảng cách tăng dần. Việc cố gắng nhớ trước khi xem đáp án giúp nhận ra từ nào cần ôn thêm.',
+    sections: [
+      ['Các mốc ôn', 'Lịch có các mốc 0, 1, 3, 7, 14 và 30 ngày tính từ lần ôn đầu tiên. Từ mới có thể được ôn ngay; nếu đã lỡ mốc, app hẹn lại vào ngày mai.'],
+      ['Khi trả lời đúng', 'Từ lên một cấp và được hẹn ở mốc tiếp theo. Trả lời đúng ở cấp 6 sẽ hoàn tất lịch ôn của từ đó.'],
+      ['Khi trả lời sai', 'Từ lùi một cấp, không xuống dưới cấp 1, rồi được hẹn ôn lại vào ngày mai. Sai là tín hiệu để gặp lại từ sớm hơn, không phải hình phạt.'],
+    ],
+  },
+  {
+    eyebrow: 'DỮ LIỆU CỦA BẠN',
+    title: 'Lưu, sao lưu và đồng bộ',
+    intro: 'Sau khi cài từ điển, bạn có thể học ngoại tuyến mà không cần tài khoản. Sổ từ và tiến độ được lưu trên thiết bị; đồng bộ tài khoản là tùy chọn.',
+    sections: [
+      ['Dữ liệu học', 'Từ đã lưu, cấp ôn, trạng thái đóng băng, thống kê và phần thưởng nằm trong dữ liệu ứng dụng trên máy. Đăng xuất không tự xóa dữ liệu cục bộ.'],
+      ['Sao lưu và khôi phục', 'Trong Cài đặt, xuất/chia sẻ tệp JSON để giữ bản sao. Nhập tệp sẽ thay thế dữ liệu học hiện tại; hãy xuất bản sao trước. Tệp sao lưu không gồm từ điển hay audio offline.'],
+      ['Đồng bộ tùy chọn', 'Khi đăng nhập và có mạng, sổ từ cùng tiến độ có thể đồng bộ với tài khoản để dùng trên thiết bị khác.'],
+      ['Tài nguyên và đặt lại', 'Cài đặt quản lý tải/xóa từ điển, IPA và audio offline. Đặt lại sẽ xóa dữ liệu trên máy và cloud cùng tài nguyên offline; cần mạng, không thể hoàn tác.'],
+    ],
+  },
+  {
+    eyebrow: 'XÂY VỐN TỪ',
+    title: 'Vì sao cần nhiều từ?',
+    intro: 'Vốn từ rộng giúp bạn hiểu nhiều chủ đề hơn khi đọc, nghe và giao tiếp; nhưng học nhiều từ cùng lúc không phải mục tiêu.',
+    sections: [
+      ['Hiểu được nhiều ngữ cảnh', 'Từ quen thuộc giúp nắm ý chính, nhận ra chi tiết và suy đoán từ mới từ câu xung quanh — hữu ích trong học tập, công việc và các kỳ thi.'],
+      ['Học chất lượng trước số lượng', 'Ưu tiên từ thường gặp và từ theo mục tiêu của bạn. Học nghĩa trong câu, cách dùng và ví dụ; chỉ lưu nghĩa phù hợp với ngữ cảnh.'],
+      ['Một nhịp học dễ duy trì', 'Mỗi ngày đọc một đoạn, chọn vài từ thật sự cần, rồi hoàn thành lượt Ôn tập đến hạn. Tự đặt câu hoặc dùng từ khi nói/viết để chuyển từ nhận biết sang sử dụng.'],
+    ],
+  },
+];
+
 const CORVI_REPLY_VARIANTS: Record<CorviAction, string[]> = {
   search: [
     'Rất sẵn lòng. Hãy nhập từ tiếng Anh vào thanh tìm kiếm, ta sẽ tra trong từ điển ngoại tuyến.',
@@ -87,6 +154,9 @@ function pickDifferentLine(lines: string[], previousLine: string) {
 
 export default function DictionaryScreen() {
   const c = useColors();
+  const { width: windowWidth } = useWindowDimensions();
+  const compactCorvi = windowWidth < 370;
+  const corviArtSize = windowWidth < 420 ? (compactCorvi ? 132 : 148) : 190;
   const reduceMotion = useReducedMotion();
   const corviArt = c.dictPage === '#FBF7EE'
     ? require('../../assets/images/corvi-dictionary-search-light.png')
@@ -118,6 +188,7 @@ export default function DictionaryScreen() {
   const [corviDialogue, setCorviDialogue] = useState(CORVI_GREETING);
   const [typedCorviDialogue, setTypedCorviDialogue] = useState('');
   const [guideOpen, setGuideOpen] = useState(false);
+  const [guidePage, setGuidePage] = useState(0);
   const reqRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<React.ElementRef<typeof TextInput>>(null);
@@ -177,6 +248,7 @@ export default function DictionaryScreen() {
     } else if (action === 'extract') {
       router.push('/extract');
     } else if (action === 'guide') {
+      setGuidePage(0);
       setGuideOpen(true);
     } else if (action === 'review') {
       router.push('/review');
@@ -349,24 +421,9 @@ export default function DictionaryScreen() {
       contentContainerStyle={{ flexGrow: 1, paddingBottom: bottom }}
     >
       <View testID="dictionary-search-idle" style={styles.idleState}>
-        <Pressable
-          testID="dictionary-corvi-talk"
-          accessibilityRole="button"
-          accessibilityLabel="Trò chuyện với Mr. Corvi"
-          onPress={talkToCorvi}
-          style={({ pressed }) => [styles.corviTouchable, { opacity: pressed ? 0.82 : 1 }]}
-        >
-          <CorviBlinkingArtwork
-            testID="dictionary-corvi-idle-art"
-            source={corviArt}
-            artSize={210}
-            style={styles.idleArt}
-            gazeToUser={corviConversationOpen}
-          />
-        </Pressable>
         <View testID="dictionary-corvi-dialogue-wrap" style={styles.dialogueWrap}>
           <View style={[styles.dialogueBubble, { backgroundColor: c.dictChip, borderColor: c.dictLine }]}>
-            <Text style={[styles.dialogueName, { color: c.dictHead }]}>Mr. Corvi</Text>
+            <Text testID="dictionary-corvi-name" style={[styles.dialogueName, { color: c.dictHead }]}>Mr. Corvi — Quản gia</Text>
             <Text
               testID="dictionary-corvi-dialogue"
               accessibilityLabel={corviDialogue}
@@ -378,6 +435,63 @@ export default function DictionaryScreen() {
           </View>
           <View style={[styles.dialogueTail, { borderTopColor: c.dictChip }]} />
         </View>
+        <View testID="dictionary-corvi-composition" style={[styles.corviComposition, compactCorvi && styles.corviCompositionCompact]}>
+          {!compactCorvi && corviConversationOpen ? (
+            <View testID="dictionary-corvi-choice-group-left" style={styles.choiceGroup}>
+              {CORVI_CHOICES.slice(0, 2).map((choice) => (
+                <Pressable
+                  key={choice.testID}
+                  testID={choice.testID}
+                  accessibilityRole="button"
+                  accessibilityLabel={choice.label}
+                  onPress={() => chooseCorviReply(choice.action)}
+                  style={({ pressed }) => [
+                    styles.corviChoice,
+                    { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 },
+                  ]}
+                >
+                  <Feather name={choice.icon} size={16} color={c.dictHead} />
+                  <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+          <Pressable
+            testID="dictionary-corvi-talk"
+            accessibilityRole="button"
+            accessibilityLabel="Trò chuyện với Mr. Corvi"
+            onPress={talkToCorvi}
+            style={({ pressed }) => [styles.corviTouchable, { width: corviArtSize, height: corviArtSize, opacity: pressed ? 0.82 : 1 }]}
+          >
+            <CorviBlinkingArtwork
+              testID="dictionary-corvi-idle-art"
+              source={corviArt}
+              artSize={corviArtSize}
+              style={[styles.idleArt, { width: corviArtSize, height: corviArtSize }]}
+              gazeToUser={corviConversationOpen}
+            />
+          </Pressable>
+          {!compactCorvi && corviConversationOpen ? (
+            <View testID="dictionary-corvi-choice-group-right" style={styles.choiceGroup}>
+              {CORVI_CHOICES.slice(2).map((choice) => (
+                <Pressable
+                  key={choice.testID}
+                  testID={choice.testID}
+                  accessibilityRole="button"
+                  accessibilityLabel={choice.label}
+                  onPress={() => chooseCorviReply(choice.action)}
+                  style={({ pressed }) => [
+                    styles.corviChoice,
+                    { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 },
+                  ]}
+                >
+                  <Feather name={choice.icon} size={16} color={c.dictHead} />
+                  <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
         {corviRecommendationLoading ? (
           <View testID="dictionary-corvi-recommend-loading" style={styles.recommendLoading}>
             <ActivityIndicator size="small" color={c.dictHead} />
@@ -386,23 +500,28 @@ export default function DictionaryScreen() {
         ) : corviConversationOpen ? (
           <View testID="dictionary-corvi-options" style={styles.corviOptions}>
             <Text style={[styles.choicePrompt, { color: c.dictMuted }]}>Ngài muốn làm gì tiếp theo?</Text>
-            <View style={styles.choiceGrid}>
-              {CORVI_CHOICES.map((choice) => (
-                <Pressable
-                  key={choice.testID}
-                  testID={choice.testID}
-                  accessibilityRole="button"
-                  onPress={() => chooseCorviReply(choice.action)}
-                  style={({ pressed }) => [
-                    styles.corviChoice,
-                    { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine },
-                  ]}
-                >
-                  <Feather name={choice.icon} size={16} color={c.dictHead} />
-                  <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
-                </Pressable>
-              ))}
-            </View>
+            {compactCorvi ? <View testID="dictionary-corvi-choice-groups-compact" style={styles.compactChoiceGroups}>
+              <View testID="dictionary-corvi-choice-group-left" style={styles.choiceGroup}>
+                {CORVI_CHOICES.slice(0, 2).map((choice) => (
+                  <Pressable key={choice.testID} testID={choice.testID} accessibilityRole="button"
+                    accessibilityLabel={choice.label} onPress={() => chooseCorviReply(choice.action)}
+                    style={({ pressed }) => [styles.corviChoice, { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 }]}>
+                    <Feather name={choice.icon} size={16} color={c.dictHead} />
+                    <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View testID="dictionary-corvi-choice-group-right" style={styles.choiceGroup}>
+                {CORVI_CHOICES.slice(2).map((choice) => (
+                  <Pressable key={choice.testID} testID={choice.testID} accessibilityRole="button"
+                    accessibilityLabel={choice.label} onPress={() => chooseCorviReply(choice.action)}
+                    style={({ pressed }) => [styles.corviChoice, { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 }]}>
+                    <Feather name={choice.icon} size={16} color={c.dictHead} />
+                    <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View> : null}
             {corviRecommendationError ? (
               <Text testID="dictionary-corvi-recommend-error" style={[styles.talkHint, { color: c.destructive }]}>
                 {corviRecommendationError}
@@ -564,15 +683,12 @@ export default function DictionaryScreen() {
         visible={guideOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setGuideOpen(false)}
+        onRequestClose={() => setGuidePage((page) => Math.max(0, page - 1))}
       >
-        <Pressable
+        <View
           style={[styles.guideOverlay, { backgroundColor: c.overlay, paddingTop: top + 12, paddingBottom: Math.max(insets.bottom, 16) }]}
-          onPress={() => setGuideOpen(false)}
         >
-          <Pressable
-            accessibilityRole="none"
-            onPress={() => {}}
+          <View
             style={[styles.guideCard, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 6 }]}
           >
             <View style={styles.guideHeader}>
@@ -580,43 +696,65 @@ export default function DictionaryScreen() {
                 <Text style={[styles.guideEyebrow, { color: c.primary }]}>CORVI GIỚI THIỆU</Text>
                 <Text style={[styles.guideTitle, { color: c.foreground }]}>Hướng dẫn nhanh</Text>
               </View>
-              <Pressable
-                testID="dictionary-guide-close"
-                accessibilityRole="button"
-                accessibilityLabel="Đóng hướng dẫn"
-                onPress={() => setGuideOpen(false)}
-                hitSlop={10}
-                style={styles.guideClose}
-              >
-                <Feather name="x" size={22} color={c.foreground} />
-              </Pressable>
             </View>
             <ScrollView
               testID="dictionary-guide-content"
               showsVerticalScrollIndicator={false}
+              key={guidePage}
+              style={styles.guidePageScroll}
               contentContainerStyle={styles.guideSections}
             >
-              {[
-                ['Thư Viện', 'Tra từ tiếng Anh trong từ điển offline, xem nghĩa, phiên âm và ví dụ. Chọn nghĩa muốn học để lưu vào Sổ từ.'],
-                ['Khóa học', 'Chọn một khóa và học lần lượt từng bài; tiến độ được lưu trên thiết bị.'],
-                ['Ôn tập', 'Ôn các từ đến hạn theo lịch lặp lại ngắt quãng. Trả lời xong sẽ xem kết quả và tiếp tục bài ôn.'],
-                ['Sổ từ', 'Tìm, lọc và xem những nghĩa bạn đã lưu để học; có thể quản lý từng từ ngay tại đây.'],
-                ['Nhiệm Vụ', 'Hoàn thành mục tiêu trong ngày để nhận lượt mở rương; mảnh tranh được xem trong Bộ Sưu Tập.'],
-                ['Mắt Quạ', 'Dán văn bản hoặc chọn tệp TXT để trích từ có trong từ điển offline. Nội dung nguồn không được dùng làm câu ví dụ.'],
-              ].map(([title, description]) => (
+              <Text style={[styles.guidePageEyebrow, { color: c.primary }]}>{GUIDE_PAGES[guidePage].eyebrow}</Text>
+              <Text style={[styles.guidePageTitle, { color: c.foreground }]}>{GUIDE_PAGES[guidePage].title}</Text>
+              <Text style={[styles.guidePageIntro, { color: c.mutedForeground }]}>{GUIDE_PAGES[guidePage].intro}</Text>
+              {GUIDE_PAGES[guidePage].sections.map(([title, description]) => (
                 <View key={title} style={[styles.guideSection, { borderBottomColor: c.border }]}>
                   <Text style={[styles.guideSectionTitle, { color: c.foreground }]}>{title}</Text>
                   <Text style={[styles.guideSectionBody, { color: c.mutedForeground }]}>{description}</Text>
                 </View>
               ))}
             </ScrollView>
-            <Button
-              testID="dictionary-guide-done"
-              label="Đã hiểu"
-              onPress={() => setGuideOpen(false)}
-            />
-          </Pressable>
-        </Pressable>
+            <View style={styles.guideFooter}>
+              <Pressable
+                testID="dictionary-guide-previous"
+                accessibilityRole="button"
+                accessibilityLabel="Trang trước"
+                accessibilityState={{ disabled: guidePage === 0 }}
+                disabled={guidePage === 0}
+                onPress={() => setGuidePage((page) => Math.max(0, page - 1))}
+                style={({ pressed }) => [styles.guidePageControl, { opacity: guidePage === 0 ? 0.35 : pressed ? 0.65 : 1 }]}
+              >
+                <Feather name="arrow-left" size={18} color={c.foreground} />
+              </Pressable>
+              <Text
+                testID="dictionary-guide-page-count"
+                accessibilityRole="text"
+                accessibilityLabel={`Trang ${guidePage + 1} trên ${GUIDE_PAGES.length}`}
+                style={[styles.guidePageCount, { color: c.mutedForeground }]}
+              >
+                {guidePage + 1} / {GUIDE_PAGES.length}
+              </Text>
+              {guidePage < GUIDE_PAGES.length - 1 ? (
+                <Pressable
+                  testID="dictionary-guide-next"
+                  accessibilityRole="button"
+                  accessibilityLabel="Trang tiếp theo"
+                  onPress={() => setGuidePage((page) => Math.min(GUIDE_PAGES.length - 1, page + 1))}
+                  style={({ pressed }) => [styles.guidePageControl, { opacity: pressed ? 0.65 : 1 }]}
+                >
+                  <Feather name="arrow-right" size={18} color={c.foreground} />
+                </Pressable>
+              ) : (
+                <Button
+                  testID="dictionary-guide-done"
+                  label="Hoàn tất"
+                  onPress={() => { setGuideOpen(false); setGuidePage(0); }}
+                  style={styles.guideDone}
+                />
+              )}
+            </View>
+          </View>
+        </View>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -627,20 +765,23 @@ const styles = StyleSheet.create({
   iconBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
-  idleState: { flexGrow: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 16, gap: 8 },
-  corviTouchable: { width: 210, height: 210, maxWidth: '100%', alignItems: 'center', justifyContent: 'center' },
-  idleArt: { width: 210, height: 210, maxWidth: '100%' },
+  idleState: { flexGrow: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 8 },
+  corviComposition: { width: '100%', maxWidth: 620, minHeight: 202, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, flexShrink: 0 },
+  corviCompositionCompact: { minHeight: 140 },
+  corviTouchable: { maxWidth: '100%', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' },
+  idleArt: { maxWidth: '100%' },
   corviOptions: { width: '100%', maxWidth: 360, gap: 8, marginTop: 2 },
   recommendLoading: { alignItems: 'center', gap: 8, paddingVertical: 8 },
   choicePrompt: { fontFamily: F.m, fontSize: 12, textAlign: 'center' },
-  choiceGrid: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  corviChoice: { width: '48%', minHeight: 48, borderWidth: 1, borderRadius: 13, paddingHorizontal: 10, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  corviChoiceText: { flexShrink: 1, fontFamily: F.s, fontSize: 12, textAlign: 'center' },
+  choiceGroup: { flex: 1, minWidth: 0, maxWidth: 150, gap: 8 },
+  compactChoiceGroups: { width: '100%', flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  corviChoice: { width: '100%', minHeight: 48, borderWidth: 1, borderRadius: 13, paddingHorizontal: 8, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  corviChoiceText: { flexShrink: 1, fontFamily: F.s, fontSize: 12, lineHeight: 16, textAlign: 'center' },
   corviActionButton: { width: '100%', maxWidth: 320, minHeight: 48, marginTop: 2 },
-  dialogueWrap: { width: '100%', maxWidth: 360, alignItems: 'center' },
-  dialogueBubble: { width: '100%', borderWidth: 1, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, gap: 5 },
-  dialogueTail: { width: 0, height: 0, borderTopWidth: 9, borderLeftWidth: 9, borderRightWidth: 9, borderLeftColor: 'transparent', borderRightColor: 'transparent', marginTop: -1 },
-  dialogueName: { fontFamily: F.s, fontSize: 12, letterSpacing: 0.3, textAlign: 'center' },
+  dialogueWrap: { width: '100%', maxWidth: 520, alignItems: 'center', zIndex: 1 },
+  dialogueBubble: { width: '100%', borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },
+  dialogueTail: { width: 0, height: 0, borderTopWidth: 9, borderLeftWidth: 9, borderRightWidth: 9, borderLeftColor: 'transparent', borderRightColor: 'transparent', marginTop: -1, alignSelf: 'center' },
+  dialogueName: { fontFamily: F.s, fontSize: 15, letterSpacing: 0.3, textAlign: 'center' },
   dialogueCopy: { fontFamily: F.r, fontSize: 15, lineHeight: 22, textAlign: 'center' },
   talkHint: { fontFamily: F.m, fontSize: 13, textAlign: 'center', marginTop: -2 },
   loadingState: { flex: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 20, gap: 10 },
@@ -648,15 +789,22 @@ const styles = StyleSheet.create({
   loadingTitle: { fontFamily: F.b, fontSize: 19, textAlign: 'center' },
   loadingBody: { maxWidth: 300, fontFamily: F.r, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 2 },
   guideOverlay: { flex: 1, justifyContent: 'center', paddingHorizontal: 18 },
-  guideCard: { width: '100%', maxWidth: 480, maxHeight: '88%', alignSelf: 'center', borderWidth: 1, padding: 18, gap: 14 },
+  guideCard: { width: '100%', maxWidth: 480, maxHeight: '88%', alignSelf: 'center', borderWidth: 1, padding: 18, gap: 12 },
   guideHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   guideEyebrow: { fontFamily: F.s, fontSize: 11, letterSpacing: 1.4, marginBottom: 3 },
   guideTitle: { fontFamily: F.b, fontSize: 23 },
-  guideClose: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
-  guideSections: { paddingBottom: 6 },
+  guidePageScroll: { flexShrink: 1, minHeight: 0 },
+  guideSections: { paddingBottom: 8 },
+  guidePageEyebrow: { fontFamily: F.s, fontSize: 11, letterSpacing: 1.3, marginBottom: 5 },
+  guidePageTitle: { fontFamily: F.b, fontSize: 20, lineHeight: 26, marginBottom: 6 },
+  guidePageIntro: { fontFamily: F.r, fontSize: 14, lineHeight: 20, marginBottom: 4 },
   guideSection: { paddingVertical: 11, borderBottomWidth: StyleSheet.hairlineWidth },
   guideSectionTitle: { fontFamily: F.s, fontSize: 15, marginBottom: 4 },
   guideSectionBody: { fontFamily: F.r, fontSize: 14, lineHeight: 20 },
+  guideFooter: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  guidePageControl: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  guidePageCount: { flex: 1, fontFamily: F.m, fontSize: 13, textAlign: 'center' },
+  guideDone: { minWidth: 124 },
   divider: { width: 1, alignSelf: 'stretch', marginVertical: 10 },
   go: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1 },

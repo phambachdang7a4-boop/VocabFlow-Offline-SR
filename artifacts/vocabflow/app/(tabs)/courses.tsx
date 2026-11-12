@@ -677,23 +677,32 @@ function QuestionView({
               </Text>
             </View>
           </View>
-          <View
-            testID="idioms-dialogue-reply"
-            style={[
-              styles.idiomDialogueBubble,
-              styles.idiomReplyBubble,
-              { backgroundColor: c.card, borderColor: c.border },
-            ]}
-          >
-            <Text style={[styles.idiomDialogueSpeaker, { color: c.primary }]}>
-              Bạn
-            </Text>
-            <Text
-              testID={`${testIdPrefix}-question-prompt`}
-              style={[styles.promptText, { color: c.foreground }]}
+          <View style={styles.idiomReplyRow}>
+            <View
+              testID="idioms-dialogue-reply"
+              style={[
+                styles.idiomDialogueBubble,
+                styles.idiomReplyBubble,
+                { backgroundColor: c.card, borderColor: c.border },
+              ]}
             >
-              {question.prompt}
-            </Text>
+              <Text style={[styles.idiomDialogueSpeaker, { color: c.primary }]}>
+                Pan
+              </Text>
+              <Text
+                testID={`${testIdPrefix}-question-prompt`}
+                style={[styles.promptText, { color: c.foreground }]}
+              >
+                {question.prompt}
+              </Text>
+            </View>
+            <Image
+              testID="idioms-dialogue-pan-avatar"
+              source={require("../../assets/images/pan-avatar.png")}
+              accessibilityLabel="Cừu Pan"
+              resizeMode="cover"
+              style={[styles.idiomDialogueAvatar, { borderColor: c.accent }]}
+            />
           </View>
         </View>
       ) : (
@@ -1015,6 +1024,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 2,
   },
+  idiomReplyRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    gap: 9,
+  },
   idiomDialogueBubble: {
     flexShrink: 1,
     borderWidth: 1,
@@ -1023,8 +1039,8 @@ const styles = StyleSheet.create({
   },
   idiomCorviBubble: { flex: 1, borderBottomLeftRadius: 5 },
   idiomReplyBubble: {
-    alignSelf: "flex-end",
-    maxWidth: "88%",
+    maxWidth: "82%",
+    flexShrink: 1,
     borderBottomRightRadius: 5,
     gap: 3,
   },

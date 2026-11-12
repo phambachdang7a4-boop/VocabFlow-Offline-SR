@@ -106,13 +106,16 @@ export function CorviBlinkingArtwork({ source, testID, artSize, style, gazeToUse
   }, [blinkProgress, floatProgress, gazeProgress, gazeToUser, pageTurnProgress, reduceMotion]);
 
   return (
-    <Animated.View testID={`${testID}-frame`} style={[styles.frame, style, gentleFloat]}>
+    <Animated.View
+      testID={`${testID}-frame`}
+      style={[styles.frame, { width: artSize, height: artSize }, style, gentleFloat]}
+    >
       <Image
         testID={testID}
         accessible={false}
         source={source}
         resizeMode="contain"
-        style={StyleSheet.absoluteFill}
+        style={[styles.artwork, { width: artSize, height: artSize }]}
       />
       <Animated.View
         testID={`${testID}-blink`}
@@ -170,7 +173,8 @@ export function CorviBlinkingArtwork({ source, testID, artSize, style, gazeToUse
 }
 
 const styles = StyleSheet.create({
-  frame: { position: 'relative', overflow: 'visible' },
+  frame: { position: 'relative', overflow: 'visible', flexShrink: 0 },
+  artwork: { flexShrink: 0 },
   // Coordinates match the eye in the 236 px Corvi artwork shown on this screen.
   eyelid: {
     position: 'absolute',

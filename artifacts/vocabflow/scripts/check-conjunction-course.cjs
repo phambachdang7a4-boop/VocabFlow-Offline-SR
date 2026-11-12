@@ -314,6 +314,20 @@ async function checkCourseContentAndProgress() {
     [...toeicTerms].sort(),
     "Every TOEIC word has course feedback content.",
   );
+  for (const [term, entry] of Object.entries(
+    toeicTopicCourse.TOEIC_TOPIC_COURSE_ENTRIES,
+  )) {
+    assert.ok(entry.example.trim(), `${term} has an English example.`);
+    assert.ok(
+      entry.exampleTranslation.trim(),
+      `${term} has a Vietnamese example translation.`,
+    );
+    assert.notEqual(
+      entry.exampleTranslation,
+      entry.example,
+      `${term} keeps its English example separate from its translation.`,
+    );
+  }
   for (const lesson of toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS) {
     assert.ok(lesson.questions.length >= 10 && lesson.questions.length <= 35);
     assert.ok(lesson.topicTitle);

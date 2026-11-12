@@ -1,5 +1,5 @@
 const { DatabaseSync } = require("node:sqlite");
-const { writeFileSync } = require("node:fs");
+const { readFileSync, writeFileSync } = require("node:fs");
 const { join } = require("node:path");
 
 const DATABASE_PATH = join(
@@ -7,6 +7,13 @@ const DATABASE_PATH = join(
   "../../../generated-artifacts/dictionary/dictionary_en_vi.db",
 );
 const OUTPUT_PATH = join(__dirname, "../domain/toeic-topic-course-data.json");
+const TOEIC_EXAMPLE_TRANSLATIONS_PATH = join(
+  __dirname,
+  "../domain/toeic-example-translations.json",
+);
+const TOEIC_EXAMPLE_TRANSLATIONS = JSON.parse(
+  readFileSync(TOEIC_EXAMPLE_TRANSLATIONS_PATH, "utf8"),
+);
 
 const TOEIC_SPELLING_CONVENTION =
   "Ưu tiên chính tả Anh-Anh; các dạng Anh-Mỹ hữu ích được ghi rõ ở mục từ.";
@@ -70,6 +77,32 @@ function validateToeicSpellingData(data) {
         `TOEIC entry "${term}" has an American label without a British equivalent.`,
       );
     }
+  }
+}
+
+function validateToeicExampleTranslations(data) {
+  const entries = data.entries ?? {};
+  const errors = [];
+  for (const [term, entry] of Object.entries(entries)) {
+    const example = String(entry.example ?? "").trim();
+    const translation = String(entry.exampleTranslation ?? "").trim();
+    const authoredTranslation = String(TOEIC_EXAMPLE_TRANSLATIONS[term] ?? "").trim();
+    if (!example) errors.push(`- ${term}: missing English example`);
+    if (!authoredTranslation) {
+      errors.push(`- ${term}: missing authored Vietnamese example translation`);
+    } else if (!translation) {
+      errors.push(`- ${term}: missing Vietnamese example translation`);
+    } else if (translation !== authoredTranslation) {
+      errors.push(`- ${term}: Vietnamese example translation differs from authored source`);
+    }
+  }
+  for (const term of Object.keys(TOEIC_EXAMPLE_TRANSLATIONS)) {
+    if (!Object.hasOwn(entries, term)) {
+      errors.push(`- ${term}: authored translation has no TOEIC course entry`);
+    }
+  }
+  if (errors.length) {
+    throw new Error(`TOEIC course examples failed validation:\n${errors.join("\n")}`);
   }
 }
 
@@ -467,7 +500,7 @@ function createTopicWords(topic, dictionary, sortedTerms, assignedTerms) {
           family: prefix,
           definition: source.definition,
           example: source.example,
-          exampleTranslation: "",
+          exampleTranslation: TOEIC_EXAMPLE_TRANSLATIONS[term] ?? "",
           dictionarySource: "offline",
           exampleSource: "offline",
           partOfSpeech: source.pos ?? "",
@@ -506,6 +539,7 @@ function main() {
       entries,
     });
     validateToeicSpellingData(output);
+    validateToeicExampleTranslations(output);
     writeFileSync(OUTPUT_PATH, `${JSON.stringify(output)}\n`, "utf8");
     console.log(
       `Built TOEIC course data: ${totalWords} unique words across ${topics.length} topics.`,
@@ -528,4 +562,5 @@ module.exports = {
   britishEquivalent,
   spellingNoteFor,
   validateToeicSpellingData,
+  validateToeicExampleTranslations,
 };

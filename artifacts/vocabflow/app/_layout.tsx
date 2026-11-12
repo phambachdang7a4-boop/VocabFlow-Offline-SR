@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -34,6 +34,7 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import { Redirect, router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { PanLoadingScreen } from "@/components/PanLoadingScreen";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -162,27 +163,7 @@ function RootLayoutNav() {
   }, [isLoaded, isSignedIn, scopeAttempt, userId]);
 
   if (isLoaded && isSignedIn === undefined) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: c.background,
-        }}
-      >
-        <ActivityIndicator color={c.primary} />
-        <Text
-          style={{
-            color: c.mutedForeground,
-            fontFamily: "Inter_400Regular",
-            marginTop: 12,
-          }}
-        >
-          Đang kiểm tra tài khoản…
-        </Text>
-      </View>
-    );
+    return <PanLoadingScreen />;
   }
   if (isLoaded && isSignedIn && inAuthFlow) return <Redirect href="/(tabs)" />;
 
@@ -245,27 +226,7 @@ function RootLayoutNav() {
 
   if (isSignedIn) {
     if (scopedUserId !== userId) {
-      return (
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: c.background,
-          }}
-        >
-          <ActivityIndicator color={c.primary} />
-          <Text
-            style={{
-              color: c.mutedForeground,
-              fontFamily: "Inter_400Regular",
-              marginTop: 12,
-            }}
-          >
-            Đang chuẩn bị sổ từ an toàn…
-          </Text>
-        </View>
-      );
+      return <PanLoadingScreen />;
     }
     return (
       <SyncProvider key={userId} userId={userId}>
@@ -277,27 +238,7 @@ function RootLayoutNav() {
   }
 
   if (scopedUserId !== null) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: c.background,
-        }}
-      >
-        <ActivityIndicator color={c.primary} />
-        <Text
-          style={{
-            color: c.mutedForeground,
-            fontFamily: "Inter_400Regular",
-            marginTop: 12,
-          }}
-        >
-          Đang chuẩn bị dữ liệu trên thiết bị…
-        </Text>
-      </View>
-    );
+    return <PanLoadingScreen />;
   }
 
   return (

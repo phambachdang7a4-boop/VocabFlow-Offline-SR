@@ -47,10 +47,12 @@ assert.equal(pronunciationAccent('NAmE'), 'us');
 assert.equal(pronunciationAccent('General-American'), 'us');
 assert.equal(pronunciationAccent(null), null);
 const native = Object.fromEntries(['View', 'Text', 'TextInput', 'Pressable', 'ScrollView', 'FlatList', 'ActivityIndicator', 'Image', 'Modal'].map(key => [key, key]));
+let screenWidth = 390;
 Object.assign(native, {
   Platform: { OS: 'web' },
   StyleSheet: { create: value => value, absoluteFill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }, hairlineWidth: 1 },
   Keyboard: { dismiss() {} },
+  useWindowDimensions: () => ({ width: screenWidth, height: 844, scale: 1, fontScale: 1 }),
 });
 const animationCalls = [];
 const sharedValues = [];
@@ -77,6 +79,11 @@ function find(node, predicate) {
   if (Array.isArray(node)) return node.map(child => find(child, predicate)).find(Boolean);
   if (!node || typeof node !== 'object') return undefined;
   return predicate(node) ? node : find(node.props?.children, predicate);
+}
+function textOf(node) {
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join('');
+  return node && typeof node === 'object' ? textOf(node.props?.children) : '';
 }
 
 // Exercise real screen callbacks/effects without a private-preview login or
@@ -187,6 +194,8 @@ function mount(file, services, personalWords = [], properties = {}) {
     source: 1, testID: 'corvi-blink-test', artSize: 236, style: { width: 236, height: 236 },
   });
   assert.ok(animatedArt.byId('corvi-blink-test'), 'The animated artwork retains the original Corvi illustration.');
+  assert.deepEqual(animatedArt.byId('corvi-blink-test').props.style.at(-1), { width: 236, height: 236 },
+    'The base illustration receives explicit dimensions so it cannot collapse on mobile.');
   assert.ok(animatedArt.byId('corvi-blink-test-blink'), 'Corvi’s blinking eyelid is rendered above the eye.');
   assert.ok(animatedArt.byId('corvi-blink-test-gaze'), 'A pixel-sized pupil overlay provides the gaze motion.');
   assert.ok(animatedArt.byId('corvi-blink-test-page-turn'), 'A restrained page overlay is rendered over the open book.');
@@ -225,6 +234,27 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(screen.byId('dictionary-search-idle'), 'Dictionary shows a welcoming idle state before a search');
   assert.ok(screen.byId('dictionary-search-idle-scroll'), 'The empty state can scroll when it exceeds the viewport');
   assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi artwork is visible before a search');
+  const idleCorviArt = screen.byId('dictionary-corvi-idle-art');
+  assert.equal(idleCorviArt.props.artSize, 148, 'The phone-sized idle artwork has a nonzero size.');
+  assert.deepEqual(idleCorviArt.props.style.at(-1), { width: 148, height: 148 },
+    'Corvi receives explicit width and height in the idle state.');
+  screenWidth = 320;
+  const narrowScreen = mount('../app/(tabs)/dictionary.tsx', {
+    searchDictionary: async () => ({ items: [], hasMore: false }),
+    suggestDictionary: async () => [],
+  });
+  const narrowArt = narrowScreen.byId('dictionary-corvi-idle-art');
+  assert.equal(narrowArt.props.artSize, 132, 'The narrow-phone layout keeps a readable Corvi illustration.');
+  assert.deepEqual(narrowArt.props.style.at(-1), { width: 132, height: 132 },
+    'The illustration retains explicit dimensions on a narrow phone.');
+  screenWidth = 390;
+  assert.equal(screen.byId('dictionary-corvi-name').props.children[0], 'Mr. Corvi — Quản gia',
+    'The steward uses the approved full display name.');
+  const idleChildren = screen.byId('dictionary-search-idle').props.children;
+  assert.ok(idleChildren.indexOf(screen.byId('dictionary-corvi-dialogue-wrap')) < idleChildren.indexOf(screen.byId('dictionary-corvi-composition')),
+    'The dialogue bubble and downward tail are laid out before the Corvi art, never over it.');
+  assert.equal(screen.byId('dictionary-corvi-choice-extract'), undefined,
+    'Conversation choices stay hidden until the learner opens Corvi.');
   assert.equal(
     screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel,
     'Xin chào cậu chủ, ngài muốn tìm từ vựng nào? Xin hãy bấm vào thanh tìm kiếm ở trên.',
@@ -235,10 +265,18 @@ function mount(file, services, personalWords = [], properties = {}) {
     'Corvi’s line appears one character at a time.');
   screen.byId('dictionary-corvi-talk').props.onPress();
   assert.ok(screen.byId('dictionary-corvi-options'), 'Tapping Corvi opens dialogue choices.');
+  const compositionChildren = screen.byId('dictionary-corvi-composition').props.children.flat(Infinity);
+  const leftGroupIndex = compositionChildren.indexOf(screen.byId('dictionary-corvi-choice-group-left'));
+  const artIndex = compositionChildren.indexOf(screen.byId('dictionary-corvi-talk'));
+  const rightGroupIndex = compositionChildren.indexOf(screen.byId('dictionary-corvi-choice-group-right'));
+  assert.ok(leftGroupIndex < artIndex && artIndex < rightGroupIndex,
+    'Corvi stays centered between the two conversation choice groups.');
   assert.equal(screen.byId('dictionary-corvi-idle-art').props.gazeToUser, true,
     'Visible conversation choices lock Corvi into eye contact.');
-  for (const choice of ['lookup', 'extract', 'guide', 'review']) {
+  for (const choice of ['lookup', 'extract', 'guide', 'review', 'recommend']) {
     assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`), `Corvi offers the ${choice} reply choice.`);
+    assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`).props.accessibilityLabel,
+      `${choice} remains explicitly labeled for assistive technology.`);
   }
   screen.byId('dictionary-corvi-choice-guide').props.onPress();
   assert.equal(screen.byId('dictionary-corvi-idle-art').props.gazeToUser, false,
@@ -253,8 +291,54 @@ function mount(file, services, personalWords = [], properties = {}) {
   screen.byId('dictionary-corvi-action-guide').props.onPress();
   assert.equal(screen.byId('dictionary-guide-modal').props.visible, true, 'The guidebook opens from Corvi’s dialogue.');
   assert.ok(screen.byId('dictionary-guide-content'), 'The guidebook contains practical instructions.');
-  screen.byId('dictionary-guide-close').props.onPress();
-  assert.equal(screen.byId('dictionary-guide-modal').props.visible, false, 'The guidebook can be dismissed.');
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 1 trên 6',
+    'The guide announces the current page and total page count accessibly.');
+  assert.match(textOf(screen.byId('dictionary-guide-content')), /Bắt đầu bằng ngữ cảnh/);
+  assert.ok(screen.byId('dictionary-guide-previous').props.disabled, 'The previous-page control is disabled on the first page.');
+  assert.ok(screen.byId('dictionary-guide-next'), 'The popup has a working next-page control.');
+  assert.equal(screen.byId('dictionary-guide-close'), undefined,
+    'The popup is completed from its last page instead of being dismissed midway.');
+  const guideModal = screen.byId('dictionary-guide-modal');
+  guideModal.props.onRequestClose();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 1 trên 6',
+    'The device back action cannot skip the guide before its final page.');
+  screen.byId('dictionary-guide-next').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 2 trên 6');
+  const navigationPage = textOf(screen.byId('dictionary-guide-content'));
+  for (const tool of ['Thư Viện', 'Khóa học', 'Ôn tập', 'Sổ từ', 'Nhiệm Vụ', 'Bộ Sưu Tập']) {
+    assert.ok(navigationPage.includes(tool), `The guide explains ${tool}.`);
+  }
+  screen.byId('dictionary-guide-previous').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 1 trên 6');
+  screen.byId('dictionary-guide-next').props.onPress();
+  screen.byId('dictionary-guide-next').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 3 trên 6');
+  const readingPage = textOf(screen.byId('dictionary-guide-content'));
+  assert.ok(readingPage.indexOf('1 · Đọc và đoán') < readingPage.indexOf('2 · Tra trong Thư Viện'));
+  assert.ok(readingPage.indexOf('2 · Tra trong Thư Viện') < readingPage.indexOf('3 · Dùng Mắt Quạ'));
+  assert.ok(readingPage.indexOf('3 · Dùng Mắt Quạ') < readingPage.indexOf('4 · Lưu và gặp lại'));
+  assert.match(readingPage, /beneath/);
+  assert.match(readingPage, /TXT/);
+  screen.byId('dictionary-guide-next').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 4 trên 6');
+  const spacedRepetitionPage = textOf(screen.byId('dictionary-guide-content'));
+  for (const checkpoint of ['0, 1, 3, 7, 14 và 30 ngày', 'cấp 6', 'ngày mai']) {
+    assert.ok(spacedRepetitionPage.includes(checkpoint), `The guide accurately explains ${checkpoint}.`);
+  }
+  screen.byId('dictionary-guide-next').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 5 trên 6');
+  const dataPage = textOf(screen.byId('dictionary-guide-content'));
+  for (const detail of ['ngoại tuyến', 'JSON', 'Đồng bộ tùy chọn', 'không thể hoàn tác']) {
+    assert.ok(dataPage.toLocaleLowerCase('vi').includes(detail.toLocaleLowerCase('vi')), `The guide explains ${detail}.`);
+  }
+  screen.byId('dictionary-guide-next').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-page-count').props.accessibilityLabel, 'Trang 6 trên 6');
+  const vocabularyPage = textOf(screen.byId('dictionary-guide-content'));
+  assert.match(vocabularyPage, /đọc, nghe và giao tiếp/);
+  assert.match(vocabularyPage, /không phải mục tiêu/);
+  assert.ok(screen.byId('dictionary-guide-done'), 'The final page offers an explicit completion action.');
+  screen.byId('dictionary-guide-done').props.onPress();
+  assert.equal(screen.byId('dictionary-guide-modal').props.visible, false, 'The final completion button dismisses the popup.');
   screen.byId('dictionary-corvi-talk').props.onPress();
   const normalLineOne = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
   screen.byId('dictionary-corvi-talk').props.onPress();
@@ -275,6 +359,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   );
   screen.tickIntervals(200);
   assert.ok(screen.byId('dictionary-corvi-action-search'), 'Repeated taps lead to an explicit search action.');
+  assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi stays visible while the search reminder button is shown.');
   screen.byId('dictionary-corvi-action-search').props.onPress();
   assert.equal(screen.byId('dictionary-corvi-options'), undefined, 'The search reminder action closes the dialogue choices.');
   screen.byId('dictionary-corvi-talk').props.onPress();
