@@ -626,7 +626,11 @@ export default function ExtractVocabularyScreen() {
             label="Trích từ"
             icon="search"
             onPress={() => void runExtraction()}
-            disabled={!sourceText.trim() || !dictionary.ready || isAdding}
+            disabled={
+              !sourceText.trim() ||
+              !dictionary.ready ||
+              isAdding
+            }
             loading={isExtracting}
             style={styles.primaryButton}
           />
