@@ -14,6 +14,7 @@ const {
   validateCourseDataAgainstAuthoredOverrides,
   validateDictionaryDefinitionReview,
   validateDictionarySenseReview,
+  validateOfflineExampleSources,
 } = require("./build-ielts-topic-course-data.cjs");
 
 function cloneCourseData() {
@@ -261,6 +262,41 @@ for (const term of REQUIRED_RELATED_HEADWORDS) {
     `${term} must remain available despite filtering its related headword.`,
   );
 }
+
+const translatedOfflineEntry = {
+  employment: {
+    example: "She is currently looking for full-time employment.",
+    exampleTranslation: "Cô ấy hiện đang tìm việc làm toàn thời gian.",
+    exampleSource: "offline",
+  },
+};
+const translatedOfflineEntryBeforeCheck = JSON.stringify(translatedOfflineEntry);
+assert.doesNotThrow(
+  () =>
+    validateOfflineExampleSources(translatedOfflineEntry, [
+      {
+        word: "employment",
+        example: "She is currently looking for full-time employment.",
+      },
+    ]),
+  "An unchanged dictionary example must keep its reviewed translation.",
+);
+assert.throws(
+  () =>
+    validateOfflineExampleSources(translatedOfflineEntry, [
+      {
+        word: "employment",
+        example: "She found employment after finishing her studies.",
+      },
+    ]),
+  /employment: dictionary example changed; review its Vietnamese translation/,
+  "A changed source sentence must require translation review instead of reusing the old pair.",
+);
+assert.equal(
+  JSON.stringify(translatedOfflineEntry),
+  translatedOfflineEntryBeforeCheck,
+  "Source-change detection must preserve the existing useful headword and course entry.",
+);
 
 const missingDefinition = cloneCourseData();
 delete missingDefinition.entries.graduation;

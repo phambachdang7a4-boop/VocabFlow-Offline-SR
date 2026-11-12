@@ -1484,6 +1484,36 @@ function dictionaryEntryIndex(rows) {
   return entries;
 }
 
+function validateOfflineExampleSources(entries, dictionaryRows) {
+  const sourceExamplesByTerm = new Map();
+  for (const row of dictionaryRows) {
+    const term = String(row.word ?? "").trim().toLowerCase();
+    const example = String(row.example ?? "").trim();
+    if (!term || !example) continue;
+    if (!sourceExamplesByTerm.has(term)) {
+      sourceExamplesByTerm.set(term, new Set());
+    }
+    sourceExamplesByTerm.get(term).add(example);
+  }
+
+  const errors = [];
+  for (const [rawTerm, entry] of Object.entries(entries ?? {})) {
+    if (entry?.exampleSource !== "offline") continue;
+    const term = rawTerm.trim().toLowerCase();
+    const example = String(entry.example ?? "").trim();
+    if (!example || sourceExamplesByTerm.get(term)?.has(example)) continue;
+    errors.push(
+      `- ${term}: dictionary example changed; review its Vietnamese translation`,
+    );
+  }
+
+  if (errors.length) {
+    throw new Error(
+      `IELTS dictionary-example translation review failed:\n${errors.join("\n")}`,
+    );
+  }
+}
+
 function termMatchesPrefix(term, prefix) {
   if (!term.startsWith(prefix)) return false;
   const remainder = term.slice(prefix.length);
@@ -1626,11 +1656,13 @@ function loadLegacyCourse() {
 function main() {
   const db = new DatabaseSync(DATABASE_PATH, { readOnly: true });
   try {
-    const dictionary = dictionaryEntryIndex(getDictionaryRows(db));
+    const dictionaryRows = getDictionaryRows(db);
+    const dictionary = dictionaryEntryIndex(dictionaryRows);
     validateDictionarySenseReview(dictionary);
     validateDictionaryDefinitionReview(dictionary);
     const sortedTerms = [...dictionary.keys()].sort();
     const legacy = loadLegacyCourse();
+    validateOfflineExampleSources(legacy.entries, dictionaryRows);
     const legacyTopics = new Map(
       legacy.topics.map((topic) => [topic.id, topic]),
     );
@@ -1790,4 +1822,5 @@ module.exports = {
   COURSE_EXAMPLE_OVERRIDES,
   COURSE_POS_OVERRIDES,
   applyCoursePosOverrides,
+  validateOfflineExampleSources,
 };
