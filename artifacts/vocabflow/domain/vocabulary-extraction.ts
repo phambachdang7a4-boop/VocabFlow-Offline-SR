@@ -2,9 +2,7 @@ import { ENGLISH_STOP_WORDS } from "./english-stopwords";
 
 export const MAX_EXTRACTION_TEXT_CHARACTERS = 1_000_000;
 export const MAX_EXTRACTION_TEXT_BYTES = 1_048_576;
-const SENTENCE_PATTERN = /[^.!?\r\n]+(?:[.!?]+)?|[.!?]+/gu;
 const TOKEN_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
-const CONTEXT_WORD_PATTERN = /[\p{L}]+(?:['’\-][\p{L}]+)*/gu;
 const WORK_BATCH_SIZE = 250;
 const LOOKUP_BATCH_SIZE = 120;
 
@@ -102,8 +100,6 @@ export interface ExtractionDictionaryEntry {
 
 export interface ExtractedVocabularyTerm {
   term: string;
-  count: number;
-  sentence: string;
   entry: ExtractionDictionaryEntry;
 }
 
@@ -132,15 +128,6 @@ export interface ExtractionProgress {
 export type ExtractionLookup = (
   candidates: readonly string[],
 ) => Promise<ReadonlyMap<string, ExtractionDictionaryEntry>>;
-
-interface RawWordCount {
-  count: number;
-  sentence: string;
-}
-
-function usableExampleContext(sentence: string): boolean {
-  return [...sentence.matchAll(CONTEXT_WORD_PATTERN)].length >= 3;
-}
 
 function addCandidate(candidates: string[], candidate: string): void {
   if (candidate.length >= 2 && !candidates.includes(candidate)) {
@@ -284,88 +271,51 @@ export async function extractVocabularyFromText(
     throw new Error("Văn bản quá lớn. Giới hạn là 1 MB.");
   }
 
-  const rawCounts = new Map<string, RawWordCount>();
-  const sentenceMatcher = sourceText.matchAll(SENTENCE_PATTERN);
-  let tokenizedCount = 0;
+  const rawWords = new Set<string>();
+  TOKEN_PATTERN.lastIndex = 0;
+  const tokenMatcher = sourceText.matchAll(TOKEN_PATTERN);
+  let tokensSinceYield = 0;
   let lastTokenizedProgress = -1;
   let lastYieldedPosition = 0;
 
-  for (const sentenceMatch of sentenceMatcher) {
-    const sentence = sentenceMatch[0].trim();
-    const sentenceEnd =
-      (sentenceMatch.index ?? 0) + sentenceMatch[0].length;
-    if (!sentence) {
-      if (sentenceEnd - lastYieldedPosition >= 32_000) {
-        const percent = (sentenceEnd / sourceText.length) * 35;
-        report(
-          options.onProgress,
-          "tokenizing",
-          percent,
-          sentenceEnd,
-          sourceText.length,
-        );
-        lastTokenizedProgress = Math.floor(percent);
-        lastYieldedPosition = sentenceEnd;
-        await yieldToUi();
-      }
-      continue;
-    }
-    TOKEN_PATTERN.lastIndex = 0;
-    for (const tokenMatch of sentence.matchAll(TOKEN_PATTERN)) {
-      const token = tokenMatch[0].toLocaleLowerCase("en");
-      tokenizedCount += 1;
-      if (!ENGLISH_STOP_WORDS.has(token)) {
-        const current = rawCounts.get(token);
-        if (current) {
-          current.count += 1;
-          if (!current.sentence && usableExampleContext(sentence)) {
-            current.sentence = sentence.slice(0, 200);
-          }
-        } else {
-          rawCounts.set(token, {
-            count: 1,
-            sentence: usableExampleContext(sentence)
-              ? sentence.slice(0, 200)
-              : "",
-          });
-        }
-      }
+  for (const tokenMatch of tokenMatcher) {
+    const token = tokenMatch[0].toLocaleLowerCase("en");
+    tokensSinceYield += 1;
+    if (!ENGLISH_STOP_WORDS.has(token)) rawWords.add(token);
 
-      if (tokenizedCount % WORK_BATCH_SIZE === 0) {
-        const position = (sentenceMatch.index ?? 0) + tokenMatch.index + token.length;
-        const percent = (position / sourceText.length) * 35;
-        if (Math.floor(percent) !== lastTokenizedProgress) {
-          report(options.onProgress, "tokenizing", percent, position, sourceText.length);
-          lastTokenizedProgress = Math.floor(percent);
-        }
-        await yieldToUi();
-        lastYieldedPosition = position;
+    if (tokensSinceYield >= WORK_BATCH_SIZE) {
+      const position = (tokenMatch.index ?? 0) + tokenMatch[0].length;
+      const percent = (position / sourceText.length) * 35;
+      if (Math.floor(percent) !== lastTokenizedProgress) {
+        report(options.onProgress, "tokenizing", percent, position, sourceText.length);
+        lastTokenizedProgress = Math.floor(percent);
       }
-    }
-    if (sentenceEnd - lastYieldedPosition >= 32_000) {
-      const percent = (sentenceEnd / sourceText.length) * 35;
-      report(
-        options.onProgress,
-        "tokenizing",
-        percent,
-        sentenceEnd,
-        sourceText.length,
-      );
-      lastTokenizedProgress = Math.floor(percent);
-      lastYieldedPosition = sentenceEnd;
       await yieldToUi();
+      lastYieldedPosition = position;
+      tokensSinceYield = 0;
     }
   }
+  if (sourceText.length - lastYieldedPosition >= 32_000) {
+    report(
+      options.onProgress,
+      "tokenizing",
+      35,
+      sourceText.length,
+      sourceText.length,
+    );
+    await yieldToUi();
+  }
+
+  const rawWordList = [...rawWords];
   report(options.onProgress, "tokenizing", 35, sourceText.length, sourceText.length);
 
-  const rawWords = [...rawCounts.keys()];
   const resolved = new Map<string, ExtractedVocabularyTerm>();
   for (
     let start = 0;
-    start < rawWords.length;
+    start < rawWordList.length;
     start += LOOKUP_BATCH_SIZE
   ) {
-    const batch = rawWords.slice(start, start + LOOKUP_BATCH_SIZE);
+    const batch = rawWordList.slice(start, start + LOOKUP_BATCH_SIZE);
     const candidates = [...new Set(batch.flatMap(candidateLemmas))];
     const dictionaryWords = await lookup(candidates);
 
@@ -377,29 +327,21 @@ export async function extractVocabularyFromText(
       const entry = dictionaryWords.get(found);
       if (!entry || entry.senses.length === 0) continue;
       const key = entry.term.toLocaleLowerCase("en");
-      const raw = rawCounts.get(rawWord)!;
-      const current = resolved.get(key);
-      if (current) {
-        current.count += raw.count;
-        if (!current.sentence && raw.sentence) current.sentence = raw.sentence;
-      }
-      else {
+      if (!resolved.has(key)) {
         resolved.set(key, {
           term: entry.term,
-          count: raw.count,
-          sentence: raw.sentence,
           entry,
         });
       }
     }
 
-    const completed = Math.min(start + batch.length, rawWords.length);
+    const completed = Math.min(start + batch.length, rawWordList.length);
     report(
       options.onProgress,
       "looking-up",
-      35 + (completed / Math.max(rawWords.length, 1)) * 65,
+      35 + (completed / Math.max(rawWordList.length, 1)) * 65,
       completed,
-      rawWords.length,
+      rawWordList.length,
     );
     await yieldToUi();
   }
@@ -409,11 +351,13 @@ export async function extractVocabularyFromText(
       term.normalize("NFKC").trim().toLocaleLowerCase("en"),
     ),
   );
-  const results = [...resolved.values()].filter(
-    (result) =>
-      !options.hideExisting ||
-      !existing.has(result.term.toLocaleLowerCase("en")),
-  );
-  report(options.onProgress, "complete", 100, rawWords.length, rawWords.length);
+  const results = [...resolved.values()]
+    .filter(
+      (result) =>
+        !options.hideExisting ||
+        !existing.has(result.term.toLocaleLowerCase("en")),
+    )
+    .sort((left, right) => left.term.localeCompare(right.term, "en"));
+  report(options.onProgress, "complete", 100, rawWordList.length, rawWordList.length);
   return results;
 }

@@ -21,7 +21,7 @@ function makeEntry(id, term, definition, pos = "n") {
   };
 }
 
-async function checkLemmasAndAggregation() {
+async function checkLemmasAndUniqueTerms() {
   const entries = new Map([
     ["student", makeEntry(1, "student", "Học sinh")],
     ["study", makeEntry(2, "study", "Học tập", "v")],
@@ -44,11 +44,12 @@ async function checkLemmasAndAggregation() {
   );
   const byTerm = new Map(result.map((item) => [item.term, item]));
 
-  assert.equal(byTerm.get("student").count, 2, "Plural inflections group by dictionary headword.");
-  assert.equal(byTerm.get("study").count, 2, "Past tense and exact form group together.");
-  assert.equal(byTerm.get("run").count, 3, "Runner, running, and runs resolve to run.");
-  assert.equal(byTerm.get("well-known").count, 1, "Internal hyphens stay inside tokens.");
-  assert.equal(byTerm.get("student").sentence, "The students studied.");
+  assert.deepEqual([...byTerm.keys()], ["run", "student", "study", "well-known"]);
+  assert.equal(byTerm.size, 4, "Repeated occurrences and inflections yield one row per dictionary word.");
+  assert.ok(
+    result.every((item) => !("count" in item) && !("sentence" in item)),
+    "Extraction results contain no occurrence count or source sentence.",
+  );
   assert.ok(!byTerm.has("the"), "Bundled stopwords are excluded.");
   assert.ok(!byTerm.has("child"), "Words absent from the dictionary are excluded.");
   assert.ok(lookupCalls.length > 0);
@@ -69,16 +70,14 @@ async function checkLemmasAndAggregation() {
     "Grudge terrific",
     fragmentLookup,
   );
-  assert.equal(fragmentOnly.find((item) => item.term === "terrific")?.sentence, "",
-    "A two-word note fragment is not stored as an example.");
+  assert.deepEqual(fragmentOnly.map((item) => item.term), ["grudge", "terrific"]);
   const laterSentence = await extraction.extractVocabularyFromText(
     "Grudge terrific. The meal was terrific and fresh.",
     fragmentLookup,
   );
-  assert.equal(
-    laterSentence.find((item) => item.term === "terrific")?.sentence,
-    "The meal was terrific and fresh.",
-    "Use the first complete context if a later valid sentence contains the word.",
+  assert.ok(
+    laterSentence.every((item) => !("sentence" in item)),
+    "No part of the source text is returned as an example, even when it is a complete sentence.",
   );
 
   assert.ok(extraction.candidateLemmas("studies").includes("study"));
@@ -126,9 +125,9 @@ async function checkIrregularFormsAndExactMatchPriority() {
     lookup,
   );
   const byTerm = new Map(result.map((item) => [item.term, item]));
-  assert.equal(byTerm.get("go").count, 2, "Irregular verb forms group under go.");
-  assert.equal(byTerm.get("child").count, 1, "Irregular plural resolves to child.");
-  assert.equal(byTerm.get("good").count, 1, "Irregular comparative resolves to good.");
+  assert.ok(byTerm.has("go"), "Irregular verb forms resolve to go.");
+  assert.ok(byTerm.has("child"), "Irregular plural resolves to child.");
+  assert.ok(byTerm.has("good"), "Irregular comparative resolves to good.");
   assert.equal(byTerm.has("see"), false, "Ambiguous saw is not assigned to see.");
   assert.equal(byTerm.has("leave"), false, "Ambiguous left is not assigned to leave.");
   assert.equal(byTerm.has("rise"), false, "Ambiguous rose is not assigned to rise.");
@@ -160,12 +159,13 @@ async function checkSavedWordsProgressAndInputLimits() {
     lookup,
     { existingTerms: new Set(["student"]), hideExisting: false },
   );
-  assert.equal(includeSaved[0].count, 20, "The hide-saved toggle preserves found entries.");
+  assert.equal(includeSaved.length, 1, "Repeated occurrences still produce a single saved-word row.");
 
   const longInput = `${"students ".repeat(251)}.`;
   const longResult = await extraction.extractVocabularyFromText(longInput, lookup);
-  assert.equal(longResult[0].count, 251);
-  assert.equal(longResult[0].sentence.length, 200, "Source sentence is capped at 200 characters.");
+  assert.equal(longResult.length, 1);
+  assert.ok(!("count" in longResult[0]));
+  assert.ok(!("sentence" in longResult[0]));
   assert.ok(progress.some((item) => item.stage === "tokenizing"));
 
   await assert.rejects(
@@ -290,8 +290,11 @@ function checkScreenWiring() {
   assert.match(screen, /FileSystem\.EncodingType\.UTF8/);
   assert.match(screen, /MAX_EXTRACTION_FILE_BYTES/);
   assert.match(screen, /utf8ByteLength\(contents\)/);
-  assert.match(screen, /saveWord\(\{ \.\.\.draft, example: result\.sentence \|\| draft\.example \}\)/);
-  assert.match(screen, /Không tìm thấy câu ví dụ đủ dài trong văn bản hoặc từ điển/u);
+  assert.match(screen, /await saveWord\(draft\)/);
+  assert.doesNotMatch(screen, /result\.sentence|Câu gốc trong văn bản/);
+  assert.match(screen, /Ví dụ trong từ điển offline/u);
+  assert.match(screen, /nội dung nguồn không được lưu làm ví dụ/u);
+  assert.doesNotMatch(screen, /Tần suất|sortAlphabetically|item\.count/);
   assert.match(screen, /for \(const result of selectedResults\)/);
   assert.match(screen, /const saveSenseNow = async/);
   assert.match(screen, /testID=\{`extract-save-sense-\$\{key\}-\$\{sense\.id\}`\}/);
@@ -322,7 +325,7 @@ function checkScreenWiring() {
 async function main() {
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size >= 290);
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size <= 330);
-  await checkLemmasAndAggregation();
+  await checkLemmasAndUniqueTerms();
   await checkIrregularFormsAndExactMatchPriority();
   await checkSavedWordsProgressAndInputLimits();
   await checkLocalDictionaryLookup();

@@ -82,7 +82,6 @@ export default function ExtractVocabularyScreen() {
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [hideExisting, setHideExisting] = useState(true);
-  const [sortAlphabetically, setSortAlphabetically] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
@@ -126,21 +125,15 @@ export default function ExtractVocabularyScreen() {
       return [
         result.term,
         ...result.entry.senses.map((sense) => sense.definition),
-        result.sentence,
       ].some((value) => value.toLocaleLowerCase("en").includes(query));
     });
-    return filtered.sort((left, right) =>
-      sortAlphabetically
-        ? left.term.localeCompare(right.term, "en")
-        : right.count - left.count || left.term.localeCompare(right.term, "en"),
-    );
+    return filtered.sort((left, right) => left.term.localeCompare(right.term, "en"));
   }, [
     hideExisting,
     manuallySavedTerms,
     results,
     savedSenseKeys,
     searchQuery,
-    sortAlphabetically,
   ]);
   const selectedResults = useMemo(
     () =>
@@ -267,7 +260,7 @@ export default function ExtractVocabularyScreen() {
     setSavingSenseKeys((current) => new Set(current).add(key));
     try {
       const draft = await getDictionaryDraft(result.entry.id, sense.id);
-      await saveWord({ ...draft, example: result.sentence || draft.example });
+      await saveWord(draft);
       setSelectedTerms((current) => {
         if (!current.has(termKey)) return current;
         const next = new Set(current);
@@ -329,7 +322,7 @@ export default function ExtractVocabularyScreen() {
         )[0];
         if (!sense) continue;
         const draft = await getDictionaryDraft(result.entry.id, sense.id);
-        await saveWord({ ...draft, example: result.sentence || draft.example });
+        await saveWord(draft);
         added += 1;
       }
       setSelectedTerms(new Set());
@@ -376,9 +369,6 @@ export default function ExtractVocabularyScreen() {
             <View style={styles.termLine}>
               <Text style={[styles.term, { color: c.foreground }]} numberOfLines={1}>
                 {item.term}
-              </Text>
-              <Text style={[styles.count, { color: c.primary }]}>
-                ×{item.count}
               </Text>
             </View>
             <Text style={[styles.meta, { color: c.mutedForeground }]}>
@@ -532,12 +522,11 @@ export default function ExtractVocabularyScreen() {
               );
             })}
             <Text style={[styles.sentenceLabel, { color: c.mutedForeground }]}>
-              {item.sentence ? "Câu gốc trong văn bản" : "Ví dụ"}
+              Ví dụ trong từ điển offline
             </Text>
             <Text style={[styles.sentence, { color: c.foreground }]}>
-              {item.sentence ||
-                item.entry.senses.find((sense) => sense.example)?.example ||
-                "Không tìm thấy câu ví dụ đủ dài trong văn bản hoặc từ điển."}
+              {item.entry.senses.find((sense) => sense.example)?.example ||
+                "Từ điển offline chưa có ví dụ cho từ này."}
             </Text>
           </View>
         ) : null}
@@ -565,7 +554,7 @@ export default function ExtractVocabularyScreen() {
           </View>
         </View>
         <Text style={[styles.offlineNote, { color: c.mutedForeground }]}>
-          Dán văn bản hoặc chọn TXT. Từ và nghĩa chỉ được tra trong SQLite offline; không dịch câu, không xử lý PDF.
+          Dán văn bản hoặc chọn TXT. Chỉ trích xuất mỗi từ một lần; nội dung nguồn không được lưu làm ví dụ. Từ và nghĩa tra trong SQLite offline; không xử lý PDF.
         </Text>
         <View style={styles.slotLine}>
           <Feather name="bookmark" size={16} color={c.primary} />
@@ -729,21 +718,6 @@ export default function ExtractVocabularyScreen() {
               <Text style={[styles.subtitle, { color: c.mutedForeground }]}>
                 Chọn cả từ để thêm nghĩa đầu tiên chưa lưu; hoặc dùng nút lưu bên dưới từng nghĩa.
               </Text>
-            </View>
-            <View style={styles.sortActions}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={
-                  sortAlphabetically ? "Sắp xếp theo tần suất" : "Sắp xếp A đến Z"
-                }
-                onPress={() => setSortAlphabetically((value) => !value)}
-                style={[styles.sortButton, { borderColor: c.border }]}
-              >
-                <Feather name="list" size={16} color={c.primary} />
-                <Text style={[styles.sortButtonText, { color: c.foreground }]}>
-                  {sortAlphabetically ? "Tần suất" : "A–Z"}
-                </Text>
-              </Pressable>
             </View>
           </View>
           <View style={styles.filterRow}>
@@ -948,18 +922,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sectionTitle: { fontFamily: F.b, fontSize: 18 },
-  sortActions: { flexDirection: "row", gap: 8 },
-  sortButton: {
-    minHeight: 40,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 6,
-  },
-  sortButtonText: { fontFamily: F.s, fontSize: 12 },
   filterRow: { flexDirection: "row", gap: 8 },
   listSearch: {
     flex: 1,
@@ -987,7 +949,6 @@ const styles = StyleSheet.create({
   resultDetailsButton: { flex: 1, minWidth: 0, minHeight: 44, justifyContent: "center" },
   termLine: { flexDirection: "row", alignItems: "center", gap: 10 },
   term: { flexShrink: 1, fontFamily: F.b, fontSize: 17 },
-  count: { fontFamily: F.b, fontSize: 15 },
   meta: { fontFamily: F.r, fontSize: 12, marginTop: 2 },
   checkbox: {
     width: 42,
