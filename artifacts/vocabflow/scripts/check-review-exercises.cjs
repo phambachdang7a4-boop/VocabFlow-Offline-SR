@@ -56,6 +56,17 @@ assert.equal(exercises.clozeSentence('The theater is there.', 'he'), null);
 assert.equal(exercises.clozeSentence('C++ is not C+.', 'C++'), '________ is not C+.');
 assert.equal(exercises.clozeSentence('They take  off.', 'take off'), 'They ________.');
 assert.equal(exercises.clozeSentence('She is running.', 'run'), null, 'Never expect a different inflection silently');
+assert.equal(exercises.isReviewExampleUsable('Grudge terrific'), false);
+assert.equal(exercises.clozeSentence('Grudge terrific', 'terrific'), null,
+  'A fragment must not become a sentence-completion question.');
+const fragmentFallback = exercises.createReviewExercise({
+  ...word,
+  term: 'terrific',
+  meaning: 'Hoàn hảo, kỳ diệu',
+  example: 'Grudge terrific',
+}, 1);
+assert.equal(fragmentFallback.kind, 'meaning');
+assert.equal(fragmentFallback.fallback, true);
 for (const example of ['', 'Nothing matches here.']) {
   const fallback = exercises.createReviewExercise({ ...word, example }, 1);
   assert.equal(fallback.kind, 'meaning');

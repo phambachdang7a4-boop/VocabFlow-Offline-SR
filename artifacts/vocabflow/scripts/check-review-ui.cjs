@@ -395,6 +395,26 @@ async function startReview(screen) {
   ];
   const sentenceExercise = exercises.createReviewExercise(sentenceWord, 1, 0, sentenceWords);
   assert.equal(sentenceExercise.kind, 'multiple-choice');
+  const fragmentWord = {
+    ...sentenceWord,
+    id: 91,
+    term: 'terrific',
+    meaning: 'Hoàn hảo, kỳ diệu',
+    example: 'Grudge terrific',
+  };
+  const fragmentExercise = exercises.createReviewExercise(fragmentWord, 1);
+  assert.equal(fragmentExercise.kind, 'meaning',
+    'Do not turn a two-word fragment into a sentence question.');
+  const fragmentCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(fragmentWord),
+    exercise: fragmentExercise,
+  }, { recordReview: async () => {} });
+  fragmentCard.byId('review-answer-input').props.onChangeText('terrific');
+  fragmentCard.byId('review-check').props.onPress();
+  await fragmentCard.settle();
+  assert.equal(find(fragmentCard.byId('review-result'), node =>
+    node.type === 'Text' && node.props.children === fragmentWord.example), undefined,
+  'Do not repeat a malformed short fragment in review feedback.');
   const resultFreezeCalls = [];
   const sentenceCard = mount('../components/ReviewCard.tsx', {
     ...makeProps(sentenceWord),

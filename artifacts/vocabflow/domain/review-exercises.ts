@@ -72,8 +72,12 @@ export function letterHint(word: Pick<VocabularyWord, 'id' | 'term' | 'level' | 
 
 /** All exact whole-word occurrences are blanked, including repeated matches.
  * An inflected form is not silently treated as the original saved answer. */
+export function isReviewExampleUsable(example: string): boolean {
+  return (example.match(/\p{L}+/gu) ?? []).length >= 3;
+}
+
 export function clozeSentence(example: string, term: string): string | null {
-  if (!example.trim()) return null;
+  if (!example.trim() || !isReviewExampleUsable(example)) return null;
   const segments = exampleSegments(example, term);
   if (!segments.some(part => part.underline)) return null;
   return segments.map(part => part.underline ? '________' : part.text).join('');

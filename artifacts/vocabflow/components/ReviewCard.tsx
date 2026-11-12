@@ -21,6 +21,7 @@ import {
   checkReviewAnswer,
   compactReviewAnswer,
   displayReviewAnswer,
+  isReviewExampleUsable,
   type ReviewExercise,
 } from "@/domain/review-exercises";
 import { Button, ErrorBanner, F, MaterialSheen } from "@/components/ui";
@@ -797,7 +798,7 @@ export function ReviewCard({
                   {word.meaning}
                 </Text>
               ) : null}
-              {word.example ? (
+              {isReviewExampleUsable(word.example) ? (
                 <Text
                   style={[
                     styles.small,
