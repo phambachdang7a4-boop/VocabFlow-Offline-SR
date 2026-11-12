@@ -492,6 +492,10 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "The child benefited from the love and nurture of a supportive family.",
     exampleTranslation: "Đứa trẻ được hưởng lợi từ tình yêu thương và sự nuôi dưỡng của một gia đình luôn hỗ trợ em.",
   },
+  paternally: {
+    example: "She answered paternally and smiled.",
+    exampleTranslation: "Cô ấy trả lời một cách đầy bao dung như một người cha và mỉm cười.",
+  },
   sexuality: {
     example: "The study examines how culture and social expectations shape sexuality.",
     exampleTranslation: "Nghiên cứu xem xét cách văn hóa và kỳ vọng xã hội định hình tính dục.",

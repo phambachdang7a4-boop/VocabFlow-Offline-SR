@@ -210,6 +210,16 @@ assert.throws(
   "Reviewed translation corrections must fail if a meaning mismatch returns.",
 );
 
+const changedPronounTranslation = cloneCourseData();
+changedPronounTranslation.entries.paternally.exampleTranslation =
+  "Anh ấy trả lời một cách đầy bao dung như một người cha và mỉm cười.";
+assert.throws(
+  () =>
+    validateCourseDataAgainstAuthoredOverrides(changedPronounTranslation),
+  /paternally: authored IELTS example translation changed/,
+  "A reviewed translation must fail if it contradicts the example's subject.",
+);
+
 console.log(
   `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} unrelated dictionary senses and ${Object.keys(RARE_HEADWORD_REVIEW).length} rare or obsolete headwords are excluded, ${REQUIRED_COMMON_INFLECTIONS.length} useful inflections remain, and authored corrections match the builder.`,
 );
