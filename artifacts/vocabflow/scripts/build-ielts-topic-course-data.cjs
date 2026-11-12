@@ -690,6 +690,42 @@ const COURSE_HEADWORD_REPLACEMENTS = {
   salarying: "salary",
 };
 
+// Dictionary examples are pinned here when a broad topic prefix selects a
+// different sense from the one learners need. Match exact headwords only:
+// related inflections and other members of the word family remain eligible.
+const DICTIONARY_SENSE_REVIEW = {
+  learn: {
+    example: "We were surprised to learn the news today.",
+    reason: "Uses learn to mean find out, not acquire knowledge through study.",
+  },
+  assessable: {
+    example: "The house is assessable for tax.",
+    reason: "Uses the tax-valuation sense rather than educational assessment.",
+  },
+  assessor: {
+    example: "The assessor checked the value of the house.",
+    reason: "Names a property tax valuer, not someone assessing learning.",
+  },
+  degree: {
+    example: "I agree with your opinion in some degree.",
+    reason: "Uses degree to mean extent, not an academic qualification.",
+  },
+  examen: {
+    example: "His examen of the facts was careful and fair.",
+    reason: "Uses a rare critical examination sense, not a school exam.",
+  },
+  modern: {
+    example: "She was a modern who liked new ideas.",
+    reason: "Uses modern as a noun for a person, not the architecture adjective.",
+  },
+  plant: {
+    example: "This large plant produces thousands of cars every year.",
+    reason: "Uses plant to mean factory, not a living organism.",
+  },
+};
+
+const REQUIRED_RELATED_HEADWORDS = ["plants", "assessed", "graduated", "modernise"];
+
 const CURATED_TOPIC_ENTRIES = {
   capital: {
     topicId: "economy",
@@ -969,6 +1005,17 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
     throw new Error("IELTS course data is missing its entries object.");
   }
 
+  for (const term of Object.keys(DICTIONARY_SENSE_REVIEW)) {
+    if (entries[term]) {
+      errors.push(`- ${term}: dictionary example uses an unrelated IELTS sense`);
+    }
+  }
+  for (const term of REQUIRED_RELATED_HEADWORDS) {
+    if (!entries[term]) {
+      errors.push(`- ${term}: valid related headword was removed by sense filtering`);
+    }
+  }
+
   for (const [oldTerm, replacement] of Object.entries(
     COURSE_HEADWORD_REPLACEMENTS,
   )) {
@@ -1089,6 +1136,7 @@ function topicCandidates(topic, dictionary, sortedTerms) {
       if (
         !seen.has(term) &&
         !LEGACY_WORDS.has(term) &&
+        !DICTIONARY_SENSE_REVIEW[term] &&
         termMatchesPrefix(term, prefix)
       ) {
         seen.add(term);
@@ -1097,6 +1145,23 @@ function topicCandidates(topic, dictionary, sortedTerms) {
     }
   }
   return selected;
+}
+
+function validateDictionarySenseReview(dictionary) {
+  const errors = [];
+  for (const [term, review] of Object.entries(DICTIONARY_SENSE_REVIEW)) {
+    const entry = dictionary.get(term);
+    if (!entry) {
+      errors.push(`- ${term}: reviewed dictionary headword is missing`);
+    } else if (entry.example !== review.example) {
+      errors.push(`- ${term}: dictionary example changed; review its IELTS sense`);
+    }
+  }
+  if (errors.length) {
+    throw new Error(
+      `IELTS dictionary-sense review failed:\n${errors.join("\n")}`,
+    );
+  }
 }
 
 function loadLegacyCourse() {
@@ -1174,6 +1239,7 @@ function main() {
   const db = new DatabaseSync(DATABASE_PATH, { readOnly: true });
   try {
     const dictionary = dictionaryEntryIndex(getDictionaryRows(db));
+    validateDictionarySenseReview(dictionary);
     const sortedTerms = [...dictionary.keys()].sort();
     const legacy = loadLegacyCourse();
     const legacyTopics = new Map(
@@ -1295,7 +1361,7 @@ function main() {
     validateCourseDataAgainstAuthoredOverrides(output);
     writeFileSync(OUTPUT_PATH, `${JSON.stringify(output)}\n`, "utf8");
     console.log(
-      `Built IELTS course data: ${totalWords} unique words across ${topics.length} topics.`,
+      `Built IELTS course data: ${totalWords} unique words across ${topics.length} topics; excluded ${Object.keys(DICTIONARY_SENSE_REVIEW).length} reviewed dictionary sense mismatches.`,
     );
     for (const topic of topics) {
       console.log(`- ${topic.title}: ${topic.words.length} words`);
@@ -1316,6 +1382,9 @@ module.exports = {
   validateCourseExamples,
   applyCourseDefinitionOverrides,
   validateCourseDataAgainstAuthoredOverrides,
+  DICTIONARY_SENSE_REVIEW,
+  REQUIRED_RELATED_HEADWORDS,
+  validateDictionarySenseReview,
   COURSE_DEFINITION_OVERRIDES,
   COURSE_EXAMPLE_OVERRIDES,
 };
