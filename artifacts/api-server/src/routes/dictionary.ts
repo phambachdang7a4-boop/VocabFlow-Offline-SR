@@ -20,7 +20,7 @@ router.get("/dictionary/asset", async (req, res): Promise<void> => {
       "Content-Disposition": 'attachment; filename="dictionary_en_vi.db"',
     });
     const stream = file.createReadStream();
-    req.on("close", () => {
+    res.on("close", () => {
       if (!res.writableEnded) stream.destroy();
     });
     stream.on("error", (error) => {
@@ -64,7 +64,7 @@ router.get("/dictionary/audio", async (req, res): Promise<void> => {
       "X-Audio-Dictionary-Entries": "104829",
     });
     const stream = file.createReadStream();
-    req.on("close", () => {
+    res.on("close", () => {
       if (!res.writableEnded) stream.destroy();
     });
     stream.on("error", (error) => {
