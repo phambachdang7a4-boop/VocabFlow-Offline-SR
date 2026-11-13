@@ -445,8 +445,8 @@ export default function CollectionScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={
                       showEnglishBiography
-                        ? "Ẩn bản dịch tiếng Anh"
-                        : "Hiện bản dịch tiếng Anh"
+                        ? "Hiện tiểu sử bằng tiếng Việt"
+                        : "Dịch tiểu sử sang tiếng Anh"
                     }
                     accessibilityState={{ selected: showEnglishBiography }}
                     onPress={() =>
@@ -520,26 +520,20 @@ export default function CollectionScreen() {
                   </Text>
                 </View>
               ) : null}
-              <Text style={[styles.biography, { color: c.foreground }]}>
-                {selectedStatue.biography ??
-                  selectedStatue.description ??
-                  "Chưa có thông tin."}
+              <Text
+                testID={
+                  showEnglishBiography && selectedStatue.biographyEn
+                    ? "statue-biography-english"
+                    : "statue-biography-vietnamese"
+                }
+                style={[styles.biography, { color: c.foreground }]}
+              >
+                {showEnglishBiography && selectedStatue.biographyEn
+                  ? selectedStatue.biographyEn
+                  : selectedStatue.biography ??
+                    selectedStatue.description ??
+                    "Chưa có thông tin."}
               </Text>
-              {showEnglishBiography && selectedStatue.biographyEn ? (
-                <View
-                  testID="statue-biography-english"
-                  style={[styles.translationBlock, { borderTopColor: c.border }]}
-                >
-                  <Text
-                    style={[styles.translationLabel, { color: c.primary }]}
-                  >
-                    ENGLISH TRANSLATION
-                  </Text>
-                  <Text style={[styles.biography, { color: c.foreground }]}>
-                    {selectedStatue.biographyEn}
-                  </Text>
-                </View>
-              ) : null}
               {selectedStatue.sourceLabel ? (
                 <Text
                   style={[styles.sourceLabel, { color: c.mutedForeground }]}
@@ -709,17 +703,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   biography: { fontFamily: F.r, fontSize: 14, lineHeight: 22, marginTop: 4 },
-  translationBlock: {
-    borderTopWidth: 1,
-    paddingTop: 10,
-    marginTop: 4,
-  },
-  translationLabel: {
-    fontFamily: F.b,
-    fontSize: 11,
-    letterSpacing: 1,
-    marginBottom: 3,
-  },
   sourceLabel: { fontFamily: F.r, fontSize: 12, lineHeight: 18, marginTop: 6 },
   emptyCard: {
     position: "relative",

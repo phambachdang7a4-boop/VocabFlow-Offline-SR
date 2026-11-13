@@ -462,7 +462,17 @@ assert.match(collectionScreen, /selectedStatue\.quote/);
 assert.match(collectionScreen, /statue-translation-toggle/);
 assert.match(collectionScreen, /MaterialCommunityIcons\s+name="translate"/);
 assert.match(collectionScreen, /selectedStatue\.biographyEn/);
-assert.match(collectionScreen, /testID="statue-biography-english"/);
+assert.match(
+  collectionScreen,
+  /testID=\{\s*showEnglishBiography && selectedStatue\.biographyEn\s*\?\s*"statue-biography-english"\s*:\s*"statue-biography-vietnamese"/,
+);
+assert.match(collectionScreen, /Dịch tiểu sử sang tiếng Anh/);
+assert.match(collectionScreen, /Hiện tiểu sử bằng tiếng Việt/);
+assert.doesNotMatch(
+  collectionScreen,
+  /translationBlock|translationLabel/,
+  "The translated biography replaces the original instead of appearing below it.",
+);
 assert.throws(
   () => artworkForCraft("epic", 1),
   /Chưa có tượng/,
