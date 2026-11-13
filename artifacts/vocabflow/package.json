@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check:speech": "node scripts/check-speech.cjs",
     "check:sound-effects": "node scripts/check-sound-effects.cjs",
+    "check:tab-music": "node scripts/check-tab-background-music.cjs",
     "check:pan-loading": "node scripts/check-pan-loading.cjs",
     "check:auth-sync": "node scripts/check-auth-sync.cjs",
     "check:notebook-filter": "node scripts/check-notebook-filter.cjs",

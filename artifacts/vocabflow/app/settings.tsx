@@ -1200,11 +1200,11 @@ Nội dung tệp:
           error={resetError}
         />
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          HIỆU ỨNG GIAO DIỆN
+          ÂM THANH
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
-          Âm thanh được lưu trong ứng dụng, không tải lên mạng. Tắt bất cứ lúc
-          nào trong phần cài đặt này.
+          Nhạc piano nhẹ phát ở các tab ngoài Ôn tập và Nối từ khi ứng dụng mở.
+          Công tắc và âm lượng dưới đây điều khiển cả nhạc lẫn hiệu ứng.
         </Text>
         <View
           style={[
@@ -1219,17 +1219,17 @@ Nội dung tệp:
           <View style={styles.speechRow}>
             <View style={styles.speechText}>
               <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
-                Âm thanh giao diện
+                Âm thanh ứng dụng
               </Text>
               <Text
                 style={[styles.appearanceDetail, { color: c.mutedForeground }]}
               >
-                Phản hồi nhẹ khi lưu, trả lời và hoàn thành bài học.
+                Hiệu ứng nhẹ và nhạc nền piano.
               </Text>
             </View>
             <Switch
               testID="sfx-enabled"
-              accessibilityLabel="Âm thanh giao diện"
+              accessibilityLabel="Âm thanh ứng dụng"
               value={sound.enabled}
               disabled={!sound.ready || sound.saving}
               onValueChange={(value) => {
@@ -1248,7 +1248,7 @@ Nội dung tệp:
           >
             <View style={styles.speechText}>
               <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
-                Âm lượng hiệu ứng
+                Âm lượng
               </Text>
               <Text
                 testID="sfx-volume-value"
@@ -1261,7 +1261,7 @@ Nội dung tệp:
               <Pressable
                 testID="sfx-volume-down"
                 accessibilityRole="button"
-                accessibilityLabel="Giảm âm lượng hiệu ứng"
+                accessibilityLabel="Giảm âm lượng"
                 accessibilityState={{
                   disabled: !sound.ready || sound.saving || sound.volume <= 0,
                 }}
@@ -1288,7 +1288,7 @@ Nội dung tệp:
               <Pressable
                 testID="sfx-volume-up"
                 accessibilityRole="button"
-                accessibilityLabel="Tăng âm lượng hiệu ứng"
+                accessibilityLabel="Tăng âm lượng"
                 accessibilityState={{
                   disabled: !sound.ready || sound.saving || sound.volume >= 1,
                 }}

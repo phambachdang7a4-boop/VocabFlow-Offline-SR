@@ -496,7 +496,7 @@ function makeFakeEngine({ returnNull = false } = {}) {
 
   const settings = source("app/settings.tsx");
   assert.match(settings, /testID="sfx-enabled"/);
-  assert.match(settings, /accessibilityLabel="Âm thanh giao diện"/);
+  assert.match(settings, /accessibilityLabel="Âm thanh ứng dụng"/);
   assert.match(settings, /testID="sfx-volume-down"/);
   assert.match(settings, /testID="sfx-volume-up"/);
   const gate = source("components/DictionaryGate.tsx");

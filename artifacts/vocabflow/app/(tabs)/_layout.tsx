@@ -15,6 +15,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 import { SymbolView } from "expo-symbols";
 import { MaterialSheen } from "@/components/ui";
 import { PanLoadingScreen } from "@/components/PanLoadingScreen";
+import { TabBackgroundMusic } from "@/components/TabBackgroundMusic";
 
 // Start guests in the Thư Viện; they can reach the notebook from its tab.
 export const unstable_settings = { anchor: "dictionary" };
@@ -245,6 +246,10 @@ export default function TabLayout() {
 
   return (
     <>
+      <TabBackgroundMusic
+        activeTab={activeTab}
+        transitionVisible={showPan}
+      />
       {isLiquidGlassAvailable() ? <NativeTabLayout /> : <ClassicTabLayout />}
       <Modal
         testID="pan-tab-transition-modal"
