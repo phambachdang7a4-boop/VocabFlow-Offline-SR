@@ -13,6 +13,12 @@ Với Mắt Quạ, dán/đọc văn bản và tra từ phải dùng dữ liệu 
 
 Ưu tiên lấy ví dụ nguyên văn từ SQLite từ điển offline. Khi người dùng yêu cầu, có thể biên soạn ví dụ riêng cho khóa học nếu từ điển thiếu ví dụ phù hợp; không tự ghi nội dung khóa học vào từ điển gốc nếu chưa được yêu cầu.
 
+Với khóa ngữ pháp, mỗi câu trắc nghiệm cần có một đáp án tự nhiên, rõ ràng; nghĩa nên ghi cụm gần tương đương và điểm khác nhau khi người học dễ nhầm.
+
+**Why:** Người dùng yêu cầu rà khóa liên từ và trạng từ liên kết để tránh ví dụ có thể chọn nhiều đáp án, đồng thời muốn nghĩa giải thích rõ các cặp gần nghĩa.
+
+**How to apply:** Khi thêm hoặc sửa bài ngữ pháp, rà cả câu dẫn lẫn phương án nhiễu; ghi chú so sánh trong nghĩa hiển thị của khóa học, không tự sửa dữ liệu từ điển gốc.
+
 Từ đã lưu chỉ được xem, đóng băng/bỏ đóng băng hoặc xóa; không cho người dùng sửa nội dung. Form thêm từ không có trường ghi chú. Ghi chú cũ được giữ trong dữ liệu, không xóa khi ẩn trường.
 
 **Why:** Người dùng yêu cầu app dùng được không cần tài khoản và chỉ đồng bộ sau khi đăng nhập; trước đó họ yêu cầu offline-first và SQLite. Người dùng cũng quy định từ đã lưu không được chỉnh sửa và yêu cầu bỏ ghi chú. Giữ ghi chú cũ tránh xóa dữ liệu ngoài yêu cầu.

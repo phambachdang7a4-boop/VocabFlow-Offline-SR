@@ -171,6 +171,38 @@ async function checkCourseContentAndProgress() {
   assert.equal(courseTerms.length, entries.size, "Every new entry appears in one exercise.");
   assert.equal(new Set(courseTerms).size, entries.size);
   assert.equal(course.CONJUNCTION_COURSE_TITLE, "Liên từ trong câu");
+  assert.equal(course.CONJUNCTION_COURSE_ENTRY_BY_TERM.size, entries.size);
+  for (const entry of course.CONJUNCTION_COURSE_ENTRY_BY_TERM.values()) {
+    assert.match(entry.definition, /Ghi chú:/, `${entry.term} explains related terms.`);
+  }
+  const conjunctionQuestionByTerm = new Map(
+    course.CONJUNCTION_COURSE_LESSONS.flatMap((lesson) =>
+      lesson.questions.map((question) => [question.term, question]),
+    ),
+  );
+  for (const [term, distractor] of [
+    ["as soon as", "by the time"],
+    ["by the time", "as soon as"],
+    ["now when", "now that"],
+    ["now that", "now when"],
+    ["as though", "just as"],
+    ["as far as", "just as"],
+    ["as far as", "inasmuch as"],
+  ]) {
+    assert.ok(
+      !conjunctionQuestionByTerm.get(term).choices.includes(distractor),
+      `${term} does not compete with the similar answer ${distractor}.`,
+    );
+  }
+  assert.match(
+    conjunctionQuestionByTerm.get("even if").prompt,
+    /forecast is uncertain/i,
+  );
+  assert.match(
+    conjunctionQuestionByTerm.get("even though").prompt,
+    /in fact/i,
+  );
+  assert.match(conjunctionQuestionByTerm.get("if only").prompt, /!/);
 
   const linkingTerms = Object.keys(
     linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
@@ -200,7 +232,26 @@ async function checkCourseContentAndProgress() {
       assert.ok(
         linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES[question.term],
       );
+      assert.match(
+        linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES[question.term]
+          .definition,
+        /Ghi chú:/,
+        `${question.term} explains related linking adverbs.`,
+      );
     }
+  }
+  const linkingQuestionByTerm = new Map(
+    linkedQuestions.map((question) => [question.term, question]),
+  );
+  for (const [term, distractor] of [
+    ["hence", "instead"],
+    ["therefore", "moreover"],
+    ["then", "accordingly"],
+  ]) {
+    assert.ok(
+      !linkingQuestionByTerm.get(term).choices.includes(distractor),
+      `${term} does not compete with the similar answer ${distractor}.`,
+    );
   }
 
   const ieltsTerms = ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.flatMap(
