@@ -4,9 +4,11 @@ import {
   openDatabaseAsync,
   type SQLiteDatabase,
 } from "expo-sqlite";
-import { Directory, File, Paths } from "expo-file-system";
+import { Directory, File, FileMode, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 import { OFFLINE_AUDIO_DICTIONARY } from "../domain/offline-audio";
+
+const AUDIO_DOWNLOAD_CHUNK_BYTES = 8 * 1024 * 1024;
 
 let databaseConnection: Promise<SQLiteDatabase> | undefined;
 let activePlayer: AudioPlayer | null = null;
@@ -82,16 +84,45 @@ export async function downloadOfflineAudio(
     if (!sqliteDirectory.exists)
       sqliteDirectory.create({ intermediates: true, idempotent: true });
     if (destination.exists) destination.delete();
-    const downloaded = await File.downloadFileAsync(
-      getDownloadUrl(),
-      destination,
-      {
-        idempotent: true,
-        signal: controller.signal,
-        onProgress: (progress) =>
-          onProgress?.(progress.bytesWritten, progress.totalBytes),
-      },
-    );
+    destination.create({ intermediates: true, overwrite: true });
+    const destinationHandle = destination.open(FileMode.WriteOnly);
+    let downloadedBytes = 0;
+    try {
+      const url = getDownloadUrl();
+      while (downloadedBytes < OFFLINE_AUDIO_DICTIONARY.bytes) {
+        const start = downloadedBytes;
+        const end = Math.min(
+          start + AUDIO_DOWNLOAD_CHUNK_BYTES - 1,
+          OFFLINE_AUDIO_DICTIONARY.bytes - 1,
+        );
+        const expectedChunkBytes = end - start + 1;
+        const response = await fetch(url, {
+          headers: { Range: `bytes=${start}-${end}` },
+          signal: controller.signal,
+        });
+        if (response.status !== 206) {
+          await response.body?.cancel().catch(() => undefined);
+          throw new Error(
+            `Không thể tải đoạn audio ${start}-${end} (HTTP ${response.status}).`,
+          );
+        }
+        const expectedRange = `bytes ${start}-${end}/${OFFLINE_AUDIO_DICTIONARY.bytes}`;
+        if (response.headers.get("content-range") !== expectedRange) {
+          await response.body?.cancel().catch(() => undefined);
+          throw new Error("Máy chủ trả về đoạn audio không đúng vị trí.");
+        }
+        const chunk = new Uint8Array(await response.arrayBuffer());
+        if (chunk.byteLength !== expectedChunkBytes) {
+          throw new Error("Đoạn audio tải chưa đủ. Hãy thử lại.");
+        }
+        await destinationHandle.writeBytes(chunk);
+        downloadedBytes += chunk.byteLength;
+        onProgress?.(downloadedBytes, OFFLINE_AUDIO_DICTIONARY.bytes);
+      }
+    } finally {
+      destinationHandle.close();
+    }
+    const downloaded = destination;
     if (downloaded.size !== OFFLINE_AUDIO_DICTIONARY.bytes) {
       throw new Error(
         "Gói audio tải chưa đủ. Hãy thử lại với kết nối ổn định.",

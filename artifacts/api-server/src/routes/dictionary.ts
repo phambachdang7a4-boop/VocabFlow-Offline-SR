@@ -52,18 +52,55 @@ router.get("/dictionary/audio", async (req, res): Promise<void> => {
   try {
     const file = await findAudioDictionaryAsset();
     const [metadata] = await file.getMetadata();
-    res.set({
+    const totalBytes = Number(metadata.size);
+    const rangeHeader = req.header("range");
+    let start = 0;
+    let end = totalBytes - 1;
+    let status = 200;
+
+    if (rangeHeader) {
+      const match = /^bytes=(\d+)-(\d*)$/.exec(rangeHeader.trim());
+      if (!match) {
+        res.set("Content-Range", `bytes */${totalBytes}`);
+        res.set("Accept-Ranges", "bytes").sendStatus(416);
+        return;
+      }
+      start = Number(match[1]);
+      end = match[2] ? Number(match[2]) : totalBytes - 1;
+      if (
+        !Number.isSafeInteger(start) ||
+        !Number.isSafeInteger(end) ||
+        start < 0 ||
+        start >= totalBytes ||
+        end < start
+      ) {
+        res.set("Content-Range", `bytes */${totalBytes}`);
+        res.set("Accept-Ranges", "bytes").sendStatus(416);
+        return;
+      }
+      end = Math.min(end, totalBytes - 1);
+      status = 206;
+    }
+
+    const headers: Record<string, string> = {
       "Content-Type": "application/vnd.sqlite3",
-      "Content-Length": String(metadata.size),
+      "Content-Length": String(end - start + 1),
       "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition":
         'attachment; filename="vocabflow-audio-dictionary.db"',
+      "Accept-Ranges": "bytes",
       "X-Audio-Dictionary-SHA256":
         "b3821cbbe15ee0e42dad72867a14202adbcefae2ed1e1712e24fcc9c389f4acc",
       "X-Audio-Dictionary-Entries": "104829",
-    });
-    const stream = file.createReadStream();
+    };
+    if (status === 206)
+      headers["Content-Range"] = `bytes ${start}-${end}/${totalBytes}`;
+    res.status(status).set(headers);
+
+    const stream = file.createReadStream(
+      status === 206 ? { start, end } : undefined,
+    );
     res.on("close", () => {
       if (!res.writableEnded) stream.destroy();
     });
