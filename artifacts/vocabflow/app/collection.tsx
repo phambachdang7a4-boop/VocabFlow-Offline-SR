@@ -37,6 +37,11 @@ import {
 const RARITY_ORDER: ChestRarity[] = [...CHEST_RARITIES];
 const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
   "ho-chi-minh-marble": require("../assets/images/ho-chi-minh-marble.png"),
+  "alexander-marble": require("../assets/images/alexander-marble.png"),
+  "leonardo-marble": require("../assets/images/leonardo-marble.png"),
+  "kant-marble": require("../assets/images/kant-marble.png"),
+  "marcus-aurelius-marble": require("../assets/images/marcus-aurelius-marble.png"),
+  "benjamin-franklin-marble": require("../assets/images/benjamin-franklin-marble.png"),
 };
 
 function rarityDisplayLabel(rarity: ChestRarity): string {
@@ -119,8 +124,8 @@ export default function CollectionScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Text style={[styles.intro, { color: c.mutedForeground }]}>
-        Tượng Hồ Chí Minh đã mở khóa sẵn. Các tượng khác cần 100 mảnh cùng phẩm
-        chất. Mảnh lưu offline và đồng bộ cùng tài khoản.
+        Tất cả tượng hiện có đã được mở khóa sẵn. Chạm vào tượng để xem thông
+        tin và tiểu sử song ngữ.
       </Text>
       {error ? (
         <ErrorBanner message={error} onRetry={() => void load()} />
@@ -193,7 +198,7 @@ export default function CollectionScreen() {
       <View style={styles.heading}>
         <Text style={[styles.title, { color: c.foreground }]}>Mảnh ghép</Text>
         <Text style={[styles.caption, { color: c.mutedForeground }]}>
-          Tượng Hồ Chí Minh đã mở khóa sẵn; tượng khác sẽ dùng mảnh cùng phẩm chất.
+          Các tượng hiện có đều đã mở khóa sẵn.
         </Text>
       </View>
 

@@ -402,10 +402,74 @@ assert.equal(
   statue.sourceLabel,
   "Cổng thông tin điện tử Hồ Chí Minh",
 );
+const alexander = COLLECTION_ARTWORKS.find(
+  (item) => item.id === "legendary-alexander-marble",
+);
+assert.ok(alexander);
+assert.equal(alexander.rarity, "legendary");
+assert.equal(alexander.title, "Tượng Alexander Đại đế");
+assert.equal(alexander.shortTitle, "Alexander");
+assert.equal(alexander.material, "Cẩm thạch");
+assert.equal(alexander.unlockMode, "automatic");
+assert.ok(alexander.biography.includes("Aristotle"));
+assert.ok(alexander.biography.includes("Hydaspes"));
+assert.ok(alexander.biographyEn.includes("Gaugamela"));
+assert.ok(alexander.biographyEn.includes("location of his tomb"));
+const leonardo = COLLECTION_ARTWORKS.find(
+  (item) => item.id === "legendary-leonardo-marble",
+);
+assert.ok(leonardo);
+assert.equal(leonardo.rarity, "legendary");
+assert.equal(leonardo.title, "Tượng Leonardo da Vinci");
+assert.equal(leonardo.shortTitle, "Leonardo");
+assert.equal(leonardo.material, "Cẩm thạch");
+assert.equal(leonardo.unlockMode, "automatic");
+assert.ok(leonardo.biography.includes("Andrea del Verrocchio"));
+assert.ok(leonardo.biography.includes("Bữa ăn tối cuối cùng"));
+assert.ok(leonardo.biographyEn.includes("Salvator Mundi"));
+assert.ok(leonardo.biographyEn.includes("detailed studies of human anatomy"));
+const kant = COLLECTION_ARTWORKS.find(
+  (item) => item.id === "legendary-immanuel-kant-marble",
+);
+assert.ok(kant);
+assert.equal(kant.rarity, "legendary");
+assert.equal(kant.title, "Tượng Immanuel Kant");
+assert.equal(kant.shortTitle, "Kant");
+assert.equal(kant.material, "Cẩm thạch");
+assert.equal(kant.unlockMode, "automatic");
+assert.ok(kant.biography.includes("triết gia người Đức"));
+assert.ok(kant.biographyEn.includes("philosopher of the Enlightenment"));
+const marcus = COLLECTION_ARTWORKS.find(
+  (item) => item.id === "epic-marcus-aurelius-marble",
+);
+assert.ok(marcus);
+assert.equal(marcus.rarity, "epic");
+assert.equal(marcus.title, "Tượng Marcus Aurelius");
+assert.equal(marcus.shortTitle, "Marcus Aurelius");
+assert.equal(marcus.material, "Cẩm thạch");
+assert.equal(marcus.unlockMode, "automatic");
+assert.ok(marcus.biography.includes("đại dịch Antonine"));
+assert.ok(marcus.biographyEn.includes("Meditations"));
+const franklin = COLLECTION_ARTWORKS.find(
+  (item) => item.id === "rare-benjamin-franklin-marble",
+);
+assert.ok(franklin);
+assert.equal(franklin.rarity, "rare");
+assert.equal(franklin.title, "Tượng Benjamin Franklin");
+assert.equal(franklin.shortTitle, "Benjamin Franklin");
+assert.equal(franklin.material, "Cẩm thạch");
+assert.equal(franklin.unlockMode, "automatic");
+assert.ok(franklin.biography.includes("Tuyên ngôn Độc lập Hoa Kỳ"));
+assert.ok(franklin.biographyEn.includes("Poor Richard's Almanack"));
+assert.throws(
+  () => artworkForCraft("legendary", 0),
+  /không hợp lệ/,
+  "Legendary craft indices must remain positive.",
+);
 assert.throws(
   () => artworkForCraft("legendary", 1),
   /Chưa có tượng/,
-  "The automatically unlocked HCM statue cannot be crafted or charged for.",
+  "All currently available statues are unlocked without fragment costs.",
 );
 assert.equal(
   isValidCollectionCraftArtwork("legendary", 1, statue.id),
@@ -436,12 +500,41 @@ assert.match(
   /justifyContent:\s*"space-between"/,
   "Four statue tiles are spaced across each grid row.",
 );
-assert.equal(COLLECTION_ARTWORKS.length, 1);
+assert.equal(COLLECTION_ARTWORKS.length, 6);
+assert.ok(
+  COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
+  "All currently available statues are unlocked without fragments.",
+);
 assert.equal(isCollectionArtwork("legendary", statue.id), true);
+assert.equal(isCollectionArtwork("legendary", alexander.id), true);
+assert.equal(isCollectionArtwork("legendary", leonardo.id), true);
+assert.equal(isCollectionArtwork("legendary", kant.id), true);
+assert.equal(isCollectionArtwork("epic", marcus.id), true);
+assert.equal(isCollectionArtwork("rare", franklin.id), true);
 assert.equal(isCollectionArtwork("epic", "epic-repose"), false);
 assert.ok(
   existsSync(join(__dirname, "../assets/images/ho-chi-minh-marble.png")),
   "The Legendary marble statue is bundled for offline display.",
+);
+assert.ok(
+  existsSync(join(__dirname, "../assets/images/alexander-marble.png")),
+  "Alexander's marble statue is bundled for offline display.",
+);
+assert.ok(
+  existsSync(join(__dirname, "../assets/images/leonardo-marble.png")),
+  "Leonardo's marble statue is bundled for offline display.",
+);
+assert.ok(
+  existsSync(join(__dirname, "../assets/images/kant-marble.png")),
+  "Kant's marble statue is bundled for offline display.",
+);
+assert.ok(
+  existsSync(join(__dirname, "../assets/images/marcus-aurelius-marble.png")),
+  "Marcus Aurelius's marble statue is bundled for offline display.",
+);
+assert.ok(
+  existsSync(join(__dirname, "../assets/images/benjamin-franklin-marble.png")),
+  "Benjamin Franklin's marble statue is bundled for offline display.",
 );
 assert.match(
   collectionScreen,

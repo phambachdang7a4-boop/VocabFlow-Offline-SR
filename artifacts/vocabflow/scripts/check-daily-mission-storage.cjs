@@ -519,12 +519,12 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     await assert.rejects(
       () => harness.repo.craftCollectionArtwork("legendary"),
       /Chưa có tượng/,
-      "The HCM statue is unlocked by default and no longer consumes fragments.",
+      "All current statues are unlocked automatically; none consumes fragments.",
     );
     assert.equal(
       (await harness.repo.getMissionCollectionOverview()).fragments.legendary,
       beforeLegendaryUnlock.fragments.legendary,
-      "Trying to craft the already-unlocked statue cannot consume fragments.",
+      "Trying to craft an already-unlocked statue cannot consume fragments.",
     );
 
     await harness.repo.recordReviewSessionResult({

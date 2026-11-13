@@ -84,3 +84,73 @@ mtime_ms = 1794314109206
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/95664ddd-4ccd-4b1a-95af-5acd2bab8d8f/c2bc1ac2-f3e7-4844-904b-1eb7d812b716"
 storage_version_token = "1794314219238460"
 content_type = "image/png"
+
+[[outputs]]
+id = "gnV0qy2wsUenIM4Z16oam"
+uri = "file://artifacts/vocabflow/assets/images/alexander-marble.png"
+type = "image"
+title = "Tượng Alexander Đại đế"
+description = "Tượng cẩm thạch pixel-art nền đen, đã thêm vào Bộ Sưu Tập VocabFlow."
+logical_id = "b7372d79-a761-47d5-afa5-d280d4c32efd"
+content_hash = "sha256:097c222922502281b83cf3cb059adb053f627dc9ceb3ce7b7b93ebe7bf29dd1e"
+size = 1047115
+mtime_ms = 1794597889358
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/b7372d79-a761-47d5-afa5-d280d4c32efd/24c2a28d-caed-4d0c-a6c5-265d3a75dc47"
+storage_version_token = "1794598679718122"
+content_type = "image/png"
+
+[[outputs]]
+id = "od3erGXTypcSYB9g3m84C"
+uri = "file://artifacts/vocabflow/assets/images/leonardo-marble.png"
+type = "image"
+title = "Tượng Leonardo da Vinci"
+description = "Tượng cẩm thạch pixel-art nền đen, đã thêm vào Bộ Sưu Tập VocabFlow."
+logical_id = "950b6fdc-9c5f-45f9-a29c-5ead10a8df57"
+content_hash = "sha256:93a0c0632f8efe4edf620c0f2e6d45f24378324dfa53a6bdc5b6f9f0d74b77dd"
+size = 899597
+mtime_ms = 1794598763982
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/950b6fdc-9c5f-45f9-a29c-5ead10a8df57/4e28e2d8-c5f9-48a9-bfd4-e23963bf564f"
+storage_version_token = "1794598898450551"
+content_type = "image/png"
+
+[[outputs]]
+id = "CzXgyg2SMrscaKe1NngmQ"
+uri = "file://artifacts/vocabflow/assets/images/kant-marble.png"
+type = "image"
+title = "Tượng Immanuel Kant"
+description = "Tượng cẩm thạch pixel-art nền đen, đã thêm vào Bộ Sưu Tập VocabFlow."
+logical_id = "f8973f2d-582d-4cf4-a967-c710f5358c1e"
+content_hash = "sha256:e4457b9bc26cd806c823ee09611e76087655b87e29426d93eaf8beee2e88db48"
+size = 854681
+mtime_ms = 1794599014252
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/f8973f2d-582d-4cf4-a967-c710f5358c1e/61495199-0833-44ca-bf1e-b7e41ea0ec31"
+storage_version_token = "1794599087340154"
+content_type = "image/png"
+
+[[outputs]]
+id = "YztbXvaSLlQxJQ82r1660"
+uri = "file://artifacts/vocabflow/assets/images/marcus-aurelius-marble.png"
+type = "image"
+title = "Tượng Marcus Aurelius"
+description = "Tượng cẩm thạch pixel-art bậc Epic, đã thêm vào Bộ Sưu Tập VocabFlow."
+logical_id = "27419ce7-173a-4b61-b93e-31e92d80346d"
+content_hash = "sha256:1a00fc883fd88752c265565062ad0ab9741a21935a41783f7133932e96f7f1e7"
+size = 885209
+mtime_ms = 1794599154827
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/27419ce7-173a-4b61-b93e-31e92d80346d/53ec73ec-16cb-418b-9796-986feeb8dc51"
+storage_version_token = "1794599270634619"
+content_type = "image/png"
+
+[[outputs]]
+id = "R6wq-tRqRIntze20c3RUX"
+uri = "file://artifacts/vocabflow/assets/images/benjamin-franklin-marble.png"
+type = "image"
+title = "Tượng Benjamin Franklin"
+description = "Tượng cẩm thạch pixel-art bậc Rare, đã thêm vào Bộ Sưu Tập VocabFlow."
+logical_id = "827e1beb-57b4-41a8-8fed-76192cecacdd"
+content_hash = "sha256:adbdafb4145230dc621745517956052344441c06f936cafd29ef3237f5cd2d7b"
+size = 875818
+mtime_ms = 1794599331204
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/827e1beb-57b4-41a8-8fed-76192cecacdd/4208ec72-63db-4a79-ab50-d03fb9a796c8"
+storage_version_token = "1794599413928042"
+content_type = "image/png"
