@@ -28,7 +28,11 @@ import {
   MAX_EXTRACTION_TEXT_CHARACTERS,
   MAX_EXTRACTION_TEXT_BYTES,
   chooseExtractionSenses,
+  extractionManualMeaningKey,
+  extractionSenseKey,
   extractVocabularyFromText,
+  hasAvailableExtractionSense,
+  isExtractionSenseSaved,
   utf8ByteLength,
 } from "@/domain/vocabulary-extraction";
 import { lookupDictionaryExtractionCandidates } from "@/data/vocabulary-extraction";
@@ -36,25 +40,9 @@ import { lookupDictionaryExtractionCandidates } from "@/data/vocabulary-extracti
 const MAX_EXTRACTION_FILE_BYTES = MAX_EXTRACTION_TEXT_BYTES;
 
 type ResultRow = Awaited<ReturnType<typeof extractVocabularyFromText>>[number];
-const EMPTY_SENSE_IDS: ReadonlySet<number> = new Set();
 
 function normalizedTerm(term: string): string {
   return term.normalize("NFKC").trim().toLocaleLowerCase("en");
-}
-
-function senseStorageKey(entryId: number, senseId: number): string {
-  return `${entryId}:${senseId}`;
-}
-
-function hasAvailableSense(
-  result: ResultRow,
-  manuallySavedTerms: ReadonlySet<string>,
-  savedSenseKeys: ReadonlySet<string>,
-): boolean {
-  if (manuallySavedTerms.has(normalizedTerm(result.term))) return false;
-  return result.entry.senses.some(
-    (sense) => !savedSenseKeys.has(senseStorageKey(result.entry.id, sense.id)),
-  );
 }
 
 function partOfSpeechLabel(pos: string | null): string {
@@ -88,7 +76,7 @@ export default function ExtractVocabularyScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const manuallySavedTerms = useMemo(
+  const savedManualMeaningKeys = useMemo(
     () =>
       new Set(
         words
@@ -97,7 +85,9 @@ export default function ExtractVocabularyScreen() {
               word.dictionaryEntryId == null ||
               word.dictionarySenseId == null,
           )
-          .map((word) => normalizedTerm(word.term)),
+          .map((word) =>
+            extractionManualMeaningKey(word.term, word.meaning),
+          ),
       ),
     [words],
   );
@@ -106,7 +96,7 @@ export default function ExtractVocabularyScreen() {
       new Set(
         words.flatMap((word) =>
           word.dictionaryEntryId != null && word.dictionarySenseId != null
-            ? [senseStorageKey(word.dictionaryEntryId, word.dictionarySenseId)]
+            ? [extractionSenseKey(word.dictionaryEntryId, word.dictionarySenseId)]
             : [],
         ),
       ),
@@ -117,7 +107,11 @@ export default function ExtractVocabularyScreen() {
     const filtered = results.filter((result) => {
       if (
         hideExisting &&
-        !hasAvailableSense(result, manuallySavedTerms, savedSenseKeys)
+        !hasAvailableExtractionSense(
+          result,
+          savedSenseKeys,
+          savedManualMeaningKeys,
+        )
       ) {
         return false;
       }
@@ -130,8 +124,8 @@ export default function ExtractVocabularyScreen() {
     return filtered.sort((left, right) => left.term.localeCompare(right.term, "en"));
   }, [
     hideExisting,
-    manuallySavedTerms,
     results,
+    savedManualMeaningKeys,
     savedSenseKeys,
     searchQuery,
   ]);
@@ -141,10 +135,14 @@ export default function ExtractVocabularyScreen() {
         const key = normalizedTerm(result.term);
         return (
           selectedTerms.has(key) &&
-          hasAvailableSense(result, manuallySavedTerms, savedSenseKeys)
+          hasAvailableExtractionSense(
+            result,
+            savedSenseKeys,
+            savedManualMeaningKeys,
+          )
         );
       }),
-    [manuallySavedTerms, results, savedSenseKeys, selectedTerms],
+    [results, savedManualMeaningKeys, savedSenseKeys, selectedTerms],
   );
 
   const chooseTextFile = async () => {
@@ -246,12 +244,16 @@ export default function ExtractVocabularyScreen() {
     result: ResultRow,
     sense: ResultRow["entry"]["senses"][number],
   ) => {
-    const key = senseStorageKey(result.entry.id, sense.id);
+    const key = extractionSenseKey(result.entry.id, sense.id);
     const termKey = normalizedTerm(result.term);
     if (
       savingSenseKeys.has(key) ||
-      savedSenseKeys.has(key) ||
-      manuallySavedTerms.has(termKey)
+      isExtractionSenseSaved(
+        result.entry,
+        sense,
+        savedSenseKeys,
+        savedManualMeaningKeys,
+      )
     ) {
       return;
     }
@@ -289,7 +291,13 @@ export default function ExtractVocabularyScreen() {
     setSelectedTerms((current) => {
       const next = new Set(current);
       for (const result of visibleResults) {
-        if (hasAvailableSense(result, manuallySavedTerms, savedSenseKeys)) {
+        if (
+          hasAvailableExtractionSense(
+            result,
+            savedSenseKeys,
+            savedManualMeaningKeys,
+          )
+        ) {
           next.add(normalizedTerm(result.term));
         }
       }
@@ -309,8 +317,11 @@ export default function ExtractVocabularyScreen() {
         const savedIds = new Set(
           result.entry.senses
             .filter((sense) =>
-              savedSenseKeys.has(
-                senseStorageKey(result.entry.id, sense.id),
+              isExtractionSenseSaved(
+                result.entry,
+                sense,
+                savedSenseKeys,
+                savedManualMeaningKeys,
               ),
             )
             .map((sense) => sense.id),
@@ -340,14 +351,19 @@ export default function ExtractVocabularyScreen() {
 
   const renderResult = ({ item }: { item: ResultRow }) => {
     const key = normalizedTerm(item.term);
-    const isSaved = !hasAvailableSense(
+    const isSaved = !hasAvailableExtractionSense(
       item,
-      manuallySavedTerms,
       savedSenseKeys,
+      savedManualMeaningKeys,
     );
     const isSelected = selectedTerms.has(key);
     const savedSenseCount = item.entry.senses.filter((sense) =>
-      savedSenseKeys.has(senseStorageKey(item.entry.id, sense.id)),
+      isExtractionSenseSaved(
+        item.entry,
+        sense,
+        savedSenseKeys,
+        savedManualMeaningKeys,
+      ),
     ).length;
     const expanded = expandedTerm === key;
     const firstSense = item.entry.senses[0];
@@ -405,6 +421,37 @@ export default function ExtractVocabularyScreen() {
             ) : null}
           </Pressable>
         </View>
+        {item.roots?.length ? (
+          <View style={styles.rootsRow}>
+            {item.roots.map((root) => (
+              <Pressable
+                key={root.id}
+                testID={`extract-root-shortcut-${key}-${root.id}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Mở từ gốc ${root.term}`}
+                onPress={() =>
+                  router.push({
+                    pathname: "/dictionary-entry",
+                    params: { id: String(root.id) },
+                  })
+                }
+                hitSlop={6}
+                style={({ pressed }) => [
+                  styles.rootShortcut,
+                  {
+                    backgroundColor: c.accent,
+                    opacity: pressed ? 0.65 : 1,
+                  },
+                ]}
+              >
+                <Feather name="corner-up-right" size={14} color={c.primary} />
+                <Text style={[styles.rootShortcutText, { color: c.primary }]}>
+                  Từ gốc: {root.term}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Xem nghĩa và câu gốc của ${item.term}`}
@@ -432,13 +479,15 @@ export default function ExtractVocabularyScreen() {
               Mỗi nghĩa có nút lưu riêng
             </Text>
             {item.entry.senses.map((sense, index) => {
-              const senseSaved = savedSenseKeys.has(
-                senseStorageKey(item.entry.id, sense.id),
+              const senseSaved = isExtractionSenseSaved(
+                item.entry,
+                sense,
+                savedSenseKeys,
+                savedManualMeaningKeys,
               );
-              const senseKey = senseStorageKey(item.entry.id, sense.id);
+              const senseKey = extractionSenseKey(item.entry.id, sense.id);
               const senseSaving = savingSenseKeys.has(senseKey);
               const senseDisabled =
-                manuallySavedTerms.has(key) ||
                 senseSaved ||
                 senseSaving ||
                 isAdding ||
@@ -509,13 +558,11 @@ export default function ExtractVocabularyScreen() {
                         },
                       ]}
                     >
-                      {manuallySavedTerms.has(key)
-                        ? "Từ đã có trong Sổ"
-                        : senseSaving
-                          ? "Đang lưu nghĩa…"
-                          : senseSaved
-                            ? "Đã có trong Sổ"
-                            : "Lưu nghĩa này"}
+                      {senseSaving
+                        ? "Đang lưu nghĩa…"
+                        : senseSaved
+                          ? "Đã có trong Sổ"
+                          : "Lưu nghĩa này"}
                     </Text>
                   </Pressable>
                 </View>
@@ -814,10 +861,10 @@ export default function ExtractVocabularyScreen() {
                 !searchQuery.trim() &&
                 results.every(
                   (item) =>
-                    !hasAvailableSense(
+                    !hasAvailableExtractionSense(
                       item,
-                      manuallySavedTerms,
                       savedSenseKeys,
+                      savedManualMeaningKeys,
                     ),
                 )
                   ? "Các nghĩa này đã có trong Sổ. Tắt “Ẩn từ đã có” để xem."
@@ -950,6 +997,16 @@ const styles = StyleSheet.create({
   bulkAction: { fontFamily: F.s, fontSize: 12 },
   resultCard: { borderWidth: 1, padding: 14, marginBottom: 9 },
   resultTop: { flexDirection: "row", alignItems: "center", gap: 12 },
+  rootsRow: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 8 },
+  rootShortcut: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 13,
+  },
+  rootShortcutText: { fontFamily: F.s, fontSize: 12 },
   resultDetailsButton: { flex: 1, minWidth: 0, minHeight: 44, justifyContent: "center" },
   termLine: { flexDirection: "row", alignItems: "center", gap: 10 },
   term: { flexShrink: 1, fontFamily: F.b, fontSize: 17 },

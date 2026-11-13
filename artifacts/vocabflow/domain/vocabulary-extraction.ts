@@ -1,4 +1,7 @@
 import { ENGLISH_STOP_WORDS } from "./english-stopwords";
+import { explicitInflectionLemmas } from "./dictionary-inflections";
+
+export { explicitInflectionLemmas } from "./dictionary-inflections";
 
 export const MAX_EXTRACTION_TEXT_CHARACTERS = 1_000_000;
 export const MAX_EXTRACTION_TEXT_BYTES = 1_048_576;
@@ -101,6 +104,59 @@ export interface ExtractionDictionaryEntry {
 export interface ExtractedVocabularyTerm {
   term: string;
   entry: ExtractionDictionaryEntry;
+  roots?: { id: number; term: string }[];
+}
+
+export function extractionSenseKey(entryId: number, senseId: number): string {
+  return `${entryId}:${senseId}`;
+}
+
+function normalizedMeaningKey(term: string, meaning: string): string {
+  const normalize = (value: string) =>
+    value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("en");
+  return `${normalize(term)}\u0000${normalize(meaning)}`;
+}
+
+export function extractionManualMeaningKey(
+  term: string,
+  meaning: string,
+): string {
+  return normalizedMeaningKey(term, meaning);
+}
+
+function extractionSenseMeaning(sense: ExtractionDictionarySense): string {
+  const kind = [sense.pos, sense.subPos].filter(Boolean).join(" · ");
+  return `${kind ? `(${kind}) ` : ""}${sense.definition}`;
+}
+
+export function isExtractionSenseSaved(
+  entry: Pick<ExtractionDictionaryEntry, "id" | "term">,
+  sense: ExtractionDictionarySense,
+  savedSenseKeys: ReadonlySet<string>,
+  savedManualMeaningKeys: ReadonlySet<string>,
+): boolean {
+  return (
+    savedSenseKeys.has(extractionSenseKey(entry.id, sense.id)) ||
+    savedManualMeaningKeys.has(
+      normalizedMeaningKey(entry.term, extractionSenseMeaning(sense)),
+    )
+  );
+}
+
+export function hasAvailableExtractionSense(
+  result: ExtractedVocabularyTerm,
+  savedSenseKeys: ReadonlySet<string>,
+  savedManualMeaningKeys: ReadonlySet<string>,
+): boolean {
+  return result.entry.senses.some(
+    (sense) =>
+      !isExtractionSenseSaved(
+        result.entry,
+        sense,
+        savedSenseKeys,
+        savedManualMeaningKeys,
+      ),
+  );
 }
 
 export function chooseExtractionSenses(
@@ -318,6 +374,7 @@ export async function extractVocabularyFromText(
     const batch = rawWordList.slice(start, start + LOOKUP_BATCH_SIZE);
     const candidates = [...new Set(batch.flatMap(candidateLemmas))];
     const dictionaryWords = await lookup(candidates);
+    const foundEntries = new Map<string, ExtractionDictionaryEntry>();
 
     for (const rawWord of batch) {
       const found = candidateLemmas(rawWord).find((candidate) =>
@@ -326,11 +383,38 @@ export async function extractVocabularyFromText(
       if (!found) continue;
       const entry = dictionaryWords.get(found);
       if (!entry || entry.senses.length === 0) continue;
+      foundEntries.set(rawWord, entry);
+    }
+
+    const rootTerms = [
+      ...new Set(
+        [...foundEntries.values()].flatMap((entry) =>
+          explicitInflectionLemmas(
+            entry.senses.map((sense) => sense.definition),
+          ).filter((root) => root !== entry.term.toLocaleLowerCase("en")),
+        ),
+      ),
+    ];
+    const rootEntries = rootTerms.length ? await lookup(rootTerms) : new Map();
+
+    for (const entry of foundEntries.values()) {
       const key = entry.term.toLocaleLowerCase("en");
       if (!resolved.has(key)) {
+        const roots = explicitInflectionLemmas(
+          entry.senses.map((sense) => sense.definition),
+        )
+          .map((root) => rootEntries.get(root))
+          .filter(
+            (root): root is ExtractionDictionaryEntry =>
+              Boolean(root) &&
+              root.term.toLocaleLowerCase("en") !==
+                entry.term.toLocaleLowerCase("en"),
+          )
+          .map(({ id, term }) => ({ id, term }));
         resolved.set(key, {
           term: entry.term,
           entry,
+          ...(roots.length ? { roots } : {}),
         });
       }
     }

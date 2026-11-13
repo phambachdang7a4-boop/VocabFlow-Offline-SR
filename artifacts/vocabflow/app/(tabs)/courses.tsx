@@ -210,7 +210,7 @@ export default function CoursesScreen() {
   const [courseWordsSavedMessage, setCourseWordsSavedMessage] = useState<
     string | null
   >(null);
-  const { words: savedWords, saveWord } = useVocabulary();
+  const { words: savedWords, saveWords } = useVocabulary();
 
   const activeCourse =
     COURSE_CATALOG.find((course) => course.id === activeCourseId) ?? null;
@@ -364,23 +364,19 @@ export default function CoursesScreen() {
     setSaving(true);
     setError(null);
     setCourseWordsSavedMessage(null);
-    let addedCount = 0;
     try {
-      for (const candidate of selected) {
-        await saveWord({
+      await saveWords(
+        selected.map((candidate) => ({
           term: candidate.term,
           meaning: candidate.meaning,
           ipa: candidate.ipa,
           example: candidate.example,
           note: "",
-        });
-        addedCount += 1;
-        setSelectedCourseWordKeys((previous) =>
-          previous.filter((key) => key !== candidate.key),
-        );
-      }
+        })),
+      );
+      setSelectedCourseWordKeys([]);
       setCourseWordsSavedMessage(
-        `Đã thêm ${addedCount} từ vào Sổ từ. Các từ mới bắt đầu ở Cấp 1.`,
+        `Đã thêm ${selected.length} từ vào Sổ từ. Các từ mới bắt đầu ở Cấp 1.`,
       );
     } catch (failure) {
       setError(

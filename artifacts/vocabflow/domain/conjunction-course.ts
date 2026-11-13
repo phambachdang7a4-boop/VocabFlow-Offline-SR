@@ -104,7 +104,7 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
       {
         term: "as though",
         prompt: "The dog stared at the empty bowl _____ it expected another meal.",
-        choices: ["as though", "as long as", "inasmuch as", "just as"],
+        choices: ["as though", "as long as", "so that", "just as"],
       },
       {
         term: "as far as",

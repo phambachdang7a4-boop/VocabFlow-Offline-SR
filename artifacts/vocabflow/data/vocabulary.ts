@@ -98,6 +98,74 @@ export function normalizeTerm(value: string): string {
     .toLocaleLowerCase("en");
 }
 
+function cleanWordInput(input: WordInput): WordInput {
+  const clean: WordInput = {
+    term: input.term.normalize("NFKC").trim().replace(/\s+/g, " "),
+    meaning: input.meaning.trim(),
+    ipa: input.ipa.trim(),
+    example: input.example.trim(),
+    note: input.note.trim(),
+    dictionaryEntryId: input.dictionaryEntryId ?? null,
+    dictionarySenseId: input.dictionarySenseId ?? null,
+  };
+  if (!clean.term || !clean.meaning) {
+    throw new Error("Vui lòng nhập từ tiếng Anh và nghĩa tiếng Việt.");
+  }
+  if (
+    clean.term.length > 200 ||
+    clean.meaning.length > 2000 ||
+    clean.ipa.length > 200 ||
+    clean.example.length > 4000 ||
+    clean.note.length > 4000
+  ) {
+    throw new Error(
+      "Nội dung quá dài. Từ và IPA tối đa 200 ký tự, nghĩa 2.000, ví dụ và ghi chú 4.000.",
+    );
+  }
+  return clean;
+}
+
+function validateDictionarySense(
+  entryId: number | null,
+  senseId: number | null,
+): void {
+  if (
+    (entryId === null) !== (senseId === null) ||
+    (entryId !== null &&
+      (!Number.isSafeInteger(entryId) ||
+        entryId < 1 ||
+        !Number.isSafeInteger(senseId) ||
+        senseId! < 1))
+  ) {
+    throw new Error("Vui lòng chọn một nghĩa từ điển hợp lệ.");
+  }
+}
+
+async function assertWordIsNotDuplicate(
+  db: SQLiteDatabase,
+  clean: WordInput,
+  entryId: number | null,
+  senseId: number | null,
+  excludedId = -1,
+): Promise<void> {
+  const key = normalizeTerm(clean.term);
+  const meaningKey = normalizeTerm(clean.meaning);
+  const duplicate = await db.getFirstAsync<{ id: number }>(
+    entryId === null
+      ? "SELECT id FROM words WHERE normalized_term = ? AND normalized_meaning = ? AND id != ?"
+      : `SELECT id FROM words WHERE ((dictionary_entry_id = ? AND dictionary_sense_id = ?) OR
+          (dictionary_entry_id IS NULL AND normalized_term = ? AND normalized_meaning = ?)) AND id != ?`,
+    ...(entryId === null
+      ? [key, meaningKey, excludedId]
+      : [entryId, senseId, key, meaningKey, excludedId]),
+  );
+  if (duplicate) {
+    throw new Error(
+      "Từ này với nghĩa đã chọn đã có trong danh sách. Hãy sửa mục đã lưu.",
+    );
+  }
+}
+
 function syncIdForWord(
   term: string,
   meaning: string,
@@ -1651,27 +1719,7 @@ export function recordReviewSessionStart(): Promise<void> {
 
 export function saveWord(input: WordInput, id?: number): Promise<void> {
   return serialize(async () => {
-    const clean: WordInput = {
-      term: input.term.normalize("NFKC").trim().replace(/\s+/g, " "),
-      meaning: input.meaning.trim(),
-      ipa: input.ipa.trim(),
-      example: input.example.trim(),
-      note: input.note.trim(),
-    };
-    if (!clean.term || !clean.meaning) {
-      throw new Error("Vui lòng nhập từ tiếng Anh và nghĩa tiếng Việt.");
-    }
-    if (
-      clean.term.length > 200 ||
-      clean.meaning.length > 2000 ||
-      clean.ipa.length > 200 ||
-      clean.example.length > 4000 ||
-      clean.note.length > 4000
-    ) {
-      throw new Error(
-        "Nội dung quá dài. Từ và IPA tối đa 200 ký tự, nghĩa 2.000, ví dụ và ghi chú 4.000.",
-      );
-    }
+    const clean = cleanWordInput(input);
     if (id !== undefined && (!Number.isSafeInteger(id) || id < 1)) {
       throw new Error("Mã từ không hợp lệ.");
     }
@@ -1697,29 +1745,8 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
     const senseId =
       previous?.dictionarySenseId ??
       (id === undefined ? (input.dictionarySenseId ?? null) : null);
-    if (
-      (entryId === null) !== (senseId === null) ||
-      (entryId !== null &&
-        (!Number.isSafeInteger(entryId) ||
-          entryId < 1 ||
-          !Number.isSafeInteger(senseId) ||
-          senseId! < 1))
-    ) {
-      throw new Error("Vui lòng chọn một nghĩa từ điển hợp lệ.");
-    }
-    const duplicate = await db.getFirstAsync<{ id: number }>(
-      entryId === null
-        ? "SELECT id FROM words WHERE normalized_term = ? AND normalized_meaning = ? AND id != ?"
-        : `SELECT id FROM words WHERE ((dictionary_entry_id = ? AND dictionary_sense_id = ?) OR
-            (dictionary_entry_id IS NULL AND normalized_term = ? AND normalized_meaning = ?)) AND id != ?`,
-      ...(entryId === null
-        ? [key, meaningKey, id ?? -1]
-        : [entryId, senseId, key, meaningKey, id ?? -1]),
-    );
-    if (duplicate)
-      throw new Error(
-        "Từ này với nghĩa đã chọn đã có trong danh sách. Hãy sửa mục đã lưu.",
-      );
+    validateDictionarySense(entryId, senseId);
+    await assertWordIsNotDuplicate(db, clean, entryId, senseId, id ?? -1);
     const now = new Date().toISOString();
     await db.withTransactionAsync(async () => {
       if (id !== undefined) {
@@ -1766,6 +1793,71 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
       if (id === undefined) {
         await grantDailyMissionChests(db, localDay(new Date(now)));
       }
+      await markSyncDirty(db);
+    });
+    notifySyncListeners();
+  });
+}
+
+/** Add multiple new words as one local transaction and one sync update. */
+export function saveWords(inputs: readonly WordInput[]): Promise<void> {
+  if (inputs.length === 0) return Promise.resolve();
+  return serialize(async () => {
+    const entries = inputs.map((input) => {
+      const clean = cleanWordInput(input);
+      const entryId = clean.dictionaryEntryId ?? null;
+      const senseId = clean.dictionarySenseId ?? null;
+      validateDictionarySense(entryId, senseId);
+      return { clean, entryId, senseId };
+    });
+
+    const batchKeys = new Set<string>();
+    for (const { clean } of entries) {
+      const batchKey = `${normalizeTerm(clean.term)}\u0000${normalizeTerm(clean.meaning)}`;
+      if (batchKeys.has(batchKey)) {
+        throw new Error(
+          "Từ này với nghĩa đã chọn bị lặp trong danh sách cần thêm.",
+        );
+      }
+      batchKeys.add(batchKey);
+    }
+
+    const db = await database();
+    const now = new Date().toISOString();
+    const learnedOn = localDay(new Date(now));
+    await db.withTransactionAsync(async () => {
+      for (const { clean, entryId, senseId } of entries) {
+        await assertWordIsNotDuplicate(db, clean, entryId, senseId);
+      }
+      for (const { clean, entryId, senseId } of entries) {
+        const key = normalizeTerm(clean.term);
+        const meaningKey = normalizeTerm(clean.meaning);
+        const result = await db.runAsync(
+          `INSERT INTO words (term, normalized_term, meaning, normalized_meaning, ipa, example, note, created_at, updated_at,
+            dictionary_entry_id, dictionary_sense_id, sync_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          clean.term,
+          key,
+          clean.meaning,
+          meaningKey,
+          clean.ipa,
+          clean.example,
+          clean.note,
+          now,
+          now,
+          entryId,
+          senseId,
+          syncIdForWord(clean.term, clean.meaning, entryId, senseId),
+        );
+        const progress = initialProgress(learnedOn);
+        await db.runAsync(
+          "INSERT INTO word_progress (word_id, learned_on, next_review_on, sync_updated_at) VALUES (?, ?, ?, ?)",
+          result.lastInsertRowId,
+          progress.learnedOn,
+          progress.nextReviewOn,
+          now,
+        );
+      }
+      await grantDailyMissionChests(db, learnedOn);
       await markSyncDirty(db);
     });
     notifySyncListeners();

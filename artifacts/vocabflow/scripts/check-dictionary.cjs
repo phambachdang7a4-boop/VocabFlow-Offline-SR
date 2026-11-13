@@ -86,6 +86,24 @@ function adapter(filename, readOnly = false) {
     "Public data must not require preview login or an API domain",
   );
   const { DICTIONARY, DICTIONARY_PAGE_SIZE } = domain;
+  const inflections = loadTs(
+    join(__dirname, "../domain/dictionary-inflections.ts"),
+  );
+  const expectedDownloadChunks = Math.ceil(
+    DICTIONARY.bytes / (8 * 1024 * 1024),
+  );
+  function rangeResponse(source, options) {
+    const match = /^bytes=(\d+)-(\d+)$/.exec(options?.headers?.Range ?? "");
+    assert.ok(match, "Dictionary downloads request a single byte range");
+    const start = Number(match[1]);
+    const end = Number(match[2]);
+    return new Response(source.subarray(start, end + 1), {
+      status: 206,
+      headers: {
+        "content-range": `bytes ${start}-${end}/${source.byteLength}`,
+      },
+    });
+  }
   for (const [tag, expected] of [
     ["N", "noun"],
     ["noun", "noun"],
@@ -108,6 +126,7 @@ function adapter(filename, readOnly = false) {
   const queries = loadTs(join(__dirname, "../data/dictionary-queries.ts"), {
     "../domain/dictionary": domain,
     "../domain/dictionary-suggestions": spelling,
+    "../domain/dictionary-inflections": inflections,
   });
   const reference = adapter(source, true);
   assert.equal(
@@ -198,6 +217,42 @@ function adapter(filename, readOnly = false) {
   );
   const entry = await queries.entryInDictionary(reference, hello.id);
   assert.ok(entry.partsOfSpeech.length > 0);
+  const lookupWordId = (term) =>
+    reference.handle
+      .prepare("SELECT id FROM words WHERE word = ? ORDER BY id LIMIT 1")
+      .get(term)?.id;
+  const unfoldedRoots = await queries.inflectionRootsInDictionary(
+    reference,
+    lookupWordId("unfolded"),
+  );
+  assert.deepEqual(
+    unfoldedRoots.map((root) => root.term),
+    ["unfold"],
+    "An explicit past-tense definition links unfolded to its local root entry.",
+  );
+  const studiesRoots = await queries.inflectionRootsInDictionary(
+    reference,
+    lookupWordId("studies"),
+  );
+  assert.ok(
+    studiesRoots.some((root) => root.term === "study"),
+    "An explicit third-person singular definition links studies to study.",
+  );
+  const axesRoots = await queries.inflectionRootsInDictionary(
+    reference,
+    lookupWordId("axes"),
+  );
+  for (const root of ["axe", "ax", "axis"]) {
+    assert.ok(
+      axesRoots.some((candidate) => candidate.term === root),
+      `The explicit plural definition links axes to ${root}.`,
+    );
+  }
+  assert.deepEqual(
+    await queries.inflectionRootsInDictionary(reference, lookupWordId("news")),
+    [],
+    "A matching suffix without a grammatical-form definition does not create a root link.",
+  );
   const multi = reference.handle
     .prepare(
       `SELECT wd.word_id AS id, COUNT(*) AS n
@@ -387,6 +442,10 @@ function adapter(filename, readOnly = false) {
       constructor(...parts) {
         this.path = pathFor(parts);
       }
+      get exists() {
+        return true;
+      }
+      create() {}
     }
     class MockFile {
       constructor(...parts) {
@@ -407,10 +466,20 @@ function adapter(filename, readOnly = false) {
       delete() {
         files.delete(this.path);
       }
-      open() {
+      create() {
+        files.set(this.path, Buffer.alloc(0));
+      }
+      open(mode) {
         const data = files.get(this.path);
         return {
           readBytes: async (length) => new Uint8Array(data.subarray(0, length)),
+          writeBytes: async (chunk) => {
+            const current = files.get(this.path);
+            files.set(
+              this.path,
+              Buffer.concat([current, Buffer.from(chunk)]),
+            );
+          },
           close() {},
         };
       }
@@ -431,7 +500,7 @@ function adapter(filename, readOnly = false) {
     const fileSystem = {
       File: MockFile,
       Directory: MockDirectory,
-      FileMode: { ReadOnly: "r" },
+      FileMode: { ReadOnly: "r", WriteOnly: "w" },
       Paths: {
         cache: new MockDirectory("cache"),
         document: new MockDirectory("document"),
@@ -480,7 +549,7 @@ function adapter(filename, readOnly = false) {
       "Public browser dictionary downloads do not send account cookies",
     );
     downloads++;
-    return new Response(bytes);
+    return rangeResponse(bytes, options);
   }, "https://phone.expo.example");
   const waiting = [];
   assert.deepEqual(
@@ -526,7 +595,7 @@ function adapter(filename, readOnly = false) {
     "importing",
     "ready",
   ]);
-  assert.equal(downloads, 1);
+  assert.equal(downloads, expectedDownloadChunks);
   assert.deepEqual(
     await repo.getOfflineDictionaryStatus(),
     { state: "installed", bytes: DICTIONARY.bytes },
@@ -608,6 +677,41 @@ function adapter(filename, readOnly = false) {
   await assert.rejects(loaded.runAsync("DELETE FROM words"), /readonly/);
   await loaded.closeAsync();
 
+  // Exercise the Expo Go file-writing path: each range is appended before
+  // integrity verification and SQLite import.
+  const nativeCacheName = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
+  rmSync(join(root, nativeCacheName), { force: true });
+  let nativeRangeRequests = 0;
+  repo = repository(async (url, options) => {
+    assert.equal(url, publicUrl);
+    assert.equal(options.credentials, "omit");
+    nativeRangeRequests++;
+    return rangeResponse(bytes, options);
+  });
+  const nativeStages = [];
+  const nativeDictionary = await repo.openDictionary(
+    (stage) => nativeStages.push(stage),
+    { allowDownload: true },
+  );
+  assert.deepEqual(nativeStages, [
+    "checking",
+    "downloading",
+    "verifying",
+    "importing",
+    "ready",
+  ]);
+  assert.equal(nativeRangeRequests, expectedDownloadChunks);
+  assert.equal(
+    (
+      await nativeDictionary.getFirstAsync(
+        "SELECT COUNT(*) AS count FROM words",
+      )
+    ).count,
+    DICTIONARY.wordCount + localAdditionData.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
+    "The Expo Go file writer imports the complete ranged download",
+  );
+  await nativeDictionary.closeAsync();
+
   // Simulate a dictionary cache created by the previous app version: examples
   // are still upstream, and its metadata has no example revision column.
   const name = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
@@ -646,7 +750,7 @@ function adapter(filename, readOnly = false) {
   );
   assert.equal(
     downloads,
-    1,
+    expectedDownloadChunks,
     "Applying local example updates must not download the 44 MB source again",
   );
   for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
@@ -697,9 +801,9 @@ function adapter(filename, readOnly = false) {
   // Remove ONLY the disposable reference cache to emulate first use without a network.
   rmSync(join(root, name));
   let online = false;
-  repo = repository(async () => {
+  repo = repository(async (_url, options) => {
     if (!online) throw new Error("No connection");
-    return new Response(bytes);
+    return rangeResponse(bytes, options);
   });
   await assert.rejects(
     repo.openDictionary(undefined, { allowDownload: true }),
@@ -720,7 +824,10 @@ function adapter(filename, readOnly = false) {
   await recovered.closeAsync();
 
   rmSync(join(root, name));
-  repo = repository(async () => new Response(Buffer.alloc(DICTIONARY.bytes)));
+  const corruptBytes = Buffer.alloc(DICTIONARY.bytes);
+  repo = repository(async (url, options) =>
+    rangeResponse(corruptBytes, options),
+  );
   await assert.rejects(
     repo.openDictionary(undefined, { allowDownload: true }),
     /không đúng phiên bản/,

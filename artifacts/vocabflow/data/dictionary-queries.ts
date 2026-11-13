@@ -4,6 +4,7 @@ import {
   type DictionaryEntry, type DictionaryMatch, type DictionaryMatches, type DictionaryPronunciation, type DictionarySense, type DictionarySuggestion, type DictionaryPartOfSpeech,
 } from '../domain/dictionary';
 import { canSuggest, rankSuggestions, spellingVariants, suggestionTerm } from '../domain/dictionary-suggestions';
+import { explicitInflectionLemmas } from '../domain/dictionary-inflections';
 
 function checkPage(offset: number) {
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) {
@@ -62,6 +63,50 @@ export async function entryInDictionary(db: SQLiteDatabase, id: number, offset =
   );
   return { ...word, pronunciations, senses: senses.slice(0, DICTIONARY_PAGE_SIZE), hasMore: senses.length > DICTIONARY_PAGE_SIZE,
     partsOfSpeech: available.map(row => row.part) };
+}
+
+export async function inflectionRootsInDictionary(
+  db: SQLiteDatabase,
+  id: number,
+): Promise<DictionarySuggestion[]> {
+  checkId(id);
+  const word = await db.getFirstAsync<{ id: number; term: string }>(
+    'SELECT id, word AS term FROM words WHERE id = ?',
+    id,
+  );
+  if (!word) throw new Error('Không tìm thấy từ trong kho tra cứu.');
+  const definitions = await db.getAllAsync<{ definition: string }>(
+    `SELECT d.definition
+     FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id
+     WHERE wd.word_id = ? AND d.definition_lang = 'vi'
+     ORDER BY wd.id`,
+    id,
+  );
+  const roots = explicitInflectionLemmas(
+    definitions.map((row) => row.definition),
+  ).filter((root) => root.toLocaleLowerCase('en') !== word.term.toLocaleLowerCase('en'));
+  if (!roots.length) return [];
+
+  const matches = await db.getAllAsync<DictionarySuggestion>(
+    `SELECT w.id, w.word AS term
+     FROM words w
+     WHERE w.lang_code = 'en'
+       AND w.word COLLATE NOCASE IN (${roots.map(() => '?').join(',')})
+       AND EXISTS (
+         SELECT 1 FROM word_definitions wd
+         JOIN definitions d ON d.id = wd.definition_id
+         WHERE wd.word_id = w.id AND d.definition_lang = 'vi'
+       )
+     ORDER BY w.word COLLATE NOCASE, w.id`,
+    ...roots,
+  );
+  const byTerm = new Map(
+    matches.map((match) => [match.term.toLocaleLowerCase('en'), match]),
+  );
+  return roots.flatMap((root) => {
+    const match = byTerm.get(root.toLocaleLowerCase('en'));
+    return match && match.id !== id ? [match] : [];
+  });
 }
 
 export async function suggestInDictionary(db: SQLiteDatabase, query: string): Promise<DictionarySuggestion[]> {

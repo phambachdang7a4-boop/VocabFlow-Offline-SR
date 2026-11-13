@@ -97,10 +97,59 @@ let upgradedHarness;
   assert.equal(finished.completed, true);
   assert.equal(finished.nextReviewOn, null);
   await assert.rejects(repo.recordReview(second.id, true, 2), /hoàn tất/);
+
+  const readSyncGeneration = async () => {
+    const row = await repo.withSyncDatabase((db) =>
+      db.getFirstAsync("SELECT value FROM sync_state WHERE key = 'generation'"),
+    );
+    return Number(row?.value ?? 0);
+  };
+  const generationBeforeBatch = await readSyncGeneration();
+  const batchInputs = ["batch alpha", "batch beta", "batch gamma"].map((term) => ({
+    term,
+    meaning: `Nghĩa của ${term}`,
+    ipa: "",
+    example: "",
+    note: "",
+  }));
+  await repo.saveWords(batchInputs);
+  assert.equal(
+    await readSyncGeneration(),
+    generationBeforeBatch + 1,
+    "A multiword save marks one sync generation.",
+  );
+  const batchWords = (await repo.listWords()).filter((item) =>
+    item.term.startsWith("batch "),
+  );
+  assert.equal(batchWords.length, batchInputs.length);
+  assert.ok(
+    batchWords.every(
+      (item) => item.level === 1 && item.reviewCount === 0 && !item.completed,
+    ),
+    "Every batch word starts at level 1 with fresh progress.",
+  );
+
+  const generationBeforeRejectedBatch = await readSyncGeneration();
+  await assert.rejects(
+    repo.saveWords([
+      { ...input, term: "must not be partially saved" },
+      { ...input, term: second.term, meaning: second.meaning },
+    ]),
+    /đã có/,
+  );
+  assert.equal(await readSyncGeneration(), generationBeforeRejectedBatch);
+  assert.equal(
+    (await repo.listWords()).some(
+      (item) => item.term === "must not be partially saved",
+    ),
+    false,
+    "A rejected batch leaves no partial words.",
+  );
+
   harness.db.close();
   const reopened = new DatabaseSync(join(root, 'vocabflow.db'));
-  assert.equal(reopened.prepare('SELECT COUNT(*) AS n FROM words').get().n, 1);
-  assert.equal(reopened.prepare('SELECT completed FROM word_progress').get().completed, 1);
+  assert.equal(reopened.prepare('SELECT COUNT(*) AS n FROM words').get().n, 4);
+  assert.equal(reopened.prepare('SELECT completed FROM word_progress WHERE word_id = ?').get(second.id).completed, 1);
   reopened.close();
 
   // Construct a real Step 1 database to verify the non-destructive migration.
@@ -129,7 +178,7 @@ let upgradedHarness;
   assert.equal(migrated.updatedAt, '2025-12-02T12:00:00Z');
   assert.equal(migrated.learnedOn, '2025-12-01');
   assert.equal(migrated.nextReviewOn, '2025-12-01');
-  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 11);
+  assert.equal(legacyHarness.db.prepare('PRAGMA user_version').get().user_version, 21);
   assert.equal((await legacyHarness.repo.listWords()).length, 1);
   // Restore a previous-schedule (v2) fixture with real history, then reopen.
   await legacyHarness.repo.saveWord({ ...input, term: 'finished' });
@@ -173,7 +222,7 @@ let upgradedHarness;
   assert.equal(stillFinished.completed, true);
   assert.equal(stillFinished.nextReviewOn, null);
   assert.equal(stillFinished.reviewCount, 6);
-  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 11);
+  assert.equal(upgradedHarness.db.prepare('PRAGMA user_version').get().user_version, 21);
   console.log('PASS: CRUD, immediate new learning, persistent SRS, atomic grading, unchanged edit progress, completion, non-destructive old database and schedule migrations.');
 })()
   .catch((error) => {

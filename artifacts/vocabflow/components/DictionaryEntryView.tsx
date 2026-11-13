@@ -16,7 +16,10 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useVocabulary } from "@/contexts/VocabularyContext";
-import { getDictionaryEntry } from "@/data/dictionary";
+import {
+  getDictionaryEntry,
+  getDictionaryInflectionRoots,
+} from "@/data/dictionary";
 import { getOfflineRegionalIpaStatus } from "@/data/offline-regional-pronunciations";
 import {
   dictionaryDraft,
@@ -79,6 +82,9 @@ export function DictionaryEntryView({
     };
   }, []);
   const [entry, setEntry] = useState<DictionaryEntry | null>(null);
+  const [inflectionRoots, setInflectionRoots] = useState<
+    { id: number; term: string }[]
+  >([]);
   const [regionalIpaInstalled, setRegionalIpaInstalled] = useState<
     boolean | null
   >(null);
@@ -119,6 +125,25 @@ export function DictionaryEntryView({
       speech.stopSpeaking,
     ]),
   );
+
+  useEffect(() => {
+    let active = true;
+    setInflectionRoots([]);
+    if (!entry) return () => {
+      active = false;
+    };
+    getDictionaryInflectionRoots(entry.id).then(
+      (roots) => {
+        if (active) setInflectionRoots(roots);
+      },
+      () => {
+        if (active) setInflectionRoots([]);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [entry?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -402,6 +427,37 @@ export function DictionaryEntryView({
             <Feather name="volume-2" size={23} color={c.dictHead} />
           </Pressable>
         </View>
+        {inflectionRoots.length ? (
+          <View style={styles.rootsRow}>
+            {inflectionRoots.map((root) => (
+              <Pressable
+                key={root.id}
+                testID={`entry-root-shortcut-${root.id}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Mở từ gốc ${root.term}`}
+                onPress={() =>
+                  router.push({
+                    pathname: "/dictionary-entry",
+                    params: { id: String(root.id) },
+                  })
+                }
+                hitSlop={6}
+                style={({ pressed }) => [
+                  styles.rootShortcut,
+                  {
+                    backgroundColor: c.dictChip,
+                    opacity: pressed ? 0.65 : 1,
+                  },
+                ]}
+              >
+                <Feather name="corner-up-right" size={14} color={c.dictHead} />
+                <Text style={[styles.rootShortcutText, { color: c.dictHead }]}>
+                  Từ gốc: {root.term}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
         {sameRegionalIpa ? (
           <View
             testID="entry-pronunciation-shared"
@@ -713,6 +769,17 @@ const styles = StyleSheet.create({
   backText: { fontFamily: F.s, fontSize: 14 },
   term: { fontFamily: F.b, fontSize: 36, letterSpacing: -0.8 },
   termRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  rootsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  rootShortcut: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 14,
+  },
+  rootShortcutText: { fontFamily: F.s, fontSize: 13 },
   speakerButton: {
     width: 44,
     height: 44,

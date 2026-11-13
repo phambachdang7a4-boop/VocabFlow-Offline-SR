@@ -12,6 +12,7 @@ interface VocabularyContextValue {
   error: string | null;
   reload: () => Promise<void>;
   saveWord: (input: WordInput, id?: number) => Promise<void>;
+  saveWords: (inputs: readonly WordInput[]) => Promise<void>;
   deleteWord: (id: number) => Promise<void>;
   recordReview: (id: number, correct: boolean, expectedReviewCount: number) => Promise<void>;
   today: string;
@@ -67,6 +68,17 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
     await reload();
   }, [reload]);
 
+  const saveWords = useCallback(async (inputs: readonly WordInput[]) => {
+    try {
+      await storage.saveWords(inputs);
+    } catch (failure) {
+      const message = failure instanceof Error ? failure.message : '';
+      const known = ['Vui lòng', 'Nội dung', 'Mã từ', 'Từ này'];
+      throw new Error(known.some(prefix => message.startsWith(prefix)) ? message : writeError);
+    }
+    await reload();
+  }, [reload]);
+
   const deleteWord = useCallback(async (id: number) => {
     try {
       await storage.deleteWord(id);
@@ -105,8 +117,8 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
     [words, today],
   );
   const value = useMemo(
-    () => ({ words, loading, error, reload, saveWord, deleteWord, recordReview, today, dueWords, frozenWords, setWordFrozen }),
-    [words, loading, error, reload, saveWord, deleteWord, recordReview, today, dueWords, frozenWords, setWordFrozen],
+    () => ({ words, loading, error, reload, saveWord, saveWords, deleteWord, recordReview, today, dueWords, frozenWords, setWordFrozen }),
+    [words, loading, error, reload, saveWord, saveWords, deleteWord, recordReview, today, dueWords, frozenWords, setWordFrozen],
   );
   return <VocabularyContext.Provider value={value}>{children}</VocabularyContext.Provider>;
 }

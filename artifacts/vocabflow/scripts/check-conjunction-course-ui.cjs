@@ -79,6 +79,7 @@ function mount() {
   const completed = [];
   const savedWords = [];
   const savedWordInputs = [];
+  const savedWordBatches = [];
   const react = {
     createElement: element,
     useState(initial) {
@@ -129,9 +130,13 @@ function mount() {
     "@/contexts/VocabularyContext": {
       useVocabulary: () => ({
         words: savedWords,
-        saveWord: async (input) => {
-          savedWordInputs.push(input);
-          savedWords.push({ ...input, id: savedWords.length + 1 });
+        saveWords: async (inputs) => {
+          const batch = [...inputs];
+          savedWordBatches.push(batch);
+          for (const input of batch) {
+            savedWordInputs.push(input);
+            savedWords.push({ ...input, id: savedWords.length + 1 });
+          }
         },
       }),
     },
@@ -176,6 +181,7 @@ function mount() {
     },
     savedWords,
     savedWordInputs,
+    savedWordBatches,
   };
 }
 
@@ -214,6 +220,15 @@ function mount() {
   screen.byId("conjunction-course-card").props.onPress();
   assert.ok(screen.byId("conjunction-lesson-1"));
   const lesson = courseDomain.CONJUNCTION_COURSE_LESSONS[0];
+  const simileQuestion = courseDomain.CONJUNCTION_COURSE_LESSONS
+    .flatMap((item) => item.questions)
+    .find((question) =>
+      question.prompt.startsWith("The dog stared at the empty bowl"),
+    );
+  assert.equal(simileQuestion?.term, "as though");
+  assert.ok(simileQuestion?.choices.includes("as though"));
+  assert.ok(!simileQuestion?.choices.includes("inasmuch as"));
+  assert.ok(simileQuestion?.choices.includes("so that"));
   screen.byId("conjunction-lesson-1").props.onPress();
   for (let index = 0; index < lesson.questions.length; index++) {
     const question = lesson.questions[index];
@@ -273,6 +288,8 @@ function mount() {
   screen.byId("conjunction-add-selected-words").props.onPress();
   await screen.settle();
   assert.equal(screen.savedWordInputs.length, lesson.questions.length);
+  assert.equal(screen.savedWordBatches.length, 1, "Selected words are saved in one batch.");
+  assert.equal(screen.savedWordBatches[0].length, lesson.questions.length);
   assert.equal(
     screen.savedWordInputs[0].term,
     lesson.questions[0].term,

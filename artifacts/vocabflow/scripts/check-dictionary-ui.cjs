@@ -28,6 +28,8 @@ assert.match(dictionarySourcesSource, /Nguồn từ điển/,
   'The full dictionary attribution page remains available in the app.');
 assert.match(dictionaryEntrySource, /entry-regional-ipa-install/,
   'Dictionary entries link to Settings when the regional IPA pack is missing.');
+assert.match(dictionaryEntrySource, /entry-root-shortcut-/,
+  'Entries with an explicitly defined inflection expose a root shortcut.');
 for (const [sentence, term, expected] of [
   ['I have not seen him since.', 'since', ['since']],
   ['Since then, since yesterday.', 'since', ['Since', 'since']],
@@ -137,7 +139,11 @@ function mount(file, services, personalWords = [], properties = {}) {
       setEnabled: async () => {}, setVolume: async () => {}, retryLoad: async () => {},
     }) },
     '@/domain/sound-cues': soundCues,
-    '@/data/vocabulary': { normalizeTerm }, '@/data/dictionary': services,
+    '@/data/vocabulary': { normalizeTerm },
+    '@/data/dictionary': {
+      getDictionaryInflectionRoots: async () => [],
+      ...services,
+    },
     '@/components/DictionaryGate': { DictionaryGate: 'DictionaryGate' },
     '@/components/DictionaryEntryView': { DictionaryEntryView: 'DictionaryEntryView' },
     '@/components/CorviBlinkingArtwork': { CorviBlinkingArtwork: 'CorviBlinkingArtwork' },
@@ -499,6 +505,30 @@ function mount(file, services, personalWords = [], properties = {}) {
       { id: 9, definition: 'làm việc', pos: 'verb', subPos: null, example: null }] };
   const btn = (view, sense, index = 0) => find(view.byId('entry-senses').props.renderItem({ item: sense, index }), node => node.props?.accessibilityRole === 'button');
   const header = view => view.byId('entry-senses').props.ListHeaderComponent;
+  {
+    const rootRequests = [];
+    const rootView = mount('../components/DictionaryEntryView.tsx', {
+      getDictionaryEntry: async () => entry,
+      getDictionaryInflectionRoots: async id => {
+        rootRequests.push(id);
+        return [{ id: 99, term: 'work' }];
+      },
+      saveWord: async () => {},
+    });
+    await rootView.settle();
+    await rootView.settle();
+    assert.deepEqual(rootRequests, [42]);
+    const shortcut = find(
+      header(rootView),
+      node => node.props?.testID === 'entry-root-shortcut-99',
+    );
+    assert.ok(shortcut, 'A confirmed root entry appears as a shortcut.');
+    shortcut.props.onPress();
+    assert.deepEqual(rootView.routes[0], {
+      pathname: '/dictionary-entry',
+      params: { id: '99' },
+    });
+  }
   // Saved/frozen matching sense opens its own row; the other sense stays saveable.
   {
     const savedInputs = [];

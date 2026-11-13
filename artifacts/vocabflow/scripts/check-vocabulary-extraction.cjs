@@ -5,8 +5,10 @@ const { loadTs } = require("./test-support.cjs");
 
 const root = join(__dirname, "..");
 const stopWords = loadTs(join(root, "domain/english-stopwords.ts"));
+const inflections = loadTs(join(root, "domain/dictionary-inflections.ts"));
 const extraction = loadTs(join(root, "domain/vocabulary-extraction.ts"), {
   "./english-stopwords": stopWords,
+  "./dictionary-inflections": inflections,
 });
 
 function makeEntry(id, term, definition, pos = "n") {
@@ -138,6 +140,95 @@ async function checkIrregularFormsAndExactMatchPriority() {
     exact[0].term,
     "went",
     "An exact dictionary entry takes priority over its irregular root.",
+  );
+}
+
+async function checkExplicitRootShortcuts() {
+  assert.deepEqual(
+    extraction.explicitInflectionLemmas([
+      "Quá khứ và phân từ quá khứ của unfold",
+      "Quá khứ của fold",
+    ]),
+    ["unfold", "fold"],
+    "Only grammatical-form definitions yield root candidates.",
+  );
+  assert.deepEqual(
+    extraction.explicitInflectionLemmas(["Tin, tin tức.", "Tin mới."]),
+    [],
+    "A suffix match alone never creates a root shortcut.",
+  );
+  assert.deepEqual(
+    extraction.explicitInflectionLemmas([
+      "Số nhiều của axe",
+      "Số nhiều của ax",
+      "Số nhiều của axis",
+    ]),
+    ["axe", "ax", "axis"],
+    "Definitions can identify multiple roots for a form.",
+  );
+
+  const entries = new Map([
+    ["unfolded", makeEntry(31, "unfolded", "Quá khứ và phân từ quá khứ của unfold", "v")],
+    ["unfold", makeEntry(32, "unfold", "Mở ra", "v")],
+    ["news", makeEntry(33, "news", "Tin, tin tức.")],
+    ["new", makeEntry(34, "new", "Mới", "a")],
+  ]);
+  const lookup = async (candidates) =>
+    new Map(candidates.flatMap((candidate) => {
+      const entry = entries.get(candidate);
+      return entry ? [[candidate, entry]] : [];
+    }));
+  const result = await extraction.extractVocabularyFromText(
+    "unfolded news",
+    lookup,
+  );
+  const byTerm = new Map(result.map((item) => [item.term, item]));
+  assert.deepEqual(byTerm.get("unfolded").roots, [{ id: 32, term: "unfold" }]);
+  assert.equal(byTerm.get("news").roots, undefined);
+
+  const twoSenseEntry = {
+    id: 41,
+    term: "unfolded",
+    ipa: "",
+    region: null,
+    senses: [
+      { id: 411, definition: "Quá khứ và phân từ quá khứ của unfold", pos: "v", subPos: null, example: null },
+      { id: 412, definition: "Được mở ra", pos: "a", subPos: null, example: null },
+    ],
+  };
+  const savedManualMeaningKeys = new Set([
+    extraction.extractionManualMeaningKey(
+      "UNFOLDED",
+      "(v) Quá khứ và phân từ quá khứ của unfold",
+    ),
+  ]);
+  assert.equal(
+    extraction.isExtractionSenseSaved(
+      twoSenseEntry,
+      twoSenseEntry.senses[0],
+      new Set(),
+      savedManualMeaningKeys,
+    ),
+    true,
+    "A manually saved matching meaning is disabled.",
+  );
+  assert.equal(
+    extraction.isExtractionSenseSaved(
+      twoSenseEntry,
+      twoSenseEntry.senses[1],
+      new Set(),
+      savedManualMeaningKeys,
+    ),
+    false,
+    "A different meaning of the same headword remains saveable.",
+  );
+  assert.equal(
+    extraction.hasAvailableExtractionSense(
+      { term: twoSenseEntry.term, entry: twoSenseEntry },
+      new Set(),
+      savedManualMeaningKeys,
+    ),
+    true,
   );
 }
 
@@ -305,8 +396,14 @@ function checkScreenWiring() {
   assert.match(screen, /Lưu nghĩa này/);
   assert.match(screen, /styles\.senseSelectionControl/);
   assert.match(screen, /chooseExtractionSenses\(/);
-  assert.match(screen, /senseStorageKey\(result\.entry\.id, sense\.id\)/);
-  assert.match(screen, /hasAvailableSense\(result, manuallySavedTerms, savedSenseKeys\)/);
+  assert.match(screen, /extractionSenseKey\(result\.entry\.id, sense\.id\)/);
+  assert.match(screen, /hasAvailableExtractionSense/);
+  assert.match(screen, /savedManualMeaningKeys/);
+  assert.match(screen, /isExtractionSenseSaved\(/);
+  assert.doesNotMatch(screen, /manuallySavedTerms/,
+    "Saving one manual meaning must not lock every sense for that headword.");
+  assert.match(screen, /extract-root-shortcut-/);
+  assert.match(screen, /pathname: "\/dictionary-entry"/);
   assert.match(screen, /Đã lưu nghĩa vào Sổ ở cấp 1/);
   assert.match(screen, /Đã thêm \$\{added\} từ vào Sổ ở cấp 1/);
   assert.match(screen, /getDictionaryDraft\(result\.entry\.id, sense\.id\)/);
@@ -327,6 +424,7 @@ async function main() {
   assert.ok(stopWords.ENGLISH_STOP_WORDS.size <= 330);
   await checkLemmasAndUniqueTerms();
   await checkIrregularFormsAndExactMatchPriority();
+  await checkExplicitRootShortcuts();
   await checkSavedWordsProgressAndInputLimits();
   await checkLocalDictionaryLookup();
   checkSenseSelection();

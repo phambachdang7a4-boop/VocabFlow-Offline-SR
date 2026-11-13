@@ -31,6 +31,7 @@ import {
 import {
   draftInDictionary,
   entryInDictionary,
+  inflectionRootsInDictionary,
   randomUnlearnedInDictionary,
   searchInDictionary,
   suggestInDictionary,
@@ -39,6 +40,7 @@ import type { DictionaryPartOfSpeech } from "../domain/dictionary";
 import { openDatabaseSafely, storageFailureMessage } from "./sqlite-connection";
 
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
+const DICTIONARY_DOWNLOAD_CHUNK_BYTES = 8 * 1024 * 1024;
 const DICTIONARY_CONTENT_REVISION =
   `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}`;
 let connection: Promise<SQLiteDatabase> | undefined;
@@ -46,6 +48,50 @@ let connection: Promise<SQLiteDatabase> | undefined;
 function sha256Hex(bytes: Uint8Array): string {
   return Array.from(sha256(bytes), (byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+}
+
+async function fetchDictionaryChunk(
+  url: string,
+  start: number,
+  end: number,
+): Promise<Uint8Array> {
+  const response = await fetch(url, {
+    headers: { Range: `bytes=${start}-${end}` },
+    credentials: "omit",
+    cache: "no-store",
+  });
+  if (response.status !== 206) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error(
+      `Không thể tải đoạn từ điển ${start}-${end} (HTTP ${response.status}). Hãy thử lại.`,
+    );
+  }
+  const expectedRange = `bytes ${start}-${end}/${DICTIONARY.bytes}`;
+  if (response.headers.get("content-range") !== expectedRange) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error("Máy chủ trả về đoạn từ điển không đúng vị trí.");
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.byteLength !== end - start + 1) {
+    throw new Error("Đoạn từ điển tải chưa đủ. Hãy thử lại.");
+  }
+  return bytes;
+}
+
+async function forEachDictionaryDownloadChunk(
+  receiveChunk: (bytes: Uint8Array, offset: number) => Promise<void>,
+  onProgress?: (bytesWritten: number, totalBytes: number) => void,
+): Promise<void> {
+  const url = dictionaryDownloadUrl();
+  for (let start = 0; start < DICTIONARY.bytes; start += DICTIONARY_DOWNLOAD_CHUNK_BYTES) {
+    const end = Math.min(
+      start + DICTIONARY_DOWNLOAD_CHUNK_BYTES - 1,
+      DICTIONARY.bytes - 1,
+    );
+    const chunk = await fetchDictionaryChunk(url, start, end);
+    await receiveChunk(chunk, start);
+    onProgress?.(end + 1, DICTIONARY.bytes);
+  }
 }
 
 export class DictionaryDownloadConsentRequired extends Error {
@@ -116,76 +162,39 @@ async function initialize(
       let buffer: Uint8Array;
       let hash: string;
       if (Platform.OS === "web") {
-        const response = await fetch(dictionaryDownloadUrl(), {
-          credentials: "omit",
-          cache: "no-store",
-        });
-        if (!response.ok) {
-          throw new Error(
-            `Không thể tải tệp từ điển (HTTP ${response.status}). Hãy thử lại.`,
-          );
-        }
-        const contentLength = Number(response.headers.get("content-length"));
-        if (contentLength > DICTIONARY.bytes) {
-          throw new Error("Tệp từ điển vượt quá kích thước đã kiểm tra.");
-        }
-        const reader = response.body?.getReader();
-        if (reader) {
-          buffer = new Uint8Array(DICTIONARY.bytes);
-          let bytesWritten = 0;
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (bytesWritten + value.byteLength > buffer.byteLength) {
-              await reader.cancel();
-              throw new Error("Tệp từ điển vượt quá kích thước đã kiểm tra.");
-            }
-            buffer.set(value, bytesWritten);
-            bytesWritten += value.byteLength;
-            onProgress?.(bytesWritten, DICTIONARY.bytes);
-          }
-          if (bytesWritten !== buffer.byteLength) {
-            throw new Error(
-              "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
-            );
-          }
-        } else {
-          buffer = new Uint8Array(await response.arrayBuffer());
-          onProgress?.(buffer.byteLength, DICTIONARY.bytes);
-        }
-        if (buffer.byteLength !== DICTIONARY.bytes) {
-          throw new Error(
-            "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
-          );
-        }
+        buffer = new Uint8Array(DICTIONARY.bytes);
+        await forEachDictionaryDownloadChunk(
+          async (chunk, offset) => buffer.set(chunk, offset),
+          onProgress,
+        );
         onStage?.("verifying");
         hash = sha256Hex(buffer);
       } else {
         const downloadFile = new File(Paths.cache, `${filename}.download`);
         try {
           if (downloadFile.exists) downloadFile.delete();
-          const downloaded = await File.downloadFileAsync(
-            dictionaryDownloadUrl(),
-            downloadFile,
-            {
-              idempotent: true,
-              onProgress: (progress) =>
-                onProgress?.(progress.bytesWritten, progress.totalBytes),
-            },
-          );
-          if (downloaded.size !== DICTIONARY.bytes) {
+          downloadFile.create({ intermediates: true, overwrite: true });
+          const handle = downloadFile.open(FileMode.WriteOnly);
+          try {
+            await forEachDictionaryDownloadChunk(
+              (chunk) => handle.writeBytes(chunk),
+              onProgress,
+            );
+          } finally {
+            handle.close();
+          }
+          if (downloadFile.size !== DICTIONARY.bytes) {
             throw new Error(
               "Tệp từ điển chưa tải đủ. Hãy thử lại khi có mạng ổn định.",
             );
           }
           onStage?.("verifying");
-          hash = await downloaded.digest("SHA-256");
-          const handle = downloaded.open(FileMode.ReadOnly);
+          hash = await downloadFile.digest("SHA-256");
+          const readHandle = downloadFile.open(FileMode.ReadOnly);
           try {
-            buffer = await handle.readBytes(DICTIONARY.bytes);
+            buffer = await readHandle.readBytes(DICTIONARY.bytes);
           } finally {
-            handle.close();
-            downloaded.delete();
+            readHandle.close();
           }
         } finally {
           if (downloadFile.exists) downloadFile.delete();
@@ -406,6 +415,10 @@ export async function getDictionaryEntry(
       supplemental,
     ),
   };
+}
+
+export async function getDictionaryInflectionRoots(id: number) {
+  return inflectionRootsInDictionary(await openDictionary(), id);
 }
 
 export async function installOfflineRegionalPronunciations(
