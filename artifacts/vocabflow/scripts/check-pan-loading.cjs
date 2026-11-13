@@ -8,12 +8,28 @@ const loadingComponent = readFileSync(
   join(__dirname, "../components/PanLoadingScreen.tsx"),
   "utf8",
 );
-const artwork = join(__dirname, "../assets/images/pan-loading.png");
+const lightArtwork = join(__dirname, "../assets/images/pan-loading-light.png");
+const darkArtwork = join(__dirname, "../assets/images/pan-loading-dark.png");
 
-assert.ok(statSync(artwork).size > 100_000, "Pan artwork is bundled locally for offline use.");
-assert.match(loadingComponent, /require\(["']\.\.\/assets\/images\/pan-loading\.png["']\)/);
+assert.ok(statSync(lightArtwork).size > 100_000, "Light-mode Pan artwork is bundled locally.");
+assert.ok(statSync(darkArtwork).size > 100_000, "Dark-mode Pan artwork is bundled locally.");
+assert.match(loadingComponent, /require\(["']\.\.\/assets\/images\/pan-loading-light\.png["']\)/);
+assert.match(loadingComponent, /require\(["']\.\.\/assets\/images\/pan-loading-dark\.png["']\)/);
+assert.match(loadingComponent, /mode === "dark" \? panArtworkDark : panArtworkLight/,
+  "The startup and tab transition artwork follows the saved appearance mode.");
 assert.match(loadingComponent, /Đang quét dọn/, "Pan loading displays the approved exact caption.");
 assert.match(loadingComponent, /useSafeAreaInsets/, "Caption placement accounts for system safe areas.");
+assert.match(loadingComponent, /testID="pan-loading-square"/, "The Pan artwork sits inside a square frame.");
+assert.match(loadingComponent, /height:\s*squareSize/, "The square image frame uses equal dimensions.");
+assert.match(loadingComponent, /resizeMode="contain"/, "Pan's complete broom scene remains visible.");
+assert.match(loadingComponent, /panArtworkHeight\s*\*\s*\(704\s*\/\s*1524\)/,
+  "The portrait artwork is scaled down to a compact width without distortion.");
+assert.match(loadingComponent, /Animated\.loop\(/, "Pan's sweeping sway repeats while the loading screen is mounted.");
+assert.match(loadingComponent, /testID="pan-loading-sweep-dust"/, "A moving dust trail follows the sweep.");
+assert.match(loadingComponent, /AccessibilityInfo\.isReduceMotionEnabled/,
+  "The sweeping animation respects the device reduced-motion preference.");
+assert.match(loadingComponent, /Platform\.OS !== "web"/,
+  "The animation selects a driver supported by both native and web previews.");
 assert.match(rootLayout, /<PanLoadingScreen\s*\/>/, "Startup initialization renders the reusable Pan screen.");
 assert.doesNotMatch(rootLayout, /ActivityIndicator|Đang kiểm tra tài khoản|Đang chuẩn bị sổ từ an toàn|Đang chuẩn bị dữ liệu trên thiết bị/,
   "The replaced startup loading states no longer use their separate spinner copy.");
