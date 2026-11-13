@@ -101,6 +101,14 @@ const timeRoot = mkdtempSync(join(tmpdir(), "vocabflow-time-mission-"));
 const timeHarness = createRepository(timeRoot, `${timeDay}T12:00:00`);
 const comboRoot = mkdtempSync(join(tmpdir(), "vocabflow-combo-mission-"));
 const comboHarness = createRepository(comboRoot, `${comboDay}T12:00:00`);
+const retryRoot = mkdtempSync(join(tmpdir(), "vocabflow-chest-retry-"));
+const retryHarness = createRepository(retryRoot, "2099-01-01T12:00:00");
+const migrationRoot = mkdtempSync(join(tmpdir(), "vocabflow-chest-reopen-"));
+const migrationSetup = createRepository(
+  migrationRoot,
+  "2026-11-13T12:00:00",
+);
+let migrationAfterUpdate;
 const gradeByLevel = { 1: "A-", 2: "A", 3: "A+" };
 const requiredGrade = gradeByLevel[gradeMission.level];
 const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
@@ -301,9 +309,9 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       openedChest = outcome.chest;
       if (outcome.finished) break;
       assert.equal(
-        outcome.succeeded,
-        true,
-        "A failed upgrade finalizes the chest rather than allowing a reroll.",
+        outcome.chest.opened,
+        false,
+        "A non-final upgrade attempt leaves the chest available after a failure.",
       );
     }
     assert.equal(
@@ -329,6 +337,72 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     await assert.rejects(
       () => harness.repo.attemptMissionChestUpgrade(chestId),
+      /đã được mở/,
+    );
+
+    const retryDay = "2099-01-01";
+    await retryHarness.repo.getDailyMissionOverview(retryDay);
+    let retryChestId;
+    for (let index = 0; index < 100_000; index += 1) {
+      const candidate = `retry-storage-${index}`;
+      if (
+        !missionChests.hasSuperUpgradeChance(candidate) &&
+        !missionChests.resolveChestUpgrade(
+          candidate,
+          1,
+          "common",
+          4,
+          false,
+        ).success
+      ) {
+        retryChestId = candidate;
+        break;
+      }
+    }
+    assert.ok(retryChestId, "A deterministic failed first tap is available.");
+    retryHarness.db
+      .prepare(
+        `INSERT INTO mission_chests
+          (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
+            rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+         VALUES (?, ?, 'review-1', 5, 0, 'common', 4, 0, 0, NULL, ?, ?)`,
+      )
+      .run(
+        retryChestId,
+        retryDay,
+        `${retryDay}T12:00:00.000Z`,
+        `${retryDay}T12:00:00.000Z`,
+      );
+    const firstTap = await retryHarness.repo.attemptMissionChestUpgrade(
+      retryChestId,
+    );
+    assert.equal(firstTap.succeeded, false);
+    assert.equal(firstTap.finished, false);
+    assert.equal(firstTap.chest.opened, false);
+    assert.equal(firstTap.awardedStone, null);
+    assert.equal(firstTap.awardedFragments, null);
+    assert.equal(
+      (await retryHarness.repo.getDailyMissionOverview(retryDay)).stoneBalance,
+      0,
+      "A failed first tap does not pay Stone early.",
+    );
+    const secondTap = await retryHarness.repo.attemptMissionChestUpgrade(
+      retryChestId,
+    );
+    assert.equal(secondTap.finished, false);
+    assert.equal(secondTap.chest.opened, false);
+    const finalTap = await retryHarness.repo.attemptMissionChestUpgrade(
+      retryChestId,
+    );
+    assert.equal(finalTap.finished, true);
+    assert.equal(finalTap.chest.opened, true);
+    assert.equal(finalTap.awardedStone, finalTap.chest.finalStone);
+    assert.deepEqual(
+      finalTap.awardedFragments,
+      missionChests.chestFragmentReward(retryChestId, finalTap.chest.rarity, 4),
+    );
+    await assert.rejects(
+      () => retryHarness.repo.attemptMissionChestUpgrade(retryChestId),
       /đã được mở/,
     );
 
@@ -430,26 +504,27 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       100,
       "Test fixture seeds 100 valid common chest fragments.",
     );
-    const beforeCraft = await harness.repo.getMissionCollectionOverview();
-    const craft = await harness.repo.craftCollectionArtwork("common");
-    assert.equal(
-      collectionArtworks.isCollectionArtwork("common", craft.artworkId),
-      true,
-    );
-    const afterCraft = await harness.repo.getMissionCollectionOverview();
-    assert.equal(
-      afterCraft.fragments.common,
-      beforeCraft.fragments.common - 100,
-      "Crafting consumes exactly 100 same-rarity fragments.",
-    );
-    assert.equal(
-      afterCraft.crafts.length,
-      1,
-      "The crafted artwork is stored exactly once.",
-    );
+    const commonBeforeCraft = await harness.repo.getMissionCollectionOverview();
     await assert.rejects(
       () => harness.repo.craftCollectionArtwork("common"),
-      /đủ 100 mảnh/,
+      /Chưa có tượng/,
+    );
+    assert.equal(
+      (await harness.repo.getMissionCollectionOverview()).fragments.common,
+      commonBeforeCraft.fragments.common,
+      "An unavailable rarity cannot consume its saved fragments.",
+    );
+
+    const beforeLegendaryUnlock = await harness.repo.getMissionCollectionOverview();
+    await assert.rejects(
+      () => harness.repo.craftCollectionArtwork("legendary"),
+      /Chưa có tượng/,
+      "The HCM statue is unlocked by default and no longer consumes fragments.",
+    );
+    assert.equal(
+      (await harness.repo.getMissionCollectionOverview()).fragments.legendary,
+      beforeLegendaryUnlock.fragments.legendary,
+      "Trying to craft the already-unlocked statue cannot consume fragments.",
     );
 
     await harness.repo.recordReviewSessionResult({
@@ -516,6 +591,123 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       Number(missionChests.hasSuperUpgradeChance("old-untouched-chest")),
       "Only an untouched chest receives the new rules and deterministic lucky state.",
     );
+
+    const migrationDay = "2026-11-12";
+    await migrationSetup.repo.getDailyMissionOverview(migrationDay);
+    let prematurelyClosedChestId;
+    for (let index = 0; index < 100_000; index += 1) {
+      const candidate = `reopen-storage-${index}`;
+      if (
+        !missionChests.hasSuperUpgradeChance(candidate) &&
+        !missionChests.resolveChestUpgrade(
+          candidate,
+          1,
+          "common",
+          4,
+          false,
+        ).success
+      ) {
+        prematurelyClosedChestId = candidate;
+        break;
+      }
+    }
+    assert.ok(prematurelyClosedChestId);
+    const preservedArtwork = collectionArtworks.COLLECTION_ARTWORKS.find(
+      (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
+    );
+    migrationSetup.db
+      .prepare(
+        `INSERT INTO mission_chests
+          (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
+            rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+         VALUES (?, ?, 'review-1', 5, 1, 'common', 4, 0, 1, 25, ?, ?)`,
+      )
+      .run(
+        prematurelyClosedChestId,
+        migrationDay,
+        `${migrationDay}T08:00:00.000Z`,
+        `${migrationDay}T08:01:00.000Z`,
+      );
+    migrationSetup.db
+      .prepare(
+        `INSERT INTO collection_crafts
+           (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+         VALUES ('craft-legendary-1', 'legendary', 1, ?, ?, 100)`,
+      )
+      .run(preservedArtwork.id, `${migrationDay}T08:02:00.000Z`);
+    const fragmentBalanceBeforeMigration = (
+      await migrationSetup.repo.getMissionCollectionOverview()
+    ).fragments;
+    const reclaimedChestFragments = missionChests.chestFragmentReward(
+      prematurelyClosedChestId,
+      "common",
+      4,
+    );
+    const expectedFragmentsAfterChestCorrection = Object.fromEntries(
+      Object.keys(fragmentBalanceBeforeMigration).map((rarity) => [
+        rarity,
+        Math.max(
+          0,
+          fragmentBalanceBeforeMigration[rarity] -
+            reclaimedChestFragments[rarity],
+        ),
+      ]),
+    );
+    migrationSetup.db.exec("PRAGMA user_version = 19");
+    migrationSetup.db.close();
+    migrationAfterUpdate = createRepository(
+      migrationRoot,
+      "2026-11-13T12:00:00",
+    );
+    const reopenedEarlyChest =
+      await migrationAfterUpdate.repo.getMissionChest(
+        prematurelyClosedChestId,
+      );
+    assert.equal(reopenedEarlyChest?.opened, false);
+    assert.equal(reopenedEarlyChest?.finalStone, null);
+    assert.equal(reopenedEarlyChest?.upgradeAttempts, 1);
+    const migratedOverview =
+      await migrationAfterUpdate.repo.getDailyMissionOverview(migrationDay);
+    assert.equal(
+      migratedOverview.stoneBalance,
+      0,
+      "The early Stone payout is reclaimed when the chest is reopened.",
+    );
+    const migratedCollection =
+      await migrationAfterUpdate.repo.getMissionCollectionOverview();
+    assert.deepEqual(
+      migratedCollection.fragments,
+      expectedFragmentsAfterChestCorrection,
+    );
+    assert.equal(
+      migratedCollection.crafts.length,
+      0,
+      "Previously owned paintings are removed from the statue collection.",
+    );
+    assert.deepEqual(
+      migrationAfterUpdate.db
+        .prepare(
+          `SELECT spend_id AS spendId, rarity, piece_cost AS pieceCost
+           FROM collection_piece_spends`,
+        )
+        .all()
+        .map((row) => ({ ...row })),
+      [
+        {
+          spendId: "legacy:craft-legendary-1",
+          rarity: "legendary",
+          pieceCost: 100,
+        },
+      ],
+      "Spent pieces are preserved without keeping the painting record.",
+    );
+    assert.equal(
+      migrationAfterUpdate.db
+        .prepare("SELECT value FROM sync_state WHERE key = 'pending'")
+        .get().value,
+      "1",
+      "The reopened chest is queued for account sync.",
+    );
   } finally {
     harness.db.close();
     rmSync(root, { recursive: true, force: true });
@@ -523,6 +715,11 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     rmSync(timeRoot, { recursive: true, force: true });
     comboHarness.db.close();
     rmSync(comboRoot, { recursive: true, force: true });
+    retryHarness.db.close();
+    rmSync(retryRoot, { recursive: true, force: true });
+    migrationAfterUpdate?.db.close();
+    if (migrationSetup.db && !migrationAfterUpdate) migrationSetup.db.close();
+    rmSync(migrationRoot, { recursive: true, force: true });
   }
   console.log(
     "Daily mission storage, chest award/opening, legacy Stone preservation, and exactly-once reward passed.",

@@ -28,7 +28,6 @@ import {
   CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_LABELS,
   CHEST_RARITY_TEXT_COLORS,
-  chestUpgradeChance,
   chestFragmentReward,
   chestStoneReward,
   maxChestUpgradeAttempts,
@@ -53,16 +52,13 @@ function fragmentRewardLabel(
   );
 }
 
-function legacyUpgradeOdds(attempt: number): string | null {
-  if (attempt === 1) return "55% lên Silver · 45% chốt Copper";
-  if (attempt === 2) return "40% lên Gold · 60% chốt Silver";
-  if (attempt === 3) return "20% lên Platinum · 5% lên Corvi · 75% chốt Gold";
-  return null;
-}
-
 export default function MissionChestScreen() {
   const c = useColors();
-  const { chestId } = useLocalSearchParams<{ chestId: string }>();
+  const { chestId, rewardFlow } = useLocalSearchParams<{
+    chestId: string;
+    rewardFlow?: string;
+  }>();
+  const isRewardFlow = rewardFlow === "1";
   const id = Array.isArray(chestId) ? chestId[0] : chestId;
   const [chest, setChest] = useState<MissionChest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,32 +95,10 @@ export default function MissionChestScreen() {
     0,
     attemptLimit - (chest?.upgradeAttempts ?? 0),
   );
-  const tierIndex = chest ? CHEST_RARITIES.indexOf(chest.rarity) : -1;
-  const nextRarity = tierIndex >= 0 ? CHEST_RARITIES[tierIndex + 1] : undefined;
-  const chance = chest
-    ? chestUpgradeChance(chest.rarity, nextAttempt, ruleSet, superUpgrade)
-    : null;
   const specialAttempt = superUpgrade && nextAttempt === 4;
-  const chanceDescription =
-    ruleSet === 1
-      ? legacyUpgradeOdds(nextAttempt)
-      : chance === null || !nextRarity
-        ? null
-        : `${chance}% lên ${rarityDisplayLabel(nextRarity)}`;
-  const currentChanceDescription =
-    specialAttempt && nextRarity
-      ? `100% lên ${rarityDisplayLabel(nextRarity)}`
-      : chanceDescription;
-  const currentStoneReward = chest
-    ? chestStoneReward(chest.baseStone, chest.rarity, ruleSet)
-    : 0;
   const openedFragments = chest?.opened
     ? chestFragmentReward(chest.chestId, chest.rarity, ruleSet)
     : null;
-  const nextStoneReward =
-    chest && nextRarity
-      ? chestStoneReward(chest.baseStone, nextRarity, ruleSet)
-      : null;
 
   const load = useCallback(async () => {
     if (!id) {
@@ -194,7 +168,7 @@ export default function MissionChestScreen() {
       const result = await attemptMissionChestUpgrade(id);
       setChest(result.chest);
       lidProgress.value = withSpring(
-        result.finished ? 1 : result.succeeded ? 0.58 : 1,
+        result.finished ? 1 : result.succeeded ? 0.58 : 0,
         { damping: 12, stiffness: 170 },
       );
       glowOpacity.value = withSequence(
@@ -210,10 +184,6 @@ export default function MissionChestScreen() {
           result.succeeded
             ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.`
             : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.`,
-        );
-      } else {
-        setMessage(
-          `Nâng cấp thành công! Rương đã lên ${rarityDisplayLabel(result.chest.rarity)}. Bạn có thể thử tiếp.`,
         );
       }
     } catch (cause) {
@@ -260,11 +230,7 @@ export default function MissionChestScreen() {
               accessibilityLabel={
                 chest.opened
                   ? `Rương đã mở, phẩm chất ${rarityDisplayLabel(chest.rarity)}`
-                  : `Chạm để nâng rương ${rarityDisplayLabel(chest.rarity)}. Còn ${remainingAttempts} lượt nâng cấp. ${
-                      currentChanceDescription
-                        ? `Lượt này: ${currentChanceDescription}.`
-                        : ""
-                    }`
+                  : `Chạm để nâng rương ${rarityDisplayLabel(chest.rarity)}. Còn ${remainingAttempts} lượt.`
               }
               accessibilityHint="Mỗi lần chạm là một lượt nâng cấp; hoạt ảnh không tạo thêm lượt."
               disabled={busy || chest.opened}
@@ -348,9 +314,11 @@ export default function MissionChestScreen() {
                 )}
               </Animated.View>
             </Pressable>
-            <Text style={[styles.chestTitle, { color: c.foreground }]}>
-              {chest.opened ? "Rương đã mở" : "Rương nhiệm vụ"}
-            </Text>
+            {chest.opened ? (
+              <Text style={[styles.chestTitle, { color: c.foreground }]}>
+                Rương đã mở
+              </Text>
+            ) : null}
             <Text
               style={[
                 styles.rarity,
@@ -360,15 +328,19 @@ export default function MissionChestScreen() {
               Phẩm chất {rarityDisplayLabel(chest.rarity)}
             </Text>
             {!chest.opened ? (
-              <Text style={[styles.tapHint, { color: c.mutedForeground }]}>
-                Chạm rương để thử nâng cấp · mỗi chạm là một lượt
+              <Text
+                testID="chest-tap-prompt"
+                style={[styles.tapHint, { color: c.mutedForeground }]}
+              >
+                {specialAttempt
+                  ? "Chạm vào rương để Nâng Cấp Siêu Việt"
+                  : "Chạm vào rương để nâng cấp"}
               </Text>
-            ) : null}
-            <Text style={[styles.detail, { color: c.mutedForeground }]}>
-              {chest.opened
-                ? `Đã dùng ${chest.upgradeAttempts}/${attemptLimit} lượt nâng cấp`
-                : `Còn ${remainingAttempts}/${attemptLimit} lượt nâng cấp`}
-            </Text>
+            ) : (
+              <Text style={[styles.detail, { color: c.mutedForeground }]}>
+                Đã dùng {chest.upgradeAttempts}/{attemptLimit} lượt nâng cấp
+              </Text>
+            )}
             <View
               style={styles.attemptRow}
               accessibilityLabel={`Đã dùng ${chest.upgradeAttempts} trên ${attemptLimit} lượt nâng cấp`}
@@ -390,65 +362,28 @@ export default function MissionChestScreen() {
                 ),
               )}
             </View>
-            <Animated.View
-              key={`${chest.rarity}-${chest.opened}`}
-              entering={FadeIn.duration(220)}
-              testID="chest-reward-preview"
-              style={[
-                styles.rewardPreview,
-                { backgroundColor: c.background, borderColor: c.border },
-              ]}
-            >
-              <View style={styles.rewardHeading}>
-                <Feather
-                  name={chest.opened ? "gift" : "award"}
-                  size={16}
-                  color={c.accent}
-                />
-                <Text style={[styles.rewardTitle, { color: c.foreground }]}>
-                  {chest.opened ? "Phần thưởng đã nhận" : "Phần thưởng khi mở"}
+            {chest.opened ? (
+              <Animated.View
+                key={`${chest.rarity}-${chest.opened}`}
+                entering={FadeIn.duration(220)}
+                testID="chest-reward-preview"
+                style={[
+                  styles.rewardPreview,
+                  { backgroundColor: c.background, borderColor: c.border },
+                ]}
+              >
+                <View style={styles.rewardHeading}>
+                  <Feather name="gift" size={16} color={c.accent} />
+                  <Text style={[styles.rewardTitle, { color: c.foreground }]}>
+                    Phần thưởng đã nhận
+                  </Text>
+                </View>
+                <Text style={[styles.rewardLine, { color: c.foreground }]}>
+                  {chest.finalStone} Stone · {fragmentRewardLabel(openedFragments)}
                 </Text>
-              </View>
-              <Text style={[styles.rewardLine, { color: c.foreground }]}>
-                {chest.opened
-                  ? `${chest.finalStone} Stone · ${fragmentRewardLabel(openedFragments)}`
-                  : `${currentStoneReward} Stone · ${
-                      ruleSet >= 4
-                        ? "mảnh ngẫu nhiên theo phẩm chất, có thể nhiều mảnh"
-                        : `1 mảnh ${rarityDisplayLabel(chest.rarity)}`
-                    }`}
-              </Text>
-              {!chest.opened && nextRarity && nextStoneReward !== null ? (
-                <Text style={[styles.rewardNote, { color: c.mutedForeground }]}>
-                  Nếu nâng thành công: {nextStoneReward} Stone ·{" "}
-                  {ruleSet >= 4
-                    ? `mảnh ngẫu nhiên theo phẩm chất ${rarityDisplayLabel(nextRarity)}, có thể nhiều mảnh`
-                    : `1 mảnh ${rarityDisplayLabel(nextRarity)}`}
-                </Text>
-              ) : null}
-              {!chest.opened ? (
-                <Text style={[styles.rewardNote, { color: c.mutedForeground }]}>
-                  {ruleSet >= 3
-                    ? "Stone thưởng cố định theo phẩm chất."
-                    : `Gồm ${chest.baseStone} Stone nhiệm vụ và thưởng theo phẩm chất.`}
-                </Text>
-              ) : null}
-            </Animated.View>
+              </Animated.View>
+            ) : null}
           </View>
-          {specialAttempt ? (
-            <View
-              style={[
-                styles.superUpgradeBanner,
-                { backgroundColor: c.card, borderColor: c.accent },
-              ]}
-            >
-              <MaterialSheen radius={14} />
-              <Feather name="zap" size={19} color={c.accent} />
-              <Text style={[styles.superUpgradeText, { color: c.foreground }]}>
-                Nâng Cấp Siêu Việt
-              </Text>
-            </View>
-          ) : null}
 
           {message ? (
             <Animated.View
@@ -482,68 +417,20 @@ export default function MissionChestScreen() {
           ) : null}
 
           {!chest.opened ? (
-            <View style={styles.actionArea}>
-              <Text style={[styles.explainer, { color: c.mutedForeground }]}>
-                {ruleSet === 1
-                  ? "Rương cũ đang giữ luật nâng cấp ban đầu."
-                  : specialAttempt
-                    ? "Lượt đặc biệt này chắc chắn nâng rương lên bậc kế tiếp."
-                    : "Mỗi lần chạm thử nâng một bậc. Nếu trượt, rương chốt thưởng ở phẩm chất hiện tại."}
-              </Text>
-              {currentChanceDescription ? (
-                <Text style={[styles.chanceText, { color: c.primary }]}>
-                  Lượt này: {currentChanceDescription}
-                </Text>
-              ) : null}
-              <Pressable
-                testID="upgrade-mission-chest"
-                accessibilityRole="button"
-                accessibilityLabel={
-                  specialAttempt
-                    ? "Nâng Cấp Siêu Việt, chắc chắn lên bậc kế tiếp"
-                    : `Thử nâng cấp rương phẩm chất ${rarityDisplayLabel(chest.rarity)}`
-                }
-                disabled={busy}
-                onPress={() => void upgrade()}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  {
-                    backgroundColor: c.accent,
-                    borderColor: c.buttonPressed,
-                    opacity: busy ? 0.7 : pressed ? 0.88 : 1,
-                    shadowColor: c.shade,
-                    shadowOffset: { width: 0, height: pressed ? 1 : 4 },
-                    shadowOpacity: pressed ? 0.06 : 0.2,
-                    shadowRadius: pressed ? 2 : 7,
-                    elevation: pressed ? 1 : 3,
-                  },
-                ]}
-              >
-                <MaterialSheen tone="gold" radius={16} />
-                {busy ? (
-                  <ActivityIndicator color={c.buttonForeground} />
-                ) : (
-                  <Feather
-                    name="trending-up"
-                    size={19}
-                    color={c.buttonForeground}
-                  />
-                )}
-                <Text
-                  style={[styles.primaryText, { color: c.buttonForeground }]}
-                >
-                  {busy
-                    ? "Đang mở rương…"
-                    : specialAttempt
-                      ? "Nâng Cấp Siêu Việt"
-                      : "Chạm để nâng cấp"}
-                </Text>
-              </Pressable>
-            </View>
+            busy ? (
+              <ActivityIndicator
+                testID="chest-upgrade-loading"
+                color={c.primary}
+              />
+            ) : null
           ) : (
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.replace("/(tabs)/blank")}
+              onPress={() =>
+                isRewardFlow
+                  ? router.back()
+                  : router.replace("/(tabs)/blank")
+              }
               style={({ pressed }) => [
                 styles.primaryButton,
                 {
@@ -561,7 +448,7 @@ export default function MissionChestScreen() {
               <MaterialSheen tone="gold" radius={16} />
               <Feather name="arrow-left" size={19} color={c.buttonForeground} />
               <Text style={[styles.primaryText, { color: c.buttonForeground }]}>
-                Về Nhiệm Vụ
+                {isRewardFlow ? "Tiếp tục" : "Về Nhiệm Vụ"}
               </Text>
             </Pressable>
           )}
@@ -671,18 +558,6 @@ const styles = StyleSheet.create({
   },
   attemptRow: { flexDirection: "row", gap: 10, marginVertical: 2 },
   attemptDot: { width: 13, height: 13, borderRadius: 7 },
-  superUpgradeBanner: {
-    position: "relative",
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-  },
-  superUpgradeText: { fontFamily: F.b, fontSize: 15 },
-  chanceText: { fontFamily: F.b, fontSize: 14, textAlign: "center" },
   rewardPreview: {
     width: "100%",
     position: "relative",
@@ -694,7 +569,6 @@ const styles = StyleSheet.create({
   rewardHeading: { flexDirection: "row", alignItems: "center", gap: 7 },
   rewardTitle: { fontFamily: F.b, fontSize: 13 },
   rewardLine: { fontFamily: F.b, fontSize: 14, lineHeight: 20 },
-  rewardNote: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   result: {
     position: "relative",
     borderWidth: 1,
@@ -705,13 +579,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   resultText: { flex: 1, fontFamily: F.s, fontSize: 14, lineHeight: 21 },
-  actionArea: { gap: 12 },
-  explainer: {
-    fontFamily: F.r,
-    fontSize: 13,
-    lineHeight: 20,
-    textAlign: "center",
-  },
   primaryButton: {
     position: "relative",
     minHeight: 54,

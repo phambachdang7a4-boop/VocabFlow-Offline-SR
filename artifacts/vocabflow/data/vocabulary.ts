@@ -31,6 +31,7 @@ import {
   hasSuperUpgradeChance,
   isValidMissionChest,
   maxChestUpgradeAttempts,
+  reopenPrematureMissionChest,
   resolveChestUpgrade,
   startingRarityForMission,
   type ChestRarity,
@@ -240,7 +241,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 19) {
+    if ((version?.user_version ?? 0) > 21) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -728,6 +729,62 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 20) {
+      await db.withTransactionAsync(async () => {
+        const rows = await db.getAllAsync<
+          Omit<MissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
+            opened: number;
+            superUpgrade: number;
+            ruleSet: number;
+          }
+        >(
+          `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
+            base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
+            rule_set AS ruleSet, super_upgrade AS superUpgrade,
+            opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
+           FROM mission_chests WHERE opened = 1 AND rule_set >= 2`,
+        );
+        const updatedAt = new Date().toISOString();
+        let reopenedCount = 0;
+        for (const row of rows) {
+          const chest = missionChestFromRow(row);
+          const reopened = reopenPrematureMissionChest(chest, updatedAt);
+          if (reopened === chest) continue;
+          const result = await db.runAsync(
+            `UPDATE mission_chests SET opened = 0, final_stone = NULL, updated_at = ?
+             WHERE chest_id = ? AND opened = 1`,
+            reopened.updatedAt,
+            reopened.chestId,
+          );
+          reopenedCount += result.changes;
+        }
+        if (reopenedCount > 0) await markSyncDirty(db);
+        await db.execAsync("PRAGMA user_version = 20;");
+      });
+    }
+    if ((version?.user_version ?? 0) < 21) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS collection_piece_spends (
+            spend_id TEXT PRIMARY KEY NOT NULL,
+            rarity TEXT NOT NULL,
+            piece_cost INTEGER NOT NULL CHECK (piece_cost IN (20, 100)),
+            spent_at TEXT NOT NULL
+          );
+        `);
+        await db.runAsync(`
+          INSERT OR IGNORE INTO collection_piece_spends
+            (spend_id, rarity, piece_cost, spent_at)
+          SELECT 'legacy:' || craft_id, rarity, piece_cost, crafted_at
+          FROM collection_crafts
+        `);
+        await db.runAsync("DELETE FROM collection_crafts");
+        // Publish the intentional collection cleanup to account sync, even
+        // when this device had no old craft rows but the cloud still does.
+        await markSyncDirty(db);
+        await db.execAsync("PRAGMA user_version = 21;");
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -1029,7 +1086,7 @@ export function attemptMissionChestUpgrade(
       );
       const rarity = upgrade.success ? upgrade.rarity : current.rarity;
       const finished =
-        !upgrade.success ||
+        (ruleSet === 1 && !upgrade.success) ||
         nextAttempt === maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
         rarity === "legendary";
       const awardedStone = finished
@@ -1094,10 +1151,10 @@ export function craftCollectionArtwork(
         ),
       ]);
       const craftIndex = previous?.nextIndex ?? 1;
-      if (overview.fragments[rarity] < 100) {
-        throw new Error("Cần đủ 100 mảnh cùng phẩm chất để ghép tranh.");
-      }
       const artwork = artworkForCraft(rarity, craftIndex);
+      if (overview.fragments[rarity] < 100) {
+        throw new Error("Cần đủ 100 mảnh cùng phẩm chất để mở khóa tượng.");
+      }
       const next: CollectionCraft = {
         craftId: `craft-${rarity}-${craftIndex}`,
         rarity,
@@ -1123,7 +1180,7 @@ export function craftCollectionArtwork(
          FROM collection_crafts WHERE craft_id = ?`,
         next.craftId,
       );
-      if (!savedCraft) throw new Error("Không thể lưu bức tranh đã ghép.");
+      if (!savedCraft) throw new Error("Không thể lưu tượng đã ghép.");
       craft = savedCraft;
       await markSyncDirty(db);
     });
@@ -1147,6 +1204,13 @@ async function readMissionCollectionOverview(
     `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
       artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
      FROM collection_crafts ORDER BY crafted_at DESC, craft_id DESC`,
+  );
+  const historicalSpends = await db.getAllAsync<{
+    rarity: ChestRarity;
+    pieceCost: number;
+  }>(
+    `SELECT rarity, SUM(piece_cost) AS pieceCost
+     FROM collection_piece_spends GROUP BY rarity`,
   );
   const fragments: Record<ChestRarity, number> = {
     common: 0,
@@ -1175,6 +1239,12 @@ async function readMissionCollectionOverview(
     fragments[craft.rarity] = Math.max(
       0,
       fragments[craft.rarity] - (craft.pieceCost ?? 20),
+    );
+  }
+  for (const spend of historicalSpends) {
+    fragments[spend.rarity] = Math.max(
+      0,
+      fragments[spend.rarity] - spend.pieceCost,
     );
   }
   return { fragments, crafts };

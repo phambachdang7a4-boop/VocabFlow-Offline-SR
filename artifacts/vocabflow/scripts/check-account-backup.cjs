@@ -124,14 +124,17 @@ const payload = {
   ],
   collectionCrafts: [
     {
-      craftId: "craft-common-1",
-      rarity: "common",
+      craftId: "craft-legendary-1",
+      rarity: "legendary",
       craftIndex: 1,
-      artworkId: collectionArtworks.artworkForCraft("common", 1).id,
+      artworkId: collectionArtworks.COLLECTION_ARTWORKS.find(
+        (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
+      ).id,
       craftedAt: "2026-11-08T10:00:00.000Z",
-      pieceCost: 20,
+      pieceCost: 100,
     },
   ],
+  collectionPieceSpends: [],
 };
 
 const serialized = serializeAccountBackup(payload);
@@ -147,6 +150,38 @@ assert.equal(Object.hasOwn(restored, "userId"), false);
 assert.equal(
   restored.payload.collectionCrafts[0].artworkId,
   payload.collectionCrafts[0].artworkId,
+);
+const legacyPaintings = JSON.parse(serialized);
+legacyPaintings.payload.collectionCrafts = [
+  {
+    craftId: "craft-epic-1",
+    rarity: "epic",
+    craftIndex: 1,
+    artworkId: "epic-repose",
+    craftedAt: "2026-11-08T10:00:00.000Z",
+    pieceCost: 100,
+  },
+];
+delete legacyPaintings.payload.collectionPieceSpends;
+const migratedLegacyBackup = parseAccountBackup(
+  JSON.stringify(legacyPaintings),
+);
+assert.deepEqual(
+  migratedLegacyBackup.payload.collectionCrafts,
+  [],
+  "Legacy paintings are not restored into the statue collection.",
+);
+assert.deepEqual(
+  migratedLegacyBackup.payload.collectionPieceSpends,
+  [
+    {
+      spendId: "legacy:craft-epic-1",
+      rarity: "epic",
+      pieceCost: 100,
+      spentAt: "2026-11-08T10:00:00.000Z",
+    },
+  ],
+  "The spent fragment balance survives removing legacy paintings.",
 );
 const olderBackup = JSON.parse(serialized);
 delete olderBackup.payload.reviewStats[0].sessionCount;
@@ -187,8 +222,51 @@ assert.equal(
   false,
   "Older backups do not gain a lucky attempt.",
 );
+let prematureChestId;
+for (let index = 0; index < 100_000; index += 1) {
+  const candidate = `backup-premature-${index}`;
+  if (
+    !missionChests.hasSuperUpgradeChance(candidate) &&
+    !missionChests.resolveChestUpgrade(
+      candidate,
+      1,
+      "common",
+      4,
+      false,
+    ).success
+  ) {
+    prematureChestId = candidate;
+    break;
+  }
+}
+assert.ok(prematureChestId);
+const prematureBackup = JSON.parse(serialized);
+prematureBackup.payload.missionChests.push({
+  ...payload.missionChests[0],
+  chestId: prematureChestId,
+  missionId: "review-1",
+  upgradeAttempts: 1,
+  rarity: "common",
+  ruleSet: 4,
+  superUpgrade: false,
+  opened: true,
+  finalStone: 25,
+});
+const migratedBackupChest = parseAccountBackup(
+  JSON.stringify(prematureBackup),
+).payload.missionChests[1];
+assert.equal(migratedBackupChest.opened, false);
+assert.equal(migratedBackupChest.finalStone, null);
+assert.equal(migratedBackupChest.upgradeAttempts, 1);
+assert.ok(
+  Date.parse(migratedBackupChest.updatedAt) >
+    Date.parse(payload.missionChests[0].updatedAt),
+  "Backup migration timestamps the reopened chest for sync conflict resolution.",
+);
+delete olderBackup.payload.collectionCrafts[0].pieceCost;
 assert.equal(
-  parseAccountBackup(serialized).payload.collectionCrafts[0].pieceCost,
+  parseAccountBackup(JSON.stringify(olderBackup)).payload.collectionCrafts[0]
+    .pieceCost,
   20,
   "Older collection crafts retain their original piece cost.",
 );

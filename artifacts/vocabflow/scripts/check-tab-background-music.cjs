@@ -6,17 +6,21 @@ const { shouldPlayTabBackgroundMusic: shouldPlay } = loadTs(
   join(__dirname, "../domain/tab-background-music.ts"),
 );
 const readyState = {
-  activeTab: "dictionary",
+  activeTab: "review",
   appVisible: true,
   soundReady: true,
   soundEnabled: true,
 };
 
-assert.equal(shouldPlay(readyState), true, "Music plays on an open non-review tab.");
 assert.equal(
-  shouldPlay({ ...readyState, activeTab: "review" }),
+  shouldPlay(readyState),
+  true,
+  "Music plays on the focused review tab when no review session is running.",
+);
+assert.equal(
+  shouldPlay({ ...readyState, activeTab: "dictionary" }),
   false,
-  "Music stays off throughout review, including the matching game.",
+  "Music stays off on other tabs.",
 );
 assert.equal(
   shouldPlay({ ...readyState, activeTab: null }),
@@ -43,11 +47,26 @@ const { readFileSync, statSync } = require("node:fs");
 const audioPath = join(__dirname, "../assets/audio/tab-piano-ambient.mp3");
 assert.ok(statSync(audioPath).size > 100_000, "Bundled offline music asset exists.");
 const layout = readFileSync(join(__dirname, "../app/(tabs)/_layout.tsx"), "utf8");
-assert.match(layout, /<TabBackgroundMusic/);
+assert.doesNotMatch(layout, /<TabBackgroundMusic/,
+  "Background music only mounts from the review screen.");
+const reviewScreen = readFileSync(
+  join(__dirname, "../app/(tabs)/review.tsx"),
+  "utf8",
+);
+assert.match(reviewScreen, /<TabBackgroundMusic/);
+assert.match(reviewScreen, /reviewTabFocused && !inSession \? "review" : null/,
+  "Music pauses during review sessions and the word-matching game.");
+assert.match(reviewScreen, /const inSession = !!session \|\| !!gameWords \|\| sessionFinalizing/,
+  "The music gate covers study sessions and the matching game.");
 const component = readFileSync(
   join(__dirname, "../components/TabBackgroundMusic.tsx"),
   "utf8",
 );
 assert.match(component, /useAudioPlayer/);
 assert.match(component, /tab-piano-ambient\.mp3/);
+assert.match(component, /const MUSIC_VOLUME = 0\.4/,
+  "Background music plays at a reduced mix level.");
+const settings = readFileSync(join(__dirname, "../app/settings.tsx"), "utf8");
+assert.match(settings, /Nhạc piano chỉ phát ở tab Ôn tập/,
+  "Settings describes the review-only music behavior.");
 console.log("Tab background music checks passed.");

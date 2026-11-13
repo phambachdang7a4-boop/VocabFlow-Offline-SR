@@ -22,6 +22,8 @@ const asyncStorage = {
 const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   "./vocabulary": harness.repo,
   "@react-native-async-storage/async-storage": asyncStorage,
+  "../domain/mission-chests": missionChests,
+  "../domain/collection-artworks": collectionArtworks,
 });
 
 (async () => {
@@ -113,9 +115,38 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     createdAt: "2026-11-08T10:00:00.000Z",
     updatedAt: "2026-11-08T10:00:00.000Z",
   };
+  let prematureChestId;
+  for (let index = 0; index < 100_000; index += 1) {
+    const candidate = `sync-premature-${index}`;
+    if (
+      !missionChests.hasSuperUpgradeChance(candidate) &&
+      !missionChests.resolveChestUpgrade(
+        candidate,
+        1,
+        "uncommon",
+        4,
+        false,
+      ).success
+    ) {
+      prematureChestId = candidate;
+      break;
+    }
+  }
+  assert.ok(prematureChestId);
+  const prematurelyOpenedChest = {
+    ...syncedChest,
+    chestId: prematureChestId,
+    missionId: "review-2",
+    upgradeAttempts: 1,
+    rarity: "uncommon",
+    superUpgrade: false,
+    opened: true,
+    finalStone: 50,
+    updatedAt: "2026-11-08T10:05:00.000Z",
+  };
   const chestPayload = {
     ...snapshot.payload,
-    missionChests: [syncedChest],
+    missionChests: [syncedChest, prematurelyOpenedChest],
     collectionCrafts: [],
   };
   await sync.mergeSyncSnapshot(chestPayload);
@@ -123,8 +154,58 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   snapshot = await sync.exportSyncSnapshot();
   assert.equal(
     snapshot.payload.missionChests.length,
-    1,
+    2,
     "Repeating an offline chest sync cannot duplicate the chest.",
+  );
+  const migratedSyncedChest = snapshot.payload.missionChests.find(
+    (chest) => chest.chestId === prematureChestId,
+  );
+  assert.equal(migratedSyncedChest.opened, false);
+  assert.equal(migratedSyncedChest.finalStone, null);
+  assert.equal(
+    migratedSyncedChest.upgradeAttempts,
+    1,
+    "Sync reopens a prematurely finalized chest without erasing its tap history.",
+  );
+  let completedRarity = "uncommon";
+  let completedAttempts = 0;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const upgrade = missionChests.resolveChestUpgrade(
+      prematureChestId,
+      attempt,
+      completedRarity,
+      4,
+      false,
+    );
+    if (upgrade.success) completedRarity = upgrade.rarity;
+    completedAttempts = attempt;
+    if (attempt === 3 || completedRarity === "legendary") break;
+  }
+  const completedChest = {
+    ...prematurelyOpenedChest,
+    upgradeAttempts: completedAttempts,
+    rarity: completedRarity,
+    opened: true,
+    finalStone: missionChests.chestStoneReward(
+      prematurelyOpenedChest.baseStone,
+      completedRarity,
+      4,
+    ),
+    updatedAt: "2026-11-08T10:10:00.000Z",
+  };
+  await sync.mergeSyncSnapshot({
+    ...chestPayload,
+    missionChests: [syncedChest, completedChest],
+  });
+  await sync.mergeSyncSnapshot(chestPayload);
+  snapshot = await sync.exportSyncSnapshot();
+  const completedSyncedChest = snapshot.payload.missionChests.find(
+    (chest) => chest.chestId === prematureChestId,
+  );
+  assert.equal(completedSyncedChest.opened, true);
+  assert.ok(
+    completedSyncedChest.upgradeAttempts > 1,
+    "A stale early chest snapshot cannot overwrite later upgrade progress.",
   );
 
   const remoteSession = {
@@ -268,7 +349,9 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
 
   const beforeRestore = await sync.exportSyncSnapshot();
   const restoredWord = beforeRestore.payload.words[0];
-  const artwork = collectionArtworks.artworkForCraft("common", 1);
+  const artwork = collectionArtworks.COLLECTION_ARTWORKS.find(
+    (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
+  );
   const backupPayload = {
     revision: beforeRestore.payload.revision,
     words: [restoredWord],
@@ -304,12 +387,20 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     missionChests: [syncedChest],
     collectionCrafts: [
       {
-        craftId: "craft-common-1",
-        rarity: "common",
+        craftId: "craft-legendary-1",
+        rarity: "legendary",
         craftIndex: 1,
         artworkId: artwork.id,
         craftedAt: "2026-11-08T10:00:00.000Z",
         pieceCost: 100,
+      },
+    ],
+    collectionPieceSpends: [
+      {
+        spendId: "legacy:craft-epic-2",
+        rarity: "epic",
+        pieceCost: 100,
+        spentAt: "2026-11-08T09:00:00.000Z",
       },
     ],
   };
@@ -340,12 +431,17 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   assert.equal(
     restoredSnapshot.payload.collectionCrafts.length,
     1,
-    "Account replacement restores crafted artwork.",
+    "Account replacement restores a crafted statue.",
   );
   assert.equal(
     restoredSnapshot.payload.collectionCrafts[0].pieceCost,
     100,
-    "Account replacement preserves the new 100-piece artwork cost.",
+    "Account replacement preserves the 100-fragment statue cost.",
+  );
+  assert.deepEqual(
+    restoredSnapshot.payload.collectionPieceSpends,
+    backupPayload.collectionPieceSpends,
+    "Account replacement restores previously spent fragments.",
   );
   assert.equal(
     await sync.hasPendingAccountReplacement(),

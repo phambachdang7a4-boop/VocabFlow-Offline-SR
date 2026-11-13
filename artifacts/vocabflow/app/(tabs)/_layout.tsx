@@ -1,7 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
-  Animated,
-  Modal,
   Platform,
   StyleSheet,
   View,
@@ -14,20 +12,9 @@ import { Tabs, useSegments } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { SymbolView } from "expo-symbols";
 import { MaterialSheen } from "@/components/ui";
-import { PanLoadingScreen } from "@/components/PanLoadingScreen";
-import { TabBackgroundMusic } from "@/components/TabBackgroundMusic";
 
 // Start guests in the Thư Viện; they can reach the notebook from its tab.
 export const unstable_settings = { anchor: "dictionary" };
-
-const TAB_NAMES = ["dictionary", "courses", "review", "index", "blank"] as const;
-type TabName = (typeof TAB_NAMES)[number];
-
-function activeTabFromSegments(segments: readonly string[]): TabName | null {
-  return segments.find((segment): segment is TabName =>
-    TAB_NAMES.includes(segment as TabName),
-  ) ?? null;
-}
 
 function NativeTabLayout() {
   return (
@@ -209,64 +196,5 @@ const styles = StyleSheet.create({
 });
 
 export default function TabLayout() {
-  const segments = useSegments();
-  const activeTab = activeTabFromSegments(segments);
-  const previousTab = useRef<TabName | null>(activeTab);
-  const [showPan, setShowPan] = useState(false);
-  const opacity = useRef(new Animated.Value(0)).current;
-  const animation = useRef<Animated.CompositeAnimation | null>(null);
-
-  useEffect(() => {
-    if (!activeTab) return;
-    const previous = previousTab.current;
-    previousTab.current = activeTab;
-    if (!previous || previous === activeTab) return;
-
-    animation.current?.stop();
-    setShowPan(true);
-    opacity.setValue(0);
-    animation.current = Animated.sequence([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 90,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 310,
-        useNativeDriver: true,
-      }),
-    ]);
-    animation.current.start(({ finished }) => {
-      if (finished) setShowPan(false);
-    });
-
-    return () => animation.current?.stop();
-  }, [activeTab, opacity]);
-
-  return (
-    <>
-      <TabBackgroundMusic
-        activeTab={activeTab}
-        transitionVisible={showPan}
-      />
-      {isLiquidGlassAvailable() ? <NativeTabLayout /> : <ClassicTabLayout />}
-      <Modal
-        testID="pan-tab-transition-modal"
-        transparent
-        visible={showPan}
-        animationType="none"
-        statusBarTranslucent
-        onRequestClose={() => {}}
-      >
-        <Animated.View
-          testID="pan-tab-transition-overlay"
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { opacity }]}
-        >
-          <PanLoadingScreen />
-        </Animated.View>
-      </Modal>
-    </>
-  );
+  return isLiquidGlassAvailable() ? <NativeTabLayout /> : <ClassicTabLayout />;
 }

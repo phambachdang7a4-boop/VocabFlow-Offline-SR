@@ -152,7 +152,7 @@ function buildLessons(): ToeicTopicCourseLesson[] {
       const lessonNumber = index + 1;
       lessons.push({
         id: `${TOEIC_TOPIC_COURSE_ID}-${topic.id}-lesson-${lessonNumber}`,
-        title: `Bài ${lessonNumber}`,
+        title: `Bài ${lessons.length + 1}`,
         focus: topic.focus,
         topicId: topic.id,
         topicTitle: topic.title,

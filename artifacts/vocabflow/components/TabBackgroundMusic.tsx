@@ -4,7 +4,7 @@ import { useAudioPlayer } from "expo-audio";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
 import { shouldPlayTabBackgroundMusic } from "@/domain/tab-background-music";
 
-const MUSIC_VOLUME = 0.55;
+const MUSIC_VOLUME = 0.4;
 
 export function TabBackgroundMusic({
   activeTab,

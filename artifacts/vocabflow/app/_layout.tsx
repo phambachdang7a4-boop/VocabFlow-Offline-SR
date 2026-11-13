@@ -34,7 +34,7 @@ import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
 import { Redirect, router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { PanLoadingScreen } from "@/components/PanLoadingScreen";
+import { MissionRewardCoordinator } from "@/components/MissionRewardCoordinator";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,19 +55,20 @@ function RootStack() {
   const c = useColors();
 
   return (
-    <Stack
-      screenOptions={{
-        headerBackTitle: "Quay lại",
-        headerStyle: { backgroundColor: c.header },
-        headerTintColor: c.headerForeground,
-        headerTitleStyle: {
-          fontFamily: "Inter_600SemiBold",
-          color: c.headerForeground,
-        },
-        headerShadowVisible: false,
-        contentStyle: { backgroundColor: c.background },
-      }}
-    >
+    <>
+      <Stack
+        screenOptions={{
+          headerBackTitle: "Quay lại",
+          headerStyle: { backgroundColor: c.header },
+          headerTintColor: c.headerForeground,
+          headerTitleStyle: {
+            fontFamily: "Inter_600SemiBold",
+            color: c.headerForeground,
+          },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: c.background },
+        }}
+      >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="collection" options={{ title: "Bộ Sưu Tập" }} />
@@ -110,7 +111,9 @@ function RootStack() {
               ),
         })}
       />
-    </Stack>
+      </Stack>
+      <MissionRewardCoordinator />
+    </>
   );
 }
 
@@ -163,7 +166,12 @@ function RootLayoutNav() {
   }, [isLoaded, isSignedIn, scopeAttempt, userId]);
 
   if (isLoaded && isSignedIn === undefined) {
-    return <PanLoadingScreen />;
+    return (
+      <View
+        testID="startup-loading-backdrop"
+        style={{ flex: 1, backgroundColor: c.background }}
+      />
+    );
   }
   if (isLoaded && isSignedIn && inAuthFlow) return <Redirect href="/(tabs)" />;
 
@@ -226,7 +234,12 @@ function RootLayoutNav() {
 
   if (isSignedIn) {
     if (scopedUserId !== userId) {
-      return <PanLoadingScreen />;
+      return (
+        <View
+          testID="startup-loading-backdrop"
+          style={{ flex: 1, backgroundColor: c.background }}
+        />
+      );
     }
     return (
       <SyncProvider key={userId} userId={userId}>
@@ -238,7 +251,12 @@ function RootLayoutNav() {
   }
 
   if (scopedUserId !== null) {
-    return <PanLoadingScreen />;
+    return (
+      <View
+        testID="startup-loading-backdrop"
+        style={{ flex: 1, backgroundColor: c.background }}
+      />
+    );
   }
 
   return (

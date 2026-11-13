@@ -2,12 +2,14 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
@@ -65,6 +67,40 @@ type CourseQuestion = {
   prompt: string;
   choices: readonly string[];
 };
+
+export function shuffleLessonChoices(
+  questions: readonly Pick<CourseQuestion, "term" | "choices">[],
+  random: () => number = Math.random,
+): string[][] {
+  let previousCorrectIndex = -1;
+  return questions.map(({ term, choices }) => {
+    const shuffled = [...choices];
+    if (!shuffled.includes(term)) {
+      throw new Error(`Đáp án đúng không có trong lựa chọn: ${term}`);
+    }
+
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [
+        shuffled[swapIndex],
+        shuffled[index],
+      ];
+    }
+
+    let correctIndex = shuffled.indexOf(term);
+    if (shuffled.length > 1 && correctIndex === previousCorrectIndex) {
+      const offset = 1 + Math.floor(random() * (shuffled.length - 1));
+      const swapIndex = (correctIndex + offset) % shuffled.length;
+      [shuffled[correctIndex], shuffled[swapIndex]] = [
+        shuffled[swapIndex],
+        shuffled[correctIndex],
+      ];
+      correctIndex = swapIndex;
+    }
+    previousCorrectIndex = correctIndex;
+    return shuffled;
+  });
+}
 
 type CourseLesson = {
   id: string;
@@ -161,6 +197,7 @@ export default function CoursesScreen() {
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [lessonChoices, setLessonChoices] = useState<readonly string[][]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [finishedLessonId, setFinishedLessonId] = useState<string | null>(null);
@@ -208,6 +245,7 @@ export default function CoursesScreen() {
   const startLesson = (lesson: CourseLesson) => {
     setActiveLesson(lesson);
     setQuestionIndex(0);
+    setLessonChoices(shuffleLessonChoices(lesson.questions));
     setSelectedAnswer(null);
     setCorrectCount(0);
     setFinishedLessonId(null);
@@ -219,6 +257,7 @@ export default function CoursesScreen() {
   const leaveLesson = () => {
     setActiveLesson(null);
     setFinishedLessonId(null);
+    setLessonChoices([]);
     setSelectedAnswer(null);
     setSelectedCourseWordKeys([]);
     setCourseWordsSavedMessage(null);
@@ -229,6 +268,7 @@ export default function CoursesScreen() {
     setActiveCourseId(null);
     setActiveLesson(null);
     setFinishedLessonId(null);
+    setLessonChoices([]);
     setSelectedAnswer(null);
     setError(null);
   };
@@ -446,6 +486,7 @@ export default function CoursesScreen() {
                 isIdiomCourse={activeCourse?.id === IDIOM_COURSE_ID}
               lesson={activeLesson}
               question={currentQuestion}
+                choices={lessonChoices[questionIndex] ?? currentQuestion.choices}
               entriesByTerm={activeCourse?.entriesByTerm ?? new Map()}
               questionIndex={questionIndex}
               selectedAnswer={selectedAnswer}
@@ -704,6 +745,7 @@ function QuestionView({
   isIdiomCourse,
   lesson,
   question,
+  choices,
   entriesByTerm,
   questionIndex,
   selectedAnswer,
@@ -716,6 +758,7 @@ function QuestionView({
   isIdiomCourse: boolean;
   lesson: CourseLesson;
   question: CourseQuestion;
+  choices: readonly string[];
   entriesByTerm: ReadonlyMap<string, CourseAnswer>;
   questionIndex: number;
   selectedAnswer: string | null;
@@ -725,6 +768,7 @@ function QuestionView({
   onAdvance: () => void;
 }) {
   const c = useColors();
+  const { height: windowHeight } = useWindowDimensions();
   const answer = entriesByTerm.get(question.term);
   const isCorrect = selectedAnswer === question.term;
   const progress = ((questionIndex + 1) / lesson.questions.length) * 100;
@@ -822,7 +866,7 @@ function QuestionView({
         </View>
       )}
       <View style={styles.choices}>
-        {question.choices.map((choice) => {
+        {choices.map((choice) => {
           const selected = selectedAnswer === choice;
           const showCorrect = selectedAnswer !== null && choice === question.term;
           return (
@@ -873,7 +917,99 @@ function QuestionView({
           );
         })}
       </View>
-      {selectedAnswer !== null && answer ? (
+      {selectedAnswer !== null && isCorrect ? (
+        <Modal
+          testID={`${testIdPrefix}-correct-popup`}
+          transparent
+          visible
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={() => {}}
+        >
+          <View
+            style={[
+              styles.correctPopupBackdrop,
+              { backgroundColor: c.overlay },
+            ]}
+          >
+            <View
+              testID={`${testIdPrefix}-answer-feedback`}
+              accessibilityLiveRegion="polite"
+              style={[
+                styles.correctPopupCard,
+                {
+                  backgroundColor: c.successSoft,
+                  borderColor: c.success,
+                  borderRadius: c.radius,
+                  maxHeight: Math.min(windowHeight * 0.78, 680),
+                },
+              ]}
+            >
+              <MaterialSheen radius={c.radius} />
+              <View style={styles.correctPopupHeading}>
+                <Feather name="check-circle" size={22} color={c.success} />
+                <Text
+                  style={[styles.feedbackTitle, { color: c.successText }]}
+                >
+                  Chính xác!
+                </Text>
+              </View>
+              <ScrollView
+                style={styles.correctPopupScroll}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.correctPopupDetails}
+              >
+                <Text style={[styles.correctPopupLabel, { color: c.mutedForeground }]}>
+                  Đáp án
+                </Text>
+                <Text
+                  testID={`${testIdPrefix}-answer-correct`}
+                  style={[styles.correctPopupAnswer, { color: c.foreground }]}
+                >
+                  {question.term}
+                </Text>
+                {answer?.definition ? (
+                  <Text style={[styles.feedbackMeaning, { color: c.foreground }]}>
+                    {answer.definition}
+                  </Text>
+                ) : null}
+                {answer?.example ? (
+                  <Text
+                    style={[
+                      styles.feedbackExample,
+                      { color: c.foreground, fontStyle: "italic" },
+                    ]}
+                  >
+                    {answer.example}
+                  </Text>
+                ) : null}
+                {answer?.spellingNote ? (
+                  <Text style={[styles.feedbackTranslation, { color: c.mutedForeground }]}>
+                    {answer.spellingNote}
+                  </Text>
+                ) : null}
+                {answer?.exampleTranslation ? (
+                  <Text style={[styles.feedbackTranslation, { color: c.mutedForeground }]}>
+                    {answer.exampleTranslation}
+                  </Text>
+                ) : null}
+              </ScrollView>
+              <Button
+                testID={`${testIdPrefix}-next`}
+                onPress={onAdvance}
+                disabled={saving}
+                style={styles.nextButton}
+                label={saving
+                  ? "Đang lưu…"
+                  : questionIndex === lesson.questions.length - 1
+                    ? "Hoàn thành bài"
+                    : "Câu tiếp theo"}
+              />
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+      {selectedAnswer !== null && !isCorrect && answer ? (
         <View
           testID={`${testIdPrefix}-answer-feedback`}
           style={[
@@ -921,7 +1057,7 @@ function QuestionView({
           ) : null}
         </View>
       ) : null}
-      {selectedAnswer !== null ? (
+      {selectedAnswer !== null && !isCorrect ? (
         <Button
           testID={`${testIdPrefix}-next`}
           onPress={onAdvance}
@@ -1308,6 +1444,29 @@ const styles = StyleSheet.create({
   feedbackMeaning: { fontFamily: F.s, fontSize: 13, lineHeight: 19 },
   feedbackExample: { fontFamily: F.b, fontSize: 13, lineHeight: 19 },
   feedbackTranslation: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
+  correctPopupBackdrop: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  correctPopupCard: {
+    width: "100%",
+    maxWidth: 440,
+    borderWidth: 1,
+    padding: 18,
+    gap: 14,
+    overflow: "hidden",
+  },
+  correctPopupHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+  correctPopupScroll: { flexShrink: 1 },
+  correctPopupLabel: { fontFamily: F.r, fontSize: 13 },
+  correctPopupAnswer: { fontFamily: F.b, fontSize: 29, lineHeight: 36 },
+  correctPopupDetails: { gap: 9, paddingBottom: 2 },
   nextButton: { minHeight: 54 },
   completeCard: {
     alignItems: "center",

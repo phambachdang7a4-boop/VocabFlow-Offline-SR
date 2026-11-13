@@ -1203,8 +1203,9 @@ Nội dung tệp:
           ÂM THANH
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
-          Nhạc piano nhẹ phát ở các tab ngoài Ôn tập và Nối từ khi ứng dụng mở.
-          Công tắc và âm lượng dưới đây điều khiển cả nhạc lẫn hiệu ứng.
+          Nhạc piano chỉ phát ở tab Ôn tập, tự tắt trong phiên làm bài và trò
+          nối từ. Âm lượng nhạc nhỏ hơn hiệu ứng; công tắc và mức âm lượng dưới
+          đây điều khiển cả hai.
         </Text>
         <View
           style={[

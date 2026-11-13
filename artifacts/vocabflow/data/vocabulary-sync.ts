@@ -11,7 +11,11 @@ import {
 } from "./vocabulary";
 import type { DailyReviewGrade } from "../domain/daily-missions";
 import type { MissionChest } from "../domain/mission-chests";
-import type { CollectionCraft } from "../domain/collection-artworks";
+import { reopenPrematureMissionChest } from "../domain/mission-chests";
+import {
+  isCollectionArtwork,
+  type CollectionCraft,
+} from "../domain/collection-artworks";
 
 export interface SyncWord {
   syncId: string;
@@ -96,6 +100,13 @@ export interface SyncMissionChest extends MissionChest {}
 
 export interface SyncCollectionCraft extends CollectionCraft {}
 
+export interface SyncCollectionPieceSpend {
+  spendId: string;
+  rarity: MissionChest["rarity"];
+  pieceCost: 20 | 100;
+  spentAt: string;
+}
+
 export interface SyncPayload {
   revision: number;
   words: SyncWord[];
@@ -108,6 +119,7 @@ export interface SyncPayload {
   missionAwards: SyncMissionAward[];
   missionChests: SyncMissionChest[];
   collectionCrafts: SyncCollectionCraft[];
+  collectionPieceSpends: SyncCollectionPieceSpend[];
 }
 
 export interface LocalSyncSnapshot {
@@ -122,6 +134,10 @@ const COURSE_SOURCE_MARKER = "Khóa học:";
 function discardRemovedCourseData(payload: SyncPayload): SyncPayload {
   return {
     ...payload,
+    collectionCrafts: (payload.collectionCrafts ?? []).filter((craft) =>
+      isCollectionArtwork(craft.rarity, craft.artworkId),
+    ),
+    collectionPieceSpends: payload.collectionPieceSpends ?? [],
     words: payload.words.filter(
       (word) => !word.note.includes(COURSE_SOURCE_MARKER),
     ),
@@ -247,7 +263,24 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           superUpgrade: Boolean(chest.superUpgrade),
           opened: Boolean(chest.opened),
         })),
-        collectionCrafts,
+        collectionCrafts: collectionCrafts.filter((craft) =>
+          isCollectionArtwork(craft.rarity, craft.artworkId),
+        ),
+        collectionPieceSpends: (
+          await db.getAllAsync<{
+            spendId: string;
+            rarity: MissionChest["rarity"];
+            pieceCost: number;
+            spentAt: string;
+          }>(`
+          SELECT spend_id AS spendId, rarity, piece_cost AS pieceCost,
+            spent_at AS spentAt
+          FROM collection_piece_spends ORDER BY spent_at, spend_id
+        `)
+        ).map((spend) => ({
+          ...spend,
+          pieceCost: spend.pieceCost === 100 ? 100 : 20,
+        })),
       },
       generation: state.generation,
       pending: state.pending,
@@ -346,6 +379,7 @@ export async function clearLocalAccountAfterCloudReset(
         missionAwards: [],
         missionChests: [],
         collectionCrafts: [],
+        collectionPieceSpends: [],
       };
       await replacePayloadData(db, emptyPayload);
       for (const [key, value] of [
@@ -384,6 +418,7 @@ async function replacePayloadData(
     DELETE FROM daily_mission_awards;
     DELETE FROM mission_chests;
     DELETE FROM collection_crafts;
+    DELETE FROM collection_piece_spends;
   `);
 
   for (const word of payload.words) {
@@ -551,6 +586,17 @@ async function replacePayloadData(
       craft.artworkId,
       craft.craftedAt,
       craft.pieceCost ?? 20,
+    );
+  }
+  for (const spend of payload.collectionPieceSpends ?? []) {
+    await db.runAsync(
+      `INSERT INTO collection_piece_spends
+        (spend_id, rarity, piece_cost, spent_at)
+       VALUES (?, ?, ?, ?)`,
+      spend.spendId,
+      spend.rarity,
+      spend.pieceCost,
+      spend.spentAt,
     );
   }
   await db.runAsync(`
@@ -886,11 +932,12 @@ async function mergeSnapshotIntoDatabase(
          FROM mission_chests WHERE chest_id = ?`,
         incoming.chestId,
       );
-      const normalizedIncoming = {
+      const normalizedIncoming = reopenPrematureMissionChest({
         ...incoming,
         ruleSet: incoming.ruleSet ?? 1,
         superUpgrade: incoming.superUpgrade ?? false,
-      };
+      });
+      const incomingRuleSet = normalizedIncoming.ruleSet ?? 1;
       const current = currentRow
         ? {
             ...currentRow,
@@ -908,23 +955,25 @@ async function mergeSnapshotIntoDatabase(
         : null;
       const selected = !current
         ? normalizedIncoming
-        : current.opened
+        : incomingRuleSet < (current.ruleSet ?? 1)
           ? current
-          : normalizedIncoming.ruleSet < (current.ruleSet ?? 1)
-            ? current
-            : normalizedIncoming.ruleSet > (current.ruleSet ?? 1)
-              ? current.upgradeAttempts === 0
-                ? normalizedIncoming
-                : current
-              : normalizedIncoming.opened
-                ? normalizedIncoming
-                : normalizedIncoming.upgradeAttempts >
-                      current.upgradeAttempts ||
-                    (normalizedIncoming.upgradeAttempts ===
-                      current.upgradeAttempts &&
-                      normalizedIncoming.updatedAt > current.updatedAt)
+          : incomingRuleSet > (current.ruleSet ?? 1)
+            ? current.upgradeAttempts === 0
+              ? normalizedIncoming
+              : current
+            : normalizedIncoming.upgradeAttempts > current.upgradeAttempts
+              ? normalizedIncoming
+              : normalizedIncoming.upgradeAttempts < current.upgradeAttempts
+                ? current
+                : Date.parse(normalizedIncoming.updatedAt) >
+                    Date.parse(current.updatedAt)
                   ? normalizedIncoming
-                  : current;
+                  : Date.parse(normalizedIncoming.updatedAt) <
+                      Date.parse(current.updatedAt)
+                    ? current
+                    : normalizedIncoming.opened && !current.opened
+                      ? normalizedIncoming
+                      : current;
       await db.runAsync(
         `INSERT INTO mission_chests
           (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity, rule_set, super_upgrade,
@@ -960,6 +1009,17 @@ async function mergeSnapshotIntoDatabase(
         craft.artworkId,
         craft.craftedAt,
         craft.pieceCost ?? 20,
+      );
+    }
+    for (const spend of payload.collectionPieceSpends ?? []) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO collection_piece_spends
+          (spend_id, rarity, piece_cost, spent_at)
+         VALUES (?, ?, ?, ?)`,
+        spend.spendId,
+        spend.rarity,
+        spend.pieceCost,
+        spend.spentAt,
       );
     }
 

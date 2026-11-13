@@ -305,7 +305,7 @@ export default function BlankScreen() {
         <Pressable
           testID="open-collection"
           accessibilityRole="button"
-          accessibilityLabel="Mở Bộ Sưu Tập mảnh ghép và tranh"
+          accessibilityLabel="Mở Bộ Sưu Tập tượng và mảnh ghép"
           onPress={() => router.push("/collection")}
           style={({ pressed }) => [
             styles.collectionButton,
@@ -340,7 +340,7 @@ export default function BlankScreen() {
                 { color: c.buttonForeground },
               ]}
             >
-              Mảnh ghép và tranh đã mở
+              Tượng đã mở khóa và mảnh ghép
             </Text>
           </View>
           <Feather name="chevron-right" size={19} color={c.primary} />

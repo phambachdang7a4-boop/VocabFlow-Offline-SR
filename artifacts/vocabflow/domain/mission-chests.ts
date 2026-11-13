@@ -192,6 +192,25 @@ export function maxChestUpgradeAttempts(
   return ruleSet >= 2 && superUpgrade ? 4 : 3;
 }
 
+export function reopenPrematureMissionChest(
+  chest: MissionChest,
+  updatedAt = new Date().toISOString(),
+): MissionChest {
+  const ruleSet = chest.ruleSet ?? 1;
+  const superUpgrade = chest.superUpgrade ?? false;
+  const attemptLimit = maxChestUpgradeAttempts(ruleSet, superUpgrade);
+  if (
+    ruleSet < 2 ||
+    !chest.opened ||
+    chest.upgradeAttempts >= attemptLimit ||
+    chest.rarity === "legendary" ||
+    !isValidMissionChest(chest)
+  ) {
+    return chest;
+  }
+  return { ...chest, opened: false, finalStone: null, updatedAt };
+}
+
 export function chestUpgradeChance(
   rarity: ChestRarity,
   attempt: number,
@@ -297,6 +316,7 @@ export function isValidMissionChest(chest: MissionChest): boolean {
     ruleSet === 1 ? "common" : startingRarityForMission(chest.missionId);
   let expectedOpened = false;
   let resolvedAttempts = 0;
+  let lastUpgradeSucceeded = true;
   const attemptLimit = maxChestUpgradeAttempts(ruleSet, superUpgrade);
   for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
     if (expectedOpened) return false;
@@ -308,19 +328,25 @@ export function isValidMissionChest(chest: MissionChest): boolean {
       superUpgrade,
     );
     resolvedAttempts = attempt;
-    if (result.success) {
-      expectedRarity = result.rarity;
-      expectedOpened =
-        attempt === attemptLimit || expectedRarity === "legendary";
-    } else {
-      expectedOpened = true;
-    }
+    lastUpgradeSucceeded = result.success;
+    if (result.success) expectedRarity = result.rarity;
+    expectedOpened =
+      attempt === attemptLimit ||
+      expectedRarity === "legendary" ||
+      (ruleSet === 1 && !result.success);
   }
 
+  const wasPrematurelyFinalized =
+    ruleSet >= 2 &&
+    chest.opened &&
+    !expectedOpened &&
+    !lastUpgradeSucceeded &&
+    chest.upgradeAttempts < attemptLimit &&
+    expectedRarity !== "legendary";
   if (
     resolvedAttempts !== chest.upgradeAttempts ||
     chest.rarity !== expectedRarity ||
-    chest.opened !== expectedOpened
+    (chest.opened !== expectedOpened && !wasPrematurelyFinalized)
   ) {
     return false;
   }

@@ -2,6 +2,7 @@ import type {
   SyncCourseProgress,
   SyncCourseSelection,
   SyncCollectionCraft,
+  SyncCollectionPieceSpend,
   SyncDeletedWord,
   SyncMissionAward,
   SyncMissionChest,
@@ -11,10 +12,14 @@ import type {
   SyncReviewStat,
   SyncWord,
 } from "./vocabulary-sync";
-import { isValidMissionChest } from "../domain/mission-chests";
 import {
-  artworkForCraft,
+  isValidMissionChest,
+  reopenPrematureMissionChest,
+} from "../domain/mission-chests";
+import {
   isCollectionArtwork,
+  isLegacyCollectionPaintingId,
+  isValidCollectionCraftArtwork,
 } from "../domain/collection-artworks";
 
 export const ACCOUNT_BACKUP_FORMAT = "vocabflow.account-backup";
@@ -125,9 +130,29 @@ function validatePayload(value: unknown): SyncPayload {
   const missionChests = optionalRecordArray(value, "missionChests").map(
     parseMissionChest,
   );
-  const collectionCrafts = optionalRecordArray(value, "collectionCrafts").map(
-    parseCollectionCraft,
-  );
+  const rawCollectionCrafts = optionalRecordArray(value, "collectionCrafts");
+  const collectionCrafts = rawCollectionCrafts
+    .filter(
+      (item) =>
+        !(
+          isRecord(item) &&
+          typeof item.artworkId === "string" &&
+          isLegacyCollectionPaintingId(item.artworkId)
+        ),
+    )
+    .map(parseCollectionCraft);
+  const explicitPieceSpends = optionalRecordArray(
+    value,
+    "collectionPieceSpends",
+  ).map(parseCollectionPieceSpend);
+  const legacyPieceSpends = rawCollectionCrafts
+    .filter(
+      (item) =>
+        isRecord(item) &&
+        typeof item.artworkId === "string" &&
+        isLegacyCollectionPaintingId(item.artworkId),
+    )
+    .map(parseLegacyCollectionPieceSpend);
   if (
     words.some((item) => item === null) ||
     deletedWords.some((item) => item === null) ||
@@ -138,7 +163,9 @@ function validatePayload(value: unknown): SyncPayload {
     reviewComboRewards.some((item) => item === null) ||
     missionAwards.some((item) => item === null) ||
     missionChests.some((item) => item === null) ||
-    collectionCrafts.some((item) => item === null)
+    collectionCrafts.some((item) => item === null) ||
+    explicitPieceSpends.some((item) => item === null) ||
+    legacyPieceSpends.some((item) => item === null)
   ) {
     throw new Error("Gói sao lưu có mục dữ liệu không hợp lệ.");
   }
@@ -153,6 +180,19 @@ function validatePayload(value: unknown): SyncPayload {
   const validMissionAwards = missionAwards as SyncMissionAward[];
   const validMissionChests = missionChests as SyncMissionChest[];
   const validCollectionCrafts = collectionCrafts as SyncCollectionCraft[];
+  const validExplicitPieceSpends =
+    explicitPieceSpends as SyncCollectionPieceSpend[];
+  const validLegacyPieceSpends =
+    legacyPieceSpends as SyncCollectionPieceSpend[];
+  const explicitSpendIds = new Set(
+    validExplicitPieceSpends.map((spend) => spend.spendId),
+  );
+  const validCollectionPieceSpends = [
+    ...validExplicitPieceSpends,
+    ...validLegacyPieceSpends.filter(
+      (spend) => !explicitSpendIds.has(spend.spendId),
+    ),
+  ];
   if (
     hasDuplicates(validWords, (word) => word.syncId) ||
     hasDuplicates(validDeletedWords, (word) => word.syncId) ||
@@ -183,7 +223,9 @@ function validatePayload(value: unknown): SyncPayload {
     hasDuplicates(
       validCollectionCrafts,
       (item) => `${item.rarity}\u0000${item.craftIndex}`,
-    )
+    ) ||
+    hasDuplicates(validExplicitPieceSpends, (item) => item.spendId) ||
+    hasDuplicates(validLegacyPieceSpends, (item) => item.spendId)
   ) {
     throw new Error("Gói sao lưu có mục bị lặp.");
   }
@@ -211,6 +253,7 @@ function validatePayload(value: unknown): SyncPayload {
     missionAwards: validMissionAwards,
     missionChests: validMissionChests,
     collectionCrafts: validCollectionCrafts,
+    collectionPieceSpends: validCollectionPieceSpends,
   };
 }
 
@@ -261,7 +304,8 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
   };
-  return isValidMissionChest(chest) ? chest : null;
+  const normalized = reopenPrematureMissionChest(chest);
+  return isValidMissionChest(normalized) ? normalized : null;
 }
 
 function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
@@ -277,8 +321,11 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
       value.pieceCost !== 100) ||
     value.craftId !== `craft-${value.rarity}-${value.craftIndex}` ||
     !isCollectionArtwork(value.rarity, value.artworkId) ||
-    artworkForCraft(value.rarity, value.craftIndex as number).id !==
-      value.artworkId
+    !isValidCollectionCraftArtwork(
+      value.rarity,
+      value.craftIndex as number,
+      value.artworkId,
+    )
   ) {
     return null;
   }
@@ -289,6 +336,52 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
     artworkId: value.artworkId,
     craftedAt: value.craftedAt,
     pieceCost: value.pieceCost === 100 ? 100 : 20,
+  };
+}
+
+function parseCollectionPieceSpend(
+  value: unknown,
+): SyncCollectionPieceSpend | null {
+  if (
+    !isRecord(value) ||
+    !isString(value.spendId, 160, false) ||
+    !isChestRarity(value.rarity) ||
+    (value.pieceCost !== 20 && value.pieceCost !== 100) ||
+    !isTimestamp(value.spentAt)
+  ) {
+    return null;
+  }
+  return {
+    spendId: value.spendId,
+    rarity: value.rarity,
+    pieceCost: value.pieceCost,
+    spentAt: value.spentAt,
+  };
+}
+
+function parseLegacyCollectionPieceSpend(
+  value: unknown,
+): SyncCollectionPieceSpend | null {
+  if (
+    !isRecord(value) ||
+    !isString(value.craftId, 120, false) ||
+    !isChestRarity(value.rarity) ||
+    !isPositiveInteger(value.craftIndex) ||
+    value.craftId !== `craft-${value.rarity}-${value.craftIndex}` ||
+    typeof value.artworkId !== "string" ||
+    !isLegacyCollectionPaintingId(value.artworkId) ||
+    (value.pieceCost !== undefined &&
+      value.pieceCost !== 20 &&
+      value.pieceCost !== 100) ||
+    !isTimestamp(value.craftedAt)
+  ) {
+    return null;
+  }
+  return {
+    spendId: `legacy:${value.craftId}`,
+    rarity: value.rarity,
+    pieceCost: value.pieceCost === 100 ? 100 : 20,
+    spentAt: value.craftedAt,
   };
 }
 

@@ -43,12 +43,13 @@ const element = (type, props, ...children) => {
   return { type, props: { ...props, children } };
 };
 const native = Object.fromEntries(
-  ["View", "Text", "Image", "Pressable", "ScrollView", "ActivityIndicator"].map(
+  ["View", "Text", "Image", "Pressable", "ScrollView", "Modal", "ActivityIndicator"].map(
     (name) => [name, name],
   ),
 );
 native.Platform = { OS: "android" };
 native.StyleSheet = { create: (value) => value };
+native.useWindowDimensions = () => ({ width: 400, height: 800 });
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 function find(node, predicate) {
@@ -56,6 +57,17 @@ function find(node, predicate) {
     return node.map((child) => find(child, predicate)).find(Boolean);
   if (!node || typeof node !== "object") return undefined;
   return predicate(node) ? node : find(node.props?.children, predicate);
+}
+
+function findAll(node, predicate, matches = []) {
+  if (Array.isArray(node)) {
+    for (const child of node) findAll(child, predicate, matches);
+    return matches;
+  }
+  if (!node || typeof node !== "object") return matches;
+  if (predicate(node)) matches.push(node);
+  findAll(node.props?.children, predicate, matches);
+  return matches;
 }
 
 function mount() {
@@ -142,6 +154,16 @@ function mount() {
       render();
       return find(tree, (node) => node.props?.testID === id);
     },
+    choiceIds(prefix) {
+      render();
+      return findAll(
+        tree,
+        (node) =>
+          typeof node.props?.testID === "string" &&
+          node.props.testID.startsWith(`${prefix}-choice-`),
+      ).map((node) => node.props.testID);
+    },
+    shuffleLessonChoices: loaded.shuffleLessonChoices,
     async settle() {
       render();
       await tick();
@@ -159,6 +181,32 @@ function mount() {
 
 (async () => {
   const screen = mount();
+  const forcedShuffle = screen.shuffleLessonChoices(
+    [
+      { term: "answer-one", choices: ["answer-one", "a", "b", "c"] },
+      { term: "answer-two", choices: ["answer-two", "a", "b", "c"] },
+      { term: "answer-three", choices: ["answer-three", "a", "b", "c"] },
+    ],
+    () => 0,
+  );
+  const correctPositions = forcedShuffle.map((choices, index) =>
+    choices.indexOf(`answer-${["one", "two", "three"][index]}`),
+  );
+  assert.ok(
+    correctPositions.every(
+      (position, index) => index === 0 || position !== correctPositions[index - 1],
+    ),
+    "The correct option does not stay at the same letter across consecutive questions.",
+  );
+  assert.deepEqual(
+    forcedShuffle.map((choices) => [...choices].sort()),
+    [
+      ["a", "answer-one", "b", "c"],
+      ["a", "answer-two", "b", "c"],
+      ["a", "answer-three", "b", "c"],
+    ],
+    "Shuffling preserves each question's full set of choices.",
+  );
   await screen.focus();
   assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
@@ -169,14 +217,38 @@ function mount() {
   screen.byId("conjunction-lesson-1").props.onPress();
   for (let index = 0; index < lesson.questions.length; index++) {
     const question = lesson.questions[index];
+    const orderBeforeAnswer = screen.choiceIds("conjunction");
     assert.deepEqual(
       screen.byId("conjunction-question-prompt").props.children,
       [question.prompt],
     );
+    const isWrongAnswer = index === 0;
+    const selectedChoice = isWrongAnswer
+      ? question.choices.find((choice) => choice !== question.term)
+      : question.term;
     screen
-      .byId(`conjunction-choice-${question.term}`)
+      .byId(`conjunction-choice-${selectedChoice}`)
       .props.onPress();
+    assert.deepEqual(
+      screen.choiceIds("conjunction"),
+      orderBeforeAnswer,
+      "Answer options remain stable after selecting an answer.",
+    );
     assert.ok(screen.byId("conjunction-answer-feedback"));
+    if (isWrongAnswer) {
+      assert.equal(
+        screen.byId("conjunction-correct-popup"),
+        undefined,
+        "Wrong answers keep the existing inline feedback.",
+      );
+    } else {
+      assert.equal(
+        screen.byId("conjunction-correct-popup").props.visible,
+        true,
+        "Correct answers open the success popup.",
+      );
+      assert.ok(screen.byId("conjunction-answer-correct"));
+    }
     screen.byId("conjunction-next").props.onPress();
     await screen.settle();
   }
@@ -239,6 +311,11 @@ function mount() {
   assert.ok(screen.byId("idioms-dialogue"));
   screen.byId(`idioms-choice-${idiomQuestion.term}`).props.onPress();
   assert.ok(screen.byId("idioms-answer-feedback"));
+  assert.equal(
+    screen.byId("idioms-correct-popup").props.visible,
+    true,
+    "Correct idiom answers also use the success popup.",
+  );
   screen.byId("idioms-next").props.onPress();
   await screen.settle();
   assert.deepEqual(
@@ -261,6 +338,11 @@ function mount() {
       .byId(`linking-adverb-choice-${question.term}`)
       .props.onPress();
     assert.ok(screen.byId("linking-adverb-answer-feedback"));
+    assert.equal(
+      screen.byId("linking-adverb-correct-popup").props.visible,
+      true,
+      "Correct linking-adverb answers open the success popup.",
+    );
     screen.byId("linking-adverb-next").props.onPress();
     await screen.settle();
   }
@@ -284,6 +366,11 @@ function mount() {
     );
     screen.byId(`ielts-choice-${question.term}`).props.onPress();
     assert.ok(screen.byId("ielts-answer-feedback"));
+    assert.equal(
+      screen.byId("ielts-correct-popup").props.visible,
+      true,
+      "Correct IELTS answers open the success popup.",
+    );
     const translation =
       ieltsTopicDomain.IELTS_TOPIC_COURSE_ENTRIES[question.term]
         .exampleTranslation;
@@ -324,6 +411,11 @@ function mount() {
     );
     screen.byId(`toeic-choice-${question.term}`).props.onPress();
     assert.ok(screen.byId("toeic-answer-feedback"));
+    assert.equal(
+      screen.byId("toeic-correct-popup").props.visible,
+      true,
+      "Correct TOEIC answers open the success popup.",
+    );
     const toeicTranslation =
       toeicTopicDomain.TOEIC_TOPIC_COURSE_ENTRIES[question.term]
         .exampleTranslation;

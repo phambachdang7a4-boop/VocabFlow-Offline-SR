@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +15,6 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
-import { CorviChestArtwork } from "@/components/CorviChestArtwork";
 import {
   craftCollectionArtwork,
   getMissionCollectionOverview,
@@ -22,6 +22,7 @@ import {
 } from "@/data/vocabulary";
 import {
   COLLECTION_ARTWORKS,
+  type CollectionArtwork,
   type CollectionCraft,
 } from "@/domain/collection-artworks";
 import {
@@ -35,15 +36,11 @@ import {
 
 const RARITY_ORDER: ChestRarity[] = [...CHEST_RARITIES];
 const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
-  "epic-repose": require("../assets/images/epic-repose.png"),
-  "epic-study": require("../assets/images/epic-study.png"),
-  "legendary-crossing": require("../assets/images/legendary-crossing.png"),
+  "ho-chi-minh-marble": require("../assets/images/ho-chi-minh-marble.png"),
 };
 
 function rarityDisplayLabel(rarity: ChestRarity): string {
-  return rarity === "legendary"
-    ? "Corvi · Hắc Diệu Thạch"
-    : CHEST_RARITY_LABELS[rarity];
+  return rarity === "legendary" ? "Legendary" : CHEST_RARITY_LABELS[rarity];
 }
 
 export default function CollectionScreen() {
@@ -55,6 +52,8 @@ export default function CollectionScreen() {
   const [loading, setLoading] = useState(true);
   const [crafting, setCrafting] = useState<ChestRarity | null>(null);
   const [newCraft, setNewCraft] = useState<CollectionCraft | null>(null);
+  const [selectedStatue, setSelectedStatue] =
+    useState<CollectionArtwork | null>(null);
   const [error, setError] = useState<string | null>(null);
   const newCraftArtwork = newCraft
     ? COLLECTION_ARTWORKS.find((item) => item.id === newCraft.artworkId)
@@ -62,6 +61,13 @@ export default function CollectionScreen() {
   const newCraftImage = newCraftArtwork?.imageAssetKey
     ? ARTWORK_IMAGE_SOURCES[newCraftArtwork.imageAssetKey]
     : undefined;
+  const unlockedStatues = overview
+    ? COLLECTION_ARTWORKS.filter(
+        (statue) =>
+          statue.unlockMode === "automatic" ||
+          overview.crafts.some((craft) => craft.artworkId === statue.id),
+      )
+    : [];
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,7 +95,7 @@ export default function CollectionScreen() {
       setOverview(await getMissionCollectionOverview());
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Chưa ghép được tranh.",
+        cause instanceof Error ? cause.message : "Chưa ghép được tượng.",
       );
     } finally {
       setCrafting(null);
@@ -97,6 +103,7 @@ export default function CollectionScreen() {
   };
 
   return (
+    <>
     <ScrollView
       style={{ flex: 1, backgroundColor: c.background }}
       contentContainerStyle={[
@@ -106,8 +113,8 @@ export default function CollectionScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Text style={[styles.intro, { color: c.mutedForeground }]}>
-        Mỗi bức tranh cần 100 mảnh cùng phẩm chất. Mảnh được lưu offline và đồng
-        bộ cùng tài khoản.
+        Tượng Hồ Chí Minh đã mở khóa sẵn. Các tượng khác cần 100 mảnh cùng phẩm
+        chất. Mảnh lưu offline và đồng bộ cùng tài khoản.
       </Text>
       {error ? (
         <ErrorBanner message={error} onRetry={() => void load()} />
@@ -129,9 +136,7 @@ export default function CollectionScreen() {
           ]}
         >
           <MaterialSheen tone="gold" radius={16} />
-          {newCraftArtwork?.illustration === "corvi-chest" ? (
-            <CorviChestArtwork size={58} />
-          ) : newCraftImage ? (
+          {newCraftImage ? (
             <Image
               accessibilityLabel={newCraftArtwork?.title}
               source={newCraftImage}
@@ -152,7 +157,7 @@ export default function CollectionScreen() {
                 { color: CHEST_RARITY_ICON_COLORS[newCraft.rarity] },
               ]}
             >
-              Đã ghép tranh mới!
+              Đã mở tượng mới!
             </Text>
             <Text
               style={[
@@ -160,13 +165,13 @@ export default function CollectionScreen() {
                 { color: CHEST_RARITY_ICON_COLORS[newCraft.rarity] },
               ]}
             >
-              {newCraftArtwork?.title ?? "Bức tranh"} ·{" "}
+              {newCraftArtwork?.title ?? "Tượng"} ·{" "}
               {rarityDisplayLabel(newCraft.rarity)}
             </Text>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Đóng thông báo tranh mới"
+            accessibilityLabel="Đóng thông báo tượng mới"
             onPress={() => setNewCraft(null)}
             hitSlop={10}
           >
@@ -182,7 +187,7 @@ export default function CollectionScreen() {
       <View style={styles.heading}>
         <Text style={[styles.title, { color: c.foreground }]}>Mảnh ghép</Text>
         <Text style={[styles.caption, { color: c.mutedForeground }]}>
-          Ghép 100 mảnh để mở một bức tranh ngẫu nhiên.
+          Tượng Hồ Chí Minh đã mở khóa sẵn; tượng khác sẽ dùng mảnh cùng phẩm chất.
         </Text>
       </View>
 
@@ -191,15 +196,29 @@ export default function CollectionScreen() {
         <View style={styles.rarityGrid}>
           {RARITY_ORDER.map((rarity) => {
             const fragments = overview.fragments[rarity];
-            const canCraft = fragments >= 100 && crafting === null;
-            const tileLabel =
-              rarity === "legendary" ? "Corvi" : rarityDisplayLabel(rarity);
+            const hasStatue = COLLECTION_ARTWORKS.some(
+              (item) => item.rarity === rarity,
+            );
+            const hasCraftableStatue = COLLECTION_ARTWORKS.some(
+              (item) =>
+                item.rarity === rarity && item.unlockMode !== "automatic",
+            );
+            const canCraft =
+              hasCraftableStatue && fragments >= 100 && crafting === null;
+            const tileLabel = rarityDisplayLabel(rarity);
+            const status = !hasStatue
+              ? "Chưa có tượng ở phẩm chất này."
+              : !hasCraftableStatue
+                ? "Tượng đã mở khóa sẵn."
+                : canCraft
+                  ? "Chạm để ghép tượng."
+                  : "Cần đủ 100 mảnh để ghép tượng.";
             return (
               <Pressable
                 key={rarity}
                 testID={`collection-rarity-${rarity}`}
                 accessibilityRole="button"
-                accessibilityLabel={`${rarityDisplayLabel(rarity)}: ${fragments} mảnh. ${canCraft ? "Chạm để ghép tranh." : "Cần đủ 100 mảnh để ghép tranh."}`}
+                accessibilityLabel={`${tileLabel}: ${fragments} mảnh. ${status}`}
                 accessibilityState={{ disabled: !canCraft }}
                 disabled={!canCraft}
                 onPress={() => void craft(rarity)}
@@ -213,7 +232,7 @@ export default function CollectionScreen() {
                     shadowOpacity: pressed ? 0.08 : 0.14,
                     shadowRadius: 6,
                     elevation: pressed ? 1 : 3,
-                    opacity: pressed ? 0.86 : 1,
+                    opacity: !hasStatue ? 0.58 : pressed ? 0.86 : 1,
                   },
                 ]}
               >
@@ -250,8 +269,21 @@ export default function CollectionScreen() {
                 <Text
                   style={[styles.fragmentCount, { color: c.mutedForeground }]}
                 >
-                  {fragments}
+                  {fragments} mảnh
                 </Text>
+                {status ? (
+                  <Text
+                    style={[styles.unavailable, { color: c.mutedForeground }]}
+                  >
+                    {!hasStatue
+                      ? "Chưa có tượng"
+                      : !hasCraftableStatue
+                        ? "Đã mở khóa sẵn"
+                        : canCraft
+                          ? "Có thể ghép"
+                          : "Cần 100 mảnh"}
+                  </Text>
+                ) : null}
               </Pressable>
             );
           })}
@@ -260,25 +292,24 @@ export default function CollectionScreen() {
 
       <View style={[styles.heading, styles.galleryHeading]}>
         <Text style={[styles.title, { color: c.foreground }]}>
-          Tranh đã ghép
+          Tượng đã mở khóa
         </Text>
         <Text style={[styles.caption, { color: c.mutedForeground }]}>
-          {overview?.crafts.length ?? 0} bức tranh
+          {unlockedStatues.length} tượng
         </Text>
       </View>
-      {overview?.crafts.length ? (
+      {unlockedStatues.length ? (
         <View style={styles.gallery}>
-          {overview.crafts.map((craft) => {
-            const artwork = COLLECTION_ARTWORKS.find(
-              (item) => item.id === craft.artworkId,
-            );
-            if (!artwork) return null;
-            const artworkImage = artwork.imageAssetKey
-              ? ARTWORK_IMAGE_SOURCES[artwork.imageAssetKey]
+          {unlockedStatues.map((statue) => {
+            const artworkImage = statue.imageAssetKey
+              ? ARTWORK_IMAGE_SOURCES[statue.imageAssetKey]
               : undefined;
             return (
-              <View
-                key={craft.craftId}
+              <Pressable
+                key={statue.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Xem thông tin ${statue.title}`}
+                onPress={() => setSelectedStatue(statue)}
                 style={[
                   styles.artCard,
                   {
@@ -296,41 +327,46 @@ export default function CollectionScreen() {
                 <View
                   style={[
                     styles.artImage,
-                    { backgroundColor: CHEST_RARITY_COLORS[craft.rarity] },
+                    { backgroundColor: CHEST_RARITY_COLORS[statue.rarity] },
                   ]}
                 >
-                  {artwork.illustration === "corvi-chest" ? (
-                    <CorviChestArtwork size={104} />
-                  ) : artworkImage ? (
+                  {artworkImage ? (
                     <Image
-                      accessibilityLabel={artwork.title}
+                      accessibilityLabel={statue.title}
                       source={artworkImage}
                       style={styles.artArtwork}
                       resizeMode="cover"
                     />
                   ) : (
                     <Feather
-                      name={artwork.icon as keyof typeof Feather.glyphMap}
+                      name={statue.icon as keyof typeof Feather.glyphMap}
                       size={34}
-                      color={CHEST_RARITY_ICON_COLORS[craft.rarity]}
+                      color={CHEST_RARITY_ICON_COLORS[statue.rarity]}
                     />
                   )}
                 </View>
                 <Text
                   style={[styles.artTitle, { color: c.foreground }]}
-                  numberOfLines={2}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                 >
-                  {artwork.title}
+                  {statue.shortTitle ?? statue.title}
                 </Text>
                 <Text
                   style={[
                     styles.artRarity,
-                    { color: CHEST_RARITY_TEXT_COLORS[craft.rarity] },
+                    { color: CHEST_RARITY_TEXT_COLORS[statue.rarity] },
                   ]}
                 >
-                  {rarityDisplayLabel(craft.rarity)}
+                  {rarityDisplayLabel(statue.rarity)}
                 </Text>
-              </View>
+                <Text style={[styles.artStatus, { color: c.primary }]}>
+                  Đã mở khóa
+                </Text>
+                <Text style={[styles.detailHint, { color: c.mutedForeground }]}>
+                  Chạm để xem
+                </Text>
+              </Pressable>
             );
           })}
         </View>
@@ -350,13 +386,105 @@ export default function CollectionScreen() {
           ]}
         >
           <MaterialSheen radius={18} />
-          <Feather name="image" size={24} color={c.mutedForeground} />
+          <Feather name="award" size={24} color={c.mutedForeground} />
           <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
-            Chưa có tranh nào. Mở rương để nhận mảnh ghép.
+            Chưa có tượng nào. Mở rương để nhận mảnh ghép.
           </Text>
         </View>
       )}
     </ScrollView>
+    <Modal
+      visible={selectedStatue !== null}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setSelectedStatue(null)}
+    >
+      <View
+        style={[
+          styles.detailOverlay,
+          { backgroundColor: c.overlay },
+        ]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Đóng thông tin tượng"
+          onPress={() => setSelectedStatue(null)}
+          style={StyleSheet.absoluteFill}
+        />
+        {selectedStatue ? (
+          <View
+            accessibilityViewIsModal
+            style={[
+              styles.detailModal,
+              {
+                backgroundColor: c.card,
+                borderColor: c.border,
+                shadowColor: c.shade,
+              },
+            ]}
+          >
+            <View style={styles.detailHeader}>
+              <Text
+                style={[styles.detailEyebrow, { color: c.mutedForeground }]}
+              >
+                THÔNG TIN TƯỢNG
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Đóng thông tin tượng"
+                onPress={() => setSelectedStatue(null)}
+                hitSlop={10}
+                style={[styles.detailClose, { backgroundColor: c.background }]}
+              >
+                <Feather name="x" size={20} color={c.foreground} />
+              </Pressable>
+            </View>
+            <ScrollView
+              style={styles.detailScroll}
+              contentContainerStyle={styles.detailContent}
+              showsVerticalScrollIndicator
+            >
+              {selectedStatue.imageAssetKey &&
+              ARTWORK_IMAGE_SOURCES[selectedStatue.imageAssetKey] ? (
+                <Image
+                  accessibilityLabel={selectedStatue.title}
+                  source={ARTWORK_IMAGE_SOURCES[selectedStatue.imageAssetKey]}
+                  style={styles.detailArtwork}
+                  resizeMode="cover"
+                />
+              ) : null}
+              <Text style={[styles.detailTitle, { color: c.foreground }]}>
+                {selectedStatue.title}
+              </Text>
+              <Text
+                style={[
+                  styles.detailRarity,
+                  { color: CHEST_RARITY_TEXT_COLORS[selectedStatue.rarity] },
+                ]}
+              >
+                {rarityDisplayLabel(selectedStatue.rarity)}
+                {selectedStatue.material
+                  ? ` · ${selectedStatue.material}`
+                  : ""}
+              </Text>
+              <Text style={[styles.biography, { color: c.foreground }]}>
+                {selectedStatue.biography ??
+                  selectedStatue.description ??
+                  "Chưa có thông tin."}
+              </Text>
+              {selectedStatue.sourceLabel ? (
+                <Text
+                  style={[styles.sourceLabel, { color: c.mutedForeground }]}
+                >
+                  Nguồn tham khảo: {selectedStatue.sourceLabel}
+                </Text>
+              ) : null}
+            </ScrollView>
+          </View>
+        ) : null}
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -393,6 +521,7 @@ const styles = StyleSheet.create({
   },
   rarityName: { fontFamily: F.b, fontSize: 13, textAlign: "center" },
   fragmentCount: { fontFamily: F.r, fontSize: 12 },
+  unavailable: { fontFamily: F.r, fontSize: 10, textAlign: "center" },
   reveal: {
     position: "relative",
     borderRadius: 16,
@@ -405,26 +534,91 @@ const styles = StyleSheet.create({
   revealText: { flex: 1, gap: 2 },
   revealTitle: { fontFamily: F.b, fontSize: 15 },
   revealSubtitle: { fontFamily: F.r, fontSize: 13 },
-  gallery: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  gallery: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 10,
+  },
   artCard: {
     position: "relative",
-    width: "47%",
-    flexGrow: 1,
+    width: "23%",
+    flexGrow: 0,
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 10,
-    gap: 6,
+    borderRadius: 12,
+    padding: 6,
+    gap: 4,
   },
   artImage: {
-    height: 110,
-    borderRadius: 12,
+    width: "100%",
+    aspectRatio: 1,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
   artArtwork: { width: "100%", height: "100%" },
-  artTitle: { fontFamily: F.s, fontSize: 14 },
-  artRarity: { fontFamily: F.r, fontSize: 12 },
+  artTitle: { fontFamily: F.s, fontSize: 11, textAlign: "center" },
+  artRarity: { fontFamily: F.r, fontSize: 9, textAlign: "center" },
+  artStatus: { fontFamily: F.s, fontSize: 9, textAlign: "center" },
+  detailHint: { fontFamily: F.r, fontSize: 9, textAlign: "center" },
+  detailOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 18,
+  },
+  detailModal: {
+    width: "100%",
+    maxHeight: "88%",
+    alignSelf: "center",
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 16,
+    overflow: "hidden",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  detailHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  detailEyebrow: {
+    fontFamily: F.b,
+    fontSize: 11,
+    letterSpacing: 1.2,
+  },
+  detailClose: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  detailScroll: { flexShrink: 1 },
+  detailContent: { gap: 10, paddingBottom: 8 },
+  detailArtwork: {
+    width: 128,
+    height: 128,
+    borderRadius: 16,
+    alignSelf: "center",
+    marginBottom: 2,
+  },
+  detailTitle: {
+    fontFamily: F.b,
+    fontSize: 20,
+    textAlign: "center",
+  },
+  detailRarity: {
+    fontFamily: F.s,
+    fontSize: 13,
+    textAlign: "center",
+  },
+  biography: { fontFamily: F.r, fontSize: 14, lineHeight: 22, marginTop: 4 },
+  sourceLabel: { fontFamily: F.r, fontSize: 12, lineHeight: 18, marginTop: 6 },
   emptyCard: {
     position: "relative",
     borderWidth: 1,

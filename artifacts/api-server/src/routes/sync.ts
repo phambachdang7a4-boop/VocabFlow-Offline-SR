@@ -1,11 +1,12 @@
 import { getAuth } from "@clerk/express";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { Router, type IRouter, type RequestHandler } from "express";
 import {
   db,
   userCourseProgress,
   userCourseSelections,
   userCollectionCrafts,
+  userCollectionPieceSpends,
   userDailyMissionAwards,
   userMissionChests,
   userReviewComboRewards,
@@ -32,6 +33,11 @@ declare global {
 
 const router: IRouter = Router();
 const COURSE_SOURCE_MARKER = "Khóa học:";
+const FIRST_STATUE_ID = "legendary-ho-chi-minh-marble";
+
+function isCurrentStatueCraft(craft: { rarity: string; artworkId: string }) {
+  return craft.rarity === "legendary" && craft.artworkId === FIRST_STATUE_ID;
+}
 
 function isCourseGeneratedWord(word: { note: string }) {
   return word.note.includes(COURSE_SOURCE_MARKER);
@@ -65,15 +71,24 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
   const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
-  const collectionCrafts = parsed.data.collectionCrafts ?? [];
+  const rawCollectionCrafts = parsed.data.collectionCrafts ?? [];
+  const collectionCrafts = rawCollectionCrafts.filter(isCurrentStatueCraft);
+  const legacyPieceSpends = rawCollectionCrafts
+    .filter((craft) => !isCurrentStatueCraft(craft))
+    .map(pieceSpendFromLegacyCraft);
+  const collectionPieceSpends = mergePieceSpends(
+    parsed.data.collectionPieceSpends ?? [],
+    legacyPieceSpends,
+  );
   if (
     hasInvalidMissionData(
       reviewSessions,
       reviewComboRewards,
       missionAwards,
       missionChests,
-      collectionCrafts,
+      rawCollectionCrafts,
     )
+    || hasInvalidCollectionPieceSpends(collectionPieceSpends)
   ) {
     res
       .status(400)
@@ -106,11 +121,12 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       missionChests,
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
-    hasDuplicates(collectionCrafts, (item) => item.craftId) ||
+    hasDuplicates(rawCollectionCrafts, (item) => item.craftId) ||
     hasDuplicates(
-      collectionCrafts,
+      rawCollectionCrafts,
       (item) => `${item.rarity}\u0000${item.craftIndex}`,
     ) ||
+    hasDuplicates(collectionPieceSpends, (item) => item.spendId) ||
     parsed.data.deletedWords.some((deleted) =>
       parsed.data.words.some((word) => word.syncId === deleted.syncId),
     )
@@ -161,6 +177,10 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
         ...craft,
         craftedAt: toTimestamp(craft.craftedAt),
       })),
+      collectionPieceSpends: collectionPieceSpends.map((spend) => ({
+        ...spend,
+        spentAt: toTimestamp(spend.spentAt),
+      })),
     };
 
     const result = await db.transaction(async (tx) => {
@@ -174,6 +194,33 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
         .from(userSyncRevisions)
         .where(eq(userSyncRevisions.userId, userId));
       const revision = (storedRevision?.revision ?? 0) + 1;
+      let pieceSpendsToSave: CollectionPieceSpendLike[] =
+        snapshot.collectionPieceSpends;
+      if (parsed.data.collectionPieceSpends === undefined) {
+        const [storedPieceSpends, storedCrafts] = await Promise.all([
+          tx
+            .select()
+            .from(userCollectionPieceSpends)
+            .where(eq(userCollectionPieceSpends.userId, userId)),
+          tx
+            .select()
+            .from(userCollectionCrafts)
+            .where(eq(userCollectionCrafts.userId, userId)),
+        ]);
+        const incomingCraftIds = new Set(
+          rawCollectionCrafts.map((craft) => craft.craftId),
+        );
+        pieceSpendsToSave = mergePieceSpends(
+          pieceSpendsToSave,
+          storedPieceSpends,
+          storedCrafts
+            .filter((craft) => !incomingCraftIds.has(craft.craftId))
+            .map(pieceSpendFromLegacyCraft),
+        ).map((spend) => ({
+          ...spend,
+          spentAt: toTimestamp(spend.spentAt),
+        }));
+      }
       await tx.delete(userVocabulary).where(eq(userVocabulary.userId, userId));
       await tx
         .delete(userWordTombstones)
@@ -202,6 +249,9 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       await tx
         .delete(userCollectionCrafts)
         .where(eq(userCollectionCrafts.userId, userId));
+      await tx
+        .delete(userCollectionPieceSpends)
+        .where(eq(userCollectionPieceSpends.userId, userId));
 
       if (snapshot.words.length) {
         await tx.insert(userVocabulary).values(
@@ -323,6 +373,17 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
           })),
         );
       }
+      if (pieceSpendsToSave.length) {
+        await tx.insert(userCollectionPieceSpends).values(
+          pieceSpendsToSave.map((spend) => ({
+            userId,
+            spendId: spend.spendId,
+            rarity: spend.rarity,
+            pieceCost: spend.pieceCost,
+            spentAt: toTimestamp(spend.spentAt),
+          })),
+        );
+      }
       await tx
         .insert(userSyncRevisions)
         .values({ userId, revision })
@@ -363,15 +424,24 @@ router.post("/sync", requireAuth, async (req, res) => {
   const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
-  const collectionCrafts = parsed.data.collectionCrafts ?? [];
+  const rawCollectionCrafts = parsed.data.collectionCrafts ?? [];
+  const collectionCrafts = rawCollectionCrafts.filter(isCurrentStatueCraft);
+  const legacyPieceSpends = rawCollectionCrafts
+    .filter((craft) => !isCurrentStatueCraft(craft))
+    .map(pieceSpendFromLegacyCraft);
+  const collectionPieceSpends = mergePieceSpends(
+    parsed.data.collectionPieceSpends ?? [],
+    legacyPieceSpends,
+  );
   if (
     hasInvalidMissionData(
       reviewSessions,
       reviewComboRewards,
       missionAwards,
       missionChests,
-      collectionCrafts,
+      rawCollectionCrafts,
     )
+    || hasInvalidCollectionPieceSpends(collectionPieceSpends)
   ) {
     res
       .status(400)
@@ -404,11 +474,12 @@ router.post("/sync", requireAuth, async (req, res) => {
       missionChests,
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
-    hasDuplicates(collectionCrafts, (item) => item.craftId) ||
+    hasDuplicates(rawCollectionCrafts, (item) => item.craftId) ||
     hasDuplicates(
-      collectionCrafts,
+      rawCollectionCrafts,
       (item) => `${item.rarity}\u0000${item.craftIndex}`,
-    )
+    ) ||
+    hasDuplicates(collectionPieceSpends, (item) => item.spendId)
   ) {
     res.status(400).json({ error: "Danh sách đồng bộ có mục trùng lặp." });
     return;
@@ -417,6 +488,45 @@ router.post("/sync", requireAuth, async (req, res) => {
   try {
     const result = await db.transaction(async (tx) => {
       const userId = res.locals.userId;
+      const storedCrafts = await tx
+        .select()
+        .from(userCollectionCrafts)
+        .where(eq(userCollectionCrafts.userId, userId));
+      const storedLegacySpends = storedCrafts
+        .filter((craft) => !isCurrentStatueCraft(craft))
+        .map(pieceSpendFromLegacyCraft);
+      const spendsToMerge = mergePieceSpends(
+        collectionPieceSpends,
+        storedLegacySpends,
+      ).map((spend) => ({
+        ...spend,
+        spentAt: toTimestamp(spend.spentAt),
+      }));
+      if (spendsToMerge.length) {
+        await tx
+          .insert(userCollectionPieceSpends)
+          .values(
+            spendsToMerge.map((spend) => ({
+              userId,
+              spendId: spend.spendId,
+              rarity: spend.rarity,
+              pieceCost: spend.pieceCost,
+              spentAt: toTimestamp(spend.spentAt),
+            })),
+          )
+          .onConflictDoNothing();
+      }
+      // Remove obsolete painting rewards from the account during its first
+      // sync with this collection version. Older clients cannot re-add them:
+      // only the current statue ID is accepted below.
+      await tx
+        .delete(userCollectionCrafts)
+        .where(
+          and(
+            eq(userCollectionCrafts.userId, userId),
+            ne(userCollectionCrafts.artworkId, FIRST_STATUE_ID),
+          ),
+        );
       await tx
         .insert(userSyncRevisions)
         .values({ userId, revision: 0 })
@@ -490,6 +600,10 @@ router.post("/sync", requireAuth, async (req, res) => {
         collectionCrafts: collectionCrafts.map((craft) => ({
           ...craft,
           craftedAt: toTimestamp(craft.craftedAt),
+        })),
+        collectionPieceSpends: collectionPieceSpends.map((spend) => ({
+          ...spend,
+          spentAt: toTimestamp(spend.spentAt),
         })),
       };
 
@@ -703,22 +817,25 @@ router.post("/sync", requireAuth, async (req, res) => {
           );
         const selected = !current
           ? normalizedChest
-          : current.opened
+          : normalizedChest.ruleSet < current.ruleSet
             ? current
-            : normalizedChest.ruleSet < current.ruleSet
-              ? current
-              : normalizedChest.ruleSet > current.ruleSet
-                ? current.upgradeAttempts === 0
-                  ? normalizedChest
-                  : current
-                : normalizedChest.opened
-                  ? normalizedChest
-                  : normalizedChest.upgradeAttempts > current.upgradeAttempts ||
-                      (normalizedChest.upgradeAttempts ===
-                        current.upgradeAttempts &&
-                        normalizedChest.updatedAt > current.updatedAt)
+            : normalizedChest.ruleSet > current.ruleSet
+              ? current.upgradeAttempts === 0
+                ? normalizedChest
+                : current
+              : normalizedChest.upgradeAttempts > current.upgradeAttempts
+                ? normalizedChest
+                : normalizedChest.upgradeAttempts < current.upgradeAttempts
+                  ? current
+                  : Date.parse(toTimestamp(normalizedChest.updatedAt)) >
+                      Date.parse(toTimestamp(current.updatedAt))
                     ? normalizedChest
-                    : current;
+                    : Date.parse(toTimestamp(normalizedChest.updatedAt)) <
+                        Date.parse(toTimestamp(current.updatedAt))
+                      ? current
+                      : normalizedChest.opened && !current.opened
+                        ? normalizedChest
+                        : current;
         await tx
           .insert(userMissionChests)
           .values({
@@ -765,7 +882,6 @@ router.post("/sync", requireAuth, async (req, res) => {
           )
           .onConflictDoNothing();
       }
-
       const [
         allWords,
         allTombstones,
@@ -775,6 +891,7 @@ router.post("/sync", requireAuth, async (req, res) => {
         allAwards,
         allChests,
         allCrafts,
+        allPieceSpends,
       ] = await Promise.all([
         tx
           .select()
@@ -808,6 +925,10 @@ router.post("/sync", requireAuth, async (req, res) => {
           .select()
           .from(userCollectionCrafts)
           .where(eq(userCollectionCrafts.userId, userId)),
+        tx
+          .select()
+          .from(userCollectionPieceSpends)
+          .where(eq(userCollectionPieceSpends.userId, userId)),
       ]);
       const tombstonesById = new Map(
         allTombstones.map((item) => [item.syncId, item.deletedAt]),
@@ -883,8 +1004,11 @@ router.post("/sync", requireAuth, async (req, res) => {
             ...chest,
             day: chest.day,
           })),
-          collectionCrafts: allCrafts.map(
-            ({ userId: _owner, ...craft }) => craft,
+          collectionCrafts: allCrafts
+            .filter((craft) => isCurrentStatueCraft(craft))
+            .map(({ userId: _owner, ...craft }) => craft),
+          collectionPieceSpends: allPieceSpends.map(
+            ({ userId: _owner, ...spend }) => spend,
           ),
         },
       };
@@ -928,6 +1052,7 @@ async function readUserSyncSnapshot(userId: string) {
     allAwards,
     allChests,
     allCrafts,
+    allPieceSpends,
   ] = await Promise.all([
     db
       .select({ revision: userSyncRevisions.revision })
@@ -962,6 +1087,10 @@ async function readUserSyncSnapshot(userId: string) {
       .select()
       .from(userCollectionCrafts)
       .where(eq(userCollectionCrafts.userId, userId)),
+    db
+      .select()
+      .from(userCollectionPieceSpends)
+      .where(eq(userCollectionPieceSpends.userId, userId)),
   ]);
   const tombstonesById = new Map(
     allTombstones.map((item) => [item.syncId, item.deletedAt]),
@@ -1012,7 +1141,12 @@ async function readUserSyncSnapshot(userId: string) {
       ...chest,
       day: chest.day,
     })),
-    collectionCrafts: allCrafts.map(({ userId: _owner, ...craft }) => craft),
+    collectionCrafts: allCrafts
+      .filter((craft) => isCurrentStatueCraft(craft))
+      .map(({ userId: _owner, ...craft }) => craft),
+    collectionPieceSpends: allPieceSpends.map(
+      ({ userId: _owner, ...spend }) => spend,
+    ),
   };
 }
 
@@ -1159,6 +1293,7 @@ function isValidMissionChestRecord(chest: {
     ruleSet === 1 ? "common" : serverStartingChestRarity(chest.missionId);
   let opened = false;
   let resolvedAttempts = 0;
+  let lastUpgradeSucceeded = true;
   for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
     if (opened) return false;
     const outcome = serverChestUpgrade(
@@ -1169,22 +1304,29 @@ function isValidMissionChestRecord(chest: {
       superUpgrade,
     );
     resolvedAttempts = attempt;
-    if (outcome.success) {
-      rarity = outcome.rarity;
-      opened = attempt === attemptLimit || rarity === "legendary";
-    } else {
-      opened = true;
-    }
+    lastUpgradeSucceeded = outcome.success;
+    if (outcome.success) rarity = outcome.rarity;
+    opened =
+      attempt === attemptLimit ||
+      rarity === "legendary" ||
+      (ruleSet === 1 && !outcome.success);
   }
+  const wasPrematurelyFinalized =
+    ruleSet >= 2 &&
+    chest.opened &&
+    !opened &&
+    !lastUpgradeSucceeded &&
+    chest.upgradeAttempts < attemptLimit &&
+    rarity !== "legendary";
   if (
     resolvedAttempts !== chest.upgradeAttempts ||
     rarity !== chest.rarity ||
-    opened !== chest.opened ||
+    (opened !== chest.opened && !wasPrematurelyFinalized) ||
     !Number.isFinite(Date.parse(toTimestamp(chest.createdAt))) ||
     !Number.isFinite(Date.parse(toTimestamp(chest.updatedAt)))
   )
     return false;
-  if (!opened) return chest.finalStone === null;
+  if (!opened && !wasPrematurelyFinalized) return chest.finalStone === null;
   const legacyBonuses: Record<string, number> = {
     common: 0,
     uncommon: 2,
@@ -1270,6 +1412,50 @@ function serverHash(value: string): number {
 
 function isChestRarity(value: string): boolean {
   return ["common", "uncommon", "rare", "epic", "legendary"].includes(value);
+}
+
+interface CollectionPieceSpendLike {
+  spendId: string;
+  rarity: string;
+  pieceCost: number;
+  spentAt: Date | string;
+}
+
+function pieceSpendFromLegacyCraft(craft: {
+  craftId: string;
+  rarity: string;
+  pieceCost?: number;
+  craftedAt: Date | string;
+}): CollectionPieceSpendLike {
+  return {
+    spendId: `legacy:${craft.craftId}`,
+    rarity: craft.rarity,
+    pieceCost: craft.pieceCost === 100 ? 100 : 20,
+    spentAt: toTimestamp(craft.craftedAt),
+  };
+}
+
+function mergePieceSpends(
+  ...groups: CollectionPieceSpendLike[][]
+): CollectionPieceSpendLike[] {
+  const byId = new Map<string, CollectionPieceSpendLike>();
+  for (const spend of groups.flat()) {
+    if (!byId.has(spend.spendId)) byId.set(spend.spendId, spend);
+  }
+  return [...byId.values()];
+}
+
+function hasInvalidCollectionPieceSpends(
+  spends: CollectionPieceSpendLike[],
+): boolean {
+  return spends.some(
+    (spend) =>
+      !spend.spendId.trim() ||
+      spend.spendId.length > 160 ||
+      !isChestRarity(spend.rarity) ||
+      (spend.pieceCost !== 20 && spend.pieceCost !== 100) ||
+      !Number.isFinite(Date.parse(toTimestamp(spend.spentAt))),
+  );
 }
 
 function hasDuplicates<T>(items: T[], keyFor: (item: T) => string): boolean {

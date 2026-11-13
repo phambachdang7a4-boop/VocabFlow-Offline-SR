@@ -129,6 +129,10 @@ export const mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax = 80;
 
 export const mergeUserSyncDataBodyCollectionCraftsMax = 10000;
 
+export const mergeUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax = 160;
+
+export const mergeUserSyncDataBodyCollectionPieceSpendsMax = 10000;
+
 
 
 export const MergeUserSyncDataBody = zod.object({
@@ -225,7 +229,13 @@ export const MergeUserSyncDataBody = zod.object({
   "artworkId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
-})).max(mergeUserSyncDataBodyCollectionCraftsMax).optional()
+})).max(mergeUserSyncDataBodyCollectionCraftsMax).optional(),
+  "collectionPieceSpends": zod.array(zod.object({
+  "spendId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
+  "spentAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyCollectionPieceSpendsMax).optional()
 })
 
 export const mergeUserSyncData200ResponseRevisionMin = 0;
@@ -336,6 +346,10 @@ export const mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax = 80;
 
 export const mergeUserSyncData200ResponseCollectionCraftsMax = 10000;
 
+export const mergeUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax = 160;
+
+export const mergeUserSyncData200ResponseCollectionPieceSpendsMax = 10000;
+
 
 
 export const MergeUserSyncData200Response = zod.object({
@@ -432,7 +446,13 @@ export const MergeUserSyncData200Response = zod.object({
   "artworkId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
-})).max(mergeUserSyncData200ResponseCollectionCraftsMax).optional()
+})).max(mergeUserSyncData200ResponseCollectionCraftsMax).optional(),
+  "collectionPieceSpends": zod.array(zod.object({
+  "spendId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
+  "spentAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseCollectionPieceSpendsMax).optional()
 })
 
 export const MergeUserSyncData400Response = zod.object({
@@ -559,6 +579,10 @@ export const replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax = 80;
 
 export const replaceUserSyncDataBodyCollectionCraftsMax = 10000;
 
+export const replaceUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax = 160;
+
+export const replaceUserSyncDataBodyCollectionPieceSpendsMax = 10000;
+
 
 
 export const ReplaceUserSyncDataBody = zod.object({
@@ -655,7 +679,13 @@ export const ReplaceUserSyncDataBody = zod.object({
   "artworkId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
-})).max(replaceUserSyncDataBodyCollectionCraftsMax).optional()
+})).max(replaceUserSyncDataBodyCollectionCraftsMax).optional(),
+  "collectionPieceSpends": zod.array(zod.object({
+  "spendId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
+  "spentAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyCollectionPieceSpendsMax).optional()
 })
 
 export const replaceUserSyncData200ResponseRevisionMin = 0;
@@ -766,6 +796,10 @@ export const replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax = 80
 
 export const replaceUserSyncData200ResponseCollectionCraftsMax = 10000;
 
+export const replaceUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax = 160;
+
+export const replaceUserSyncData200ResponseCollectionPieceSpendsMax = 10000;
+
 
 
 export const ReplaceUserSyncData200Response = zod.object({
@@ -862,7 +896,13 @@ export const ReplaceUserSyncData200Response = zod.object({
   "artworkId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
-})).max(replaceUserSyncData200ResponseCollectionCraftsMax).optional()
+})).max(replaceUserSyncData200ResponseCollectionCraftsMax).optional(),
+  "collectionPieceSpends": zod.array(zod.object({
+  "spendId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax),
+  "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
+  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
+  "spentAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseCollectionPieceSpendsMax).optional()
 })
 
 export const ReplaceUserSyncData400Response = zod.object({

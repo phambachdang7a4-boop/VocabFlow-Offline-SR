@@ -62,6 +62,7 @@ import {
   type ReviewSessionSummary,
 } from "@/domain/review-session";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
+import { TabBackgroundMusic } from "@/components/TabBackgroundMusic";
 import { soundCueFor } from "@/domain/sound-cues";
 import {
   recordReviewSessionResult,
@@ -129,6 +130,7 @@ export default function ReviewScreen() {
   const [startError, setStartError] = useState<string | null>(null);
   const [sessionSaveError, setSessionSaveError] = useState<string | null>(null);
   const [comboNotice, setComboNotice] = useState<ComboNotice | null>(null);
+  const [reviewTabFocused, setReviewTabFocused] = useState(false);
   const busyRef = useRef(false);
   const startingRef = useRef(false);
   const finalizingRef = useRef(false);
@@ -147,6 +149,13 @@ export default function ReviewScreen() {
     [overview.dueWords],
   );
   const inSession = !!session || !!gameWords || sessionFinalizing;
+
+  useFocusEffect(
+    useCallback(() => {
+      setReviewTabFocused(true);
+      return () => setReviewTabFocused(false);
+    }, []),
+  );
 
   useEffect(() => {
     navigation.setOptions({
@@ -571,6 +580,10 @@ export default function ReviewScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
+      <TabBackgroundMusic
+        activeTab={reviewTabFocused && !inSession ? "review" : null}
+        transitionVisible={false}
+      />
       {session ? (
         <View
           style={[

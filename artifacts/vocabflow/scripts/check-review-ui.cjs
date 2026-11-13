@@ -23,8 +23,9 @@ function find(node, predicate) {
 
 // Real screen/component callbacks, controlled context/clock; not a touch E2E.
 function mount(file, properties = {}, initial = {}) {
-  let now = new Date('2026-11-07T23:59:59').getTime(), dirty = true, cursor, tree, focus, focusCleanup;
-  const slots = [], effects = [], routes = [], tabOptions = [];
+  let now = new Date('2026-11-07T23:59:59').getTime(), dirty = true, cursor, focusCursor, tree;
+  const slots = [], effects = [], routes = [], tabOptions = [], focusCallbacks = [];
+  let focusCleanups = [];
   const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const speechCalls = [];
@@ -74,7 +75,11 @@ function mount(file, properties = {}, initial = {}) {
     react: { ...react, default: react }, 'react-native': native,
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
     '@expo/vector-icons': { Feather: 'Feather', MaterialCommunityIcons: 'MaterialCommunityIcons' },
-    'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: callback => { focus = callback; }, useNavigation: () => navigation },
+    'expo-router': {
+      router: { push: route => routes.push(route) },
+      useFocusEffect: callback => { focusCallbacks[focusCursor++] = callback; },
+      useNavigation: () => navigation,
+    },
     'expo-crypto': { randomUUID: () => 'review-session-test' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
@@ -91,6 +96,7 @@ function mount(file, properties = {}, initial = {}) {
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },
     '@/components/ReviewCard': { ReviewCard: 'ReviewCard', calendarLabel },
     '@/components/ReviewMistakeMatchGame': { ReviewMistakeMatchGame: 'ReviewMistakeMatchGame' },
+    '@/components/TabBackgroundMusic': { TabBackgroundMusic: 'TabBackgroundMusic' },
     '@/components/ReviewOverview': { SavedTotal: 'SavedTotal', LevelDistributionChart: 'LevelDistributionChart', ReviewStatusBar: 'ReviewStatusBar' },
     '@/data/vocabulary': {
       recordReviewSessionStart: async () => {},
@@ -112,7 +118,7 @@ function mount(file, properties = {}, initial = {}) {
   function render() {
     for (let limit = 0; dirty; limit++) {
       assert.ok(limit < 30, 'Render/effects must settle');
-      dirty = false; cursor = 0; tree = Component(properties);
+      dirty = false; cursor = 0; focusCursor = 0; tree = Component(properties);
       while (effects.length) effects.shift()();
     }
   }
@@ -128,8 +134,15 @@ function mount(file, properties = {}, initial = {}) {
     update(next) { Object.assign(context, next); dirty = true; render(); },
     props(next) { Object.assign(properties, next); dirty = true; render(); },
     time(value) { now = new Date(value).getTime(); dirty = true; render(); },
-    focus() { focusCleanup?.(); render(); focusCleanup = focus(); render(); },
-    unmount() { slots.forEach(slot => slot?.cleanup?.()); focusCleanup?.(); },
+    focus() {
+      focusCleanups.forEach(cleanup => cleanup?.());
+      render();
+      focusCleanups = focusCallbacks
+        .map(callback => callback())
+        .filter(cleanup => typeof cleanup === 'function');
+      render();
+    },
+    unmount() { slots.forEach(slot => slot?.cleanup?.()); focusCleanups.forEach(cleanup => cleanup()); },
     async settle() { render(); await tick(); render(); },
   };
 }

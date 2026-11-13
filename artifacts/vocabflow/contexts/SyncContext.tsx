@@ -100,6 +100,7 @@ export function SyncProvider({
         missionAwards: remote.missionAwards ?? [],
         missionChests: remote.missionChests ?? [],
         collectionCrafts: remote.collectionCrafts ?? [],
+        collectionPieceSpends: remote.collectionPieceSpends ?? [],
       };
       const [current, replacementPending] = await Promise.all([
         getLocalSyncState(),
@@ -179,6 +180,7 @@ export function SyncProvider({
               missionAwards: [],
               missionChests: [],
               collectionCrafts: [],
+              collectionPieceSpends: [],
             };
             const remote = await replaceRemote({ data: emptyPayload });
             cloudCleared = true;

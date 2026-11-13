@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { SyncCollectionCraft } from './syncCollectionCraft';
+import type { SyncCollectionPieceSpend } from './syncCollectionPieceSpend';
 import type { SyncCourseProgress } from './syncCourseProgress';
 import type { SyncCourseSelection } from './syncCourseSelection';
 import type { SyncDeletedWord } from './syncDeletedWord';
@@ -42,4 +43,6 @@ export interface UserSyncSnapshot {
   missionChests?: SyncMissionChest[];
   /** @maxItems 10000 */
   collectionCrafts?: SyncCollectionCraft[];
+  /** @maxItems 10000 */
+  collectionPieceSpends?: SyncCollectionPieceSpend[];
 }

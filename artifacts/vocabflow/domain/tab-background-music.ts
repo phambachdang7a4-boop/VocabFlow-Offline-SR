@@ -12,8 +12,7 @@ export function shouldPlayTabBackgroundMusic({
   soundEnabled,
 }: TabBackgroundMusicState): boolean {
   return (
-    activeTab !== null &&
-    activeTab !== "review" &&
+    activeTab === "review" &&
     appVisible &&
     soundReady &&
     soundEnabled

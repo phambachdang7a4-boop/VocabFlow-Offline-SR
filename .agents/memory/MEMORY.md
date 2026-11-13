@@ -10,3 +10,4 @@
 - [Đối chiếu đại từ trong mệnh đề IELTS](ielts-pronoun-clause-checks.md) — Chỉ so sánh các chủ ngữ tường minh khi hai câu có số mệnh đề nhận diện tương ứng.
 - [Cặp ví dụ IELTS đã duyệt](ielts-reviewed-example-sources.md) — Lưu cặp Anh-Việt và ảnh chụp câu từ điển ngoài dữ liệu sinh để phát hiện thay đổi nguồn.
 - [Cừu Pan](vocabflow-scope.md) — Cừu Pan là nhân vật riêng, khác Corvi; hình tham chiếu của Pan đang quét dọn.
+- [Hình tượng sưu tập](statue-art-direction.md) — Tượng mới dùng phong cách pixel-art cẩm thạch theo ảnh tham chiếu Hồ Chí Minh và Marcus Aurelius.

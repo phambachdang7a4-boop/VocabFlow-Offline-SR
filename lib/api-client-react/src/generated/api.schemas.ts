@@ -300,6 +300,36 @@ export interface SyncCollectionCraft {
   pieceCost?: SyncCollectionCraftPieceCost;
 }
 
+export type SyncCollectionPieceSpendRarity = typeof SyncCollectionPieceSpendRarity[keyof typeof SyncCollectionPieceSpendRarity];
+
+
+export const SyncCollectionPieceSpendRarity = {
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
+} as const;
+
+export type SyncCollectionPieceSpendPieceCost = typeof SyncCollectionPieceSpendPieceCost[keyof typeof SyncCollectionPieceSpendPieceCost];
+
+
+export const SyncCollectionPieceSpendPieceCost = {
+  NUMBER_20: 20,
+  NUMBER_100: 100,
+} as const;
+
+export interface SyncCollectionPieceSpend {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  spendId: string;
+  rarity: SyncCollectionPieceSpendRarity;
+  pieceCost: SyncCollectionPieceSpendPieceCost;
+  spentAt: string;
+}
+
 export interface UserSyncSnapshot {
   /**
      * Account data generation used to prevent stale devices from restoring older data.
@@ -326,6 +356,8 @@ export interface UserSyncSnapshot {
   missionChests?: SyncMissionChest[];
   /** @maxItems 10000 */
   collectionCrafts?: SyncCollectionCraft[];
+  /** @maxItems 10000 */
+  collectionPieceSpends?: SyncCollectionPieceSpend[];
 }
 
 export interface DictionaryAssetError {

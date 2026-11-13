@@ -1,7 +1,14 @@
 const assert = require("node:assert/strict");
 const { existsSync, readFileSync } = require("node:fs");
 const { join } = require("node:path");
-const { missionChests, collectionArtworks } = require("./test-support.cjs");
+const {
+  loadTs,
+  missionChests,
+  collectionArtworks,
+} = require("./test-support.cjs");
+const rewardQueue = loadTs(
+  join(__dirname, "../domain/mission-reward-queue.ts"),
+);
 
 const {
   CHEST_RARITY_LABELS,
@@ -14,11 +21,63 @@ const {
   hasSuperUpgradeChance,
   isValidMissionChest,
   maxChestUpgradeAttempts,
+  reopenPrematureMissionChest,
   resolveChestUpgrade,
   startingRarityForMission,
 } = missionChests;
-const { COLLECTION_ARTWORKS, artworkForCraft, isCollectionArtwork } =
-  collectionArtworks;
+const {
+  COLLECTION_ARTWORKS,
+  artworkForCraft,
+  isCollectionArtwork,
+  isValidCollectionCraftArtwork,
+} = collectionArtworks;
+
+const queuedChest = (chestId, missionId, createdAt) => ({
+  chestId,
+  missionId,
+  createdAt,
+});
+const queueMissions = [
+  { id: "review-1", level: 1, title: "Ôn 30 từ" },
+  { id: "review-2", level: 2, title: "Ôn 60 từ" },
+  { id: "review-3", level: 3, title: "Ôn 90 từ" },
+];
+const initialQueue = [
+  {
+    chestId: "pending-older",
+    missionId: "review-2",
+    title: "Ôn 60 từ",
+    level: 2,
+  },
+];
+const reconciledQueue = rewardQueue.reconcileMissionRewardQueue(
+  initialQueue,
+  [
+    queuedChest("pending-older", "review-2", "2026-11-13T10:00:00Z"),
+    queuedChest("new-level-3", "review-3", "2026-11-13T10:01:00Z"),
+    queuedChest("new-level-1", "review-1", "2026-11-13T10:02:00Z"),
+  ],
+  queueMissions,
+);
+assert.deepEqual(
+  reconciledQueue.map((item) => item.chestId),
+  ["pending-older", "new-level-1", "new-level-3"],
+  "Newly completed mission chests queue once in task-level order.",
+);
+assert.deepEqual(
+  rewardQueue
+    .reconcileMissionRewardQueue(
+      reconciledQueue,
+      [
+        queuedChest("new-level-3", "review-3", "2026-11-13T10:01:00Z"),
+        queuedChest("new-level-1", "review-1", "2026-11-13T10:02:00Z"),
+      ],
+      queueMissions,
+    )
+    .map((item) => item.chestId),
+  ["new-level-1", "new-level-3"],
+  "Opened chests leave the queue while unopened rewards remain in order.",
+);
 
 assert.deepEqual(
   ["common", "uncommon", "rare", "epic", "legendary"].map((rarity) =>
@@ -142,43 +201,52 @@ assert.match(
 );
 assert.match(
   chestScreen,
-  /chest-reward-preview/,
-  "The screen shows current and next-rarity rewards.",
+  /chest\.opened \? \(\s*<Animated\.View[\s\S]*?testID="chest-reward-preview"/,
+  "Reward details appear only after the chest is finalized.",
 );
 assert.match(
   chestScreen,
-  /Còn \$\{remainingAttempts\}\/\$\{attemptLimit\} lượt nâng cấp/,
-  "The screen tells learners how many upgrade attempts remain.",
+  /testID="chest-tap-prompt"/,
+  "The unopened chest screen prompts the learner to tap the chest.",
 );
 assert.match(
   chestScreen,
-  /const chanceDescription =/,
-  "The screen shows the current upgrade chance without changing it.",
+  /testID="tap-chest-art"/,
+  "The chest illustration is the upgrade control.",
+);
+assert.doesNotMatch(
+  chestScreen,
+  /testID="upgrade-mission-chest"/,
+  "There is no second upgrade button separate from the chest.",
 );
 assert.match(
   chestScreen,
-  /\$\{chance\}% lên \$\{rarityDisplayLabel\(nextRarity\)\}/,
-  "The displayed upgrade chance is paired with the next chest tier.",
+  /rewardFlow === "1"[\s\S]*?router\.back\(\)/,
+  "Reward-flow chest screens return to the app screen that was interrupted.",
+);
+const rewardCoordinator = readFileSync(
+  join(__dirname, "../components/MissionRewardCoordinator.tsx"),
+  "utf8",
 );
 assert.match(
-  chestScreen,
-  /Lượt này: \{currentChanceDescription\}/,
-  "The current chance is visible before upgrading.",
+  rewardCoordinator,
+  /subscribeSyncChanges/,
+  "Task completion is detected from local database changes across app tabs.",
 );
 assert.match(
-  chestScreen,
-  /55% lên Silver · 45% chốt Copper/,
-  "Legacy chests explain the first attempt's existing outcomes.",
+  rewardCoordinator,
+  /Animated\.timing/,
+  "The task completion popup animates its progress bar before opening a chest.",
 );
 assert.match(
-  chestScreen,
-  /40% lên Gold · 60% chốt Silver/,
-  "Legacy chests explain the second attempt's existing outcomes.",
+  rewardCoordinator,
+  /AsyncStorage\.setItem/,
+  "The unopened chest sequence survives navigation and app restarts.",
 );
 assert.match(
-  chestScreen,
-  /20% lên Platinum · 5% lên Corvi · 75% chốt Gold/,
-  "Legacy chests explain the third attempt's existing outcomes.",
+  rewardCoordinator,
+  /testID="mission-completion-popup"/,
+  "A dedicated completion popup appears before the chest screen.",
 );
 assert.match(
   chestScreen,
@@ -234,7 +302,60 @@ assert.equal(isValidMissionChest(failedChest), true);
 assert.equal(
   isValidMissionChest({ ...failedChest, opened: false, finalStone: null }),
   false,
-  "A failed chest cannot be rerolled.",
+  "Legacy rule-set chests keep their original early-finalization behavior.",
+);
+
+let retryChestId;
+for (let index = 0; index < 100_000; index += 1) {
+  const id = `retry-mission-${index}`;
+  if (
+    !hasSuperUpgradeChance(id) &&
+    !resolveChestUpgrade(id, 1, "common", 4, false).success
+  ) {
+    retryChestId = id;
+    break;
+  }
+}
+assert.ok(retryChestId, "The new rules can roll a failed first tap.");
+const retryFirst = resolveChestUpgrade(retryChestId, 1, "common", 4, false);
+const retryingChest = {
+  ...failedChest,
+  chestId: retryChestId,
+  missionId: "review-1",
+  upgradeAttempts: 1,
+  rarity: retryFirst.rarity,
+  ruleSet: 4,
+  superUpgrade: false,
+  opened: false,
+  finalStone: null,
+};
+assert.equal(
+  isValidMissionChest(retryingChest),
+  true,
+  "A failed tap under current rules leaves the chest valid and available.",
+);
+const oldPrematureChest = {
+  ...retryingChest,
+  opened: true,
+  finalStone: chestStoneReward(5, retryingChest.rarity, 4),
+};
+assert.equal(
+  isValidMissionChest(oldPrematureChest),
+  true,
+  "A previously finalized early chest remains readable for migration.",
+);
+const reopenedChest = reopenPrematureMissionChest(
+  oldPrematureChest,
+  "2026-11-13T12:00:00.000Z",
+);
+assert.equal(reopenedChest.opened, false);
+assert.equal(reopenedChest.finalStone, null);
+assert.equal(reopenedChest.upgradeAttempts, 1);
+assert.equal(isValidMissionChest(reopenedChest), true);
+assert.equal(
+  reopenPrematureMissionChest(failedChest),
+  failedChest,
+  "Legacy chests retain their historical rewards.",
 );
 
 const upgrades = [1, 2, 3].map((attempt) =>
@@ -255,64 +376,87 @@ const upgradedChest = {
 };
 assert.equal(isValidMissionChest(upgradedChest), true);
 
-for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"]) {
-  const artwork = artworkForCraft(rarity, 1);
-  assert.equal(artwork.rarity, rarity);
-  assert.equal(isCollectionArtwork(rarity, artwork.id), true);
-  assert.equal(
-    artwork.id,
-    artworkForCraft(rarity, 1).id,
-    "The same craft index resolves consistently across devices.",
-  );
-}
-assert.ok(
-  COLLECTION_ARTWORKS.some(
-    (artwork) =>
-      artwork.rarity === "epic" && artwork.imageAssetKey === "epic-repose",
-  ),
+assert.throws(
+  () => artworkForCraft("common", 1),
+  /Chưa có tượng/,
+  "Rarities without statues cannot consume fragments.",
 );
-assert.ok(
-  existsSync(join(__dirname, "../assets/images/epic-repose.png")),
-  "The Epic painting asset is bundled with the app.",
+const statue = COLLECTION_ARTWORKS.find(
+  (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
 );
-assert.ok(
-  COLLECTION_ARTWORKS.some(
-    (artwork) =>
-      artwork.rarity === "epic" && artwork.imageAssetKey === "epic-study",
-  ),
+assert.ok(statue);
+assert.equal(statue.rarity, "legendary");
+assert.equal(statue.title, "Tượng Chủ tịch Hồ Chí Minh");
+assert.equal(statue.shortTitle, "Bác Hồ");
+assert.equal(statue.material, "Cẩm thạch");
+assert.equal(statue.unlockMode, "automatic");
+assert.ok(statue.biography.includes("19.05.1890 – 02.09.1969"));
+assert.ok(statue.biography.includes("Nguyễn Sinh Cung"));
+assert.ok(statue.biography.includes("Tuyên ngôn Độc lập"));
+assert.equal(
+  statue.sourceLabel,
+  "Cổng thông tin điện tử Hồ Chí Minh",
 );
-assert.ok(
-  existsSync(join(__dirname, "../assets/images/epic-study.png")),
-  "The second Epic painting asset is bundled with the app.",
+assert.throws(
+  () => artworkForCraft("legendary", 1),
+  /Chưa có tượng/,
+  "The automatically unlocked HCM statue cannot be crafted or charged for.",
 );
-assert.ok(
-  Array.from({ length: 100 }, (_, index) =>
-    artworkForCraft("epic", index + 1),
-  ).some((artwork) => artwork.id === "epic-repose"),
-  "The supplied painting can be selected as an Epic collection reward.",
+assert.equal(
+  isValidCollectionCraftArtwork("legendary", 1, statue.id),
+  true,
+  "Backups created before automatic unlocking still accept the old HCM craft.",
 );
-assert.ok(
-  Array.from({ length: 100 }, (_, index) =>
-    artworkForCraft("epic", index + 1),
-  ).some((artwork) => artwork.id === "epic-study"),
-  "The second supplied painting can be selected as an Epic collection reward.",
+const collectionScreen = readFileSync(
+  join(__dirname, "../app/collection.tsx"),
+  "utf8",
 );
-assert.ok(
-  COLLECTION_ARTWORKS.some(
-    (artwork) =>
-      artwork.rarity === "legendary" &&
-      artwork.imageAssetKey === "legendary-crossing",
-  ),
+assert.match(
+  collectionScreen,
+  /statue\.unlockMode === "automatic"/,
+  "Automatically unlocked statues appear without saved craft records.",
 );
-assert.ok(
-  existsSync(join(__dirname, "../assets/images/legendary-crossing.png")),
-  "The Legendary painting asset is bundled with the app.",
+assert.match(
+  collectionScreen,
+  /item\.unlockMode !== "automatic"/,
+  "Automatically unlocked statues are excluded from fragment crafting.",
 );
+assert.match(
+  collectionScreen,
+  /width:\s*"23%"/,
+  "Unlocked statues are arranged in four columns on the collection grid.",
+);
+assert.match(
+  collectionScreen,
+  /justifyContent:\s*"space-between"/,
+  "Four statue tiles are spaced across each grid row.",
+);
+assert.equal(COLLECTION_ARTWORKS.length, 1);
+assert.equal(isCollectionArtwork("legendary", statue.id), true);
+assert.equal(isCollectionArtwork("epic", "epic-repose"), false);
 assert.ok(
-  Array.from({ length: 100 }, (_, index) =>
-    artworkForCraft("legendary", index + 1),
-  ).some((artwork) => artwork.id === "legendary-crossing"),
-  "The supplied painting can be selected as a Legendary collection reward.",
+  existsSync(join(__dirname, "../assets/images/ho-chi-minh-marble.png")),
+  "The Legendary marble statue is bundled for offline display.",
+);
+assert.match(
+  collectionScreen,
+  /onPress=\{\(\) => setSelectedStatue\(statue\)\}/,
+  "Tapping a statue opens its information.",
+);
+assert.match(
+  collectionScreen,
+  /visible=\{selectedStatue !== null\}/,
+  "The statue biography is shown in a dismissible modal.",
+);
+assert.match(
+  collectionScreen,
+  /selectedStatue\.biography/,
+  "The detail view renders the full biography.",
+);
+assert.throws(
+  () => artworkForCraft("epic", 1),
+  /Chưa có tượng/,
+  "Other qualities remain unavailable until their statue catalog is added.",
 );
 
 assert.deepEqual(
@@ -449,5 +593,5 @@ assert.equal(
 );
 
 console.log(
-  "PASS: legacy reward compatibility, fixed rarity rewards, upgrade odds, task starting tiers, super upgrade, and collection artwork.",
+  "PASS: legacy reward compatibility, fixed rarity rewards, upgrade odds, task starting tiers, super upgrade, and statue collection.",
 );

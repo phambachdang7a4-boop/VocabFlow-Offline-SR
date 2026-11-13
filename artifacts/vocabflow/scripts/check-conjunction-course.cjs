@@ -215,6 +215,13 @@ async function checkCourseContentAndProgress() {
   );
   assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 29);
   assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length > 50);
+  assert.deepEqual(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.map((lesson) => lesson.title),
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.map(
+      (_, index) => `Bài ${index + 1}`,
+    ),
+    "IELTS lesson display numbers are continuous across all topics.",
+  );
   assert.ok(ieltsTerms.length >= 1300 && ieltsTerms.length <= 2000);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(
@@ -298,6 +305,13 @@ async function checkCourseContentAndProgress() {
   );
   assert.equal(toeicTopicCourse.TOEIC_TOPIC_WORD_LIST.length, 25);
   assert.ok(toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.length >= 35);
+  assert.deepEqual(
+    toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.map((lesson) => lesson.title),
+    toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.map(
+      (_, index) => `Bài ${index + 1}`,
+    ),
+    "TOEIC lesson display numbers are continuous across all topics.",
+  );
   assert.ok(toeicTerms.length >= 850 && toeicTerms.length <= 1000);
   assert.equal(new Set(toeicTerms).size, toeicTerms.length);
   assert.equal(

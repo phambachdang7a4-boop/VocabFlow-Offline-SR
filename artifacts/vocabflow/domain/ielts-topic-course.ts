@@ -154,6 +154,7 @@ function buildLessons(): IeltsTopicCourseLesson[] {
     if (legacy) {
       lessons.push({
         ...legacy,
+        title: `Bài ${lessons.length + 1}`,
         topicId: topic.id,
         topicTitle: topic.title,
       });
@@ -166,7 +167,7 @@ function buildLessons(): IeltsTopicCourseLesson[] {
       const lessonNumber = index + (legacy ? 2 : 1);
       lessons.push({
         id: `${IELTS_TOPIC_COURSE_ID}-${topic.id}-lesson-${lessonNumber}`,
-        title: `Bài ${lessonNumber}`,
+        title: `Bài ${lessons.length + 1}`,
         focus: topic.focus,
         topicId: topic.id,
         topicTitle: topic.title,

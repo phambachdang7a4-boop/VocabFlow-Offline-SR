@@ -71,7 +71,7 @@ const GUIDE_PAGES = [
       ['Khóa học', 'Học theo chủ đề và bài học. Khóa Idioms luyện thành ngữ bằng câu thoại có chỗ trống.'],
       ['Ôn tập', 'Tự nhớ từ đã đến hạn. Câu trả lời đúng hoặc sai sẽ cập nhật cấp ôn theo lịch của app.'],
       ['Sổ từ', 'Tìm từ đã lưu, lọc theo cấp ôn, đóng băng để tạm ẩn khỏi lượt ôn hoặc xóa từ không cần nữa.'],
-      ['Nhiệm Vụ', 'Theo dõi mục tiêu trong ngày, mở rương nhận thưởng và xem mảnh tranh trong Bộ Sưu Tập.'],
+      ['Nhiệm Vụ', 'Theo dõi mục tiêu trong ngày, mở rương nhận thưởng và xem mảnh tượng trong Bộ Sưu Tập.'],
       ['Corvi', 'Chạm vào quản gia trong Thư Viện để mở lựa chọn tra từ, dùng Mắt Quạ, ôn tập, xin gợi ý từ mới hoặc đọc hướng dẫn.'],
     ],
   },

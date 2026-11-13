@@ -191,6 +191,11 @@ components:
           maxItems: 10000
           items:
             $ref: "#/components/schemas/SyncCollectionCraft"
+        collectionPieceSpends:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncCollectionPieceSpend"
     SyncWord:
       type: object
       required:
@@ -509,6 +514,23 @@ components:
           type: integer
           enum: [20, 100]
           description: Optional for older clients and backups; omitted values preserve the original 20-piece cost.
+    SyncCollectionPieceSpend:
+      type: object
+      required: [spendId, rarity, pieceCost, spentAt]
+      properties:
+        spendId:
+          type: string
+          minLength: 1
+          maxLength: 160
+        rarity:
+          type: string
+          enum: [common, uncommon, rare, epic, legendary]
+        pieceCost:
+          type: integer
+          enum: [20, 100]
+        spentAt:
+          type: string
+          format: date-time
     DictionaryAssetError:
       type: object
       required: [error]

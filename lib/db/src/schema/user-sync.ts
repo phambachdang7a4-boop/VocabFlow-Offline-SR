@@ -189,6 +189,18 @@ export const userCollectionCrafts = pgTable(
   ],
 );
 
+export const userCollectionPieceSpends = pgTable(
+  "user_collection_piece_spends",
+  {
+    userId: text("user_id").notNull(),
+    spendId: text("spend_id").notNull(),
+    rarity: text("rarity").notNull(),
+    pieceCost: integer("piece_cost").notNull(),
+    spentAt: timestampColumn("spent_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.spendId] })],
+);
+
 export const userSyncRevisions = pgTable("user_sync_revisions", {
   userId: text("user_id").primaryKey(),
   revision: integer("revision").notNull().default(0),
