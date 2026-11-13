@@ -20,6 +20,7 @@
     "check:mission-chests": "node scripts/check-mission-chests.cjs",
     "check:review-session": "node scripts/check-review-session.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
+    "check:course-word-selection": "node scripts/check-course-word-selection.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
     "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
     "check:known-example-repair": "node scripts/check-known-example-repair.cjs",

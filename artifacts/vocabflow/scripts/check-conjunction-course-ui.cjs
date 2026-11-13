@@ -35,6 +35,9 @@ const idiomCourseDomain = loadTs(
     "./dictionary": dictionaryDomain,
   },
 );
+const courseWordSelectionDomain = loadTs(
+  join(__dirname, "../domain/course-word-selection.ts"),
+);
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});
   return { type, props: { ...props, children } };
@@ -62,6 +65,8 @@ function mount() {
   let dirty = true;
   let tree;
   const completed = [];
+  const savedWords = [];
+  const savedWordInputs = [];
   const react = {
     createElement: element,
     useState(initial) {
@@ -109,6 +114,16 @@ function mount() {
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
       markCourseLessonCompleted: async (lessonId) => completed.push(lessonId),
     },
+    "@/contexts/VocabularyContext": {
+      useVocabulary: () => ({
+        words: savedWords,
+        saveWord: async (input) => {
+          savedWordInputs.push(input);
+          savedWords.push({ ...input, id: savedWords.length + 1 });
+        },
+      }),
+    },
+    "@/domain/course-word-selection": courseWordSelectionDomain,
     "@/hooks/useColors": {
       useColors: () => ({ ...colors, radius: 14 }),
     },
@@ -137,6 +152,8 @@ function mount() {
       focusCallbacks.at(-1)?.();
       await this.settle();
     },
+    savedWords,
+    savedWordInputs,
   };
 }
 
@@ -168,6 +185,28 @@ function mount() {
     screen.byId("conjunction-lesson-complete").props.testID,
     "conjunction-lesson-complete",
   );
+  assert.ok(screen.byId("conjunction-word-selection"));
+  assert.equal(screen.savedWordInputs.length, 0, "Finishing a lesson never auto-adds its words.");
+  assert.equal(
+    screen.byId("conjunction-add-selected-words").props.label,
+    `Thêm ${lesson.questions.length} từ đã chọn`,
+    "Unsaved lesson terms are selected by default.",
+  );
+  screen.byId("conjunction-clear-word-selection").props.onPress();
+  assert.equal(
+    screen.byId("conjunction-add-selected-words").props.label,
+    "Thêm 0 từ đã chọn",
+  );
+  screen.byId("conjunction-select-all-words").props.onPress();
+  screen.byId("conjunction-add-selected-words").props.onPress();
+  await screen.settle();
+  assert.equal(screen.savedWordInputs.length, lesson.questions.length);
+  assert.equal(
+    screen.savedWordInputs[0].term,
+    lesson.questions[0].term,
+    "The selection screen sends the chosen lesson word through saveWord.",
+  );
+  assert.ok(screen.byId("conjunction-words-added-message"));
   screen.byId("conjunction-return").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
   screen.byId("idioms-course-card").props.onPress();

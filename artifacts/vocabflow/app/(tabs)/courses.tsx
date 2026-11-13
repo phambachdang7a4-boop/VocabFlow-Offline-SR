@@ -52,6 +52,11 @@ import {
   IDIOM_COURSE_WORD_COUNT,
 } from "@/domain/idiom-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
+import { useVocabulary } from "@/contexts/VocabularyContext";
+import {
+  buildCourseWordCandidates,
+  type CourseWordCandidate,
+} from "@/domain/course-word-selection";
 import { useColors } from "@/hooks/useColors";
 
 type CourseQuestion = {
@@ -162,6 +167,13 @@ export default function CoursesScreen() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCourseWordKeys, setSelectedCourseWordKeys] = useState<
+    string[]
+  >([]);
+  const [courseWordsSavedMessage, setCourseWordsSavedMessage] = useState<
+    string | null
+  >(null);
+  const { words: savedWords, saveWord } = useVocabulary();
 
   const activeCourse =
     COURSE_CATALOG.find((course) => course.id === activeCourseId) ?? null;
@@ -199,6 +211,8 @@ export default function CoursesScreen() {
     setSelectedAnswer(null);
     setCorrectCount(0);
     setFinishedLessonId(null);
+    setSelectedCourseWordKeys([]);
+    setCourseWordsSavedMessage(null);
     setError(null);
   };
 
@@ -206,6 +220,8 @@ export default function CoursesScreen() {
     setActiveLesson(null);
     setFinishedLessonId(null);
     setSelectedAnswer(null);
+    setSelectedCourseWordKeys([]);
+    setCourseWordsSavedMessage(null);
     setError(null);
   };
 
@@ -228,6 +244,16 @@ export default function CoursesScreen() {
           : [...previous, activeLesson.id],
       );
       setFinishedLessonId(activeLesson.id);
+      setSelectedCourseWordKeys(
+        buildCourseWordCandidates(
+          activeLesson.questions.map((question) => question.term),
+          activeCourse?.entriesByTerm ?? new Map(),
+          savedWords,
+        )
+          .filter((candidate) => !candidate.alreadySaved)
+          .map((candidate) => candidate.key),
+      );
+      setCourseWordsSavedMessage(null);
       setError(null);
     } catch (failure) {
       setError(
@@ -259,6 +285,73 @@ export default function CoursesScreen() {
     : [];
   const isLessonFinished =
     activeLesson !== null && finishedLessonId === activeLesson.id;
+  const lessonWordCandidates =
+    activeLesson && activeCourse
+      ? buildCourseWordCandidates(
+          activeLesson.questions.map((question) => question.term),
+          activeCourse.entriesByTerm,
+          savedWords,
+        )
+      : [];
+  const addableLessonWords = lessonWordCandidates.filter(
+    (candidate) => !candidate.alreadySaved,
+  );
+
+  const setAllCourseWordsSelected = (selected: boolean) => {
+    setSelectedCourseWordKeys(
+      selected ? addableLessonWords.map((candidate) => candidate.key) : [],
+    );
+  };
+
+  const toggleCourseWord = (candidate: CourseWordCandidate) => {
+    if (candidate.alreadySaved || saving) return;
+    setSelectedCourseWordKeys((previous) =>
+      previous.includes(candidate.key)
+        ? previous.filter((key) => key !== candidate.key)
+        : [...previous, candidate.key],
+    );
+  };
+
+  const addSelectedCourseWords = async () => {
+    if (!activeLesson || !activeCourse || saving) return;
+    const selected = lessonWordCandidates.filter(
+      (candidate) =>
+        !candidate.alreadySaved &&
+        selectedCourseWordKeys.includes(candidate.key),
+    );
+    if (selected.length === 0) return;
+
+    setSaving(true);
+    setError(null);
+    setCourseWordsSavedMessage(null);
+    let addedCount = 0;
+    try {
+      for (const candidate of selected) {
+        await saveWord({
+          term: candidate.term,
+          meaning: candidate.meaning,
+          ipa: candidate.ipa,
+          example: candidate.example,
+          note: "",
+        });
+        addedCount += 1;
+        setSelectedCourseWordKeys((previous) =>
+          previous.filter((key) => key !== candidate.key),
+        );
+      }
+      setCourseWordsSavedMessage(
+        `Đã thêm ${addedCount} từ vào Sổ từ. Các từ mới bắt đầu ở Cấp 1.`,
+      );
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Không thể thêm từ vào Sổ từ. Hãy thử lại.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <View style={[styles.flex, { backgroundColor: c.background }]}>
@@ -336,6 +429,14 @@ export default function CoursesScreen() {
               testIdPrefix={activeCourse?.testIdPrefix ?? "course"}
               lesson={activeLesson}
               correctCount={correctCount}
+              words={lessonWordCandidates}
+              selectedWordKeys={selectedCourseWordKeys}
+              savedMessage={courseWordsSavedMessage}
+              saving={saving}
+              onToggleWord={toggleCourseWord}
+              onSelectAll={() => setAllCourseWordsSelected(true)}
+              onClearSelection={() => setAllCourseWordsSelected(false)}
+              onAddSelected={() => void addSelectedCourseWords()}
               onReturn={leaveLesson}
               onRetry={() => startLesson(activeLesson)}
             />
@@ -841,16 +942,36 @@ function LessonComplete({
   testIdPrefix,
   lesson,
   correctCount,
+  words,
+  selectedWordKeys,
+  savedMessage,
+  saving,
+  onToggleWord,
+  onSelectAll,
+  onClearSelection,
+  onAddSelected,
   onReturn,
   onRetry,
 }: {
   testIdPrefix: string;
   lesson: CourseLesson;
   correctCount: number;
+  words: readonly CourseWordCandidate[];
+  selectedWordKeys: readonly string[];
+  savedMessage: string | null;
+  saving: boolean;
+  onToggleWord: (candidate: CourseWordCandidate) => void;
+  onSelectAll: () => void;
+  onClearSelection: () => void;
+  onAddSelected: () => void;
   onReturn: () => void;
   onRetry: () => void;
 }) {
   const c = useColors();
+  const selectedCount = words.filter(
+    (word) => !word.alreadySaved && selectedWordKeys.includes(word.key),
+  ).length;
+  const addableCount = words.filter((word) => !word.alreadySaved).length;
   return (
     <View
       testID={`${testIdPrefix}-lesson-complete`}
@@ -871,6 +992,124 @@ function LessonComplete({
       <Text style={[styles.completeScore, { color: c.mutedForeground }]}>
         Đúng {correctCount}/{lesson.questions.length} câu
       </Text>
+      <View
+        testID={`${testIdPrefix}-word-selection`}
+        style={[
+          styles.courseWordSelection,
+          { backgroundColor: c.card, borderColor: c.border },
+        ]}
+      >
+        <Text style={[styles.courseWordSelectionTitle, { color: c.foreground }]}>
+          Chọn từ muốn thêm vào Sổ từ
+        </Text>
+        <Text
+          style={[
+            styles.courseWordSelectionHint,
+            { color: c.mutedForeground },
+          ]}
+        >
+          Bài học không tự thêm từ. Từ đã có trong Sổ sẽ được đánh dấu.
+        </Text>
+        <View style={styles.courseWordSelectionActions}>
+          <Pressable
+            testID={`${testIdPrefix}-select-all-words`}
+            accessibilityRole="button"
+            onPress={onSelectAll}
+            disabled={saving || addableCount === 0}
+            style={styles.courseWordSelectionAction}
+          >
+            <Text style={[styles.courseWordSelectionActionText, { color: c.primary }]}>
+              Chọn tất cả
+            </Text>
+          </Pressable>
+          <Pressable
+            testID={`${testIdPrefix}-clear-word-selection`}
+            accessibilityRole="button"
+            onPress={onClearSelection}
+            disabled={saving || selectedCount === 0}
+            style={styles.courseWordSelectionAction}
+          >
+            <Text style={[styles.courseWordSelectionActionText, { color: c.primary }]}>
+              Bỏ chọn
+            </Text>
+          </Pressable>
+        </View>
+        <View style={styles.courseWordList}>
+          {words.map((word, index) => {
+            const selected =
+              !word.alreadySaved && selectedWordKeys.includes(word.key);
+            return (
+              <Pressable
+                key={word.key}
+                testID={`${testIdPrefix}-course-word-${index}`}
+                accessibilityRole="checkbox"
+                accessibilityState={{
+                  checked: word.alreadySaved || selected,
+                  disabled: word.alreadySaved || saving,
+                }}
+                disabled={word.alreadySaved || saving}
+                onPress={() => onToggleWord(word)}
+                style={[
+                  styles.courseWordRow,
+                  {
+                    borderColor: c.border,
+                    opacity: word.alreadySaved ? 0.68 : 1,
+                  },
+                ]}
+              >
+                <Feather
+                  name={
+                    word.alreadySaved
+                      ? "check-circle"
+                      : selected
+                        ? "check-square"
+                        : "square"
+                  }
+                  size={20}
+                  color={word.alreadySaved ? c.success : c.primary}
+                />
+                <View style={styles.courseWordCopy}>
+                  <Text style={[styles.courseWordTerm, { color: c.foreground }]}>
+                    {word.term}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.courseWordMeaning,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    {word.meaning}
+                  </Text>
+                  {word.alreadySaved ? (
+                    <Text style={[styles.courseWordSaved, { color: c.successText }]}>
+                      Đã có trong Sổ từ
+                    </Text>
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+        {savedMessage ? (
+          <Text
+            testID={`${testIdPrefix}-words-added-message`}
+            style={[styles.courseWordSavedMessage, { color: c.successText }]}
+          >
+            {savedMessage}
+          </Text>
+        ) : null}
+        <Button
+          testID={`${testIdPrefix}-add-selected-words`}
+          onPress={onAddSelected}
+          disabled={saving || selectedCount === 0}
+          style={styles.courseWordAddButton}
+          label={
+            saving
+              ? "Đang thêm từ…"
+              : `Thêm ${selectedCount} từ đã chọn`
+          }
+        />
+      </View>
       <Button
         testID={`${testIdPrefix}-return`}
         onPress={onReturn}
@@ -1090,6 +1329,48 @@ const styles = StyleSheet.create({
   completeButton: { width: "100%", marginTop: 6 },
   retryLesson: { minHeight: 42, alignItems: "center", justifyContent: "center" },
   retryLessonText: { fontFamily: F.b, fontSize: 13 },
+  courseWordSelection: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 17,
+    padding: 14,
+    gap: 10,
+    alignItems: "stretch",
+  },
+  courseWordSelectionTitle: {
+    fontFamily: F.b,
+    fontSize: 16,
+    textAlign: "left",
+  },
+  courseWordSelectionHint: {
+    fontFamily: F.r,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "left",
+  },
+  courseWordSelectionActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 2,
+  },
+  courseWordSelectionAction: { minHeight: 36, justifyContent: "center", paddingHorizontal: 4 },
+  courseWordSelectionActionText: { fontFamily: F.b, fontSize: 13 },
+  courseWordList: { gap: 5 },
+  courseWordRow: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderTopWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 2,
+  },
+  courseWordCopy: { flex: 1, gap: 2 },
+  courseWordTerm: { fontFamily: F.b, fontSize: 14 },
+  courseWordMeaning: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
+  courseWordSaved: { fontFamily: F.s, fontSize: 11 },
+  courseWordSavedMessage: { fontFamily: F.s, fontSize: 12 },
+  courseWordAddButton: { minHeight: 48 },
   errorBox: { borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },
   errorText: { fontFamily: F.s, fontSize: 13, lineHeight: 19 },
   retryButton: { alignSelf: "flex-start", paddingVertical: 5 },
