@@ -393,6 +393,11 @@ assert.equal(statue.unlockMode, "automatic");
 assert.ok(statue.biography.includes("19.05.1890 – 02.09.1969"));
 assert.ok(statue.biography.includes("Nguyễn Sinh Cung"));
 assert.ok(statue.biography.includes("Tuyên ngôn Độc lập"));
+assert.equal(statue.quote, "Không có gì quý hơn độc lập, tự do.");
+assert.ok(statue.biographyEn.includes("Nothing is more precious than independence and freedom."));
+assert.ok(statue.biographyEn.includes("PERSONAL BACKGROUND"));
+assert.ok(statue.biographyEn.includes("LIFE AND REVOLUTIONARY CAREER"));
+assert.ok(statue.biographyEn.includes("February 3"));
 assert.equal(
   statue.sourceLabel,
   "Cổng thông tin điện tử Hồ Chí Minh",
@@ -440,7 +445,7 @@ assert.ok(
 );
 assert.match(
   collectionScreen,
-  /onPress=\{\(\) => setSelectedStatue\(statue\)\}/,
+  /setSelectedStatue\(statue\)/,
   "Tapping a statue opens its information.",
 );
 assert.match(
@@ -453,6 +458,11 @@ assert.match(
   /selectedStatue\.biography/,
   "The detail view renders the full biography.",
 );
+assert.match(collectionScreen, /selectedStatue\.quote/);
+assert.match(collectionScreen, /statue-translation-toggle/);
+assert.match(collectionScreen, /MaterialCommunityIcons\s+name="translate"/);
+assert.match(collectionScreen, /selectedStatue\.biographyEn/);
+assert.match(collectionScreen, /testID="statue-biography-english"/);
 assert.throws(
   () => artworkForCraft("epic", 1),
   /Chưa có tượng/,

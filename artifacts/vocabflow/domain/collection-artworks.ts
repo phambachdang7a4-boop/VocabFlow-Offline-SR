@@ -11,6 +11,8 @@ export interface CollectionArtwork {
   material?: string;
   description?: string;
   biography?: string;
+  biographyEn?: string;
+  quote?: string;
   sourceLabel?: string;
   unlockMode?: "automatic";
 }
@@ -39,6 +41,7 @@ export const COLLECTION_ARTWORKS: CollectionArtwork[] = [
     unlockMode: "automatic",
     description:
       "Nguyễn Ái Quốc, vị lãnh tụ của dân tộc Việt Nam và Chủ tịch nước Việt Nam Dân chủ Cộng hòa từ năm 1945 đến năm 1969.",
+    quote: "Không có gì quý hơn độc lập, tự do.",
     biography: `Chủ tịch Hồ Chí Minh (19.05.1890 – 02.09.1969) là vị lãnh tụ vĩ đại của dân tộc Việt Nam, nhà hoạt động lỗi lạc của phong trào cộng sản quốc tế.
 
 THÂN THẾ
@@ -59,6 +62,29 @@ QUÁ TRÌNH HOẠT ĐỘNG VÀ SỰ NGHIỆP
 • 1941: Trở về nước sau hơn 30 năm hoạt động ở nước ngoài; trực tiếp lãnh đạo phong trào cách mạng trong nước và thành lập Mặt trận Việt Minh.
 • 1945: Lãnh đạo Cách mạng Tháng Tám thành công. Ngày 2 tháng 9, tại Quảng trường Ba Đình (Hà Nội), đọc Tuyên ngôn Độc lập, khai sinh nước Việt Nam Dân chủ Cộng hòa.
 • 1945–1969: Giữ cương vị Chủ tịch nước Việt Nam Dân chủ Cộng hòa, lãnh đạo nhân dân trong kháng chiến chống Pháp (1946–1954) và kháng chiến chống Mỹ cứu nước.`,
+    biographyEn: `“Nothing is more precious than independence and freedom.”
+— President Ho Chi Minh
+
+President Ho Chi Minh (May 19, 1890 – September 2, 1969) was the great leader of the Vietnamese people and an outstanding activist in the international communist movement.
+
+PERSONAL BACKGROUND
+• Birth name: Nguyen Sinh Cung
+• Name used during his schooling: Nguyen Tat Thanh
+• Revolutionary name: Nguyen Ai Quoc, along with many other aliases and pen names
+• Date of birth: May 19, 1890
+• Hometown: Sen Village (Kim Lien), Nam Dan District, Nghe An Province
+• Father: Nguyen Sinh Sac, a scholar who earned the Phó bảng (junior doctorate) degree
+• Mother: Hoang Thi Loan
+• Date of death: September 2, 1969, in Hanoi, at the age of 79
+
+LIFE AND REVOLUTIONARY CAREER
+• 1911: On June 5, he left Nha Rong Wharf in Saigon to travel abroad in search of a path to national liberation.
+• 1919: Joined the French Socialist Party.
+• 1920: Attended the Tours Congress and took part in founding the French Communist Party.
+• 1930: Chaired the conference that established the Communist Party of Vietnam on February 3.
+• 1941: Returned to Vietnam after more than 30 years abroad, directly led the revolutionary movement at home, and founded the Viet Minh Front.
+• 1945: Led the August Revolution to victory. On September 2, at Ba Dinh Square in Hanoi, he read the Declaration of Independence, proclaiming the birth of the Democratic Republic of Vietnam.
+• 1945–1969: Served as President of the Democratic Republic of Vietnam and led the people through the resistance against France (1946–1954) and the resistance against the United States.`,
     sourceLabel: "Cổng thông tin điện tử Hồ Chí Minh",
   },
 ];

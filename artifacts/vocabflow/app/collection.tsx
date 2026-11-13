@@ -54,6 +54,7 @@ export default function CollectionScreen() {
   const [newCraft, setNewCraft] = useState<CollectionCraft | null>(null);
   const [selectedStatue, setSelectedStatue] =
     useState<CollectionArtwork | null>(null);
+  const [showEnglishBiography, setShowEnglishBiography] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const newCraftArtwork = newCraft
     ? COLLECTION_ARTWORKS.find((item) => item.id === newCraft.artworkId)
@@ -100,6 +101,11 @@ export default function CollectionScreen() {
     } finally {
       setCrafting(null);
     }
+  };
+
+  const closeStatueDetails = () => {
+    setSelectedStatue(null);
+    setShowEnglishBiography(false);
   };
 
   return (
@@ -309,7 +315,10 @@ export default function CollectionScreen() {
                 key={statue.id}
                 accessibilityRole="button"
                 accessibilityLabel={`Xem thông tin ${statue.title}`}
-                onPress={() => setSelectedStatue(statue)}
+                onPress={() => {
+                  setSelectedStatue(statue);
+                  setShowEnglishBiography(false);
+                }}
                 style={[
                   styles.artCard,
                   {
@@ -397,7 +406,7 @@ export default function CollectionScreen() {
       visible={selectedStatue !== null}
       transparent
       animationType="fade"
-      onRequestClose={() => setSelectedStatue(null)}
+      onRequestClose={closeStatueDetails}
     >
       <View
         style={[
@@ -408,7 +417,7 @@ export default function CollectionScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Đóng thông tin tượng"
-          onPress={() => setSelectedStatue(null)}
+          onPress={closeStatueDetails}
           style={StyleSheet.absoluteFill}
         />
         {selectedStatue ? (
@@ -429,15 +438,42 @@ export default function CollectionScreen() {
               >
                 THÔNG TIN TƯỢNG
               </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Đóng thông tin tượng"
-                onPress={() => setSelectedStatue(null)}
-                hitSlop={10}
-                style={[styles.detailClose, { backgroundColor: c.background }]}
-              >
-                <Feather name="x" size={20} color={c.foreground} />
-              </Pressable>
+              <View style={styles.detailHeaderActions}>
+                {selectedStatue.biographyEn ? (
+                  <Pressable
+                    testID="statue-translation-toggle"
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      showEnglishBiography
+                        ? "Ẩn bản dịch tiếng Anh"
+                        : "Hiện bản dịch tiếng Anh"
+                    }
+                    accessibilityState={{ selected: showEnglishBiography }}
+                    onPress={() =>
+                      setShowEnglishBiography((visible) => !visible)
+                    }
+                    hitSlop={10}
+                  >
+                    <MaterialCommunityIcons
+                      name="translate"
+                      size={22}
+                      color={c.primary}
+                    />
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Đóng thông tin tượng"
+                  onPress={closeStatueDetails}
+                  hitSlop={10}
+                  style={[
+                    styles.detailClose,
+                    { backgroundColor: c.background },
+                  ]}
+                >
+                  <Feather name="x" size={20} color={c.foreground} />
+                </Pressable>
+              </View>
             </View>
             <ScrollView
               style={styles.detailScroll}
@@ -467,11 +503,43 @@ export default function CollectionScreen() {
                   ? ` · ${selectedStatue.material}`
                   : ""}
               </Text>
+              {selectedStatue.quote ? (
+                <View
+                  style={[
+                    styles.quoteCard,
+                    { borderLeftColor: c.primary, backgroundColor: c.background },
+                  ]}
+                >
+                  <Text style={[styles.quoteText, { color: c.foreground }]}>
+                    “{selectedStatue.quote}”
+                  </Text>
+                  <Text
+                    style={[styles.quoteAttribution, { color: c.mutedForeground }]}
+                  >
+                    — Chủ tịch Hồ Chí Minh
+                  </Text>
+                </View>
+              ) : null}
               <Text style={[styles.biography, { color: c.foreground }]}>
                 {selectedStatue.biography ??
                   selectedStatue.description ??
                   "Chưa có thông tin."}
               </Text>
+              {showEnglishBiography && selectedStatue.biographyEn ? (
+                <View
+                  testID="statue-biography-english"
+                  style={[styles.translationBlock, { borderTopColor: c.border }]}
+                >
+                  <Text
+                    style={[styles.translationLabel, { color: c.primary }]}
+                  >
+                    ENGLISH TRANSLATION
+                  </Text>
+                  <Text style={[styles.biography, { color: c.foreground }]}>
+                    {selectedStatue.biographyEn}
+                  </Text>
+                </View>
+              ) : null}
               {selectedStatue.sourceLabel ? (
                 <Text
                   style={[styles.sourceLabel, { color: c.mutedForeground }]}
@@ -586,6 +654,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
   },
+  detailHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
   detailEyebrow: {
     fontFamily: F.b,
     fontSize: 11,
@@ -617,7 +690,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
   },
+  quoteCard: {
+    borderLeftWidth: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 2,
+    gap: 4,
+  },
+  quoteText: {
+    fontFamily: F.b,
+    fontSize: 16,
+    lineHeight: 24,
+    fontStyle: "italic",
+  },
+  quoteAttribution: {
+    fontFamily: F.s,
+    fontSize: 12,
+    textAlign: "right",
+  },
   biography: { fontFamily: F.r, fontSize: 14, lineHeight: 22, marginTop: 4 },
+  translationBlock: {
+    borderTopWidth: 1,
+    paddingTop: 10,
+    marginTop: 4,
+  },
+  translationLabel: {
+    fontFamily: F.b,
+    fontSize: 11,
+    letterSpacing: 1,
+    marginBottom: 3,
+  },
   sourceLabel: { fontFamily: F.r, fontSize: 12, lineHeight: 18, marginTop: 6 },
   emptyCard: {
     position: "relative",
