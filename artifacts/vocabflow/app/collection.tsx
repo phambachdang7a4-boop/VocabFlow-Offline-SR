@@ -42,6 +42,7 @@ const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
   "kant-marble": require("../assets/images/kant-marble.png"),
   "marcus-aurelius-marble": require("../assets/images/marcus-aurelius-marble.png"),
   "benjamin-franklin-marble": require("../assets/images/benjamin-franklin-marble.png"),
+  "napoleon-marble": require("../assets/images/napoleon-marble.png"),
 };
 
 function rarityDisplayLabel(rarity: ChestRarity): string {

@@ -154,3 +154,17 @@ mtime_ms = 1794599331204
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/827e1beb-57b4-41a8-8fed-76192cecacdd/4208ec72-63db-4a79-ab50-d03fb9a796c8"
 storage_version_token = "1794599413928042"
 content_type = "image/png"
+
+[[outputs]]
+id = "FOJXyvN675dmugtUEoK0G"
+uri = "file://artifacts/vocabflow/assets/images/napoleon-marble.png"
+type = "image"
+title = "Tượng Napoléon Bonaparte"
+description = "Tượng cẩm thạch pixel-art bậc Legendary, đã thêm vào Bộ Sưu Tập VocabFlow."
+logical_id = "9b75e011-77f8-4b02-ae41-c50810981c56"
+content_hash = "sha256:a9b297bde5ce596de31b0269f6d13baf9ae543ca2bedc93b93bc9b0e792b4889"
+size = 924311
+mtime_ms = 1794599618871
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/9b75e011-77f8-4b02-ae41-c50810981c56/f37960e2-c435-4b06-bfc4-7f0964d0bbda"
+storage_version_token = "1794599702581638"
+content_type = "image/png"

@@ -461,6 +461,17 @@ assert.equal(franklin.material, "Cẩm thạch");
 assert.equal(franklin.unlockMode, "automatic");
 assert.ok(franklin.biography.includes("Tuyên ngôn Độc lập Hoa Kỳ"));
 assert.ok(franklin.biographyEn.includes("Poor Richard's Almanack"));
+const napoleon = COLLECTION_ARTWORKS.find(
+  (item) => item.id === "legendary-napoleon-bonaparte-marble",
+);
+assert.ok(napoleon);
+assert.equal(napoleon.rarity, "legendary");
+assert.equal(napoleon.title, "Tượng Napoléon Bonaparte");
+assert.equal(napoleon.shortTitle, "Napoléon");
+assert.equal(napoleon.material, "Cẩm thạch");
+assert.equal(napoleon.unlockMode, "automatic");
+assert.ok(napoleon.biography.includes("Code Napoléon"));
+assert.ok(napoleon.biographyEn.includes("Battle of Waterloo"));
 assert.throws(
   () => artworkForCraft("legendary", 0),
   /không hợp lệ/,
@@ -500,7 +511,7 @@ assert.match(
   /justifyContent:\s*"space-between"/,
   "Four statue tiles are spaced across each grid row.",
 );
-assert.equal(COLLECTION_ARTWORKS.length, 6);
+assert.equal(COLLECTION_ARTWORKS.length, 7);
 assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
   "All currently available statues are unlocked without fragments.",
@@ -511,6 +522,7 @@ assert.equal(isCollectionArtwork("legendary", leonardo.id), true);
 assert.equal(isCollectionArtwork("legendary", kant.id), true);
 assert.equal(isCollectionArtwork("epic", marcus.id), true);
 assert.equal(isCollectionArtwork("rare", franklin.id), true);
+assert.equal(isCollectionArtwork("legendary", napoleon.id), true);
 assert.equal(isCollectionArtwork("epic", "epic-repose"), false);
 assert.ok(
   existsSync(join(__dirname, "../assets/images/ho-chi-minh-marble.png")),
@@ -535,6 +547,10 @@ assert.ok(
 assert.ok(
   existsSync(join(__dirname, "../assets/images/benjamin-franklin-marble.png")),
   "Benjamin Franklin's marble statue is bundled for offline display.",
+);
+assert.ok(
+  existsSync(join(__dirname, "../assets/images/napoleon-marble.png")),
+  "Napoleon's marble statue is bundled for offline display.",
 );
 assert.match(
   collectionScreen,

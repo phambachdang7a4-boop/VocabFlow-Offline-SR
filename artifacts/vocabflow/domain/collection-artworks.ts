@@ -272,6 +272,62 @@ CAREER AND MAJOR CONTRIBUTIONS
 • Politics and Diplomacy: Helped draft and signed the United States Declaration of Independence (1776). He served as the U.S. minister to France during the American Revolution, playing a crucial role in securing French military and financial aid for American independence. He participated in drafting the U.S. Constitution and was the only person to sign all four major founding documents of the United States.
 • Civic Activities: Founded America's first public lending library and first volunteer fire company. He served as President of Pennsylvania and became an ardent abolitionist later in life.`,
   },
+  {
+    id: "legendary-napoleon-bonaparte-marble",
+    rarity: "legendary",
+    title: "Tượng Napoléon Bonaparte",
+    shortTitle: "Napoléon",
+    icon: "award",
+    imageAssetKey: "napoleon-marble",
+    material: "Cẩm thạch",
+    unlockMode: "automatic",
+    description:
+      "Nhà chỉ huy quân sự và nhà lãnh đạo chính trị Pháp, Hoàng đế đầu tiên của Đế chế Pháp.",
+    biography: `Napoléon Bonaparte là nhà chỉ huy quân sự và nhà lãnh đạo chính trị lỗi lạc của Pháp. Ông đã định hình lại chính trị và lịch sử châu Âu vào cuối thế kỷ 18 và đầu thế kỷ 19.
+
+1. THÂN THẾ VÀ GIÁO DỤC
+• Ngày sinh: Ngày 15 tháng 8 năm 1769 tại Ajaccio trên đảo Corsica.
+• Tên khai sinh: Napoleone di Buonaparte.
+• Gia đình: Là người con thứ tư trong số tám người con của Carlo Bonaparte và Letizia Ramolino, thuộc tầng lớp quý tộc Ý cấp thấp.
+• Học vấn: Ông học tại học viện quân sự Brienne và École Militaire ở Paris, chuyên về pháo binh.
+
+2. SỰ NGHIỆP QUÂN SỰ VÀ CON ĐƯỜNG NẮM QUYỀN
+• Thành công ban đầu: Khởi đầu là sĩ quan pháo binh trẻ, ông nhanh chóng thăng tiến trong Cách mạng Pháp nhờ tài năng chiến lược.
+• Chiến thắng: Ông tham chiến hơn 60 trận và giành chiến thắng hơn 51 trận, trong đó có các chiến thắng nổi tiếng ở Marengo và Austerlitz.
+• Hoàng đế Pháp: Năm 1804, ông tự đăng quang Hoàng đế Pháp và lập nên Đế chế Pháp thứ nhất.
+
+3. CÁC CẢI CÁCH LỚN
+• Bộ luật Napoléon (Code Napoléon): Ông ban hành bộ luật dân sự thống nhất, đặt nền tảng pháp lý cho nước Pháp hiện đại và tạo ảnh hưởng đến các hệ thống luật pháp khắp châu Âu.
+• Hành chính và giáo dục: Ông cải cách nền hành chính công, ngân hàng, tài chính và hệ thống giáo dục trung học, đại học.
+
+4. THẤT BẠI, LƯU ĐÀY VÀ QUA ĐỜI
+• Cuộc xâm lược Nga (1812): Cuộc xâm lược thảm họa vào Nga đánh dấu bước ngoặt trong vận mệnh của ông.
+• Thoái vị lần thứ nhất (1814): Sau khi bị liên quân châu Âu đánh bại tại trận Leipzig, ông buộc phải thoái vị và bị lưu đày đến đảo Elba.
+• Một trăm ngày (1815): Ông trốn khỏi Elba và trở lại nắm quyền trong 100 ngày, trước khi chịu thất bại cuối cùng trước quân Anh và Phổ tại trận Waterloo.
+• Lưu đày lần cuối và qua đời: Người Anh đày ông đến đảo Saint Helena xa xôi. Ông mất tại đó ngày 5 tháng 5 năm 1821, thọ 51 tuổi, do ung thư dạ dày. Năm 1840, hài cốt ông được đưa về Paris an táng.`,
+    biographyEn: `Napoleon Bonaparte was an eminent French military commander and political leader. He reshaped European politics and history during the late 18th and early 19th centuries.
+
+1. EARLY LIFE AND EDUCATION
+• Birth Date: Born on August 15, 1769, in Ajaccio on the island of Corsica.
+• Birth Name: Napoleone di Buonaparte.
+• Family: He was the fourth of eight children born to Carlo Bonaparte and Letizia Ramolino, who belonged to the minor Italian nobility.
+• Education: He studied at the military academy at Brienne and the École Militaire in Paris, specializing in artillery.
+
+2. MILITARY CAREER AND RISE TO POWER
+• Early Success: Starting as a young artillery officer, he rose rapidly during the French Revolution thanks to his strategic brilliance.
+• Victories: He fought in over 60 battles and won more than 51 of them, including famous victories at Marengo and Austerlitz.
+• Emperor of the French: In 1804, he crowned himself Emperor of the French, establishing the First French Empire.
+
+3. MAJOR REFORMS
+• The Napoleonic Code (Code Napoléon): He introduced a unified civil code that laid the legal foundation for modern France and influenced legal systems across Europe.
+• Administration & Education: He reformed public administration, banking, finance, and the secondary and higher education systems.
+
+4. DOWNFALL, EXILE, AND DEATH
+• Invasion of Russia (1812): A disastrous invasion of Russia marked the turning point in his fortunes.
+• First Abdication (1814): Defeated by European coalitions at the Battle of Leipzig, he was forced to abdicate and was exiled to the island of Elba.
+• The Hundred Days (1815): He escaped Elba and returned to power for 100 days, before suffering a final defeat by British and Prussian forces at the Battle of Waterloo.
+• Final Exile and Death: The British exiled him to the remote island of Saint Helena, where he died on May 5, 1821, at age 51 from stomach cancer. In 1840, his remains were returned to Paris for burial.`,
+  },
 ];
 
 const LEGACY_PAINTING_IDS = new Set([
