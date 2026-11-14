@@ -61,6 +61,13 @@ import {
   IDIOM_COURSE_TITLE,
   IDIOM_COURSE_WORD_COUNT,
 } from "@/domain/idiom-course";
+import {
+  PHRASAL_VERB_COURSE_ENTRIES,
+  PHRASAL_VERB_COURSE_ID,
+  PHRASAL_VERB_COURSE_LESSONS,
+  PHRASAL_VERB_COURSE_TITLE,
+  PHRASAL_VERB_COURSE_WORD_COUNT,
+} from "@/domain/phrasal-verb-course";
 import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import {
@@ -149,6 +156,17 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     icon: "book-open",
     testIdPrefix: "idioms",
     wordCount: IDIOM_COURSE_WORD_COUNT,
+  },
+  {
+    id: PHRASAL_VERB_COURSE_ID,
+    title: PHRASAL_VERB_COURSE_TITLE,
+    description:
+      `Học ${PHRASAL_VERB_COURSE_WORD_COUNT} cụm động từ thông dụng qua 6 chủ đề sinh hoạt, học tập, giao tiếp và xử lý tình huống.`,
+    lessons: PHRASAL_VERB_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(PHRASAL_VERB_COURSE_ENTRIES)),
+    icon: "message-circle",
+    testIdPrefix: "phrasal-verbs",
+    wordCount: PHRASAL_VERB_COURSE_WORD_COUNT,
   },
   {
     id: CONJUNCTION_COURSE_ID,

@@ -38,6 +38,9 @@ const idiomCourseDomain = loadTs(
     "./dictionary": dictionaryDomain,
   },
 );
+const phrasalVerbCourseDomain = loadTs(
+  join(__dirname, "../domain/phrasal-verb-course.ts"),
+);
 const courseWordSelectionDomain = loadTs(
   join(__dirname, "../domain/course-word-selection.ts"),
 );
@@ -124,6 +127,7 @@ function mount() {
     "@/domain/toeic-topic-course": toeicTopicDomain,
     "@/domain/office-apps-course": officeAppsDomain,
     "@/domain/idiom-course": idiomCourseDomain,
+    "@/domain/phrasal-verb-course": phrasalVerbCourseDomain,
     "../../assets/images/corvi-app-icon.png": "corvi-avatar-asset",
     "../../assets/images/pan-avatar.png": "pan-avatar-asset",
     "@/data/vocabulary": {
@@ -480,6 +484,59 @@ function mount() {
     await screen.settle();
   }
   assert.ok(screen.byId("office-apps-lesson-complete"));
+  screen.byId("office-apps-leave-lesson").props.onPress();
+  screen.byId("return-to-course-list").props.onPress();
+  assert.ok(screen.byId("phrasal-verbs-course-card"));
+  screen.byId("phrasal-verbs-course-card").props.onPress();
+  const phrasalVerbLesson = phrasalVerbCourseDomain
+    .PHRASAL_VERB_COURSE_LESSONS[0];
+  assert.equal(phrasalVerbLesson.questions.length, 20);
+  screen.byId("phrasal-verbs-lesson-1").props.onPress();
+  const firstPhrasalQuestion = phrasalVerbLesson.questions[0];
+  assert.deepEqual(
+    screen.byId("phrasal-verbs-question-prompt").props.children,
+    [firstPhrasalQuestion.prompt],
+    "Phrasal-verb cloze questions appear in the shared lesson screen.",
+  );
+  const wrongPhrasalChoice = firstPhrasalQuestion.choices.find(
+    (choice) => choice !== firstPhrasalQuestion.term,
+  );
+  screen.byId(`phrasal-verbs-choice-${wrongPhrasalChoice}`).props.onPress();
+  assert.ok(screen.byId("phrasal-verbs-answer-feedback"));
+  screen.byId("phrasal-verbs-next").props.onPress();
+  await screen.settle();
+  for (let index = 1; index < phrasalVerbLesson.questions.length; index += 1) {
+    const question = phrasalVerbLesson.questions[index];
+    const entry = phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_ENTRIES[
+      question.term
+    ];
+    assert.deepEqual(
+      screen.byId("phrasal-verbs-question-prompt").props.children,
+      [question.prompt],
+    );
+    screen.byId(`phrasal-verbs-choice-${question.term}`).props.onPress();
+    assert.ok(screen.byId("phrasal-verbs-answer-feedback"));
+    assert.ok(
+      find(
+        screen.byId("phrasal-verbs-answer-feedback"),
+        (node) => node.props?.children?.includes?.(entry.exampleTranslation),
+      ),
+      "Correct-answer feedback includes the complete Vietnamese example translation.",
+    );
+    screen.byId("phrasal-verbs-next").props.onPress();
+    await screen.settle();
+  }
+  assert.ok(screen.byId("phrasal-verbs-lesson-complete"));
+  assert.ok(screen.byId("phrasal-verbs-word-selection"));
+  const savedBeforePhrasalCourse = screen.savedWordInputs.length;
+  screen.byId("phrasal-verbs-add-selected-words").props.onPress();
+  await screen.settle();
+  assert.equal(
+    screen.savedWordInputs.length,
+    savedBeforePhrasalCourse + phrasalVerbLesson.questions.length,
+    "Course words are added to the existing vocabulary notebook flow.",
+  );
+  assert.ok(screen.byId("phrasal-verbs-words-added-message"));
   console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {
   console.error(error);
