@@ -418,6 +418,7 @@ assert.ok(statue.biography.includes("19.05.1890 – 02.09.1969"));
 assert.ok(statue.biography.includes("Nguyễn Sinh Cung"));
 assert.ok(statue.biography.includes("Tuyên ngôn Độc lập"));
 assert.equal(statue.quote, "Không có gì quý hơn độc lập, tự do.");
+assert.equal(statue.quoteTranslation, statue.quote);
 assert.equal(
   statue.quoteSource,
   "Lời kêu gọi ngày 17 tháng 7 năm 1966",
@@ -437,6 +438,10 @@ assert.ok(alexander);
 assert.equal(alexander.rarity, "legendary");
 assert.equal(alexander.title, "Tượng Alexander Đại đế");
 assert.equal(alexander.shortTitle, "Alexander");
+assert.equal(
+  alexander.quoteTranslation,
+  "Không gì là không thể với người dám thử.",
+);
 assert.equal(alexander.material, "Cẩm thạch");
 assert.equal(alexander.unlockMode, "automatic");
 assert.ok(alexander.biography.includes("Aristotle"));
@@ -579,8 +584,10 @@ assert.ok(
   "All currently available statues are unlocked without fragments.",
 );
 assert.ok(
-  COLLECTION_ARTWORKS.every((item) => item.quote && item.quoteSource),
-  "Every statue has a Famous Quote and its source or attribution note.",
+  COLLECTION_ARTWORKS.every(
+    (item) => item.quote && item.quoteSource && item.quoteTranslation,
+  ),
+  "Every statue has a quote, attribution note, and full Vietnamese translation.",
 );
 const namedHistoricalStatues = COLLECTION_ARTWORKS.filter(
   (item) => item.collectionGroup !== "bonus",
@@ -840,7 +847,12 @@ assert.match(
 assert.match(
   collectionScreen,
   /Famous Quote/,
-  "Every statue card and detail view exposes its Famous Quote.",
+  "The statue detail view exposes the Famous Quote after the user opens it.",
+);
+assert.doesNotMatch(
+  collectionScreen,
+  /statue-famous-quote|statue\.quote/,
+  "Collection cards hide Famous Quotes until a statue is opened.",
 );
 assert.match(
   collectionScreen,
@@ -848,6 +860,8 @@ assert.match(
   "Quote attribution comes from the statue data rather than a fixed person.",
 );
 assert.match(collectionScreen, /selectedStatue\.quote/);
+assert.match(collectionScreen, /selectedStatue\.quoteTranslation/);
+assert.match(collectionScreen, /BẢN DỊCH TIẾNG VIỆT/);
 assert.match(collectionScreen, /statue-translation-toggle/);
 assert.match(collectionScreen, /MaterialCommunityIcons\s+name="translate"/);
 assert.match(collectionScreen, /selectedStatue\.biographyEn/);

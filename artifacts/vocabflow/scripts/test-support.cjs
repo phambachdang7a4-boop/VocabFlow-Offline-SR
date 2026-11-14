@@ -59,6 +59,9 @@ const historicalCollectionArtworks = loadTs(
 const collectionBiographyExpansions = loadTs(
   join(__dirname, "../domain/collection-biography-expansions.ts"),
 );
+const collectionQuoteTranslations = loadTs(
+  join(__dirname, "../domain/collection-quote-translations.ts"),
+);
 const worldExpansionStatues = loadTs(
   join(__dirname, "../domain/collection-world-expansion.ts"),
 );
@@ -69,6 +72,7 @@ const collectionArtworks = loadTs(
     "./collection-historical-artworks": historicalCollectionArtworks,
     "./collection-world-expansion": worldExpansionStatues,
     "./collection-biography-expansions": collectionBiographyExpansions,
+    "./collection-quote-translations": collectionQuoteTranslations,
   },
 );
 

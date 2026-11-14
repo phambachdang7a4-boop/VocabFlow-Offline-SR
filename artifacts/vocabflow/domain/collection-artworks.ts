@@ -2,6 +2,7 @@ import type { ChestRarity } from "./mission-chests";
 import { HISTORICAL_COLLECTION_ARTWORKS } from "./collection-historical-artworks";
 import { WORLD_EXPANSION_STATUES } from "./collection-world-expansion";
 import { COLLECTION_BIOGRAPHY_EXPANSIONS } from "./collection-biography-expansions";
+import { COLLECTION_QUOTE_TRANSLATIONS } from "./collection-quote-translations";
 
 export interface CollectionArtwork {
   id: string;
@@ -17,6 +18,7 @@ export interface CollectionArtwork {
   biographyEn?: string;
   collectionGroup?: "bonus";
   quote?: string;
+  quoteTranslation?: string;
   quoteSource?: string;
   sourceLabel?: string;
   portraitSourceType?: "contemporary" | "later-portrait" | "uncertain-likeness";
@@ -409,18 +411,26 @@ function insertBiographyExpansion(
 export const COLLECTION_ARTWORKS: CollectionArtwork[] =
   collectionArtworkDefinitions.map((artwork) => {
     const expansion = COLLECTION_BIOGRAPHY_EXPANSIONS[artwork.id];
-    if (!expansion) return artwork;
-    return {
-      ...artwork,
-      biography: insertBiographyExpansion(
-        artwork.biography ?? artwork.description ?? "",
-        expansion.vi,
-      ),
-      biographyEn: insertBiographyExpansion(
-        artwork.biographyEn ?? artwork.description ?? "",
-        expansion.en,
-      ),
-    };
+    const expandedArtwork = expansion
+      ? {
+          ...artwork,
+          biography: insertBiographyExpansion(
+            artwork.biography ?? artwork.description ?? "",
+            expansion.vi,
+          ),
+          biographyEn: insertBiographyExpansion(
+            artwork.biographyEn ?? artwork.description ?? "",
+            expansion.en,
+          ),
+        }
+      : artwork;
+    if (!expandedArtwork.quote) return expandedArtwork;
+    const quoteTranslation =
+      COLLECTION_QUOTE_TRANSLATIONS[expandedArtwork.imageAssetKey ?? ""];
+    if (!quoteTranslation) {
+      throw new Error(`Missing quote translation for ${expandedArtwork.title}.`);
+    }
+    return { ...expandedArtwork, quoteTranslation };
   });
 
 const LEGACY_PAINTING_IDS = new Set([
