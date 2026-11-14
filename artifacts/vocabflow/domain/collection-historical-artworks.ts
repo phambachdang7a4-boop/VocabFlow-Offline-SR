@@ -1405,7 +1405,7 @@ const historicalPortraitSources: Record<
   },
   "ptolemy-marble": {
     sourceLabel: "Hình minh họa Ptolemy năm 1476",
-    portraitSourceType: "later-portrait",
+    portraitSourceType: "uncertain-likeness",
     portraitSourceUrl:
       "https://commons.wikimedia.org/wiki/File:Ptolemy_1476_with_armillary_sphere_model.jpg",
   },

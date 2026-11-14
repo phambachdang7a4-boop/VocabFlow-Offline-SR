@@ -70,3 +70,10 @@ period-regalia mismatch. Her revised image keeps the marble style and 768×768
 format while replacing the Egyptian headdress with Hellenistic hair and a low
 diadem. Other portraits were retained because their period cues are consistent,
 or because reliable sources do not establish an exact likeness.
+
+Collection details identify uncertain or conventional likenesses as idealized
+depictions, rather than documentary portraits. This applies to Archimedes,
+Confucius, Pythagoras, Hippocrates, Homer, Hannibal, Euclid, Seneca, Ptolemy,
+and Sun Tzu. Ptolemy's 1476 image is a later scholarly convention, not a secure
+likeness. Secure contemporary and established portrait sources keep their
+existing labels and do not receive an uncertainty warning.

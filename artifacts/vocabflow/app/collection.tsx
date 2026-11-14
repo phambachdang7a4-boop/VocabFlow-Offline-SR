@@ -109,7 +109,7 @@ function rarityDisplayLabel(rarity: ChestRarity): string {
 const PORTRAIT_SOURCE_TYPE_LABELS = {
   contemporary: "Đương thời",
   "later-portrait": "Chân dung về sau",
-  "uncertain-likeness": "Chưa rõ chân dung thật",
+  "uncertain-likeness": "Hình tượng ước lệ / lý tưởng hóa",
 } as const;
 
 export default function CollectionScreen() {
@@ -700,6 +700,21 @@ export default function CollectionScreen() {
                       ]}
                     </Text>
                   ) : null}
+                  {selectedStatue.portraitSourceType ===
+                  "uncertain-likeness" ? (
+                    <Text
+                      testID="statue-portrait-uncertainty"
+                      accessibilityRole="text"
+                      style={[
+                        styles.portraitUncertainty,
+                        { color: c.mutedForeground },
+                      ]}
+                    >
+                      {showEnglishBiography
+                        ? "This is a conventional or idealized depiction; the person's actual appearance is not verified."
+                        : "Đây là hình tượng ước lệ hoặc lý tưởng hóa; diện mạo thật của nhân vật chưa được xác nhận."}
+                    </Text>
+                  ) : null}
                   {selectedStatue.sourceLabel &&
                   selectedStatue.portraitSourceUrl ? (
                     <Pressable
@@ -924,6 +939,12 @@ const styles = StyleSheet.create({
   biography: { fontFamily: F.r, fontSize: 14, lineHeight: 22, marginTop: 4 },
   portraitSource: { gap: 3, marginTop: 6 },
   portraitSourceType: { fontFamily: F.s, fontSize: 12, lineHeight: 18 },
+  portraitUncertainty: {
+    fontFamily: F.r,
+    fontSize: 12,
+    lineHeight: 18,
+    paddingVertical: 3,
+  },
   portraitSourceLink: {
     flexDirection: "row",
     alignItems: "center",
