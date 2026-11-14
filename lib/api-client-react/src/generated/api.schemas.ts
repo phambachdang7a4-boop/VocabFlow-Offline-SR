@@ -207,7 +207,7 @@ export const SyncMissionChestRarity = {
 } as const;
 
 /**
- * Optional for legacy clients; omitted values use the legacy chest rules.
+ * Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.
  */
 export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
 
@@ -217,6 +217,7 @@ export const SyncMissionChestRuleSet = {
   NUMBER_2: 2,
   NUMBER_3: 3,
   NUMBER_4: 4,
+  NUMBER_5: 5,
 } as const;
 
 export interface SyncMissionChest {
@@ -244,14 +245,14 @@ export interface SyncMissionChest {
      */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
-  /** Optional for legacy clients; omitted values use the legacy chest rules. */
+  /** Optional for legacy clients; rule 5 replaces each Common fragment with five Stone. */
   ruleSet?: SyncMissionChestRuleSet;
   /** Whether this chest has its guaranteed fourth upgrade. */
   superUpgrade?: boolean;
   opened: boolean;
   /**
      * @minimum 1
-     * @maximum 1000
+     * @maximum 5050
      * @nullable
      */
   finalStone: number | null;

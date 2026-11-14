@@ -29,7 +29,6 @@ import {
   CHEST_RARITY_LABELS,
   CHEST_RARITY_TEXT_COLORS,
   chestFragmentReward,
-  chestStoneReward,
   maxChestUpgradeAttempts,
   type ChestRarity,
   type MissionChest,

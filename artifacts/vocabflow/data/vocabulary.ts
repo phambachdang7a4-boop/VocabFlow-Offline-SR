@@ -27,7 +27,7 @@ import {
 } from "../domain/daily-missions";
 import {
   chestFragmentReward,
-  chestStoneReward,
+  chestTotalStoneReward,
   hasSuperUpgradeChance,
   isValidMissionChest,
   maxChestUpgradeAttempts,
@@ -309,7 +309,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 21) {
+    if ((version?.user_version ?? 0) > 22) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -853,6 +853,48 @@ async function initialize(): Promise<SQLiteDatabase> {
         await db.execAsync("PRAGMA user_version = 21;");
       });
     }
+    if ((version?.user_version ?? 0) < 22) {
+      await db.withTransactionAsync(async () => {
+        const pendingChests = await db.getFirstAsync<{ count: number }>(
+          "SELECT COUNT(*) AS count FROM mission_chests WHERE opened = 0",
+        );
+        await db.execAsync(`
+          CREATE TABLE mission_chests_v22 (
+            chest_id TEXT PRIMARY KEY NOT NULL,
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            base_stone INTEGER NOT NULL CHECK (base_stone BETWEEN 1 AND 20),
+            upgrade_attempts INTEGER NOT NULL DEFAULT 0 CHECK (upgrade_attempts BETWEEN 0 AND 4),
+            rarity TEXT NOT NULL DEFAULT 'common'
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            rule_set INTEGER NOT NULL DEFAULT 1 CHECK (rule_set IN (1, 2, 3, 4, 5)),
+            super_upgrade INTEGER NOT NULL DEFAULT 0 CHECK (super_upgrade IN (0, 1)),
+            opened INTEGER NOT NULL DEFAULT 0 CHECK (opened IN (0, 1)),
+            final_stone INTEGER,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (mission_day, mission_id),
+            CHECK (
+              (opened = 0 AND final_stone IS NULL) OR
+              (opened = 1 AND final_stone BETWEEN 1 AND 5050)
+            )
+          );
+          INSERT INTO mission_chests_v22
+            (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+              rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+          SELECT chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+            CASE WHEN opened = 0 AND rule_set = 4 THEN 5 ELSE rule_set END,
+            super_upgrade, opened, final_stone, created_at, updated_at
+          FROM mission_chests;
+          DROP TABLE mission_chests;
+          ALTER TABLE mission_chests_v22 RENAME TO mission_chests;
+          CREATE INDEX idx_mission_chests_opened
+            ON mission_chests(opened, mission_day);
+          PRAGMA user_version = 22;
+        `);
+        if ((pendingChests?.count ?? 0) > 0) await markSyncDirty(db);
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -950,8 +992,9 @@ async function grantDailyMissionChests(
     const chestId = `mission-${day}-${mission.id}`;
     const result = await db.runAsync(
       `INSERT OR IGNORE INTO mission_chests
-        (chest_id, mission_day, mission_id, base_stone, rarity, rule_set, super_upgrade, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)`,
+        (chest_id, mission_day, mission_id, base_stone, rarity, rule_set, super_upgrade,
+          created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 5, ?, ?, ?)`,
       chestId,
       day,
       mission.id,
@@ -976,14 +1019,14 @@ async function migrateUntouchedMissionChests(
   }>(
     `SELECT chest_id AS chestId, mission_id AS missionId
      FROM mission_chests
-      WHERE opened = 0 AND upgrade_attempts = 0 AND rule_set < 4`,
+      WHERE opened = 0 AND upgrade_attempts = 0 AND rule_set < 5`,
   );
   let changed = false;
   for (const chest of untouched) {
     const update = await db.runAsync(
       `UPDATE mission_chests
-        SET rarity = ?, rule_set = 4, super_upgrade = ?, updated_at = ?
-        WHERE chest_id = ? AND opened = 0 AND upgrade_attempts = 0 AND rule_set < 4`,
+        SET rarity = ?, rule_set = 5, super_upgrade = ?, updated_at = ?
+        WHERE chest_id = ? AND opened = 0 AND upgrade_attempts = 0 AND rule_set < 5`,
       startingRarityForMission(chest.missionId),
       hasSuperUpgradeChance(chest.chestId) ? 1 : 0,
       now,
@@ -1062,7 +1105,7 @@ async function readUnopenedMissionChests(
   >(
     `SELECT chest_id AS chestId, mission_day AS day, mission_id AS missionId,
       base_stone AS baseStone, upgrade_attempts AS upgradeAttempts, rarity,
-      rule_set AS ruleSet, super_upgrade AS superUpgrade,
+        rule_set AS ruleSet, super_upgrade AS superUpgrade,
       opened, final_stone AS finalStone, created_at AS createdAt, updated_at AS updatedAt
      FROM mission_chests WHERE opened = 0 ORDER BY mission_day DESC, created_at DESC`,
   );
@@ -1079,7 +1122,15 @@ function missionChestFromRow(
   return {
     ...row,
     ruleSet:
-      row.ruleSet === 4 ? 4 : row.ruleSet === 3 ? 3 : row.ruleSet === 2 ? 2 : 1,
+      row.ruleSet === 5
+        ? 5
+        : row.ruleSet === 4
+          ? 4
+          : row.ruleSet === 3
+            ? 3
+            : row.ruleSet === 2
+              ? 2
+              : 1,
     superUpgrade: Boolean(row.superUpgrade),
     opened: Boolean(row.opened),
   };
@@ -1158,7 +1209,12 @@ export function attemptMissionChestUpgrade(
         nextAttempt === maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
         rarity === "legendary";
       const awardedStone = finished
-        ? chestStoneReward(current.baseStone, rarity, ruleSet)
+        ? chestTotalStoneReward(
+            chestId,
+            current.baseStone,
+            rarity,
+            ruleSet,
+          )
         : null;
       const next: MissionChest = {
         ...current,
@@ -1189,7 +1245,11 @@ export function attemptMissionChestUpgrade(
         finished,
         awardedStone,
         awardedFragments: finished
-          ? chestFragmentReward(chestId, rarity, ruleSet)
+          ? chestFragmentReward(
+              chestId,
+              rarity,
+              ruleSet,
+            )
           : null,
       };
     });
@@ -1200,7 +1260,8 @@ export function attemptMissionChestUpgrade(
 
 export function getMissionCollectionOverview(): Promise<MissionCollectionOverview> {
   return serialize(async () => {
-    return readMissionCollectionOverview(await database());
+    const balance = await readMissionCollectionBalance(await database());
+    return { fragments: balance.fragments, crafts: balance.crafts };
   });
 }
 
@@ -1260,6 +1321,13 @@ export function craftCollectionArtwork(
 async function readMissionCollectionOverview(
   db: SQLiteDatabase,
 ): Promise<MissionCollectionOverview> {
+  const balance = await readMissionCollectionBalance(db);
+  return { fragments: balance.fragments, crafts: balance.crafts };
+}
+
+async function readMissionCollectionBalance(
+  db: SQLiteDatabase,
+): Promise<MissionCollectionOverview> {
   const openedChests = await db.getAllAsync<{
     chestId: string;
     rarity: ChestRarity;
@@ -1290,13 +1358,15 @@ async function readMissionCollectionOverview(
 
   for (const chest of openedChests) {
     const chestRules =
-      chest.ruleSet === 4
-        ? 4
-        : chest.ruleSet === 3
-          ? 3
-          : chest.ruleSet === 2
-            ? 2
-            : 1;
+      chest.ruleSet === 5
+        ? 5
+        : chest.ruleSet === 4
+          ? 4
+          : chest.ruleSet === 3
+            ? 3
+            : chest.ruleSet === 2
+              ? 2
+              : 1;
     const reward = chestFragmentReward(chest.chestId, chest.rarity, chestRules);
     for (const rarity of Object.keys(fragments) as ChestRarity[]) {
       fragments[rarity] += reward[rarity];
@@ -1315,6 +1385,7 @@ async function readMissionCollectionOverview(
       fragments[spend.rarity] - spend.pieceCost,
     );
   }
+  fragments.common = 0;
   return { fragments, crafts };
 }
 

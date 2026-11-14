@@ -277,7 +277,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       firstOverview.chests[0].ruleSet,
-      4,
+      5,
       "New missions use fixed Stone rewards and Points-based fragments.",
     );
     assert.equal(
@@ -321,7 +321,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.deepEqual(
       openedResult.awardedFragments,
-      missionChests.chestFragmentReward(chestId, openedChest.rarity, 4),
+      missionChests.chestFragmentReward(chestId, openedChest.rarity, openedChest.ruleSet),
       "The chest returns its stable multi-rarity fragment reward once opened.",
     );
     const openedOverview = await harness.repo.getDailyMissionOverview(day);
@@ -365,7 +365,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
         `INSERT INTO mission_chests
           (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
             rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
-         VALUES (?, ?, 'review-1', 5, 0, 'common', 4, 0, 0, NULL, ?, ?)`,
+         VALUES (?, ?, 'review-1', 5, 0, 'common', 5, 0, 0, NULL, ?, ?)`,
       )
       .run(
         retryChestId,
@@ -399,7 +399,11 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     assert.equal(finalTap.awardedStone, finalTap.chest.finalStone);
     assert.deepEqual(
       finalTap.awardedFragments,
-      missionChests.chestFragmentReward(retryChestId, finalTap.chest.rarity, 4),
+      missionChests.chestFragmentReward(
+        retryChestId,
+        finalTap.chest.rarity,
+        finalTap.chest.ruleSet,
+      ),
     );
     await assert.rejects(
       () => retryHarness.repo.attemptMissionChestUpgrade(retryChestId),
@@ -467,7 +471,16 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       1000,
       "A Corvi chest awards the fixed total exactly once.",
     );
-
+    await harness.repo.recordReviewSessionResult({
+      sessionId: "qualified-session-0",
+      startedAt: new Date(`${day}T12:00:00`).getTime(),
+      activeDurationMs: 0,
+      maxCombo: 0,
+      reviewedCount: 30,
+      correctCount: correctCountByGrade[requiredGrade],
+      grade: requiredGrade,
+      completed: true,
+    });
     let seededCommonPieces = 0;
     const missionIds = ["review-1", "add-words-1", "lesson-1", "grade-1"];
     for (
@@ -511,9 +524,10 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       (await harness.repo.getMissionCollectionOverview()).fragments.common,
-      commonBeforeCraft.fragments.common,
-      "An unavailable rarity cannot consume its saved fragments.",
+      0,
+      "Existing Common fragments are removed from the collection balance.",
     );
+    assert.equal(commonBeforeCraft.fragments.common, 0);
 
     const beforeLegendaryUnlock = await harness.repo.getMissionCollectionOverview();
     await assert.rejects(
@@ -527,23 +541,20 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       "Trying to craft an already-unlocked statue cannot consume fragments.",
     );
 
-    await harness.repo.recordReviewSessionResult({
-      sessionId: "qualified-session-0",
-      startedAt: new Date(`${day}T12:00:00`).getTime(),
-      activeDurationMs: 0,
-      maxCombo: 0,
-      reviewedCount: 30,
-      correctCount: correctCountByGrade[requiredGrade],
-      grade: requiredGrade,
-      completed: true,
-    });
     const secondOverview = await harness.repo.getDailyMissionOverview(day);
+    const storedStone = harness.db
+      .prepare(
+        `SELECT
+          COALESCE((SELECT SUM(stone) FROM daily_mission_awards), 0) +
+          COALESCE((SELECT SUM(final_stone) FROM mission_chests WHERE opened = 1), 0) +
+          COALESCE((SELECT SUM(combo_length) FROM review_combo_rewards), 0)
+          AS total`,
+      )
+      .get().total;
     assert.equal(
       secondOverview.stoneBalance,
-      openedOverview.stoneBalance +
-        superResult.awardedStone +
-        seededCommonPieces,
-      "Retrying the same session cannot duplicate rewards; all opened chest Stone remains in the balance.",
+      storedStone,
+      "Removing previously saved Common fragments does not grant Stone.",
     );
     assert.equal(secondOverview.chests.length, 0);
     assert.equal(
@@ -562,9 +573,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       nextDayOverview.stoneBalance,
-      openedOverview.stoneBalance +
-        superResult.awardedStone +
-        seededCommonPieces,
+      secondOverview.stoneBalance,
       "Previously earned Stone carries forward.",
     );
 
@@ -584,7 +593,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
         "SELECT rarity, rule_set, super_upgrade FROM mission_chests WHERE chest_id = ?",
       )
       .get("old-untouched-chest");
-    assert.equal(migratedChest.rule_set, 4);
+    assert.equal(migratedChest.rule_set, 5);
     assert.equal(migratedChest.rarity, "uncommon");
     assert.equal(
       migratedChest.super_upgrade,

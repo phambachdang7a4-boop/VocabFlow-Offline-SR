@@ -471,8 +471,8 @@ components:
           enum: [common, uncommon, rare, epic, legendary]
         ruleSet:
           type: integer
-          enum: [1, 2, 3, 4]
-          description: Optional for legacy clients; omitted values use the legacy chest rules.
+          enum: [1, 2, 3, 4, 5]
+          description: Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.
         superUpgrade:
           type: boolean
           description: Whether this chest has its guaranteed fourth upgrade.
@@ -481,7 +481,7 @@ components:
         finalStone:
           type: integer
           minimum: 1
-          maximum: 1000
+          maximum: 5050
           nullable: true
         createdAt:
           type: string

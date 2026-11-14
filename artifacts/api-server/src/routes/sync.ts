@@ -820,7 +820,8 @@ router.post("/sync", requireAuth, async (req, res) => {
           : normalizedChest.ruleSet < current.ruleSet
             ? current
             : normalizedChest.ruleSet > current.ruleSet
-              ? current.upgradeAttempts === 0
+              ? current.upgradeAttempts === 0 ||
+                (current.ruleSet === 4 && normalizedChest.ruleSet === 5)
                 ? normalizedChest
                 : current
               : normalizedChest.upgradeAttempts > current.upgradeAttempts
@@ -1282,7 +1283,11 @@ function isValidMissionChestRecord(chest: {
     !Number.isSafeInteger(chest.upgradeAttempts) ||
     chest.upgradeAttempts < 0 ||
     chest.upgradeAttempts > attemptLimit ||
-    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3 && ruleSet !== 4) ||
+    (ruleSet !== 1 &&
+      ruleSet !== 2 &&
+      ruleSet !== 3 &&
+      ruleSet !== 4 &&
+      ruleSet !== 5) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
     !isChestRarity(chest.rarity)
@@ -1345,7 +1350,55 @@ function isValidMissionChestRecord(chest: {
     ruleSet >= 3
       ? fixedRewards[rarity]
       : chest.baseStone + legacyBonuses[rarity];
-  return chest.finalStone === expectedStone;
+  return (
+    chest.finalStone ===
+    expectedStone + serverCommonFragmentStoneBonus(chest.chestId, rarity, ruleSet)
+  );
+}
+
+function serverCommonFragmentStoneBonus(
+  chestId: string,
+  rarity: string,
+  ruleSet: number,
+): number {
+  if (ruleSet !== 5) return 0;
+  const rarities = ["common", "uncommon", "rare", "epic", "legendary"];
+  const rarityIndex = rarities.indexOf(rarity);
+  const costs: Record<string, number> = {
+    common: 1,
+    uncommon: 3,
+    rare: 9,
+    epic: 27,
+    legendary: 81,
+  };
+  const ranges: Record<string, readonly [number, number]> = {
+    common: [2, 10],
+    uncommon: [6, 30],
+    rare: [18, 90],
+    epic: [54, 270],
+    legendary: [162, 810],
+  };
+  const range = ranges[rarity];
+  if (rarityIndex < 0 || !range) return 0;
+  let points =
+    range[0] +
+    (serverHash(`fragment-points:${chestId}:${rarity}`) %
+      (range[1] - range[0] + 1));
+  let convertedCommonCount = 0;
+  let roll = 0;
+  while (points > 0) {
+    const available = rarities
+      .slice(0, rarityIndex + 1)
+      .filter((candidate) => costs[candidate]! <= points);
+    const selectedHash = serverHash(
+      `fragment-distribution:${chestId}:${rarity}:${roll}`,
+    );
+    const selected = available[selectedHash % available.length]!;
+    if (selected === "common") convertedCommonCount += 1;
+    points -= costs[selected]!;
+    roll += 1;
+  }
+  return convertedCommonCount * 5;
 }
 
 function serverChestUpgrade(

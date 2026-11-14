@@ -253,13 +253,15 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         missionChests: missionChests.map((chest) => ({
           ...chest,
           ruleSet:
-            chest.ruleSet === 4
-              ? 4
-              : chest.ruleSet === 3
-                ? 3
-                : chest.ruleSet === 2
-                  ? 2
-                  : 1,
+            chest.ruleSet === 5
+              ? 5
+              : chest.ruleSet === 4
+                ? 4
+                : chest.ruleSet === 3
+                  ? 3
+                  : chest.ruleSet === 2
+                    ? 2
+                    : 1,
           superUpgrade: Boolean(chest.superUpgrade),
           opened: Boolean(chest.opened),
         })),
@@ -942,13 +944,15 @@ async function mergeSnapshotIntoDatabase(
         ? {
             ...currentRow,
             ruleSet:
-              currentRow.ruleSet === 4
-                ? (4 as const)
-                : currentRow.ruleSet === 3
-                  ? (3 as const)
-                  : currentRow.ruleSet === 2
-                    ? (2 as const)
-                    : (1 as const),
+              currentRow.ruleSet === 5
+                ? (5 as const)
+                : currentRow.ruleSet === 4
+                  ? (4 as const)
+                  : currentRow.ruleSet === 3
+                    ? (3 as const)
+                    : currentRow.ruleSet === 2
+                      ? (2 as const)
+                      : (1 as const),
             superUpgrade: Boolean(currentRow.superUpgrade),
             opened: Boolean(currentRow.opened),
           }
@@ -958,7 +962,8 @@ async function mergeSnapshotIntoDatabase(
         : incomingRuleSet < (current.ruleSet ?? 1)
           ? current
           : incomingRuleSet > (current.ruleSet ?? 1)
-            ? current.upgradeAttempts === 0
+            ? current.upgradeAttempts === 0 ||
+              ((current.ruleSet ?? 1) === 4 && incomingRuleSet === 5)
               ? normalizedIncoming
               : current
             : normalizedIncoming.upgradeAttempts > current.upgradeAttempts

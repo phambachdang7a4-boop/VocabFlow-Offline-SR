@@ -118,7 +118,7 @@ export const mergeUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
 export const mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
 export const mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const mergeUserSyncDataBodyMissionChestsItemFinalStoneMax = 1000;
+export const mergeUserSyncDataBodyMissionChestsItemFinalStoneMax = 5050;
 
 export const mergeUserSyncDataBodyMissionChestsMax = 10000;
 
@@ -215,7 +215,7 @@ export const MergeUserSyncDataBody = zod.object({
   "baseStone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionChestsItemBaseStoneMax),
   "upgradeAttempts": zod.number().int().min(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin).max(mergeUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5)]).optional().describe('Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.'),
   "superUpgrade": zod.boolean().optional().describe('Whether this chest has its guaranteed fourth upgrade.'),
   "opened": zod.boolean(),
   "finalStone": zod.number().int().min(1).max(mergeUserSyncDataBodyMissionChestsItemFinalStoneMax).nullable(),
@@ -335,7 +335,7 @@ export const mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
 export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
 export const mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax = 1000;
+export const mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax = 5050;
 
 export const mergeUserSyncData200ResponseMissionChestsMax = 10000;
 
@@ -432,7 +432,7 @@ export const MergeUserSyncData200Response = zod.object({
   "baseStone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionChestsItemBaseStoneMax),
   "upgradeAttempts": zod.number().int().min(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin).max(mergeUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5)]).optional().describe('Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.'),
   "superUpgrade": zod.boolean().optional().describe('Whether this chest has its guaranteed fourth upgrade.'),
   "opened": zod.boolean(),
   "finalStone": zod.number().int().min(1).max(mergeUserSyncData200ResponseMissionChestsItemFinalStoneMax).nullable(),
@@ -568,7 +568,7 @@ export const replaceUserSyncDataBodyMissionChestsItemBaseStoneMax = 20;
 export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin = 0;
 export const replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const replaceUserSyncDataBodyMissionChestsItemFinalStoneMax = 1000;
+export const replaceUserSyncDataBodyMissionChestsItemFinalStoneMax = 5050;
 
 export const replaceUserSyncDataBodyMissionChestsMax = 10000;
 
@@ -665,7 +665,7 @@ export const ReplaceUserSyncDataBody = zod.object({
   "baseStone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionChestsItemBaseStoneMax),
   "upgradeAttempts": zod.number().int().min(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMin).max(replaceUserSyncDataBodyMissionChestsItemUpgradeAttemptsMax),
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5)]).optional().describe('Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.'),
   "superUpgrade": zod.boolean().optional().describe('Whether this chest has its guaranteed fourth upgrade.'),
   "opened": zod.boolean(),
   "finalStone": zod.number().int().min(1).max(replaceUserSyncDataBodyMissionChestsItemFinalStoneMax).nullable(),
@@ -785,7 +785,7 @@ export const replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax = 20;
 export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin = 0;
 export const replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax = 4;
 
-export const replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax = 1000;
+export const replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax = 5050;
 
 export const replaceUserSyncData200ResponseMissionChestsMax = 10000;
 
@@ -882,7 +882,7 @@ export const ReplaceUserSyncData200Response = zod.object({
   "baseStone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionChestsItemBaseStoneMax),
   "upgradeAttempts": zod.number().int().min(replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMin).max(replaceUserSyncData200ResponseMissionChestsItemUpgradeAttemptsMax),
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
-  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4)]).optional().describe('Optional for legacy clients; omitted values use the legacy chest rules.'),
+  "ruleSet": zod.union([zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5)]).optional().describe('Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.'),
   "superUpgrade": zod.boolean().optional().describe('Whether this chest has its guaranteed fourth upgrade.'),
   "opened": zod.boolean(),
   "finalStone": zod.number().int().min(1).max(replaceUserSyncData200ResponseMissionChestsItemFinalStoneMax).nullable(),

@@ -271,13 +271,14 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
       value.ruleSet !== 1 &&
       value.ruleSet !== 2 &&
       value.ruleSet !== 3 &&
-      value.ruleSet !== 4) ||
+      value.ruleSet !== 4 &&
+      value.ruleSet !== 5) ||
     (value.superUpgrade !== undefined &&
       typeof value.superUpgrade !== "boolean") ||
     !isChestRarity(value.rarity) ||
     typeof value.opened !== "boolean" ||
     (value.finalStone !== null &&
-      (!isPositiveInteger(value.finalStone) || value.finalStone > 1000)) ||
+      (!isPositiveInteger(value.finalStone) || value.finalStone > 5050)) ||
     !isTimestamp(value.createdAt) ||
     !isTimestamp(value.updatedAt)
   ) {
@@ -291,13 +292,15 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
     upgradeAttempts: value.upgradeAttempts,
     rarity: value.rarity,
     ruleSet:
-      value.ruleSet === 4
-        ? 4
-        : value.ruleSet === 3
-          ? 3
-          : value.ruleSet === 2
-            ? 2
-            : 1,
+      value.ruleSet === 5
+        ? 5
+        : value.ruleSet === 4
+          ? 4
+          : value.ruleSet === 3
+            ? 3
+            : value.ruleSet === 2
+              ? 2
+              : 1,
     superUpgrade: value.superUpgrade === true,
     opened: value.opened,
     finalStone: value.finalStone as number | null,

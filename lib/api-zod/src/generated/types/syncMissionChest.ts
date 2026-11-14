@@ -33,14 +33,14 @@ export interface SyncMissionChest {
      */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
-  /** Optional for legacy clients; omitted values use the legacy chest rules. */
+  /** Optional for legacy clients; rule 5 replaces each Common fragment with five Stone. */
   ruleSet?: SyncMissionChestRuleSet;
   /** Whether this chest has its guaranteed fourth upgrade. */
   superUpgrade?: boolean;
   opened: boolean;
   /**
      * @minimum 1
-     * @maximum 1000
+     * @maximum 5050
      * @nullable
      */
   finalStone: number | null;

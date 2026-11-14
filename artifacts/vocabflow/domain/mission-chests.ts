@@ -6,7 +6,7 @@ export const CHEST_RARITIES = [
   "legendary",
 ] as const;
 export type ChestRarity = (typeof CHEST_RARITIES)[number];
-export type ChestRuleSet = 1 | 2 | 3 | 4;
+export type ChestRuleSet = 1 | 2 | 3 | 4 | 5;
 
 export const CHEST_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Copper",
@@ -96,6 +96,7 @@ export const CHEST_FRAGMENT_POINT_RANGES: Record<
 };
 
 export type CollectionFragmentReward = Record<ChestRarity, number>;
+export const STONE_PER_COMMON_FRAGMENT = 5;
 
 export function chestFragmentPointBudget(
   chestId: string,
@@ -114,6 +115,44 @@ export function chestFragmentReward(
   chestId: string,
   rarity: ChestRarity,
   ruleSet: ChestRuleSet = 1,
+): CollectionFragmentReward {
+  const reward = rawChestFragmentReward(chestId, rarity, ruleSet);
+  if (ruleSet === 5) reward.common = 0;
+  return reward;
+}
+
+export function chestCommonFragmentStoneBonus(
+  chestId: string,
+  rarity: ChestRarity,
+  ruleSet: ChestRuleSet = 1,
+): number {
+  if (ruleSet !== 5) return 0;
+  return (
+    rawChestFragmentReward(chestId, rarity, ruleSet).common *
+    STONE_PER_COMMON_FRAGMENT
+  );
+}
+
+export function chestTotalStoneReward(
+  chestId: string,
+  baseStone: number,
+  rarity: ChestRarity,
+  ruleSet: ChestRuleSet = 1,
+): number {
+  return (
+    chestStoneReward(baseStone, rarity, ruleSet) +
+    chestCommonFragmentStoneBonus(
+      chestId,
+      rarity,
+      ruleSet,
+    )
+  );
+}
+
+function rawChestFragmentReward(
+  chestId: string,
+  rarity: ChestRarity,
+  ruleSet: ChestRuleSet,
 ): CollectionFragmentReward {
   const reward: CollectionFragmentReward = {
     common: 0,
@@ -301,7 +340,11 @@ export function isValidMissionChest(chest: MissionChest): boolean {
     !Number.isSafeInteger(chest.upgradeAttempts) ||
     chest.upgradeAttempts < 0 ||
     chest.upgradeAttempts > maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
-    (ruleSet !== 1 && ruleSet !== 2 && ruleSet !== 3 && ruleSet !== 4) ||
+    (ruleSet !== 1 &&
+      ruleSet !== 2 &&
+      ruleSet !== 3 &&
+      ruleSet !== 4 &&
+      ruleSet !== 5) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== hasSuperUpgradeChance(chest.chestId)) ||
     !CHEST_RARITIES.includes(chest.rarity) ||
@@ -352,7 +395,12 @@ export function isValidMissionChest(chest: MissionChest): boolean {
   }
   return chest.opened
     ? chest.finalStone ===
-        chestStoneReward(chest.baseStone, chest.rarity, ruleSet)
+        chestTotalStoneReward(
+          chest.chestId,
+          chest.baseStone,
+          chest.rarity,
+          ruleSet,
+        )
     : chest.finalStone === null;
 }
 

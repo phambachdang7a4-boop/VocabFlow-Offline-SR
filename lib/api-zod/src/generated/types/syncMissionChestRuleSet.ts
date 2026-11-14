@@ -7,7 +7,7 @@
  */
 
 /**
- * Optional for legacy clients; omitted values use the legacy chest rules.
+ * Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.
  */
 export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
 
@@ -17,4 +17,5 @@ export const SyncMissionChestRuleSet = {
   NUMBER_2: 2,
   NUMBER_3: 3,
   NUMBER_4: 4,
+  NUMBER_5: 5,
 } as const;

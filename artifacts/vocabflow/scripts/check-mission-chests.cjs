@@ -17,7 +17,10 @@ const {
   COLLECTION_FRAGMENT_POINT_COSTS,
   chestFragmentPointBudget,
   chestFragmentReward,
+  chestCommonFragmentStoneBonus,
   chestStoneReward,
+  chestTotalStoneReward,
+  STONE_PER_COMMON_FRAGMENT,
   hasSuperUpgradeChance,
   isValidMissionChest,
   maxChestUpgradeAttempts,
@@ -184,6 +187,27 @@ assert.deepEqual(
   chestFragmentReward("legacy-chest", "epic", 3),
   { common: 0, uncommon: 0, rare: 0, epic: 1, legendary: 0 },
   "Older opened chests keep their original single-fragment award.",
+);
+const convertedChestId = Array.from(
+  { length: 500 },
+  (_, index) => `common-fragment-conversion-${index}`,
+).find(
+  (chestId) => chestFragmentReward(chestId, "rare", 4).common > 0,
+);
+assert.ok(convertedChestId, "A chest can include Common fragments to convert.");
+const legacyConvertedDrop = chestFragmentReward(convertedChestId, "rare", 4);
+const newConvertedDrop = chestFragmentReward(convertedChestId, "rare", 5);
+assert.equal(newConvertedDrop.common, 0);
+assert.equal(
+  chestCommonFragmentStoneBonus(convertedChestId, "rare", 5),
+  legacyConvertedDrop.common * STONE_PER_COMMON_FRAGMENT,
+  "Each removed Common fragment becomes five Stone.",
+);
+assert.equal(
+  chestTotalStoneReward(convertedChestId, 2, "rare", 5),
+  chestStoneReward(2, "rare", 5) +
+    legacyConvertedDrop.common * STONE_PER_COMMON_FRAGMENT,
+  "The chest Stone reward includes converted Common fragments.",
 );
 const chestScreen = readFileSync(
   join(__dirname, "../app/chest/[chestId].tsx"),
