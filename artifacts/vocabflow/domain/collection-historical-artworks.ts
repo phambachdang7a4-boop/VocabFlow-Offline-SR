@@ -25,7 +25,7 @@ function historicalStatue(
   };
 }
 
-export const HISTORICAL_COLLECTION_ARTWORKS: CollectionArtwork[] = [
+const historicalStatues: CollectionArtwork[] = [
   historicalStatue(
     "julius-caesar",
     "Julius Caesar",
@@ -1039,3 +1039,194 @@ LEGACY
 • The Art of War is studied in military affairs, management, and strategy around the world.`,
   ),
 ];
+
+const historicalQuotes: Record<
+  string,
+  { quote: string; quoteSource: string }
+> = {
+  "julius-caesar-marble": {
+    quote: "Veni, vidi, vici.",
+    quoteSource: "Plutarch, Life of Caesar (reported)",
+  },
+  "isaac-newton-marble": {
+    quote: "If I have seen further, it is by standing on the shoulders of giants.",
+    quoteSource: "Letter to Robert Hooke (1675)",
+  },
+  "socrates-marble": {
+    quote: "The unexamined life is not worth living.",
+    quoteSource: "Plato, Apology 38a",
+  },
+  "aristotle-marble": {
+    quote: "The whole is greater than the sum of its parts.",
+    quoteSource: "Metaphysics (translation)",
+  },
+  "archimedes-marble": {
+    quote: "Give me a place to stand, and I will move the Earth.",
+    quoteSource: "Pappus of Alexandria (attributed)",
+  },
+  "cleopatra-vii-marble": {
+    quote: "I will not be triumphed over.",
+    quoteSource: "Shakespeare, Antony and Cleopatra (dramatic)",
+  },
+  "augustus-marble": {
+    quote: "I found Rome a city of bricks and left it a city of marble.",
+    quoteSource: "Suetonius, The Deified Augustus 28 (reported)",
+  },
+  "confucius-marble": {
+    quote: "Is it not a pleasure to learn and practice what is learned?",
+    quoteSource: "Analects 1.1 (translated)",
+  },
+  "michelangelo-marble": {
+    quote: "The best of artists has no conception that the marble does not contain.",
+    quoteSource: "Sonnet 151 (translated excerpt)",
+  },
+  "william-shakespeare-marble": {
+    quote: "All the world's a stage, and all the men and women merely players.",
+    quoteSource: "As You Like It, Act II, Scene VII",
+  },
+  "galileo-galilei-marble": {
+    quote: "The book of nature is written in the language of mathematics.",
+    quoteSource: "The Assayer (1623, translated)",
+  },
+  "plato-marble": {
+    quote: "Until philosophers are kings, cities will have no rest from evils.",
+    quoteSource: "Republic, Book V (translated excerpt)",
+  },
+  "pythagoras-marble": {
+    quote: "Number is the ruler of forms and ideas.",
+    quoteSource: "Traditionally attributed; source uncertain",
+  },
+  "hippocrates-marble": {
+    quote: "Life is short; the art long.",
+    quoteSource: "Aphorisms 1.1 (translated)",
+  },
+  "homer-marble": {
+    quote: "Sing, goddess, the anger of Achilles.",
+    quoteSource: "Iliad 1.1 (translated)",
+  },
+  "cicero-marble": {
+    quote: "The life of the dead is placed in the memory of the living.",
+    quoteSource: "Philippics 9.10 (translated)",
+  },
+  "hannibal-marble": {
+    quote: "We will either find a way, or make one.",
+    quoteSource: "Traditionally attributed; source uncertain",
+  },
+  "dante-alighieri-marble": {
+    quote: "The love that moves the sun and the other stars.",
+    quoteSource: "Divine Comedy, Paradiso XXXIII (translated)",
+  },
+  "nicolaus-copernicus-marble": {
+    quote: "In the midst of all sits the Sun.",
+    quoteSource: "On the Revolutions, Book I, chapter 10 (translated)",
+  },
+  "johannes-kepler-marble": {
+    quote: "Geometry is one and eternal, shining in the mind of God.",
+    quoteSource: "Mysterium Cosmographicum (translated)",
+  },
+  "voltaire-marble": {
+    quote: "We must cultivate our garden.",
+    quoteSource: "Candide, chapter 30 (translated)",
+  },
+  "charles-darwin-marble": {
+    quote: "There is grandeur in this view of life.",
+    quoteSource: "On the Origin of Species, chapter 14",
+  },
+  "ludwig-van-beethoven-marble": {
+    quote: "Music is a higher revelation than all wisdom and philosophy.",
+    quoteSource: "Traditionally attributed; source uncertain",
+  },
+  "wolfgang-amadeus-mozart-marble": {
+    quote: "The music is not in the notes, but in the silence between.",
+    quoteSource: "Commonly attributed; source uncertain",
+  },
+  "george-washington-marble": {
+    quote: "Observe good faith and justice toward all nations.",
+    quoteSource: "Farewell Address (1796)",
+  },
+  "euclid-marble": {
+    quote: "There is no royal road to geometry.",
+    quoteSource: "Proclus, Commentary on Euclid (anecdote)",
+  },
+  "herodotus-marble": {
+    quote: "My purpose is to prevent the traces of human events from being erased by time.",
+    quoteSource: "Histories 1.1 (translated)",
+  },
+  "pericles-marble": {
+    quote: "Our constitution is called a democracy because power is in the hands of the many.",
+    quoteSource: "Thucydides, History of the Peloponnesian War 2.37",
+  },
+  "demosthenes-marble": {
+    quote: "Nothing is easier than self-deceit.",
+    quoteSource: "Traditionally attributed; source uncertain",
+  },
+  "virgil-marble": {
+    quote: "Fortune favors the bold.",
+    quoteSource: "Aeneid 10.284 (translated)",
+  },
+  "seneca-marble": {
+    quote: "It is not that we have a short time to live, but that we waste much of it.",
+    quoteSource: "On the Shortness of Life 1.1 (translated)",
+  },
+  "ptolemy-marble": {
+    quote: "I know that I am mortal and ephemeral.",
+    quoteSource: "Almagest (translated, attributed)",
+  },
+  "charlemagne-marble": {
+    quote: "To have another language is to possess a second soul.",
+    quoteSource: "Traditionally attributed; source uncertain",
+  },
+  "avicenna-marble": {
+    quote: "Knowledge is not complete unless it is known by its causes.",
+    quoteSource: "Book of Healing (paraphrase)",
+  },
+  "marco-polo-marble": {
+    quote: "I have not told half of what I saw.",
+    quoteSource: "Reported on his deathbed; source uncertain",
+  },
+  "johannes-gutenberg-marble": {
+    quote: "And God said, “Let there be light.”",
+    quoteSource: "Gutenberg Bible, Genesis 1:3 (printed text, not his words)",
+  },
+  "erasmus-marble": {
+    quote: "In the land of the blind, the one-eyed man is king.",
+    quoteSource: "Adages (1500, translated)",
+  },
+  "francis-bacon-marble": {
+    quote: "Knowledge itself is power.",
+    quoteSource: "Meditationes Sacrae (1597, translated)",
+  },
+  "rene-descartes-marble": {
+    quote: "I think, therefore I am.",
+    quoteSource: "Discourse on Method (1637, translated)",
+  },
+  "rembrandt-marble": {
+    quote: "Choose only one master—Nature.",
+    quoteSource: "Commonly attributed; source uncertain",
+  },
+  "johann-sebastian-bach-marble": {
+    quote: "The aim of all music should be the glory of God.",
+    quoteSource: "Traditionally attributed; source uncertain",
+  },
+  "johann-wolfgang-von-goethe-marble": {
+    quote: "Knowing is not enough; we must apply. Willing is not enough; we must do.",
+    quoteSource: "Wilhelm Meister's Journeyman Years (translated)",
+  },
+  "victor-hugo-marble": {
+    quote: "Even the darkest night will end and the sun will rise.",
+    quoteSource: "Les Misérables (translated)",
+  },
+  "sun-tzu-marble": {
+    quote: "Know the enemy and know yourself; you need not fear the result.",
+    quoteSource: "The Art of War, chapter 3 (translated)",
+  },
+};
+
+export const HISTORICAL_COLLECTION_ARTWORKS: CollectionArtwork[] =
+  historicalStatues.map((statue) => {
+    const quote = historicalQuotes[statue.imageAssetKey ?? ""];
+    if (!quote) {
+      throw new Error(`Missing famous quote for ${statue.title}.`);
+    }
+    return { ...statue, ...quote };
+  });

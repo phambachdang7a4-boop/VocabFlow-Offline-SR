@@ -15,6 +15,7 @@ export interface CollectionArtwork {
   biographyEn?: string;
   collectionGroup?: "bonus";
   quote?: string;
+  quoteSource?: string;
   sourceLabel?: string;
   unlockMode?: "automatic";
 }
@@ -45,6 +46,7 @@ export const COLLECTION_ARTWORKS: CollectionArtwork[] = [
     description:
       "Nguyễn Ái Quốc, vị lãnh tụ của dân tộc Việt Nam và Chủ tịch nước Việt Nam Dân chủ Cộng hòa từ năm 1945 đến năm 1969.",
     quote: "Không có gì quý hơn độc lập, tự do.",
+    quoteSource: "Lời kêu gọi ngày 17 tháng 7 năm 1966",
     biography: `Chủ tịch Hồ Chí Minh (19.05.1890 – 02.09.1969) là vị lãnh tụ vĩ đại của dân tộc Việt Nam, nhà hoạt động lỗi lạc của phong trào cộng sản quốc tế.
 
 THÂN THẾ
@@ -99,6 +101,8 @@ LIFE AND REVOLUTIONARY CAREER
     imageAssetKey: "alexander-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    quote: "There is nothing impossible to him who will try.",
+    quoteSource: "Plutarch, Life of Alexander (attributed)",
     description:
       "Vua Macedonia, nhà chinh phạt và chiến lược gia quân sự thời cổ đại.",
     biography: `Alexander Đại đế (Alexandros III của Macedonia, 356 TCN – 323 TCN) là một trong những vị quân vương và nhà chiến lược quân sự vĩ đại, thành công nhất lịch sử nhân loại. Ông chưa từng thất bại trong bất kỳ trận đánh nào suốt cuộc đời chinh phạt của mình.
@@ -151,6 +155,8 @@ Within 12 years of his reign, Alexander’s army built one of the largest empire
     imageAssetKey: "leonardo-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    quote: "Learning never exhausts the mind.",
+    quoteSource: "Commonly attributed; source uncertain",
     description:
       "Nhà bác học đa tài thời Phục Hưng, nổi bật với hội họa, kỹ thuật và giải phẫu học.",
     biography: `Leonardo da Vinci (15 tháng 4 năm 1452 – 2 tháng 5 năm 1519) là nhà bác học đa tài người Ý thời Phục Hưng đỉnh cao. Ông được xem là một trong những người có tài năng đa dạng nhất lịch sử, xuất sắc trong hội họa, phát minh, kỹ thuật, giải phẫu học và triết học tự nhiên.
@@ -193,6 +199,9 @@ NOTABLE WORKS AND LEGACY
     imageAssetKey: "kant-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    quote:
+      "Thoughts without content are empty; intuitions without concepts are blind.",
+    quoteSource: "Critique of Pure Reason, A51/B75 (translated)",
     description:
       "Triết gia Đức thời Khai sáng, người sáng lập Chủ nghĩa duy tâm siêu nghiệm.",
     biography: `Immanuel Kant (22 tháng 4 năm 1724 – 12 tháng 2 năm 1804) là triết gia Đức có ảnh hưởng lớn trong Thời đại Khai sáng và là một trong những tư tưởng gia vĩ đại nhất của triết học phương Tây.
@@ -231,6 +240,8 @@ MAJOR PHILOSOPHICAL IDEAS
     imageAssetKey: "marcus-aurelius-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    quote: "You have power over your mind—not outside events.",
+    quoteSource: "Meditations, 12.36 (paraphrased translation)",
     description:
       "Hoàng đế La Mã, vị cuối cùng trong nhóm Năm Hoàng đế Tốt và triết gia Khắc kỷ.",
     biography: `Marcus Aurelius (26 tháng 4 năm 121 – 17 tháng 3 năm 180) là hoàng đế thứ 17 của Đế chế La Mã, vị cuối cùng trong nhóm Năm Hoàng đế Tốt và một triết gia Khắc kỷ tiêu biểu.
@@ -271,6 +282,8 @@ LIFE AND CAREER
     imageAssetKey: "benjamin-franklin-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    quote: "Well done is better than well said.",
+    quoteSource: "Poor Richard's Almanack (1737)",
     description:
       "Nhà lập quốc Hoa Kỳ, nhà ngoại giao, nhà khoa học và tác giả đa tài.",
     biography: `Benjamin Franklin là một trong những nhà lập quốc lỗi lạc nhất của Hoa Kỳ, nổi tiếng với tài năng đa dạng trong chính trị, ngoại giao, khoa học và văn học.
@@ -307,6 +320,8 @@ CAREER AND MAJOR CONTRIBUTIONS
     imageAssetKey: "napoleon-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    quote: "Impossible is a word found only in the dictionary of fools.",
+    quoteSource: "Traditionally attributed; source uncertain",
     description:
       "Nhà chỉ huy quân sự và nhà lãnh đạo chính trị Pháp, Hoàng đế đầu tiên của Đế chế Pháp.",
     biography: `Napoléon Bonaparte là nhà chỉ huy quân sự và nhà lãnh đạo chính trị lỗi lạc của Pháp. Ông đã định hình lại chính trị và lịch sử châu Âu vào cuối thế kỷ 18 và đầu thế kỷ 19.

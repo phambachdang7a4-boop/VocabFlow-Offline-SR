@@ -538,6 +538,10 @@ assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
   "All currently available statues are unlocked without fragments.",
 );
+assert.ok(
+  COLLECTION_ARTWORKS.every((item) => item.quote && item.quoteSource),
+  "Every statue has a Famous Quote and its source or attribution note.",
+);
 const namedHistoricalStatues = COLLECTION_ARTWORKS.filter(
   (item) => item.collectionGroup !== "bonus",
 );
@@ -679,6 +683,16 @@ assert.match(
   collectionScreen,
   /selectedStatue\.biography/,
   "The detail view renders the full biography.",
+);
+assert.match(
+  collectionScreen,
+  /Famous Quote/,
+  "Every statue card and detail view exposes its Famous Quote.",
+);
+assert.match(
+  collectionScreen,
+  /selectedStatue\.quoteSource \?\? selectedStatue\.title/,
+  "Quote attribution comes from the statue data rather than a fixed person.",
 );
 assert.match(collectionScreen, /selectedStatue\.quote/);
 assert.match(collectionScreen, /statue-translation-toggle/);

@@ -425,7 +425,7 @@ export default function CollectionScreen() {
                     <Pressable
                       key={statue.id}
                       accessibilityRole="button"
-                      accessibilityLabel={`Xem thông tin ${statue.title}`}
+                      accessibilityLabel={`Xem thông tin ${statue.title}${statue.quote ? `. Famous Quote: ${statue.quote}` : ""}`}
                       onPress={() => {
                         setSelectedStatue(statue);
                         setShowEnglishBiography(false);
@@ -474,6 +474,23 @@ export default function CollectionScreen() {
                       >
                         {statue.shortTitle ?? statue.title}
                       </Text>
+                      {statue.quote ? (
+                        <>
+                          <Text style={[styles.artQuoteLabel, { color: c.primary }]}>
+                            Famous Quote
+                          </Text>
+                          <Text
+                            testID={`statue-famous-quote-${statue.id}`}
+                            style={[
+                              styles.artQuote,
+                              { color: c.mutedForeground },
+                            ]}
+                            numberOfLines={2}
+                          >
+                            “{statue.quote}”
+                          </Text>
+                        </>
+                      ) : null}
                       <Text
                         style={[
                           styles.artRarity,
@@ -631,13 +648,18 @@ export default function CollectionScreen() {
                     { borderLeftColor: c.primary, backgroundColor: c.background },
                   ]}
                 >
+                  <Text
+                    style={[styles.quoteLabel, { color: c.mutedForeground }]}
+                  >
+                    Famous Quote
+                  </Text>
                   <Text style={[styles.quoteText, { color: c.foreground }]}>
                     “{selectedStatue.quote}”
                   </Text>
                   <Text
                     style={[styles.quoteAttribution, { color: c.mutedForeground }]}
                   >
-                    — Chủ tịch Hồ Chí Minh
+                    — {selectedStatue.quoteSource ?? selectedStatue.title}
                   </Text>
                 </View>
               ) : null}
@@ -750,6 +772,13 @@ const styles = StyleSheet.create({
   },
   artArtwork: { width: "100%", height: "100%" },
   artTitle: { fontFamily: F.s, fontSize: 11, textAlign: "center" },
+  artQuoteLabel: {
+    fontFamily: F.b,
+    fontSize: 7,
+    letterSpacing: 0.35,
+    textAlign: "center",
+  },
+  artQuote: { fontFamily: F.r, fontSize: 8, lineHeight: 10, textAlign: "center" },
   artRarity: { fontFamily: F.r, fontSize: 9, textAlign: "center" },
   artStatus: { fontFamily: F.s, fontSize: 9, textAlign: "center" },
   detailHint: { fontFamily: F.r, fontSize: 9, textAlign: "center" },
@@ -825,6 +854,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontStyle: "italic",
+  },
+  quoteLabel: {
+    fontFamily: F.b,
+    fontSize: 10,
+    letterSpacing: 1,
   },
   quoteAttribution: {
     fontFamily: F.s,
