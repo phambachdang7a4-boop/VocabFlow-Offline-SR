@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -248,10 +248,36 @@ export default function CoursesScreen() {
   const [courseWordsSavedMessage, setCourseWordsSavedMessage] = useState<
     string | null
   >(null);
+  const [bulkAddConfirmationOpen, setBulkAddConfirmationOpen] = useState(false);
+  const [bulkAddAcknowledged, setBulkAddAcknowledged] = useState(false);
+  const [bulkCourseWordsSavedMessage, setBulkCourseWordsSavedMessage] =
+    useState<string | null>(null);
   const { words: savedWords, saveWords } = useVocabulary();
 
   const activeCourse =
     COURSE_CATALOG.find((course) => course.id === activeCourseId) ?? null;
+  const allCourseWordCandidates = useMemo(
+    () =>
+      activeCourse
+        ? buildCourseWordCandidates(
+            [...activeCourse.entriesByTerm.keys()],
+            activeCourse.entriesByTerm,
+            savedWords,
+          )
+        : [],
+    [activeCourse, savedWords, savedWords.length],
+  );
+  const addableAllCourseWords = allCourseWordCandidates.filter(
+    (candidate) => !candidate.alreadySaved,
+  );
+  const alreadySavedCourseWords =
+    allCourseWordCandidates.length - addableAllCourseWords.length;
+  const missingCourseEntries = activeCourse
+    ? Math.max(
+        0,
+        activeCourse.entriesByTerm.size - allCourseWordCandidates.length,
+      )
+    : 0;
 
   const loadProgress = useCallback(async () => {
     setLoading(true);
@@ -308,6 +334,9 @@ export default function CoursesScreen() {
     setFinishedLessonId(null);
     setLessonChoices([]);
     setSelectedAnswer(null);
+    setBulkAddConfirmationOpen(false);
+    setBulkAddAcknowledged(false);
+    setBulkCourseWordsSavedMessage(null);
     setError(null);
   };
 
@@ -421,6 +450,60 @@ export default function CoursesScreen() {
         failure instanceof Error
           ? failure.message
           : "Không thể thêm từ vào Sổ từ. Hãy thử lại.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openBulkAddConfirmation = () => {
+    if (!activeCourse || saving || addableAllCourseWords.length === 0) return;
+    setBulkAddAcknowledged(false);
+    setBulkCourseWordsSavedMessage(null);
+    setError(null);
+    setBulkAddConfirmationOpen(true);
+  };
+
+  const cancelBulkAdd = () => {
+    if (saving) return;
+    setBulkAddConfirmationOpen(false);
+    setBulkAddAcknowledged(false);
+  };
+
+  const addAllCourseWords = async () => {
+    if (
+      !activeCourse ||
+      saving ||
+      !bulkAddAcknowledged ||
+      addableAllCourseWords.length === 0
+    ) {
+      return;
+    }
+
+    const selected = addableAllCourseWords;
+    setSaving(true);
+    setError(null);
+    setBulkCourseWordsSavedMessage(null);
+    try {
+      await saveWords(
+        selected.map((candidate) => ({
+          term: candidate.term,
+          meaning: candidate.meaning,
+          ipa: candidate.ipa,
+          example: candidate.example,
+          note: "",
+        })),
+      );
+      setBulkCourseWordsSavedMessage(
+        `Đã nạp ${selected.length.toLocaleString("vi-VN")} từ mới vào Sổ từ; bỏ qua ${alreadySavedCourseWords.toLocaleString("vi-VN")} từ đã có cùng nghĩa.`,
+      );
+      setBulkAddConfirmationOpen(false);
+      setBulkAddAcknowledged(false);
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Không thể nạp toàn bộ từ của khóa học. Hãy thử lại.",
       );
     } finally {
       setSaving(false);
@@ -569,6 +652,39 @@ export default function CoursesScreen() {
                   · học ngoại tuyến
                 </Text>
               </View>
+            </View>
+
+            <View
+              testID={`${activeCourse.testIdPrefix}-bulk-add-section`}
+              style={styles.bulkAddSection}
+            >
+              <Button
+                testID={`${activeCourse.testIdPrefix}-bulk-add-button`}
+                label={
+                  addableAllCourseWords.length > 0
+                    ? `Nạp toàn bộ từ vào Sổ (${addableAllCourseWords.length.toLocaleString("vi-VN")} từ mới)`
+                    : "Tất cả từ đã có trong Sổ"
+                }
+                icon="download"
+                onPress={openBulkAddConfirmation}
+                disabled={saving || addableAllCourseWords.length === 0}
+              />
+              <Text style={[styles.bulkAddHint, { color: c.mutedForeground }]}>
+                {allCourseWordCandidates.length.toLocaleString("vi-VN")} mục từ đủ nghĩa
+                {" · "}
+                {alreadySavedCourseWords.toLocaleString("vi-VN")} mục đã có sẽ được bỏ qua
+                {missingCourseEntries > 0
+                  ? ` · ${missingCourseEntries.toLocaleString("vi-VN")} mục thiếu nghĩa sẽ không được thêm`
+                  : ""}
+              </Text>
+              {bulkCourseWordsSavedMessage ? (
+                <Text
+                  testID={`${activeCourse.testIdPrefix}-bulk-add-success`}
+                  style={[styles.courseWordSavedMessage, { color: c.successText }]}
+                >
+                  {bulkCourseWordsSavedMessage}
+                </Text>
+              ) : null}
             </View>
 
             <View style={styles.lessonHeading}>
@@ -770,6 +886,203 @@ export default function CoursesScreen() {
           </View>
         )}
       </ScrollView>
+      {activeCourse ? (
+        <Modal
+          testID={`${activeCourse.testIdPrefix}-bulk-add-confirmation`}
+          visible={bulkAddConfirmationOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={cancelBulkAdd}
+        >
+          <View
+            style={[
+              styles.bulkAddBackdrop,
+              { backgroundColor: c.overlay },
+            ]}
+          >
+            <View
+              accessibilityViewIsModal
+              style={[
+                styles.bulkAddDialog,
+                {
+                  backgroundColor: c.card,
+                  borderColor: c.border,
+                  borderRadius: c.radius + 6,
+                },
+              ]}
+            >
+              <View style={styles.bulkAddDialogHeading}>
+                <View
+                  style={[
+                    styles.bulkAddWarningIcon,
+                    { backgroundColor: c.destructiveSoft },
+                  ]}
+                >
+                  <Feather
+                    name="alert-triangle"
+                    size={21}
+                    color={c.destructive}
+                  />
+                </View>
+                <View style={styles.bulkAddDialogTitleCopy}>
+                  <Text
+                    style={[styles.bulkAddDialogTitle, { color: c.foreground }]}
+                  >
+                    Xác nhận nạp toàn khóa
+                  </Text>
+                  <Text
+                    style={[
+                      styles.bulkAddDialogSubtitle,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    {activeCourse.title}
+                  </Text>
+                </View>
+              </View>
+              <ScrollView
+                style={styles.bulkAddDialogScroll}
+                contentContainerStyle={styles.bulkAddDialogContent}
+                showsVerticalScrollIndicator
+              >
+                <View
+                  testID={`${activeCourse.testIdPrefix}-bulk-add-summary`}
+                  style={[
+                    styles.bulkAddSummary,
+                    { backgroundColor: c.secondary, borderColor: c.border },
+                  ]}
+                >
+                  <View style={styles.bulkAddSummaryRow}>
+                    <Text style={[styles.bulkAddSummaryLabel, { color: c.foreground }]}>
+                      Từ mới sẽ thêm
+                    </Text>
+                    <Text style={[styles.bulkAddSummaryValue, { color: c.primary }]}>
+                      {addableAllCourseWords.length.toLocaleString("vi-VN")}
+                    </Text>
+                  </View>
+                  <View style={styles.bulkAddSummaryRow}>
+                    <Text style={[styles.bulkAddSummaryLabel, { color: c.foreground }]}>
+                      Từ trùng nghĩa sẽ bỏ qua
+                    </Text>
+                    <Text style={[styles.bulkAddSummaryValue, { color: c.foreground }]}>
+                      {alreadySavedCourseWords.toLocaleString("vi-VN")}
+                    </Text>
+                  </View>
+                  {missingCourseEntries > 0 ? (
+                    <View style={styles.bulkAddSummaryRow}>
+                      <Text style={[styles.bulkAddSummaryLabel, { color: c.foreground }]}>
+                        Mục thiếu nghĩa, không thêm
+                      </Text>
+                      <Text style={[styles.bulkAddSummaryValue, { color: c.foreground }]}>
+                        {missingCourseEntries.toLocaleString("vi-VN")}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                <View
+                  style={[
+                    styles.bulkAddRiskBox,
+                    {
+                      backgroundColor: c.destructiveSoft,
+                      borderColor: c.destructive,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.bulkAddRiskTitle, { color: c.destructiveText }]}>
+                    Rủi ro cần đọc trước
+                  </Text>
+                  <Text style={[styles.bulkAddRiskText, { color: c.destructiveText }]}>
+                    • Quá tải ôn tập: {addableAllCourseWords.length.toLocaleString("vi-VN")} từ mới đều bắt đầu ở Cấp 1, làm tăng đáng kể số lượt ôn.
+                  </Text>
+                  <Text style={[styles.bulkAddRiskText, { color: c.destructiveText }]}>
+                    • Dễ sai: nghĩa và câu ví dụ trong khóa có thể chưa chính xác hoặc chưa hợp ngữ cảnh. Hãy kiểm tra lại trước khi học.
+                  </Text>
+                  <Text style={[styles.bulkAddRiskText, { color: c.destructiveText }]}>
+                    • Khóa học không cung cấp IPA cho thao tác này nên phiên âm sẽ để trống. Không có hoàn tác cả lô; sau đó chỉ có thể xóa từng từ.
+                  </Text>
+                </View>
+
+                <Pressable
+                  testID={`${activeCourse.testIdPrefix}-bulk-add-acknowledgement`}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: bulkAddAcknowledged, disabled: saving }}
+                  accessibilityLabel="Tôi đã đọc rủi ro và muốn nạp toàn bộ từ mới vào Sổ từ"
+                  onPress={() => {
+                    if (!saving)
+                      setBulkAddAcknowledged((acknowledged) => !acknowledged);
+                  }}
+                  style={styles.bulkAddAcknowledgement}
+                >
+                  <View
+                    style={[
+                      styles.bulkAddCheckbox,
+                      {
+                        backgroundColor: bulkAddAcknowledged
+                          ? c.primary
+                          : "transparent",
+                        borderColor: bulkAddAcknowledged ? c.primary : c.border,
+                      },
+                    ]}
+                  >
+                    {bulkAddAcknowledged ? (
+                      <Feather name="check" size={15} color={c.accentForeground} />
+                    ) : null}
+                  </View>
+                  <Text
+                    style={[
+                      styles.bulkAddAcknowledgementText,
+                      { color: c.foreground },
+                    ]}
+                  >
+                    Tôi đã đọc các rủi ro và muốn tiếp tục.
+                  </Text>
+                </Pressable>
+
+                {error ? (
+                  <View
+                    testID={`${activeCourse.testIdPrefix}-bulk-add-error`}
+                    style={[
+                      styles.bulkAddError,
+                      {
+                        backgroundColor: c.destructiveSoft,
+                        borderColor: c.destructive,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.errorText, { color: c.destructiveText }]}>
+                      {error}
+                    </Text>
+                  </View>
+                ) : null}
+              </ScrollView>
+
+              <View style={styles.bulkAddActions}>
+                <Button
+                  testID={`${activeCourse.testIdPrefix}-bulk-add-cancel`}
+                  label="Hủy"
+                  variant="ghost"
+                  onPress={cancelBulkAdd}
+                  disabled={saving}
+                  style={styles.bulkAddActionButton}
+                />
+                <Button
+                  testID={`${activeCourse.testIdPrefix}-bulk-add-confirm`}
+                  label={`Tôi hiểu, nạp ${addableAllCourseWords.length.toLocaleString("vi-VN")} từ`}
+                  onPress={() => void addAllCourseWords()}
+                  disabled={
+                    saving ||
+                    !bulkAddAcknowledged ||
+                    addableAllCourseWords.length === 0
+                  }
+                  loading={saving}
+                  style={styles.bulkAddActionButton}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
     </View>
   );
 }
@@ -1564,6 +1877,85 @@ const styles = StyleSheet.create({
   courseWordSaved: { fontFamily: F.s, fontSize: 11 },
   courseWordSavedMessage: { fontFamily: F.s, fontSize: 12 },
   courseWordAddButton: { minHeight: 48 },
+  bulkAddSection: { gap: 7 },
+  bulkAddHint: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
+  bulkAddBackdrop: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 18,
+  },
+  bulkAddDialog: {
+    width: "100%",
+    maxWidth: 460,
+    maxHeight: "90%",
+    borderWidth: 1,
+    padding: 18,
+    gap: 14,
+    overflow: "hidden",
+  },
+  bulkAddDialogHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+  bulkAddWarningIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bulkAddDialogTitleCopy: { flex: 1, gap: 3 },
+  bulkAddDialogTitle: { fontFamily: F.b, fontSize: 18 },
+  bulkAddDialogSubtitle: { fontFamily: F.r, fontSize: 13 },
+  bulkAddDialogScroll: { flexShrink: 1 },
+  bulkAddDialogContent: { gap: 12, paddingBottom: 2 },
+  bulkAddSummary: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 13,
+    gap: 9,
+  },
+  bulkAddSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+  },
+  bulkAddSummaryLabel: { flex: 1, fontFamily: F.r, fontSize: 13 },
+  bulkAddSummaryValue: { fontFamily: F.b, fontSize: 15 },
+  bulkAddRiskBox: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 13,
+    gap: 8,
+  },
+  bulkAddRiskTitle: { fontFamily: F.b, fontSize: 14 },
+  bulkAddRiskText: { fontFamily: F.r, fontSize: 13, lineHeight: 19 },
+  bulkAddAcknowledgement: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 4,
+  },
+  bulkAddCheckbox: {
+    width: 23,
+    height: 23,
+    borderWidth: 1.5,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bulkAddAcknowledgementText: {
+    flex: 1,
+    fontFamily: F.s,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  bulkAddError: { borderWidth: 1, borderRadius: 12, padding: 11 },
+  bulkAddActions: { flexDirection: "row", gap: 9, marginTop: 1 },
+  bulkAddActionButton: { flex: 1, minHeight: 48 },
   errorBox: { borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },
   errorText: { fontFamily: F.s, fontSize: 13, lineHeight: 19 },
   retryButton: { alignSelf: "flex-start", paddingVertical: 5 },

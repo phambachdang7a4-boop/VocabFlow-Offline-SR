@@ -1,19 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import type { VocabularyWord, WordInput } from '@/data/types';
 import { useColors } from '@/hooks/useColors';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { Button, ConfirmDialog, EmptyState, ErrorBanner, F, Skeleton } from '@/components/ui';
+import { Button, ConfirmDialog, EmptyState, ErrorBanner, F, MaterialSheen, Skeleton } from '@/components/ui';
 import { formatDate } from '@/utils/text';
-import { getDictionaryDraft } from '@/data/dictionary';
+import { getDictionaryDraft, getDictionaryEntry } from '@/data/dictionary';
 import { sameWordSense, validDictionaryId } from '@/domain/dictionary';
 import { useDictionary } from '@/hooks/useDictionary';
 import { DictionaryGate } from '@/components/DictionaryGate';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
 import { soundCueFor, withSoundOutcome } from '@/domain/sound-cues';
+import { useSpeechPreferences } from '@/contexts/SpeechPreferencesContext';
+import {
+  getRegionalIpaLookupForTerm,
+  type RegionalIpaLookupResult,
+} from '@/data/offline-regional-pronunciations';
+import type { DictionaryPronunciation } from '@/domain/dictionary';
+import {
+  groupReviewPronunciations,
+  reviewExampleTranslation,
+} from '@/domain/review-result-details';
 
 function goBack() {
   if (router.canGoBack()) router.back();
@@ -51,18 +62,256 @@ function Field({ label, required, error, hint, ...props }: TextInputProps & { re
   );
 }
 
-function ReadOnlyField({ label, value, multiline = false }: { label: string; value: string; multiline?: boolean }) {
+function SavedWordInfoCard({ word }: { word: VocabularyWord }) {
   const c = useColors();
+  const speech = useSpeechPreferences();
+  const lookupKey = `${word.id}:${word.dictionaryEntryId ?? ''}:${word.term}`;
+  const [pronunciationLookup, setPronunciationLookup] = useState<{
+    key: string;
+    pronunciations: DictionaryPronunciation[];
+    regionalState: RegionalIpaLookupResult['state'] | 'loading' | 'not-needed';
+  } | null>(null);
+  const pronunciationState =
+    pronunciationLookup?.key === lookupKey
+      ? pronunciationLookup.regionalState
+      : 'loading';
+  const pronunciationLines = groupReviewPronunciations(
+    pronunciationLookup?.key === lookupKey
+      ? pronunciationLookup.pronunciations
+      : [],
+    word.ipa,
+  );
+  const exampleTranslation = reviewExampleTranslation(word.example);
+
+  useEffect(() => {
+    let active = true;
+    const loadPronunciations = async () => {
+      let pronunciations: DictionaryPronunciation[] = [];
+      let dictionaryLookupFailed = false;
+      if (word.dictionaryEntryId != null) {
+        try {
+          pronunciations = (await getDictionaryEntry(word.dictionaryEntryId)).pronunciations;
+        } catch {
+          dictionaryLookupFailed = true;
+        }
+      }
+
+      let regionalState: RegionalIpaLookupResult['state'] | 'not-needed' =
+        'not-needed';
+      if (
+        word.dictionaryEntryId == null ||
+        !groupReviewPronunciations(pronunciations, '').uk.length
+      ) {
+        try {
+          const result = await getRegionalIpaLookupForTerm(word.term);
+          regionalState =
+            dictionaryLookupFailed && result.state !== 'found'
+              ? 'failed'
+              : result.state;
+          if (result.state === 'found') {
+            pronunciations = [...pronunciations, ...result.pronunciations];
+          }
+        } catch {
+          regionalState = 'failed';
+        }
+      }
+
+      if (active) {
+        setPronunciationLookup({
+          key: lookupKey,
+          pronunciations,
+          regionalState,
+        });
+      }
+    };
+
+    void loadPronunciations();
+    return () => {
+      active = false;
+    };
+  }, [lookupKey, word.dictionaryEntryId, word.term]);
+
+  const ukIpa =
+    pronunciationLines.uk.join(' · ') ||
+    (pronunciationState === 'loading'
+      ? 'Đang tra cứu IPA Anh-Anh…'
+      : pronunciationState === 'not-found'
+        ? 'Gói đã cài nhưng không có mục Anh-Anh cho từ này'
+        : pronunciationState === 'damaged'
+          ? 'Gói IPA bị lỗi · hãy cài lại trong Cài đặt'
+          : pronunciationState === 'failed'
+            ? 'Tra cứu IPA Anh-Anh thất bại · hãy thử lại'
+            : pronunciationState === 'not-needed'
+              ? 'Chưa có dữ liệu Anh-Anh'
+              : 'Chưa cài gói IPA Anh-Anh · tải gói trong Cài đặt');
+
   return (
-    <View style={{ gap: 6 }}>
-      <Text style={[styles.label, { color: c.foreground }]}>{label}</Text>
-      <View style={[
-        styles.readOnlyValue,
-        { backgroundColor: c.input, borderColor: c.border, borderRadius: c.radius },
-        multiline && styles.readOnlyMulti,
-      ]}>
-        <Text style={[styles.readOnlyText, { color: c.foreground }]}>{value.trim() ? value : '—'}</Text>
+    <View
+      testID="word-info-card"
+      style={[
+        styles.wordInfoCard,
+        { backgroundColor: c.vocabCard, borderRadius: c.radius + 6 },
+      ]}
+    >
+      <MaterialSheen tone="navy" radius={c.radius + 6} />
+      <Text style={[styles.infoEyebrow, { color: c.vocabCardMuted }]}>
+        THÔNG TIN TỪ
+      </Text>
+      <View style={styles.infoGroup}>
+        <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
+          TIẾN ĐỘ ÔN
+        </Text>
+        <Text
+          testID="word-info-progress"
+          style={[styles.infoValue, { color: c.vocabCardForeground }]}
+        >
+          {word.frozen
+            ? 'Đã đóng băng — dừng ôn tập'
+            : word.completed
+              ? 'Đã hoàn tất 6 cấp ôn'
+              : `Cấp ôn hiện tại: ${word.level} / 6`}
+        </Text>
+        <Text style={[styles.infoMuted, { color: c.vocabCardMuted }]}>
+          {word.frozen
+            ? 'Vẫn tra cứu được và vẫn tính vào tổng số từ đã lưu.'
+            : word.nextReviewOn
+              ? `Hạn ôn: ${word.nextReviewOn.split('-').reverse().join('/')}`
+              : 'Không còn lịch ôn trong chu kỳ này.'}
+        </Text>
+        <Text style={[styles.infoMuted, { color: c.vocabCardMuted }]}>
+          Đã trả lời {word.reviewCount} lần.
+        </Text>
       </View>
+      <View style={styles.infoGroup}>
+        <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>ĐÁP ÁN</Text>
+        <Text
+          testID="word-info-term"
+          style={[styles.infoTerm, { color: c.vocabCardForeground }]}
+        >
+          {word.term}
+        </Text>
+      </View>
+      <View style={styles.infoGroup}>
+        <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
+          PHIÊN ÂM
+        </Text>
+        <View style={styles.ipaRows}>
+          <View style={styles.ipaRow}>
+            <Text
+              style={[
+                styles.ipaAccent,
+                { color: c.vocabCardMuted, borderColor: c.vocabCardMuted },
+              ]}
+              accessibilityLabel="Phiên âm Anh-Mỹ"
+            >
+              US
+            </Text>
+            <Text
+              testID="word-info-ipa-us"
+              style={[
+                styles.infoMuted,
+                styles.ipaValue,
+                { color: c.vocabCardMuted },
+              ]}
+            >
+              {pronunciationLines.us.join(' · ') || 'Chưa có dữ liệu'}
+            </Text>
+            <Pressable
+              testID="word-info-speak"
+              accessibilityRole="button"
+              accessibilityLabel={`Phát âm ${word.term}`}
+              onPress={() => {
+                void speech.speakWord(word.term, word.dictionaryEntryId);
+              }}
+              hitSlop={10}
+              style={styles.audioButton}
+            >
+              <Feather name="volume-2" size={20} color={c.vocabCardAccent} />
+            </Pressable>
+          </View>
+          <View style={styles.ipaRow}>
+            <Text
+              style={[
+                styles.ipaAccent,
+                { color: c.vocabCardMuted, borderColor: c.vocabCardMuted },
+              ]}
+              accessibilityLabel="Phiên âm Anh-Anh"
+            >
+              UK
+            </Text>
+            <Text
+              testID="word-info-ipa-uk"
+              style={[
+                styles.infoMuted,
+                styles.ipaValue,
+                { color: c.vocabCardMuted },
+              ]}
+            >
+              {ukIpa}
+            </Text>
+          </View>
+          {pronunciationLines.unspecified.length ? (
+            <View style={styles.ipaRow}>
+              <Text
+                style={[
+                  styles.ipaAccent,
+                  { color: c.vocabCardMuted, borderColor: c.vocabCardMuted },
+                ]}
+                accessibilityLabel="Phiên âm chưa xác định vùng"
+              >
+                —
+              </Text>
+              <Text
+                testID="word-info-ipa-unspecified"
+                style={[
+                  styles.infoMuted,
+                  styles.ipaValue,
+                  { color: c.vocabCardMuted },
+                ]}
+              >
+                {pronunciationLines.unspecified.join(' · ')}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+      <View style={styles.infoGroup}>
+        <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
+          NGHĨA TIẾNG VIỆT
+        </Text>
+        <Text
+          testID="word-info-meaning"
+          style={[styles.infoValue, { color: c.vocabCardForeground }]}
+        >
+          {word.meaning}
+        </Text>
+      </View>
+      {word.example.trim() ? (
+        <View style={styles.infoGroup}>
+          <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
+            CÂU VÍ DỤ
+          </Text>
+          <Text
+            testID="word-info-example"
+            style={[styles.infoExample, { color: c.vocabCardForeground }]}
+          >
+            {word.example}
+          </Text>
+          {exampleTranslation ? (
+            <View style={styles.infoGroup}>
+              <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
+                DỊCH NGHĨA
+              </Text>
+              <Text
+                testID="word-info-example-translation"
+                style={[styles.infoValue, { color: c.vocabCardForeground }]}
+              >
+                {exampleTranslation}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -188,21 +437,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
             {existing ? `Ghi lần đầu ngày ${formatDate(existing.createdAt)}` : fromDictionary ? 'Đã điền sẵn từ từ điển. Hãy kiểm tra nội dung trước khi lưu.' : 'Chỉ từ và nghĩa là bắt buộc.'}
           </Text>
         </View>
-        {existing ? (
-          <View testID="word-srs-progress" style={{ backgroundColor: c.secondary, borderRadius: c.radius, padding: 14, gap: 6 }}>
-            <Text style={[styles.label, { color: c.primary }]}>
-              {existing.frozen ? 'Đã đóng băng — dừng ôn tập' : existing.completed ? 'Đã hoàn tất 6 cấp ôn' : `Cấp ôn hiện tại: ${existing.level} / 6`}
-            </Text>
-            <Text style={[styles.sub, { color: c.mutedForeground }]}>
-              {existing.frozen ? 'Vẫn tra cứu được và vẫn tính vào tổng số từ đã lưu.' : existing.nextReviewOn
-                ? `Hạn ôn: ${existing.nextReviewOn.split('-').reverse().join('/')}`
-                : 'Không còn lịch ôn trong chu kỳ này.'}
-            </Text>
-            <Text style={[styles.sub, { color: c.mutedForeground }]}>
-              Đã trả lời {existing.reviewCount} lần.
-            </Text>
-          </View>
-        ) : (
+        {existing ? <SavedWordInfoCard word={existing} /> : (
           <Text style={[styles.sub, { color: c.mutedForeground }]}>Từ mới có thể học ngay sau khi lưu.</Text>
         )}
         {submitError ? <ErrorBanner message={submitError} /> : null}
@@ -220,14 +455,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
             </Text>
           </View>
         ) : null}
-        {existing ? (
-          <View testID="word-readonly-details" style={{ gap: 14 }}>
-            <ReadOnlyField label="Từ tiếng Anh" value={existing.term} />
-            <ReadOnlyField label="Nghĩa tiếng Việt" value={existing.meaning} multiline />
-            <ReadOnlyField label="Phiên âm IPA" value={existing.ipa} />
-            <ReadOnlyField label="Câu ví dụ" value={existing.example} multiline />
-          </View>
-        ) : (
+        {!existing ? (
           <>
             <Field testID="field-term" label="Từ tiếng Anh" required error={termErr} value={form.term} onChangeText={set('term')}
               autoCapitalize="none" autoCorrect={false} returnKeyType="next" onSubmitEditing={() => meaningRef.current?.focus()} editable={!saving} />
@@ -236,7 +464,7 @@ function WordForm({ existing, initial, fromDictionary }: { existing?: Vocabulary
             <Field testID="field-example" label="Câu ví dụ" value={form.example} onChangeText={set('example')} multiline editable={!saving} />
             <Button testID="save" label="Lưu vào sổ" icon="check" onPress={submit} loading={saving} disabled={deleting || changingFreeze} />
           </>
-        )}
+        ) : null}
         {existing ? (
           <Button testID="delete" label="Xoá từ này" icon="trash-2" variant="ghost" onPress={() => setConfirm(true)} disabled={saving || deleting || changingFreeze}
             style={{ borderColor: c.destructiveSoft }} />
@@ -388,9 +616,30 @@ const styles = StyleSheet.create({
   label: { fontFamily: F.s, fontSize: 14 },
   input: { fontFamily: F.r, fontSize: 16, paddingHorizontal: 14, paddingVertical: 12, minHeight: 50 },
   multi: { minHeight: 90, textAlignVertical: 'top' },
-  readOnlyValue: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, minHeight: 50, justifyContent: 'center' },
-  readOnlyMulti: { minHeight: 90, justifyContent: 'flex-start' },
-  readOnlyText: { fontFamily: F.r, fontSize: 16, lineHeight: 24 },
+  wordInfoCard: { padding: 18, gap: 18, overflow: 'hidden' },
+  infoEyebrow: { fontFamily: F.b, fontSize: 11, letterSpacing: 1.2 },
+  infoGroup: { gap: 7 },
+  infoLabel: { fontFamily: F.b, fontSize: 11, letterSpacing: 0.7 },
+  infoValue: { fontFamily: F.r, fontSize: 16, lineHeight: 24 },
+  infoMuted: { fontFamily: F.m, fontSize: 13, lineHeight: 20 },
+  infoTerm: { fontFamily: F.b, fontSize: 28, lineHeight: 34 },
+  infoExample: { fontFamily: F.s, fontSize: 16, lineHeight: 24, fontStyle: 'italic' },
+  ipaRows: { gap: 4 },
+  ipaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  ipaAccent: {
+    minWidth: 48,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderRadius: 6,
+    fontFamily: F.b,
+    fontSize: 10,
+    lineHeight: 16,
+    textAlign: 'center',
+    overflow: 'hidden',
+  },
+  ipaValue: { flex: 1, flexWrap: 'wrap' },
+  audioButton: { width: 40, height: 36, alignItems: 'center', justifyContent: 'center' },
   err: { fontFamily: F.m, fontSize: 13 },
   hint: { fontFamily: F.r, fontSize: 13 },
 });

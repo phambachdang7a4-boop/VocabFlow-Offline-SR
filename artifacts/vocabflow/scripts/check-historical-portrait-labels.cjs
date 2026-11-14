@@ -8,7 +8,7 @@ const artworksByImageKey = new Map(
   ]),
 );
 
-const uncertainAncientPortraits = [
+const uncertainPortraits = [
   "archimedes-marble",
   "confucius-marble",
   "pythagoras-marble",
@@ -19,9 +19,19 @@ const uncertainAncientPortraits = [
   "seneca-marble",
   "ptolemy-marble",
   "sun-tzu-marble",
+  "hai-ba-trung-marble",
+  "tran-hung-dao-marble",
+  "nguyen-trai-marble",
+  "le-thanh-tong-marble",
+  "nguyen-binh-khiem-marble",
+  "nguyen-du-marble",
+  "ho-xuan-huong-marble",
+  "phan-chau-trinh-marble",
+  "vo-nguyen-giap-marble",
+  "thich-nhat-hanh-marble",
 ];
 
-for (const imageKey of uncertainAncientPortraits) {
+for (const imageKey of uncertainPortraits) {
   assert.equal(
     artworksByImageKey.get(imageKey)?.portraitSourceType,
     "uncertain-likeness",
@@ -46,5 +56,5 @@ for (const imageKey of sourcedPortraits) {
 }
 
 console.log(
-  `Verified uncertainty labels for ${uncertainAncientPortraits.length} ancient figures and no warning for ${sourcedPortraits.length} sourced portraits.`,
+  `Verified uncertainty labels for ${uncertainPortraits.length} figures and no warning for ${sourcedPortraits.length} sourced portraits.`,
 );

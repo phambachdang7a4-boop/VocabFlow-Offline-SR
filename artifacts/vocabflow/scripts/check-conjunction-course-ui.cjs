@@ -76,14 +76,14 @@ function findAll(node, predicate, matches = []) {
   return matches;
 }
 
-function mount() {
+function mount(initialSavedWords = []) {
   const slots = [];
   const focusCallbacks = [];
   let cursor = 0;
   let dirty = true;
   let tree;
   const completed = [];
-  const savedWords = [];
+  const savedWords = [...initialSavedWords];
   const savedWordInputs = [];
   const savedWordBatches = [];
   const react = {
@@ -104,6 +104,7 @@ function mount() {
       ];
     },
     useCallback: (callback) => callback,
+    useMemo: (factory) => factory(),
   };
   const loaded = loadTs(join(__dirname, "../app/(tabs)/courses.tsx"), {
     react: { ...react, default: react },
@@ -537,6 +538,97 @@ function mount() {
     "Course words are added to the existing vocabulary notebook flow.",
   );
   assert.ok(screen.byId("phrasal-verbs-words-added-message"));
+
+  const officeEntries = officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES;
+  const firstOfficeTerm = Object.keys(officeEntries)[0];
+  const bulkScreen = mount([
+    {
+      term: firstOfficeTerm,
+      meaning: officeEntries[firstOfficeTerm].definition,
+    },
+  ]);
+  await bulkScreen.focus();
+  bulkScreen.byId("office-apps-course-card").props.onPress();
+  const allOfficeCandidates = courseWordSelectionDomain.buildCourseWordCandidates(
+    Object.keys(officeEntries),
+    new Map(Object.entries(officeEntries)),
+    bulkScreen.savedWords,
+  );
+  const newOfficeWordCount = allOfficeCandidates.filter(
+    (candidate) => !candidate.alreadySaved,
+  ).length;
+  assert.ok(bulkScreen.byId("office-apps-bulk-add-section"));
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-button").props.label,
+    `Nạp toàn bộ từ vào Sổ (${newOfficeWordCount.toLocaleString("vi-VN")} từ mới)`,
+    "The course overview offers a single button for every available course entry.",
+  );
+  bulkScreen.byId("office-apps-bulk-add-button").props.onPress();
+  const bulkModal = bulkScreen.byId("office-apps-bulk-add-confirmation");
+  assert.equal(bulkModal.props.visible, true);
+  assert.ok(bulkScreen.byId("office-apps-bulk-add-summary"));
+  assert.ok(
+    find(bulkModal, (node) =>
+      node.type === "Text" &&
+      String(node.props?.children ?? "").includes("Quá tải ôn tập"),
+    ),
+    "The confirmation warns that adding a whole course can overload reviews.",
+  );
+  assert.ok(
+    find(bulkModal, (node) =>
+      node.type === "Text" &&
+      String(node.props?.children ?? "").includes("Dễ sai"),
+    ),
+    "The confirmation warns that course meanings and examples can be wrong.",
+  );
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
+    true,
+    "The final add button remains disabled until the learner acknowledges the risks.",
+  );
+  bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
+  await bulkScreen.settle();
+  assert.equal(
+    bulkScreen.savedWordInputs.length,
+    0,
+    "Calling the guarded confirm action without acknowledgment adds nothing.",
+  );
+  bulkScreen
+    .byId("office-apps-bulk-add-acknowledgement")
+    .props.onPress();
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-acknowledgement").props.accessibilityState
+      .checked,
+    true,
+  );
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
+    false,
+  );
+  bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
+  await bulkScreen.settle();
+  assert.equal(bulkScreen.savedWordInputs.length, newOfficeWordCount);
+  assert.equal(
+    bulkScreen.savedWordBatches.length,
+    1,
+    "All newly selected course entries are saved in one batch.",
+  );
+  assert.ok(bulkScreen.byId("office-apps-bulk-add-success"));
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-confirmation").props.visible,
+    false,
+  );
+  assert.ok(
+    find(bulkScreen.byId("office-apps-bulk-add-success"), (node) =>
+      String(node.props?.children ?? "").includes("bỏ qua 1 từ"),
+    ),
+    "The success message reports the existing duplicate that was skipped.",
+  );
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-button").props.disabled,
+    true,
+    "After import, the course button prevents re-adding already saved words.",
+  );
   console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {
   console.error(error);

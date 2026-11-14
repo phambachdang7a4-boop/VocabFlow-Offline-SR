@@ -81,12 +81,11 @@ export function ReviewCard({
   const speech = useSpeechPreferences();
   const sound = useSoundEffects();
   const { height: windowHeight } = useWindowDimensions();
-  const resultPanelHeight = Math.round(windowHeight * 0.34);
+  const resultPanelHeight = Math.round(windowHeight * 0.72);
   const [typed, setTyped] = useState("");
   const [phase, setPhase] = useState<Phase>("answering");
   const [inputFocused, setInputFocused] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
-  const [resultDetailsVisible, setResultDetailsVisible] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [freezeDialogOpen, setFreezeDialogOpen] = useState(false);
   const [freezeBusy, setFreezeBusy] = useState(false);
@@ -261,7 +260,6 @@ export function ReviewCard({
     if (o.action === "grade" && o.typed !== "" && !o.typed.trim()) return;
     lock.current = true;
     outcomeRef.current = o;
-    if (o.action === "grade") setResultDetailsVisible(true);
     setOutcome(o);
     void persist();
   };
@@ -374,8 +372,7 @@ export function ReviewCard({
     }
   };
 
-  const tone = graded?.correct ? c.successText : c.primary;
-  const toneSoft = graded?.correct ? c.reviewRightSoft : c.secondary;
+  const tone = graded?.correct ? c.vocabCardAccent : c.vocabCardForeground;
   const hintPattern =
     exercise.hint ??
     Array.from(word.term)
@@ -727,174 +724,372 @@ export function ReviewCard({
             styles.resultPanel,
             {
               height: resultPanelHeight,
-              backgroundColor: toneSoft,
-              borderRadius: c.radius,
+              backgroundColor: c.vocabCard,
+              borderRadius: c.radius + 6,
             },
           ]}
         >
-          <MaterialSheen radius={c.radius} />
-          {graded ? (
-            <View style={styles.resultInfo}>
-              <View style={styles.resultHeader}>
-                <View style={[styles.labelRow, styles.resultStatus]}>
-                  <Feather
-                    name={graded.correct ? "check-circle" : "book-open"}
-                    size={20}
-                    color={tone}
-                  />
-                  <Text style={[styles.resultTitle, { color: tone }]}>
-                    {graded.correct ? "Chính xác!" : "Đáp án"}
-                  </Text>
-                </View>
-                <View testID="review-result-actions" style={styles.resultActions}>
-                  <Pressable
-                    testID="review-result-freeze"
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      frozenAfterAnswer ? "Từ đã đóng băng" : "Đóng băng từ này"
-                    }
-                    accessibilityState={{
-                      disabled:
-                        blocked ||
-                        phase !== "saved" ||
-                        freezeBusy ||
-                        frozenAfterAnswer,
-                    }}
-                    onPress={() => setFreezeDialogOpen(true)}
-                    disabled={
-                      blocked ||
-                      phase !== "saved" ||
-                      freezeBusy ||
-                      frozenAfterAnswer
-                    }
-                    hitSlop={8}
-                    style={({ pressed }) => [
-                      styles.resultFreezePressable,
-                      {
-                        opacity:
+          <MaterialSheen radius={c.radius + 6} />
+          <ScrollView
+            testID="review-result-details-scroll"
+            style={styles.resultPanelScroll}
+            contentContainerStyle={styles.resultDetailsContent}
+            showsVerticalScrollIndicator
+          >
+            {graded ? (
+              <View testID="review-result-details" style={styles.resultInfo}>
+                <View style={styles.resultHeader}>
+                  <View style={[styles.labelRow, styles.resultStatus]}>
+                    <Feather
+                      name={graded.correct ? "check-circle" : "book-open"}
+                      size={20}
+                      color={tone}
+                    />
+                    <Text style={[styles.resultTitle, { color: tone }]}>
+                      {graded.correct ? "Chính xác!" : "Đáp án"}
+                    </Text>
+                  </View>
+                  <View testID="review-result-actions" style={styles.resultActions}>
+                    <Pressable
+                      testID="review-result-freeze"
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        frozenAfterAnswer ? "Từ đã đóng băng" : "Đóng băng từ này"
+                      }
+                      accessibilityState={{
+                        disabled:
                           blocked ||
                           phase !== "saved" ||
                           freezeBusy ||
-                          frozenAfterAnswer
-                            ? 0.45
-                            : pressed
-                              ? 0.65
-                              : 1,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.resultFreezeCircle,
-                        { borderColor: c.border },
+                          frozenAfterAnswer,
+                      }}
+                      onPress={() => setFreezeDialogOpen(true)}
+                      disabled={
+                        blocked ||
+                        phase !== "saved" ||
+                        freezeBusy ||
+                        frozenAfterAnswer
+                      }
+                      hitSlop={8}
+                      style={({ pressed }) => [
+                        styles.resultFreezePressable,
+                        {
+                          opacity:
+                            blocked ||
+                            phase !== "saved" ||
+                            freezeBusy ||
+                            frozenAfterAnswer
+                              ? 0.45
+                              : pressed
+                                ? 0.65
+                                : 1,
+                        },
                       ]}
                     >
-                      <MaterialCommunityIcons
-                        name="snowflake"
-                        size={20}
-                        color={frozenAfterAnswer ? c.success : c.primary}
-                      />
-                    </View>
-                  </Pressable>
-                  <Pressable
-                    testID="review-result-report"
-                    accessibilityRole="button"
-                    accessibilityLabel="Báo lỗi từ này"
-                    accessibilityState={{
-                      disabled: blocked || phase !== "saved",
-                    }}
-                    onPress={() => {
-                      setReportError(null);
-                      setReportReason(null);
-                      setReportNote("");
-                      setReportDialogOpen(true);
-                    }}
-                    disabled={blocked || phase !== "saved"}
-                    hitSlop={8}
-                    style={({ pressed }) => [
-                      styles.resultFreezePressable,
-                      {
-                        opacity:
-                          blocked || phase !== "saved"
-                            ? 0.45
-                            : pressed
-                              ? 0.65
-                              : 1,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.resultFreezeCircle,
-                        { borderColor: c.border },
+                      <View
+                        style={[
+                          styles.resultFreezeCircle,
+                          { borderColor: c.vocabCardMuted },
+                        ]}
+                      >
+                        <MaterialCommunityIcons
+                          name="snowflake"
+                          size={20}
+                          color={frozenAfterAnswer ? c.vocabCardAccent : c.vocabCardMuted}
+                        />
+                      </View>
+                    </Pressable>
+                    <Pressable
+                      testID="review-result-report"
+                      accessibilityRole="button"
+                      accessibilityLabel="Báo lỗi từ này"
+                      accessibilityState={{
+                        disabled: blocked || phase !== "saved",
+                      }}
+                      onPress={() => {
+                        setReportError(null);
+                        setReportReason(null);
+                        setReportNote("");
+                        setReportDialogOpen(true);
+                      }}
+                      disabled={blocked || phase !== "saved"}
+                      hitSlop={8}
+                      style={({ pressed }) => [
+                        styles.resultFreezePressable,
+                        {
+                          opacity:
+                            blocked || phase !== "saved"
+                              ? 0.45
+                              : pressed
+                                ? 0.65
+                                : 1,
+                        },
                       ]}
                     >
-                      <Feather name="flag" size={18} color={c.primary} />
-                    </View>
-                  </Pressable>
+                      <View
+                        style={[
+                          styles.resultFreezeCircle,
+                          { borderColor: c.vocabCardMuted },
+                        ]}
+                      >
+                        <Feather
+                          name="flag"
+                          size={18}
+                          color={c.vocabCardMuted}
+                        />
+                      </View>
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
-              <Text style={[styles.small, { color: c.mutedForeground }]}>
-                Đáp án
-              </Text>
-              <Text
-                style={[styles.answer, { color: c.foreground }]}
-              >
-                {word.term}
-              </Text>
-              <Pressable
-                testID="review-open-details"
-                accessibilityRole="button"
-                accessibilityLabel={`Mở thông tin từ ${word.term}`}
-                onPress={() => setResultDetailsVisible(true)}
-                style={({ pressed }) => [
-                  styles.resultDetailsOpen,
-                  { opacity: pressed ? 0.65 : 1 },
-                ]}
-              >
-                <Feather name="book-open" size={17} color={c.primary} />
-                <Text style={[styles.resultDetailsOpenText, { color: c.primary }]}>
-                  Xem thông tin từ
-                </Text>
-              </Pressable>
-              <Text style={[styles.small, { color: c.mutedForeground }]}>
-                {phase === "saved"
-                  ? graded.correct
-                    ? word.level === 6
-                      ? "Đã lưu: hoàn tất 6 cấp."
-                      : `Đã lưu: lên cấp ${word.level + 1}.`
-                    : `Đã lưu: ${word.level === 1 ? "giữ cấp 1" : `lùi về cấp ${word.level - 1}`}, ôn lại ngày mai.`
-                  : phase === "saving"
-                    ? "Đang lưu…"
-                    : "Chưa lưu được kết quả."}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.resultInfo}>
-              <View style={styles.labelRow}>
-                <Feather name="pause-circle" size={20} color={c.primary} />
-                <Text
-                  style={[styles.resultTitle, { color: c.primary, flex: 1 }]}
-                >
+                <View style={styles.resultDetailsGroup}>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.vocabCardMuted },
+                    ]}
+                  >
+                    THÔNG TIN TỪ
+                  </Text>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.vocabCardMuted },
+                    ]}
+                  >
+                    ĐÁP ÁN
+                  </Text>
+                  <Text
+                    testID="review-answer-correct"
+                    style={[styles.answer, { color: c.vocabCardForeground }]}
+                  >
+                    {word.term}
+                  </Text>
+                </View>
+                <View style={styles.resultDetailsGroup}>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.vocabCardMuted },
+                    ]}
+                  >
+                    PHIÊN ÂM
+                  </Text>
+                  <View style={styles.ipaRows}>
+                    <View style={styles.ipaRow}>
+                      <Text
+                        style={[
+                          styles.ipaAccent,
+                          {
+                            color: c.vocabCardMuted,
+                            borderColor: c.vocabCardMuted,
+                          },
+                        ]}
+                        accessibilityLabel="Phiên âm Anh-Mỹ"
+                      >
+                        US
+                      </Text>
+                      <Text
+                        testID="review-result-ipa-us"
+                        style={[
+                          styles.small,
+                          styles.ipaValue,
+                          { color: c.vocabCardMuted },
+                        ]}
+                      >
+                        {pronunciationLines.us.join(" · ") || "Chưa có dữ liệu"}
+                      </Text>
+                      <Pressable
+                        testID="review-result-speak-word"
+                        accessibilityRole="button"
+                        accessibilityLabel={`Phát âm ${word.term}`}
+                        onPress={() => {
+                          void speech.speakWord(word.term, word.dictionaryEntryId);
+                        }}
+                        hitSlop={10}
+                        style={({ pressed }) => [
+                          styles.resultAudioButton,
+                          { opacity: pressed ? 0.55 : 1 },
+                        ]}
+                      >
+                        <Feather
+                          name="volume-2"
+                          size={20}
+                          color={c.vocabCardAccent}
+                        />
+                      </Pressable>
+                    </View>
+                    <View style={styles.ipaRow}>
+                      <Text
+                        style={[
+                          styles.ipaAccent,
+                          {
+                            color: c.vocabCardMuted,
+                            borderColor: c.vocabCardMuted,
+                          },
+                        ]}
+                        accessibilityLabel="Phiên âm Anh-Anh"
+                      >
+                        UK
+                      </Text>
+                      <Text
+                        testID="review-result-ipa-uk"
+                        style={[
+                          styles.small,
+                          styles.ipaValue,
+                          { color: c.vocabCardMuted },
+                        ]}
+                      >
+                        {pronunciationLines.uk.join(" · ") ||
+                          (pronunciationState === "loading"
+                            ? "Đang tra cứu IPA Anh-Anh…"
+                            : pronunciationState === "not-found"
+                              ? "Gói đã cài nhưng không có mục Anh-Anh cho từ này"
+                              : pronunciationState === "damaged"
+                                ? "Gói IPA bị lỗi · hãy cài lại trong Cài đặt"
+                                : pronunciationState === "failed"
+                                  ? "Tra cứu IPA Anh-Anh thất bại · hãy thử lại"
+                                  : pronunciationState === "not-needed"
+                                    ? "Chưa có dữ liệu Anh-Anh"
+                                    : "Chưa cài gói IPA Anh-Anh · tải gói trong Cài đặt")}
+                      </Text>
+                    </View>
+                    {pronunciationLines.unspecified.length ? (
+                      <View style={styles.ipaRow}>
+                        <Text
+                          style={[
+                            styles.ipaAccent,
+                            {
+                              color: c.vocabCardMuted,
+                              borderColor: c.vocabCardMuted,
+                            },
+                          ]}
+                          accessibilityLabel="Phiên âm chưa xác định vùng"
+                        >
+                          —
+                        </Text>
+                        <Text
+                          testID="review-result-ipa-unspecified"
+                          style={[
+                            styles.small,
+                            styles.ipaValue,
+                            { color: c.vocabCardMuted },
+                          ]}
+                        >
+                          {pronunciationLines.unspecified.join(" · ")}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+                <View style={styles.resultDetailsGroup}>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.vocabCardMuted },
+                    ]}
+                  >
+                    NGHĨA TIẾNG VIỆT
+                  </Text>
+                  <Text
+                    testID="review-result-meaning"
+                    style={[
+                      styles.resultDetailsValue,
+                      { color: c.vocabCardForeground },
+                    ]}
+                  >
+                    {word.meaning}
+                  </Text>
+                </View>
+                {isReviewExampleUsable(word.example) ? (
+                  <View style={styles.resultDetailsGroup}>
+                    <Text
+                      style={[
+                        styles.resultDetailsLabel,
+                        { color: c.vocabCardMuted },
+                      ]}
+                    >
+                      CÂU VÍ DỤ
+                    </Text>
+                    <Text
+                      testID="review-result-example"
+                      style={[
+                        styles.resultDetailsExample,
+                        { color: c.vocabCardForeground },
+                      ]}
+                    >
+                      {word.example}
+                    </Text>
+                    {exampleTranslation ? (
+                      <View style={styles.resultDetailsGroup}>
+                        <Text
+                          style={[
+                            styles.resultDetailsLabel,
+                            { color: c.vocabCardMuted },
+                          ]}
+                        >
+                          DỊCH NGHĨA
+                        </Text>
+                        <Text
+                          testID="review-result-example-translation"
+                          style={[
+                            styles.resultDetailsValue,
+                            { color: c.vocabCardForeground },
+                          ]}
+                        >
+                          {exampleTranslation}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
+                <Text style={[styles.small, { color: c.vocabCardMuted }]}>
                   {phase === "saved"
-                    ? "Đã đóng băng từ này. Bỏ đóng băng trong Cài đặt."
+                    ? graded.correct
+                      ? word.level === 6
+                        ? "Đã lưu: hoàn tất 6 cấp."
+                        : `Đã lưu: lên cấp ${word.level + 1}.`
+                      : `Đã lưu: ${word.level === 1 ? "giữ cấp 1" : `lùi về cấp ${word.level - 1}`}, ôn lại ngày mai.`
                     : phase === "saving"
-                      ? "Đang đóng băng…"
-                      : "Chưa đóng băng được."}
+                      ? "Đang lưu…"
+                      : "Chưa lưu được kết quả."}
                 </Text>
+                {saveError ? <ErrorBanner message={saveError} /> : null}
+                {freezeError ? <ErrorBanner message={freezeError} /> : null}
+                {frozenAfterAnswer ? (
+                  <Text
+                    testID="review-result-frozen"
+                    style={[styles.small, { color: c.vocabCardAccent }]}
+                  >
+                    Đã đóng băng từ này.
+                  </Text>
+                ) : null}
               </View>
-            </View>
-          )}
-          {saveError ? <ErrorBanner message={saveError} /> : null}
-          {freezeError ? <ErrorBanner message={freezeError} /> : null}
-          {frozenAfterAnswer ? (
-            <Text
-              testID="review-result-frozen"
-              style={[styles.small, { color: c.successText }]}
-            >
-              Đã đóng băng từ này.
-            </Text>
-          ) : null}
+            ) : (
+              <View style={styles.resultInfo}>
+                <View style={styles.labelRow}>
+                  <Feather
+                    name="pause-circle"
+                    size={20}
+                    color={c.vocabCardMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.resultTitle,
+                      { color: c.vocabCardForeground, flex: 1 },
+                    ]}
+                  >
+                    {phase === "saved"
+                      ? "Đã đóng băng từ này. Bỏ đóng băng trong Cài đặt."
+                      : phase === "saving"
+                        ? "Đang đóng băng…"
+                        : "Chưa đóng băng được."}
+                  </Text>
+                </View>
+                {saveError ? <ErrorBanner message={saveError} /> : null}
+                {freezeError ? <ErrorBanner message={freezeError} /> : null}
+              </View>
+            )}
+          </ScrollView>
           {phase === "failed" ? (
             <Button
               testID="review-retry-save"
@@ -969,254 +1164,6 @@ export function ReviewCard({
             </Pressable>
           </>
         </View>
-      ) : null}
-
-      {graded ? (
-        <Modal
-          testID="review-result-modal"
-          visible={resultDetailsVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setResultDetailsVisible(false)}
-        >
-          <View
-            style={[
-              styles.resultDetailsOverlay,
-              { backgroundColor: c.overlay },
-            ]}
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Đóng thông tin từ"
-              onPress={() => setResultDetailsVisible(false)}
-              style={StyleSheet.absoluteFill}
-            />
-            <View
-              testID="review-result-details"
-              accessibilityViewIsModal
-              style={[
-                styles.resultDetailsModal,
-                {
-                  backgroundColor: c.card,
-                  borderColor: c.border,
-                  borderRadius: c.radius + 6,
-                  shadowColor: c.shade,
-                },
-              ]}
-            >
-              <View style={styles.resultDetailsHeader}>
-                <Text
-                  style={[
-                    styles.resultDetailsEyebrow,
-                    { color: c.mutedForeground },
-                  ]}
-                >
-                  THÔNG TIN TỪ
-                </Text>
-                <Pressable
-                  testID="review-result-close"
-                  accessibilityRole="button"
-                  accessibilityLabel="Đóng thông tin từ"
-                  onPress={() => setResultDetailsVisible(false)}
-                  hitSlop={10}
-                  style={[
-                    styles.resultDetailsClose,
-                    { backgroundColor: c.background },
-                  ]}
-                >
-                  <Feather name="x" size={20} color={c.foreground} />
-                </Pressable>
-              </View>
-              <ScrollView
-                testID="review-result-details-scroll"
-                style={styles.resultDetailsScroll}
-                contentContainerStyle={styles.resultDetailsContent}
-                showsVerticalScrollIndicator
-              >
-                <View style={styles.resultDetailsGroup}>
-                  <Text
-                    style={[
-                      styles.resultDetailsLabel,
-                      { color: c.mutedForeground },
-                    ]}
-                  >
-                    ĐÁP ÁN
-                  </Text>
-                  <Text
-                    testID="review-answer-correct"
-                    style={[styles.answer, { color: c.foreground }]}
-                  >
-                    {word.term}
-                  </Text>
-                </View>
-                <View style={styles.resultDetailsGroup}>
-                  <Text
-                    style={[
-                      styles.resultDetailsLabel,
-                      { color: c.mutedForeground },
-                    ]}
-                  >
-                    PHIÊN ÂM
-                  </Text>
-                  <View style={styles.ipaRows}>
-                    <View style={styles.ipaRow}>
-                      <Text
-                        style={[
-                          styles.ipaAccent,
-                          { color: c.primary, borderColor: c.border },
-                        ]}
-                        accessibilityLabel="Phiên âm Anh-Mỹ"
-                      >
-                        US
-                      </Text>
-                      <Text
-                        testID="review-result-ipa-us"
-                        style={[
-                          styles.small,
-                          styles.ipaValue,
-                          { color: c.mutedForeground },
-                        ]}
-                      >
-                        {pronunciationLines.us.join(" · ") || "Chưa có dữ liệu"}
-                      </Text>
-                      <Pressable
-                        testID="review-result-speak-word"
-                        accessibilityRole="button"
-                        accessibilityLabel={`Phát âm ${word.term}`}
-                        onPress={() => {
-                          void speech.speakWord(word.term, word.dictionaryEntryId);
-                        }}
-                        hitSlop={10}
-                        style={({ pressed }) => [
-                          styles.resultAudioButton,
-                          { opacity: pressed ? 0.55 : 1 },
-                        ]}
-                      >
-                        <Feather name="volume-2" size={20} color={c.primary} />
-                      </Pressable>
-                    </View>
-                    <View style={styles.ipaRow}>
-                      <Text
-                        style={[
-                          styles.ipaAccent,
-                          { color: c.primary, borderColor: c.border },
-                        ]}
-                        accessibilityLabel="Phiên âm Anh-Anh"
-                      >
-                        UK
-                      </Text>
-                      <Text
-                        testID="review-result-ipa-uk"
-                        style={[
-                          styles.small,
-                          styles.ipaValue,
-                          { color: c.mutedForeground },
-                        ]}
-                      >
-                        {pronunciationLines.uk.join(" · ") ||
-                          (pronunciationState === "loading"
-                            ? "Đang tra cứu IPA Anh-Anh…"
-                            : pronunciationState === "not-found"
-                              ? "Gói đã cài nhưng không có mục Anh-Anh cho từ này"
-                              : pronunciationState === "damaged"
-                                ? "Gói IPA bị lỗi · hãy cài lại trong Cài đặt"
-                                : pronunciationState === "failed"
-                                  ? "Tra cứu IPA Anh-Anh thất bại · hãy thử lại"
-                                  : pronunciationState === "not-needed"
-                                    ? "Chưa có dữ liệu Anh-Anh"
-                                    : "Chưa cài gói IPA Anh-Anh · tải gói trong Cài đặt")}
-                      </Text>
-                    </View>
-                    {pronunciationLines.unspecified.length ? (
-                      <View style={styles.ipaRow}>
-                        <Text
-                          style={[
-                            styles.ipaAccent,
-                            { color: c.primary, borderColor: c.border },
-                          ]}
-                          accessibilityLabel="Phiên âm chưa xác định vùng"
-                        >
-                          —
-                        </Text>
-                        <Text
-                          testID="review-result-ipa-unspecified"
-                          style={[
-                            styles.small,
-                            styles.ipaValue,
-                            { color: c.mutedForeground },
-                          ]}
-                        >
-                          {pronunciationLines.unspecified.join(" · ")}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-                <View style={styles.resultDetailsGroup}>
-                  <Text
-                    style={[
-                      styles.resultDetailsLabel,
-                      { color: c.mutedForeground },
-                    ]}
-                  >
-                    NGHĨA TIẾNG VIỆT
-                  </Text>
-                  <Text
-                    testID="review-result-meaning"
-                    style={[
-                      styles.resultDetailsValue,
-                      { color: c.foreground },
-                    ]}
-                  >
-                    {word.meaning}
-                  </Text>
-                </View>
-                {isReviewExampleUsable(word.example) ? (
-                  <View style={styles.resultDetailsGroup}>
-                    <Text
-                      style={[
-                        styles.resultDetailsLabel,
-                        { color: c.mutedForeground },
-                      ]}
-                    >
-                      CÂU VÍ DỤ
-                    </Text>
-                    <Text
-                      testID="review-result-example"
-                      style={[
-                        styles.resultDetailsExample,
-                        { color: c.foreground },
-                      ]}
-                    >
-                      {word.example}
-                    </Text>
-                    {exampleTranslation ? (
-                      <View style={styles.resultDetailsGroup}>
-                        <Text
-                          style={[
-                            styles.resultDetailsLabel,
-                            { color: c.mutedForeground },
-                          ]}
-                        >
-                          DỊCH NGHĨA
-                        </Text>
-                        <Text
-                          testID="review-result-example-translation"
-                          style={[
-                            styles.resultDetailsValue,
-                            { color: c.foreground },
-                          ]}
-                        >
-                          {exampleTranslation}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                ) : null}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
       ) : null}
 
       {freezeDialogOpen ? (
@@ -1562,9 +1509,10 @@ const styles = StyleSheet.create({
     elevation: 12,
     padding: 16,
     gap: 10,
-    justifyContent: "space-between",
+    overflow: "hidden",
   },
-  resultInfo: { gap: 6 },
+  resultPanelScroll: { flex: 1, minHeight: 0 },
+  resultInfo: { gap: 14 },
   resultHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1603,52 +1551,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  resultDetailsOpen: {
-    alignSelf: "flex-start",
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    paddingHorizontal: 2,
-  },
-  resultDetailsOpenText: { fontFamily: F.s, fontSize: 13 },
-  resultDetailsOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 18,
-  },
-  resultDetailsModal: {
-    width: "100%",
-    maxWidth: 480,
-    maxHeight: "88%",
-    alignSelf: "center",
-    borderWidth: 1,
-    padding: 16,
-    overflow: "hidden",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 18,
-    elevation: 10,
-  },
-  resultDetailsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  resultDetailsEyebrow: {
-    fontFamily: F.b,
-    fontSize: 11,
-    letterSpacing: 1.2,
-  },
-  resultDetailsClose: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  resultDetailsScroll: { flexShrink: 1 },
   resultDetailsContent: { gap: 15, paddingBottom: 4 },
   resultDetailsGroup: { gap: 6 },
   resultDetailsLabel: {

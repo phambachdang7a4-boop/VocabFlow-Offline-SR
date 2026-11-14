@@ -100,6 +100,16 @@ const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
   "johann-wolfgang-von-goethe-marble": require("../assets/images/johann-wolfgang-von-goethe-marble.png"),
   "victor-hugo-marble": require("../assets/images/victor-hugo-marble.png"),
   "sun-tzu-marble": require("../assets/images/sun-tzu-marble.png"),
+  "hai-ba-trung-marble": require("../assets/images/hai-ba-trung-marble.png"),
+  "tran-hung-dao-marble": require("../assets/images/tran-hung-dao-marble.png"),
+  "nguyen-trai-marble": require("../assets/images/nguyen-trai-marble.png"),
+  "le-thanh-tong-marble": require("../assets/images/le-thanh-tong-marble.png"),
+  "nguyen-binh-khiem-marble": require("../assets/images/nguyen-binh-khiem-marble.png"),
+  "nguyen-du-marble": require("../assets/images/nguyen-du-marble.png"),
+  "ho-xuan-huong-marble": require("../assets/images/ho-xuan-huong-marble.png"),
+  "phan-chau-trinh-marble": require("../assets/images/phan-chau-trinh-marble.png"),
+  "vo-nguyen-giap-marble": require("../assets/images/vo-nguyen-giap-marble.png"),
+  "thich-nhat-hanh-marble": require("../assets/images/thich-nhat-hanh-marble.png"),
 };
 
 function rarityDisplayLabel(rarity: ChestRarity): string {

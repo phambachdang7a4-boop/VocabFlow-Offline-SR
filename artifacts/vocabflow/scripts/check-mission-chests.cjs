@@ -394,7 +394,11 @@ assert.ok(statue.biography.includes("19.05.1890 – 02.09.1969"));
 assert.ok(statue.biography.includes("Nguyễn Sinh Cung"));
 assert.ok(statue.biography.includes("Tuyên ngôn Độc lập"));
 assert.equal(statue.quote, "Không có gì quý hơn độc lập, tự do.");
-assert.ok(statue.biographyEn.includes("Nothing is more precious than independence and freedom."));
+assert.equal(
+  statue.quoteSource,
+  "Lời kêu gọi ngày 17 tháng 7 năm 1966",
+  "The quote attribution belongs to the quote field, not the biography.",
+);
 assert.ok(statue.biographyEn.includes("PERSONAL BACKGROUND"));
 assert.ok(statue.biographyEn.includes("LIFE AND REVOLUTIONARY CAREER"));
 assert.ok(statue.biographyEn.includes("February 3"));
@@ -531,9 +535,9 @@ assert.match(
 assert.match(
   collectionScreen,
   /collectionGroup !== "bonus"/,
-  "The special Hồ Chí Minh statue is kept outside the fifty-person rank counts.",
+  "The special Hồ Chí Minh statue is kept outside the sixty-person rank counts.",
 );
-assert.equal(COLLECTION_ARTWORKS.length, 51);
+assert.equal(COLLECTION_ARTWORKS.length, 61);
 assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
   "All currently available statues are unlocked without fragments.",
@@ -545,7 +549,7 @@ assert.ok(
 const namedHistoricalStatues = COLLECTION_ARTWORKS.filter(
   (item) => item.collectionGroup !== "bonus",
 );
-assert.equal(namedHistoricalStatues.length, 50);
+assert.equal(namedHistoricalStatues.length, 60);
 assert.equal(statue.collectionGroup, "bonus");
 assert.deepEqual(
   Object.fromEntries(
@@ -554,8 +558,8 @@ assert.deepEqual(
       namedHistoricalStatues.filter((item) => item.rarity === rarity).length,
     ]),
   ),
-  { common: 20, uncommon: 0, rare: 15, epic: 10, legendary: 5 },
-  "The requested fifty-person statue roster has the specified tier counts.",
+  { common: 20, uncommon: 0, rare: 19, epic: 14, legendary: 7 },
+  "The sixty-person statue roster has the specified tier counts.",
 );
 const expectedHistoricalNames = [
   "Alexander Đại đế",
@@ -608,13 +612,23 @@ const expectedHistoricalNames = [
   "Johann Wolfgang von Goethe",
   "Victor Hugo",
   "Tôn Tử",
+  "Hai Bà Trưng",
+  "Trần Hưng Đạo",
+  "Nguyễn Trãi",
+  "Lê Thánh Tông",
+  "Nguyễn Bỉnh Khiêm",
+  "Nguyễn Du",
+  "Hồ Xuân Hương",
+  "Phan Châu Trinh",
+  "Võ Nguyên Giáp",
+  "Thích Nhất Hạnh",
 ].sort();
 assert.deepEqual(
   namedHistoricalStatues
     .map((item) => item.title.replace(/^Tượng /, ""))
     .sort(),
   expectedHistoricalNames,
-  "The catalog contains exactly the fifty requested historical figures.",
+  "The catalog contains the fifty requested international figures and ten additional Vietnamese figures.",
 );
 for (const artwork of namedHistoricalStatues) {
   assert.ok(artwork.biography, `${artwork.title} has a Vietnamese biography.`);

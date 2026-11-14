@@ -1038,6 +1038,176 @@ STRATEGY
 LEGACY
 • The Art of War is studied in military affairs, management, and strategy around the world.`,
   ),
+  historicalStatue(
+    "hai-ba-trung",
+    "Hai Bà Trưng",
+    "Hai Bà Trưng",
+    "epic",
+    "Hai nữ thủ lĩnh Trưng Trắc và Trưng Nhị, gắn với cuộc khởi nghĩa chống nhà Đông Hán vào năm 40.",
+    `Hai Bà Trưng là Trưng Trắc và Trưng Nhị, hai nữ thủ lĩnh gắn với cuộc khởi nghĩa chống sự cai trị của nhà Đông Hán vào năm 40. Theo sử liệu truyền thống, Trưng Trắc là con một Lạc tướng ở vùng Mê Linh; sau khi chồng bà là Thi Sách bị nhà Hán giết, bà cùng em gái tập hợp lực lượng đứng lên khởi nghĩa. Nghĩa quân giành quyền kiểm soát nhiều thành trì ở Giao Chỉ và Trưng Trắc được tôn làm vua. Cuộc kháng chiến kết thúc sau khi quân Đông Hán do Mã Viện chỉ huy tiến đánh vào năm 43.
+
+DI SẢN
+• Hai Bà Trưng trở thành biểu tượng nổi bật của tinh thần chống ngoại xâm và vai trò của phụ nữ trong lịch sử Việt Nam.
+• Tư liệu về thế kỷ thứ nhất được ghi chép lại về sau, nên một số chi tiết tiểu sử và lời thơ truyền tụng không thể xem là nguyên văn đương thời.`,
+    `The Trưng Sisters, Trưng Trắc and Trưng Nhị, are associated with an uprising against Eastern Han rule in 40 CE. Traditional accounts identify Trưng Trắc as the daughter of a local Lạc lord in the Mê Linh area. After Han authorities killed her husband, Thi Sách, she and her younger sister rallied supporters and led a revolt. The rebels took control of many settlements in the region, and Trưng Trắc was proclaimed ruler. The resistance ended after Han forces led by Ma Yuan invaded in 43 CE.
+
+LEGACY
+• The sisters became enduring symbols of resistance to foreign rule and of women’s leadership in Vietnamese history.
+• Accounts of first-century events were written down later, so some biographical details and traditional verses cannot be treated as contemporary verbatim records.`,
+  ),
+  historicalStatue(
+    "tran-hung-dao",
+    "Trần Hưng Đạo",
+    "Trần Hưng Đạo",
+    "legendary",
+    "Danh tướng Trần Quốc Tuấn, người chỉ huy quân Đại Việt trong các cuộc kháng chiến chống Nguyên–Mông.",
+    `Trần Hưng Đạo, tên thật Trần Quốc Tuấn (khoảng 1228–1300), là hoàng thân và danh tướng Đại Việt thời Trần. Ông giữ vai trò chỉ huy quan trọng trong các cuộc kháng chiến chống quân Nguyên–Mông vào các năm 1285 và 1287–1288, trong đó có chiến thắng Bạch Đằng năm 1288. Ông cũng được gắn với tác phẩm Hịch tướng sĩ, lời hiệu triệu nhấn mạnh kỷ luật, lòng trung thành và trách nhiệm bảo vệ đất nước.
+
+DI SẢN
+• Trần Hưng Đạo được tưởng nhớ rộng rãi trong đền thờ và lễ hội ở nhiều địa phương.
+• Những lời nói của ông được sử sách chép lại qua nhiều thế hệ; cách diễn đạt có thể khác nhau giữa các bản dịch và bản kể.`,
+    `Trần Hưng Đạo, born Trần Quốc Tuấn (c. 1228–1300), was a royal prince and military commander of Đại Việt under the Trần dynasty. He held a leading command role during the Mongol–Yuan invasions, especially the campaigns of 1285 and 1287–1288. The 1288 victory on the Bạch Đằng River became a defining episode in Vietnamese military history. He is also associated with Hịch tướng sĩ, an exhortation to officers that stresses discipline, loyalty, and the duty to defend the country.
+
+LEGACY
+• Trần Hưng Đạo is honored in temples and festivals across Vietnam.
+• Historical chronicles preserve sayings attributed to him, though wording varies between editions and later retellings.`,
+  ),
+  historicalStatue(
+    "nguyen-trai",
+    "Nguyễn Trãi",
+    "Nguyễn Trãi",
+    "legendary",
+    "Nhà chính trị, chiến lược gia và tác gia thế kỷ XV; tác giả Bình Ngô đại cáo.",
+    `Nguyễn Trãi (1380–1442) là nhà chính trị, nhà ngoại giao, chiến lược gia và tác gia lớn của Đại Việt. Trong khởi nghĩa Lam Sơn, ông là cố vấn quan trọng của Lê Lợi và tham gia xây dựng đường lối vận động, ngoại giao và kết thúc chiến tranh. Năm 1428, ông soạn Bình Ngô đại cáo, văn kiện công bố thắng lợi và khẳng định nền độc lập sau cuộc kháng chiến chống Minh. Tác phẩm của ông gồm thơ chữ Hán, thơ Nôm, văn chính luận và các ghi chép về đất nước, con người.
+
+DI SẢN
+• Nguyễn Trãi được xem là một gương mặt tiêu biểu của văn học và tư tưởng chính trị Việt Nam.
+• Ông bị xử tử sau vụ án Lệ Chi Viên năm 1442; triều đình về sau minh oan và phục hồi danh dự cho ông.`,
+    `Nguyễn Trãi (1380–1442) was a Vietnamese statesman, diplomat, strategist, and major writer. During the Lam Sơn uprising, he served as an important adviser to Lê Lợi and helped shape its political, diplomatic, and military communications. In 1428 he wrote Bình Ngô đại cáo, a proclamation of victory and independence after the war against Ming rule. His surviving works include classical Chinese and Nôm poetry, political prose, and writings about the country and its people.
+
+LEGACY
+• Nguyễn Trãi remains a central figure in Vietnamese literature and political thought.
+• He was executed after the Lệ Chi Viên case in 1442; the court later cleared his name and restored his reputation.`,
+  ),
+  historicalStatue(
+    "le-thanh-tong",
+    "Lê Thánh Tông",
+    "Lê Thánh Tông",
+    "epic",
+    "Hoàng đế triều Lê sơ, nổi bật với cải cách hành chính, luật pháp và giáo dục.",
+    `Lê Thánh Tông (1442–1497) trị vì từ năm 1460 đến 1497 và là một trong những vị vua có ảnh hưởng lớn của triều Lê sơ. Ông củng cố bộ máy hành chính trung ương, tổ chức lại các đơn vị quản lý và mở rộng hệ thống thi cử Nho học. Bộ luật Hồng Đức được hoàn thiện dưới triều đại của ông; bộ luật đề cập nhiều lĩnh vực quản trị và đời sống xã hội, dù quá trình biên soạn kéo dài qua nhiều đời vua. Lê Thánh Tông cũng là nhà thơ, bảo trợ văn học và lập hội Tao Đàn.
+
+DI SẢN
+• Thời Hồng Đức thường được nhắc đến như giai đoạn phát triển mạnh của nhà nước và văn hóa Đại Việt.
+• Các cải cách của ông góp phần định hình nền hành chính và giáo dục trong nhiều thế hệ.`,
+    `Lê Thánh Tông (1442–1497) ruled from 1460 to 1497 and was one of the most influential emperors of the Early Lê dynasty. He strengthened central administration, reorganized provincial governance, and expanded Confucian examinations and education. The Hồng Đức legal code was completed during his reign; it covered many aspects of government and social life, although its compilation developed across more than one reign. Lê Thánh Tông was also a poet and patron of literature who established the Tao Đàn literary circle.
+
+LEGACY
+• The Hồng Đức era is often remembered as a period of strong state institutions and cultural activity in Đại Việt.
+• His reforms shaped administration and education for generations.`,
+  ),
+  historicalStatue(
+    "nguyen-binh-khiem",
+    "Nguyễn Bỉnh Khiêm",
+    "Nguyễn Bỉnh Khiêm",
+    "rare",
+    "Nhà thơ, nhà giáo và học giả thế kỷ XVI, thường được gọi là Trạng Trình.",
+    `Nguyễn Bỉnh Khiêm (1491–1585), thường được gọi là Trạng Trình, là nhà thơ, nhà giáo và học giả nổi tiếng thời Mạc. Ông đỗ Trạng nguyên năm 1535, làm quan một thời gian rồi xin về quê mở trường dạy học. Học trò tìm đến ông từ nhiều vùng, và ảnh hưởng của ông được ghi nhận trong đời sống học thuật cũng như văn chương thế kỷ XVI. Tác phẩm thường gắn với ông gồm Bạch Vân am thi tập và Bạch Vân quốc ngữ thi, viết bằng chữ Hán và chữ Nôm.
+
+DI SẢN
+• Thơ Nguyễn Bỉnh Khiêm thường suy ngẫm về đạo đức, thời thế, đời sống thanh đạm và cách ứng xử.
+• Một số câu thơ được lưu truyền qua nhiều dị bản; bộ sưu tập ghi rõ tác phẩm khi có thể xác định.`,
+    `Nguyễn Bỉnh Khiêm (1491–1585), widely known as Trạng Trình, was a prominent Vietnamese poet, teacher, and scholar of the Mạc period. He passed the highest civil-service examination in 1535, served in government for a time, and later returned to his home region to teach. Students came to study with him from different areas, and his influence is remembered in the intellectual and literary life of the sixteenth century. Works associated with him include Bạch Vân am thi tập and Bạch Vân quốc ngữ thi, written in classical Chinese and Nôm.
+
+LEGACY
+• His poetry reflects on ethics, public life, simplicity, and personal conduct.
+• Some verses survive in variant forms; the collection identifies a work when an attribution can be made.`,
+  ),
+  historicalStatue(
+    "nguyen-du",
+    "Nguyễn Du",
+    "Nguyễn Du",
+    "epic",
+    "Đại thi hào, tác giả Truyện Kiều, tác phẩm có ảnh hưởng sâu rộng trong văn học Việt Nam.",
+    `Nguyễn Du (1765–1820) là nhà thơ lớn của Việt Nam, sinh trong một gia đình quan lại có truyền thống văn chương. Cuộc đời ông trải qua nhiều biến động cuối thế kỷ XVIII và đầu thế kỷ XIX, từ sự sụp đổ của nhà Lê đến việc thành lập triều Nguyễn. Tác phẩm nổi tiếng nhất của ông là Đoạn trường tân thanh, thường gọi là Truyện Kiều, truyện thơ Nôm dựa trên cốt truyện Trung Hoa nhưng được sáng tạo lại bằng ngôn ngữ, tâm lý và cảnh đời Việt Nam. Ông cũng sáng tác thơ chữ Hán và từng đi sứ sang nhà Thanh.
+
+DI SẢN
+• Truyện Kiều được đọc, ngâm, bình luận và chuyển thể qua nhiều thế hệ.
+• Tác phẩm đặt ra những câu hỏi về tài năng, số phận, lòng trắc ẩn và phẩm giá con người.`,
+    `Nguyễn Du (1765–1820) was one of Vietnam’s most influential poets, born into a mandarin family with a strong literary tradition. His life unfolded amid the political upheavals of the late eighteenth and early nineteenth centuries, from the fall of the Lê dynasty to the establishment of the Nguyễn dynasty. His best-known work is Đoạn trường tân thanh, usually called Truyện Kiều, a Nôm verse narrative adapted from a Chinese plot but transformed through Vietnamese language, psychology, and social detail. He also wrote classical Chinese poetry and served on a diplomatic mission to the Qing court.
+
+LEGACY
+• Truyện Kiều has been read, recited, studied, and adapted across generations.
+• The poem explores talent, fortune, compassion, and human dignity.`,
+  ),
+  historicalStatue(
+    "ho-xuan-huong",
+    "Hồ Xuân Hương",
+    "Hồ Xuân Hương",
+    "rare",
+    "Nữ thi sĩ Nôm nổi tiếng, có thơ sắc sảo về thân phận và tiếng nói của phụ nữ.",
+    `Hồ Xuân Hương là nữ thi sĩ viết bằng chữ Nôm, thường được đặt vào cuối thế kỷ XVIII và đầu thế kỷ XIX. Tư liệu chắc chắn về cuộc đời bà còn hạn chế, vì vậy năm sinh, năm mất và một số chi tiết tiểu sử vẫn được tranh luận. Thơ của bà nổi bật bởi cách dùng từ đa nghĩa, hình ảnh đời thường và giọng trào phúng. Nhiều bài thơ thể hiện sự quan sát sắc sảo về lễ giáo, quan hệ xã hội và vị thế của phụ nữ trong xã hội đương thời.
+
+DI SẢN
+• Các bài như Bánh trôi nước thường được đọc như tiếng nói về phẩm giá, nghị lực và thân phận người phụ nữ.
+• Do văn bản truyền qua nhiều bản chép và tuyển tập, việc xác định toàn bộ tác phẩm của bà vẫn là vấn đề nghiên cứu.`,
+    `Hồ Xuân Hương was a Vietnamese poet who wrote in Nôm and is usually placed in the late eighteenth and early nineteenth centuries. Reliable biographical evidence is limited, so her dates and several details of her life remain debated. Her poetry is known for wordplay, everyday imagery, and a satirical voice. Many poems offer sharp observations about social conventions, relationships, and women’s position in the society of her time.
+
+LEGACY
+• Poems such as Bánh trôi nước are often read as reflections on women’s dignity, resilience, and social circumstances.
+• Because the poems survive through different manuscripts and anthologies, scholars continue to discuss which works can be securely attributed to her.`,
+  ),
+  historicalStatue(
+    "phan-chau-trinh",
+    "Phan Châu Trinh",
+    "Phan Châu Trinh",
+    "rare",
+    "Nhà cải cách đầu thế kỷ XX, chủ trương nâng cao dân trí và đổi mới xã hội.",
+    `Phan Châu Trinh (1872–1926) là nhà hoạt động và tư tưởng cải cách đầu thế kỷ XX. Ông cho rằng muốn xây dựng một xã hội tiến bộ cần mở mang giáo dục, nâng cao ý thức công dân và cải tổ các thiết chế, thay vì chỉ dựa vào khởi nghĩa vũ trang. Những hoạt động gắn với phong trào Duy Tân cổ vũ học tập, thực nghiệp và đổi mới xã hội. Sau các biến động chống thuế năm 1908, ông bị bắt, rồi bị đưa sang Pháp; ông trở về nước năm 1925 và qua đời tại Sài Gòn năm sau.
+
+DI SẢN
+• Tư tưởng “khai dân trí, chấn dân khí, hậu dân sinh” thường được dùng để tóm lược định hướng cải cách của ông, nhưng không nên mặc định đó là một câu trích nguyên văn.
+• Di sản của Phan Châu Trinh tiếp tục được thảo luận trong lịch sử giáo dục và tư tưởng chính trị Việt Nam.`,
+    `Phan Châu Trinh (1872–1926) was an early twentieth-century Vietnamese reformer and political thinker. He argued that social progress required broader education, civic awareness, and institutional change rather than relying only on armed revolt. Activities associated with the Duy Tân reform movement promoted learning, practical skills, and social renewal. After the anti-tax unrest of 1908, he was arrested and later sent to France. He returned to Vietnam in 1925 and died in Saigon the following year.
+
+LEGACY
+• “Develop the people’s knowledge, strengthen their civic spirit, and improve their livelihood” is often used as a summary of his reform outlook, not as a securely verified verbatim quotation.
+• His ideas remain part of discussions about Vietnamese education and political thought.`,
+  ),
+  historicalStatue(
+    "vo-nguyen-giap",
+    "Võ Nguyên Giáp",
+    "Võ Nguyên Giáp",
+    "epic",
+    "Đại tướng, nhà giáo và nhà chỉ huy quân sự Việt Nam trong thế kỷ XX.",
+    `Võ Nguyên Giáp (1911–2013) là nhà giáo, nhà báo và nhà chỉ huy quân sự Việt Nam. Trước khi hoạt động quân sự, ông từng dạy lịch sử và tham gia báo chí. Trong kháng chiến chống Pháp, ông giữ vai trò chỉ huy cấp cao, trong đó có chiến dịch Điện Biên Phủ năm 1954. Về sau, ông tiếp tục giữ các chức vụ lãnh đạo trong quân đội và nhà nước; tên ông cũng gắn với chiến dịch mùa Xuân năm 1975. Vai trò của ông được nhìn nhận trong bối cảnh rộng hơn của lực lượng, đồng đội và các diễn biến chính trị, xã hội thời chiến.
+
+DI SẢN
+• Ông thường được nhắc đến như một trong những chỉ huy quân sự nổi bật của Việt Nam hiện đại.
+• Câu lệnh “Thần tốc, thần tốc hơn nữa; táo bạo, táo bạo hơn nữa” được ghi lại trong tư liệu chỉ đạo chiến dịch năm 1975.`,
+    `Võ Nguyên Giáp (1911–2013) was a Vietnamese teacher, journalist, and military commander. Before his military career, he taught history and worked in journalism. During the First Indochina War he held senior command responsibilities, including in the 1954 Điện Biên Phủ campaign. He later served in high-level military and government roles; his name is also associated with the 1975 Spring campaign. His place in history is best understood alongside the wider contributions of the forces, colleagues, and political and social circumstances of wartime.
+
+LEGACY
+• He is widely remembered as one of the prominent military commanders of modern Vietnam.
+• The order “Faster, faster still; bolder, bolder still” is recorded in accounts of campaign directives from 1975.`,
+  ),
+  historicalStatue(
+    "thich-nhat-hanh",
+    "Thích Nhất Hạnh",
+    "Thích Nhất Hạnh",
+    "rare",
+    "Thiền sư, tác giả và nhà hoạt động hòa bình Việt Nam có ảnh hưởng quốc tế.",
+    `Thích Nhất Hạnh (1926–2022) là thiền sư, nhà thơ, tác giả và nhà hoạt động hòa bình người Việt Nam. Ông xuất gia khi còn trẻ, giảng dạy và viết nhiều sách về chánh niệm, lòng từ bi và trách nhiệm xã hội. Trong chiến tranh, ông cổ vũ “Phật giáo dấn thân”, kết nối thực hành tâm linh với hoạt động cứu trợ và xây dựng cộng đồng. Ông sống nhiều năm ở Pháp và cùng các cộng sự phát triển Làng Mai thành một cộng đồng tu tập quốc tế.
+
+DI SẢN
+• Sách của ông được dịch ra nhiều ngôn ngữ và được độc giả trên thế giới tìm đọc.
+• Câu “Không có con đường nào dẫn đến hòa bình; hòa bình chính là con đường” thường được dẫn từ sách Peace Is Every Step; bản tiếng Việt là bản dịch.`,
+    `Thích Nhất Hạnh (1926–2022) was a Vietnamese Zen Buddhist monk, poet, author, and peace activist. He entered monastic life as a young man and wrote widely about mindfulness, compassion, and social responsibility. During wartime he advocated “engaged Buddhism,” connecting spiritual practice with relief work and community service. He spent many years in France, where he and his colleagues developed Plum Village into an international practice community.
+
+LEGACY
+• His books have been translated into many languages and read by audiences around the world.
+• “There is no way to peace; peace is the way” is commonly cited from Peace Is Every Step; Vietnamese versions are translations.`,
+  ),
 ];
 
 const historicalQuotes: Record<
@@ -1219,6 +1389,49 @@ const historicalQuotes: Record<
   "sun-tzu-marble": {
     quote: "Know the enemy and know yourself; you need not fear the result.",
     quoteSource: "The Art of War, chapter 3 (translated)",
+  },
+  "hai-ba-trung-marble": {
+    quote: "Một xin rửa sạch nước thù / Hai xin dựng lại nghiệp xưa họ Hùng.",
+    quoteSource:
+      "Đại Nam quốc sử diễn ca; thơ đời sau truyền tụng, không phải lời đương thời được xác nhận",
+  },
+  "tran-hung-dao-marble": {
+    quote: "Nếu bệ hạ muốn hàng, xin hãy chém đầu thần trước đã.",
+    quoteSource: "Đại Việt sử ký toàn thư, Trần Kỷ (lời được sử chép)",
+  },
+  "nguyen-trai-marble": {
+    quote: "Đem đại nghĩa để thắng hung tàn, lấy chí nhân để thay cường bạo.",
+    quoteSource: "Bình Ngô đại cáo (1428)",
+  },
+  "le-thanh-tong-marble": {
+    quote: "Một thước núi, một tấc sông của ta, lẽ nào lại tự tiện bỏ đi được?",
+    quoteSource:
+      "Chỉ dụ bảo vệ bờ cõi được chép trong Đại Việt sử ký toàn thư (bản dịch)",
+  },
+  "nguyen-binh-khiem-marble": {
+    quote: "Còn bạc, còn tiền, còn đệ tử / Hết cơm, hết rượu, hết ông tôi.",
+    quoteSource: "Thói đời, thơ Nôm truyền tụng gắn với Nguyễn Bỉnh Khiêm",
+  },
+  "nguyen-du-marble": {
+    quote: "Trăm năm trong cõi người ta / Chữ tài chữ mệnh khéo là ghét nhau.",
+    quoteSource: "Truyện Kiều, câu 1–2",
+  },
+  "ho-xuan-huong-marble": {
+    quote: "Thân em vừa trắng lại vừa tròn / Bảy nổi ba chìm với nước non.",
+    quoteSource: "Bánh trôi nước (bài thơ Nôm truyền tụng)",
+  },
+  "phan-chau-trinh-marble": {
+    quote: "Khai dân trí, chấn dân khí, hậu dân sinh.",
+    quoteSource:
+      "Cách tóm lược tư tưởng cải cách thường gắn với Phan Châu Trinh; không khẳng định là nguyên văn",
+  },
+  "vo-nguyen-giap-marble": {
+    quote: "Thần tốc, thần tốc hơn nữa; táo bạo, táo bạo hơn nữa.",
+    quoteSource: "Điện chỉ đạo chiến dịch mùa Xuân 1975 (bản chép)",
+  },
+  "thich-nhat-hanh-marble": {
+    quote: "Không có con đường nào dẫn đến hòa bình; hòa bình chính là con đường.",
+    quoteSource: "Peace Is Every Step (bản dịch tiếng Việt)",
   },
 };
 
@@ -1474,6 +1687,62 @@ const historicalPortraitSources: Record<
     sourceLabel: "Tư liệu về Tôn Tử",
     portraitSourceType: "uncertain-likeness",
     portraitSourceUrl: "https://www.britannica.com/biography/Sunzi",
+  },
+  "hai-ba-trung-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://en.wikipedia.org/wiki/Tr%C6%B0ng_sisters",
+  },
+  "tran-hung-dao-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng không phải chân dung xác thực",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://en.wikipedia.org/wiki/Tr%E1%BA%A7n_H%C6%B0ng_%C4%90%E1%BA%A1o",
+  },
+  "nguyen-trai-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://en.wikipedia.org/wiki/Nguy%E1%BB%85n_Tr%C3%A3i",
+  },
+  "le-thanh-tong-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://en.wikipedia.org/wiki/L%C3%AA_Th%C3%A1nh_T%C3%B4ng",
+  },
+  "nguyen-binh-khiem-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng không phải chân dung xác thực",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://en.wikipedia.org/wiki/Nguy%E1%BB%85n_B%E1%BB%89nh_Khi%C3%AAm",
+  },
+  "nguyen-du-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://en.wikipedia.org/wiki/Nguy%E1%BB%85n_Du",
+  },
+  "ho-xuan-huong-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://en.wikipedia.org/wiki/H%E1%BB%93_Xu%C3%A2n_H%C6%B0%C6%A1ng",
+  },
+  "phan-chau-trinh-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://en.wikipedia.org/wiki/Phan_Ch%C3%A2u_Trinh",
+  },
+  "vo-nguyen-giap-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng không phải bản sao chân dung xác thực",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://en.wikipedia.org/wiki/V%C3%B5_Nguy%C3%AAn_Gi%C3%A1p",
+  },
+  "thich-nhat-hanh-marble": {
+    sourceLabel: "Tư liệu tiểu sử; tượng là hình tượng nghệ thuật phỏng dựng",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://en.wikipedia.org/wiki/Th%C3%ADch_Nh%E1%BA%A5t_H%E1%BA%A1nh",
   },
 };
 
