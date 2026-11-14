@@ -47,6 +47,14 @@ import {
   TOEIC_TOPIC_WORD_LIST,
 } from "@/domain/toeic-topic-course";
 import {
+  OFFICE_APPS_COURSE_ENTRIES,
+  OFFICE_APPS_COURSE_ID,
+  OFFICE_APPS_COURSE_LESSONS,
+  OFFICE_APPS_COURSE_TITLE,
+  OFFICE_APPS_COURSE_TOPIC_COUNT,
+  OFFICE_APPS_COURSE_WORD_COUNT,
+} from "@/domain/office-apps-course";
+import {
   IDIOM_COURSE_ENTRIES,
   IDIOM_COURSE_ID,
   IDIOM_COURSE_LESSONS,
@@ -185,6 +193,18 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     testIdPrefix: "toeic",
     wordCount: TOEIC_TOPIC_COURSE_WORD_COUNT,
     topicCount: TOEIC_TOPIC_WORD_LIST.length,
+  },
+  {
+    id: OFFICE_APPS_COURSE_ID,
+    title: OFFICE_APPS_COURSE_TITLE,
+    description:
+      `Học ${OFFICE_APPS_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ và cụm từ thường gặp trong Excel, Word và PowerPoint, chia theo 3 ứng dụng.`,
+    lessons: OFFICE_APPS_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(OFFICE_APPS_COURSE_ENTRIES)),
+    icon: "monitor",
+    testIdPrefix: "office-apps",
+    wordCount: OFFICE_APPS_COURSE_WORD_COUNT,
+    topicCount: OFFICE_APPS_COURSE_TOPIC_COUNT,
   },
 ];
 

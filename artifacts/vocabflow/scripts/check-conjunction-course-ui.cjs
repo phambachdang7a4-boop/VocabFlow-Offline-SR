@@ -26,6 +26,9 @@ const toeicTopicDomain = loadTs(
     ),
   },
 );
+const officeAppsDomain = loadTs(
+  join(__dirname, "../domain/office-apps-course.ts"),
+);
 const idiomCourseData = require("../domain/idiom-course-data.json");
 const dictionaryDomain = require("./test-support.cjs").loadDictionaryDomain();
 const idiomCourseDomain = loadTs(
@@ -119,6 +122,7 @@ function mount() {
     "@/domain/linking-adverb-course": linkingAdverbDomain,
     "@/domain/ielts-topic-course": ieltsTopicDomain,
     "@/domain/toeic-topic-course": toeicTopicDomain,
+    "@/domain/office-apps-course": officeAppsDomain,
     "@/domain/idiom-course": idiomCourseDomain,
     "../../assets/images/corvi-app-icon.png": "corvi-avatar-asset",
     "../../assets/images/pan-avatar.png": "pan-avatar-asset",
@@ -448,6 +452,34 @@ function mount() {
     await screen.settle();
   }
   assert.ok(screen.byId("toeic-lesson-complete"));
+  screen.byId("toeic-leave-lesson").props.onPress();
+  screen.byId("return-to-course-list").props.onPress();
+  assert.ok(screen.byId("office-apps-course-card"));
+  screen.byId("office-apps-course-card").props.onPress();
+  const officeLesson = officeAppsDomain.OFFICE_APPS_COURSE_LESSONS[0];
+  screen.byId("office-apps-lesson-1").props.onPress();
+  for (let index = 0; index < officeLesson.questions.length; index++) {
+    const question = officeLesson.questions[index];
+    const translation =
+      officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES[question.term]
+        .exampleTranslation;
+    assert.deepEqual(
+      screen.byId("office-apps-question-prompt").props.children,
+      [question.prompt],
+    );
+    screen.byId(`office-apps-choice-${question.term}`).props.onPress();
+    assert.ok(screen.byId("office-apps-answer-feedback"));
+    assert.ok(
+      find(
+        screen.byId("office-apps-answer-feedback"),
+        (node) => node.props?.children?.includes?.(translation),
+      ),
+      "Office-apps feedback shows the Vietnamese example translation.",
+    );
+    screen.byId("office-apps-next").props.onPress();
+    await screen.settle();
+  }
+  assert.ok(screen.byId("office-apps-lesson-complete"));
   console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {
   console.error(error);

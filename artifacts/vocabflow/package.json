@@ -27,6 +27,7 @@
     "check:known-example-repair": "node scripts/check-known-example-repair.cjs",
     "check:regional-ipa": "node scripts/check-regional-pronunciations.cjs",
     "check:conjunction-course": "node scripts/check-conjunction-course.cjs && node scripts/check-conjunction-course-ui.cjs",
+    "check:office-apps-course": "node scripts/check-office-apps-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "course:build-idioms": "node scripts/build-idiom-course-data.cjs",
     "check:idiom-course": "node scripts/check-idiom-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "check:vocabulary-extraction": "node scripts/check-vocabulary-extraction.cjs",
