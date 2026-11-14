@@ -29,12 +29,24 @@ import {
   CHEST_RARITIES,
   CHEST_RARITY_COLORS,
   CHEST_RARITY_ICON_COLORS,
-  CHEST_RARITY_LABELS,
   CHEST_RARITY_TEXT_COLORS,
   type ChestRarity,
 } from "@/domain/mission-chests";
 
 const RARITY_ORDER: ChestRarity[] = [...CHEST_RARITIES];
+const GALLERY_RARITY_ORDER: ChestRarity[] = [
+  "legendary",
+  "epic",
+  "rare",
+  "common",
+];
+const STATUE_RARITY_LABELS: Record<ChestRarity, string> = {
+  common: "Common",
+  uncommon: "Uncommon",
+  rare: "Rare",
+  epic: "Epic",
+  legendary: "Legendary",
+};
 const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
   "ho-chi-minh-marble": require("../assets/images/ho-chi-minh-marble.png"),
   "alexander-marble": require("../assets/images/alexander-marble.png"),
@@ -43,10 +55,54 @@ const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
   "marcus-aurelius-marble": require("../assets/images/marcus-aurelius-marble.png"),
   "benjamin-franklin-marble": require("../assets/images/benjamin-franklin-marble.png"),
   "napoleon-marble": require("../assets/images/napoleon-marble.png"),
+  "julius-caesar-marble": require("../assets/images/julius-caesar-marble.png"),
+  "isaac-newton-marble": require("../assets/images/isaac-newton-marble.png"),
+  "socrates-marble": require("../assets/images/socrates-marble.png"),
+  "aristotle-marble": require("../assets/images/aristotle-marble.png"),
+  "archimedes-marble": require("../assets/images/archimedes-marble.png"),
+  "cleopatra-vii-marble": require("../assets/images/cleopatra-vii-marble.png"),
+  "augustus-marble": require("../assets/images/augustus-marble.png"),
+  "confucius-marble": require("../assets/images/confucius-marble.png"),
+  "michelangelo-marble": require("../assets/images/michelangelo-marble.png"),
+  "william-shakespeare-marble": require("../assets/images/william-shakespeare-marble.png"),
+  "galileo-galilei-marble": require("../assets/images/galileo-galilei-marble.png"),
+  "plato-marble": require("../assets/images/plato-marble.png"),
+  "pythagoras-marble": require("../assets/images/pythagoras-marble.png"),
+  "hippocrates-marble": require("../assets/images/hippocrates-marble.png"),
+  "homer-marble": require("../assets/images/homer-marble.png"),
+  "cicero-marble": require("../assets/images/cicero-marble.png"),
+  "hannibal-marble": require("../assets/images/hannibal-marble.png"),
+  "dante-alighieri-marble": require("../assets/images/dante-alighieri-marble.png"),
+  "nicolaus-copernicus-marble": require("../assets/images/nicolaus-copernicus-marble.png"),
+  "johannes-kepler-marble": require("../assets/images/johannes-kepler-marble.png"),
+  "voltaire-marble": require("../assets/images/voltaire-marble.png"),
+  "charles-darwin-marble": require("../assets/images/charles-darwin-marble.png"),
+  "ludwig-van-beethoven-marble": require("../assets/images/ludwig-van-beethoven-marble.png"),
+  "wolfgang-amadeus-mozart-marble": require("../assets/images/wolfgang-amadeus-mozart-marble.png"),
+  "george-washington-marble": require("../assets/images/george-washington-marble.png"),
+  "euclid-marble": require("../assets/images/euclid-marble.png"),
+  "herodotus-marble": require("../assets/images/herodotus-marble.png"),
+  "pericles-marble": require("../assets/images/pericles-marble.png"),
+  "demosthenes-marble": require("../assets/images/demosthenes-marble.png"),
+  "virgil-marble": require("../assets/images/virgil-marble.png"),
+  "seneca-marble": require("../assets/images/seneca-marble.png"),
+  "ptolemy-marble": require("../assets/images/ptolemy-marble.png"),
+  "charlemagne-marble": require("../assets/images/charlemagne-marble.png"),
+  "avicenna-marble": require("../assets/images/avicenna-marble.png"),
+  "marco-polo-marble": require("../assets/images/marco-polo-marble.png"),
+  "johannes-gutenberg-marble": require("../assets/images/johannes-gutenberg-marble.png"),
+  "erasmus-marble": require("../assets/images/erasmus-marble.png"),
+  "francis-bacon-marble": require("../assets/images/francis-bacon-marble.png"),
+  "rene-descartes-marble": require("../assets/images/rene-descartes-marble.png"),
+  "rembrandt-marble": require("../assets/images/rembrandt-marble.png"),
+  "johann-sebastian-bach-marble": require("../assets/images/johann-sebastian-bach-marble.png"),
+  "johann-wolfgang-von-goethe-marble": require("../assets/images/johann-wolfgang-von-goethe-marble.png"),
+  "victor-hugo-marble": require("../assets/images/victor-hugo-marble.png"),
+  "sun-tzu-marble": require("../assets/images/sun-tzu-marble.png"),
 };
 
 function rarityDisplayLabel(rarity: ChestRarity): string {
-  return rarity === "legendary" ? "Legendary" : CHEST_RARITY_LABELS[rarity];
+  return STATUE_RARITY_LABELS[rarity];
 }
 
 export default function CollectionScreen() {
@@ -75,6 +131,28 @@ export default function CollectionScreen() {
           overview.crafts.some((craft) => craft.artworkId === statue.id),
       )
     : [];
+  const bonusStatues = unlockedStatues.filter(
+    (statue) => statue.collectionGroup === "bonus",
+  );
+  const galleryGroups: {
+    key: string;
+    title: string;
+    statues: CollectionArtwork[];
+  }[] = GALLERY_RARITY_ORDER.map((rarity) => ({
+    key: rarity,
+    title: rarityDisplayLabel(rarity),
+    statues: unlockedStatues.filter(
+      (statue) =>
+        statue.collectionGroup !== "bonus" && statue.rarity === rarity,
+    ),
+  })).filter((group) => group.statues.length > 0);
+  if (bonusStatues.length > 0) {
+    galleryGroups.push({
+      key: "bonus",
+      title: "Đặc biệt",
+      statues: bonusStatues,
+    });
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -311,80 +389,117 @@ export default function CollectionScreen() {
         </Text>
       </View>
       {unlockedStatues.length ? (
-        <View style={styles.gallery}>
-          {unlockedStatues.map((statue) => {
-            const artworkImage = statue.imageAssetKey
-              ? ARTWORK_IMAGE_SOURCES[statue.imageAssetKey]
-              : undefined;
-            return (
-              <Pressable
-                key={statue.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Xem thông tin ${statue.title}`}
-                onPress={() => {
-                  setSelectedStatue(statue);
-                  setShowEnglishBiography(false);
-                }}
-                style={[
-                  styles.artCard,
-                  {
-                    backgroundColor: c.card,
-                    borderColor: c.border,
-                    shadowColor: c.shade,
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.14,
-                    shadowRadius: 7,
-                    elevation: 3,
-                  },
-                ]}
-              >
-                <MaterialSheen radius={16} />
-                <View
-                  style={[
-                    styles.artImage,
-                    { backgroundColor: CHEST_RARITY_COLORS[statue.rarity] },
-                  ]}
-                >
-                  {artworkImage ? (
-                    <Image
-                      accessibilityLabel={statue.title}
-                      source={artworkImage}
-                      style={styles.artArtwork}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Feather
-                      name={statue.icon as keyof typeof Feather.glyphMap}
-                      size={34}
-                      color={CHEST_RARITY_ICON_COLORS[statue.rarity]}
-                    />
-                  )}
-                </View>
-                <Text
-                  style={[styles.artTitle, { color: c.foreground }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                >
-                  {statue.shortTitle ?? statue.title}
-                </Text>
+        galleryGroups.map((group) => {
+          return (
+            <View
+              key={group.key}
+              testID={`collection-section-${group.key}`}
+              style={styles.raritySection}
+            >
+              <View style={styles.raritySectionHeading}>
                 <Text
                   style={[
-                    styles.artRarity,
-                    { color: CHEST_RARITY_TEXT_COLORS[statue.rarity] },
+                    styles.raritySectionTitle,
+                    {
+                      color:
+                        group.key === "bonus"
+                          ? c.primary
+                          : CHEST_RARITY_TEXT_COLORS[
+                              group.key as ChestRarity
+                            ],
+                    },
                   ]}
                 >
-                  {rarityDisplayLabel(statue.rarity)}
+                  {group.title}
                 </Text>
-                <Text style={[styles.artStatus, { color: c.primary }]}>
-                  Đã mở khóa
+                <Text style={[styles.caption, { color: c.mutedForeground }]}>
+                  {group.statues.length} tượng
                 </Text>
-                <Text style={[styles.detailHint, { color: c.mutedForeground }]}>
-                  Chạm để xem
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+              </View>
+              <View style={styles.gallery}>
+                {group.statues.map((statue) => {
+                  const artworkImage = statue.imageAssetKey
+                    ? ARTWORK_IMAGE_SOURCES[statue.imageAssetKey]
+                    : undefined;
+                  return (
+                    <Pressable
+                      key={statue.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Xem thông tin ${statue.title}`}
+                      onPress={() => {
+                        setSelectedStatue(statue);
+                        setShowEnglishBiography(false);
+                      }}
+                      style={[
+                        styles.artCard,
+                        {
+                          backgroundColor: c.card,
+                          borderColor: c.border,
+                          shadowColor: c.shade,
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.14,
+                          shadowRadius: 7,
+                          elevation: 3,
+                        },
+                      ]}
+                    >
+                      <MaterialSheen radius={16} />
+                      <View
+                        style={[
+                          styles.artImage,
+                          {
+                            backgroundColor: CHEST_RARITY_COLORS[statue.rarity],
+                          },
+                        ]}
+                      >
+                        {artworkImage ? (
+                          <Image
+                            accessibilityLabel={statue.title}
+                            source={artworkImage}
+                            style={styles.artArtwork}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Feather
+                            name={statue.icon as keyof typeof Feather.glyphMap}
+                            size={34}
+                            color={CHEST_RARITY_ICON_COLORS[statue.rarity]}
+                          />
+                        )}
+                      </View>
+                      <Text
+                        style={[styles.artTitle, { color: c.foreground }]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                      >
+                        {statue.shortTitle ?? statue.title}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.artRarity,
+                          { color: CHEST_RARITY_TEXT_COLORS[statue.rarity] },
+                        ]}
+                      >
+                        {rarityDisplayLabel(statue.rarity)}
+                      </Text>
+                      <Text style={[styles.artStatus, { color: c.primary }]}>
+                        Đã mở khóa
+                      </Text>
+                      <Text
+                        style={[
+                          styles.detailHint,
+                          { color: c.mutedForeground },
+                        ]}
+                      >
+                        Chạm để xem
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })
       ) : (
         <View
           style={[
@@ -561,6 +676,14 @@ const styles = StyleSheet.create({
   intro: { fontFamily: F.r, fontSize: 13, lineHeight: 19, marginBottom: 2 },
   heading: { gap: 3, marginTop: 8, marginBottom: 2 },
   galleryHeading: { marginTop: 14 },
+  raritySection: { gap: 8, marginTop: 6 },
+  raritySectionHeading: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  raritySectionTitle: { fontFamily: F.b, fontSize: 16 },
   title: { fontFamily: F.b, fontSize: 20 },
   caption: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
   rarityGrid: {

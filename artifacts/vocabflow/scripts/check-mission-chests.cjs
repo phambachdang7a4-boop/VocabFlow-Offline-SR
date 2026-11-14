@@ -513,11 +513,122 @@ assert.match(
   /justifyContent:\s*"space-between"/,
   "Four statue tiles are spaced across each grid row.",
 );
-assert.equal(COLLECTION_ARTWORKS.length, 7);
+assert.match(
+  collectionScreen,
+  /GALLERY_RARITY_ORDER\.map\(\(rarity\) =>/,
+  "The statue gallery is grouped in the requested high-to-low rarity order.",
+);
+assert.match(
+  collectionScreen,
+  /testID=\{`collection-section-\$\{group\.key\}`\}/,
+  "Each statue rarity group has its own identifiable section.",
+);
+assert.match(
+  collectionScreen,
+  /group\.statues\.map\(\(statue\) =>/,
+  "Each rarity section contains only statues of that rarity.",
+);
+assert.match(
+  collectionScreen,
+  /collectionGroup !== "bonus"/,
+  "The special Hồ Chí Minh statue is kept outside the fifty-person rank counts.",
+);
+assert.equal(COLLECTION_ARTWORKS.length, 51);
 assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
   "All currently available statues are unlocked without fragments.",
 );
+const namedHistoricalStatues = COLLECTION_ARTWORKS.filter(
+  (item) => item.collectionGroup !== "bonus",
+);
+assert.equal(namedHistoricalStatues.length, 50);
+assert.equal(statue.collectionGroup, "bonus");
+assert.deepEqual(
+  Object.fromEntries(
+    ["common", "uncommon", "rare", "epic", "legendary"].map((rarity) => [
+      rarity,
+      namedHistoricalStatues.filter((item) => item.rarity === rarity).length,
+    ]),
+  ),
+  { common: 20, uncommon: 0, rare: 15, epic: 10, legendary: 5 },
+  "The requested fifty-person statue roster has the specified tier counts.",
+);
+const expectedHistoricalNames = [
+  "Alexander Đại đế",
+  "Julius Caesar",
+  "Leonardo da Vinci",
+  "Isaac Newton",
+  "Napoléon Bonaparte",
+  "Socrates",
+  "Aristotle",
+  "Archimedes",
+  "Cleopatra VII",
+  "Augustus",
+  "Marcus Aurelius",
+  "Khổng Tử",
+  "Michelangelo",
+  "William Shakespeare",
+  "Galileo Galilei",
+  "Plato",
+  "Pythagoras",
+  "Hippocrates",
+  "Homer",
+  "Cicero",
+  "Hannibal",
+  "Dante Alighieri",
+  "Nicolaus Copernicus",
+  "Johannes Kepler",
+  "Voltaire",
+  "Charles Darwin",
+  "Ludwig van Beethoven",
+  "Wolfgang Amadeus Mozart",
+  "George Washington",
+  "Benjamin Franklin",
+  "Euclid",
+  "Herodotus",
+  "Pericles",
+  "Demosthenes",
+  "Virgil",
+  "Seneca",
+  "Ptolemy",
+  "Charlemagne",
+  "Avicenna",
+  "Marco Polo",
+  "Johannes Gutenberg",
+  "Erasmus",
+  "Francis Bacon",
+  "René Descartes",
+  "Rembrandt",
+  "Johann Sebastian Bach",
+  "Immanuel Kant",
+  "Johann Wolfgang von Goethe",
+  "Victor Hugo",
+  "Tôn Tử",
+].sort();
+assert.deepEqual(
+  namedHistoricalStatues
+    .map((item) => item.title.replace(/^Tượng /, ""))
+    .sort(),
+  expectedHistoricalNames,
+  "The catalog contains exactly the fifty requested historical figures.",
+);
+for (const artwork of namedHistoricalStatues) {
+  assert.ok(artwork.biography, `${artwork.title} has a Vietnamese biography.`);
+  assert.ok(artwork.biographyEn, `${artwork.title} has an English biography.`);
+  assert.ok(artwork.imageAssetKey, `${artwork.title} has an image key.`);
+  assert.ok(
+    existsSync(
+      join(__dirname, `../assets/images/${artwork.imageAssetKey}.png`),
+    ),
+    `${artwork.title}'s image is bundled for offline display.`,
+  );
+  assert.ok(
+    collectionScreen.includes(
+      `"${artwork.imageAssetKey}": require("../assets/images/${artwork.imageAssetKey}.png")`,
+    ),
+    `${artwork.title}'s image is registered for the collection screen.`,
+  );
+}
 assert.equal(isCollectionArtwork("legendary", statue.id), true);
 assert.equal(isCollectionArtwork("legendary", alexander.id), true);
 assert.equal(isCollectionArtwork("legendary", leonardo.id), true);

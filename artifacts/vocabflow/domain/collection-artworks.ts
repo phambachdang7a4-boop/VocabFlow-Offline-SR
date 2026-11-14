@@ -1,4 +1,5 @@
 import type { ChestRarity } from "./mission-chests";
+import { HISTORICAL_COLLECTION_ARTWORKS } from "./collection-historical-artworks";
 
 export interface CollectionArtwork {
   id: string;
@@ -12,6 +13,7 @@ export interface CollectionArtwork {
   description?: string;
   biography?: string;
   biographyEn?: string;
+  collectionGroup?: "bonus";
   quote?: string;
   sourceLabel?: string;
   unlockMode?: "automatic";
@@ -39,6 +41,7 @@ export const COLLECTION_ARTWORKS: CollectionArtwork[] = [
     imageAssetKey: "ho-chi-minh-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
+    collectionGroup: "bonus",
     description:
       "Nguyễn Ái Quốc, vị lãnh tụ của dân tộc Việt Nam và Chủ tịch nước Việt Nam Dân chủ Cộng hòa từ năm 1945 đến năm 1969.",
     quote: "Không có gì quý hơn độc lập, tự do.",
@@ -351,6 +354,7 @@ CAREER AND MAJOR CONTRIBUTIONS
 • The Hundred Days (1815): He escaped Elba and returned to power for 100 days, before suffering a final defeat by British and Prussian forces at the Battle of Waterloo.
 • Final Exile and Death: The British exiled him to the remote island of Saint Helena, where he died on May 5, 1821, at age 51 from stomach cancer. In 1840, his remains were returned to Paris for burial.`,
   },
+  ...HISTORICAL_COLLECTION_ARTWORKS,
 ];
 
 const LEGACY_PAINTING_IDS = new Set([

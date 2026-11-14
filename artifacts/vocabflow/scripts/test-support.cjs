@@ -53,10 +53,14 @@ const sqliteConnection = loadTs(
   join(__dirname, "../data/sqlite-connection.ts"),
 );
 const missionChests = loadTs(join(__dirname, "../domain/mission-chests.ts"));
+const historicalCollectionArtworks = loadTs(
+  join(__dirname, "../domain/collection-historical-artworks.ts"),
+);
 const collectionArtworks = loadTs(
   join(__dirname, "../domain/collection-artworks.ts"),
   {
     "./mission-chests": missionChests,
+    "./collection-historical-artworks": historicalCollectionArtworks,
   },
 );
 
