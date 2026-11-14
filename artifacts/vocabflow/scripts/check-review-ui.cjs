@@ -4,10 +4,14 @@ const { loadTs, loadDictionaryDomain, srs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
 const dictionary = loadDictionaryDomain();
+const localDictionaryAdditions = loadTs(join(__dirname, '../domain/dictionary-local-additions.ts'));
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const reviewResultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
-  { './dictionary': dictionary },
+  {
+    './dictionary': dictionary,
+    './dictionary-local-additions': localDictionaryAdditions,
+  },
 );
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
@@ -474,6 +478,11 @@ async function startReview(screen) {
   assert.ok(find(sentenceCard.byId('review-result-details'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
   'Show the dictionary example inside the word-information popup.');
+  assert.equal(
+    sentenceCard.byId('review-result-example-translation'),
+    undefined,
+    'Leave an unsupported example untranslated in review feedback.',
+  );
   assert.equal(
     sentenceCard.byId('review-result-meaning').props.children.join(''),
     sentenceWord.meaning,

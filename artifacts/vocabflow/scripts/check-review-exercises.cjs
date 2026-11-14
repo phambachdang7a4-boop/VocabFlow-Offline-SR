@@ -4,10 +4,14 @@ const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { loadTs, loadDictionaryDomain, srs, createRepository } = require('./test-support.cjs');
 const dictionary = loadDictionaryDomain();
+const localDictionaryAdditions = loadTs(join(__dirname, '../domain/dictionary-local-additions.ts'));
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const resultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
-  { './dictionary': dictionary },
+  {
+    './dictionary': dictionary,
+    './dictionary-local-additions': localDictionaryAdditions,
+  },
 );
 const word = {
   id: 1, term: 'whimsical', meaning: 'kỳ quặc, giàu tưởng tượng', ipa: '', note: '',
@@ -41,6 +45,41 @@ assert.equal(
   'Điều quan trọng là đáp lại một ân huệ một cách tử tế.',
   'Translate the example shown in the review result.',
 );
+assert.equal(
+  resultDetails.reviewExampleTranslation(
+    'A family is a group of people related to one another, such as parents and children.',
+  ),
+  'Gia đình là một nhóm người có quan hệ với nhau, chẳng hạn như cha mẹ và con cái.',
+  'Translate a common curated dictionary example by its exact source sentence.',
+);
+assert.equal(
+  resultDetails.reviewExampleTranslation(
+    'You may borrow my compass as long as you return it before sunset.',
+  ),
+  'Bạn có thể mượn la bàn miễn là trả lại trước khi mặt trời lặn.',
+  'Reuse the Vietnamese translation paired with a local offline-dictionary example.',
+);
+assert.equal(
+  resultDetails.reviewExampleTranslation(
+    'A family is a group of people.',
+  ),
+  null,
+  'Do not reuse a translation when the saved English sentence differs.',
+);
+assert.equal(
+  resultDetails.reviewExampleTranslation('She told a joke to break the ice.'),
+  null,
+  'Keep unsupported examples untranslated rather than guessing.',
+);
+const familyExamples = require('../data/basic-family-example-overrides.json');
+for (const examples of Object.values(familyExamples)) {
+  for (const example of Object.values(examples)) {
+    assert.ok(
+      resultDetails.reviewExampleTranslation(example),
+      `Every curated family-word sentence should have its paired translation: ${example}`,
+    );
+  }
+}
 const idiomWord = {
   ...word,
   term: 'break the ice',
