@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as storage from '@/data/vocabulary';
+import type { SaveWordsProgress } from '@/data/vocabulary';
 import { storageFailureMessage } from '@/data/sqlite-connection';
 import type { VocabularyWord, WordInput } from '@/data/types';
 import { AppState } from 'react-native';
@@ -12,7 +13,10 @@ interface VocabularyContextValue {
   error: string | null;
   reload: () => Promise<void>;
   saveWord: (input: WordInput, id?: number) => Promise<void>;
-  saveWords: (inputs: readonly WordInput[]) => Promise<void>;
+  saveWords: (
+    inputs: readonly WordInput[],
+    onProgress?: SaveWordsProgress,
+  ) => Promise<void>;
   deleteWord: (id: number) => Promise<void>;
   recordReview: (id: number, correct: boolean, expectedReviewCount: number) => Promise<void>;
   today: string;
@@ -68,9 +72,12 @@ export function VocabularyProvider({ children }: { children: React.ReactNode }) 
     await reload();
   }, [reload]);
 
-  const saveWords = useCallback(async (inputs: readonly WordInput[]) => {
+  const saveWords = useCallback(async (
+    inputs: readonly WordInput[],
+    onProgress?: SaveWordsProgress,
+  ) => {
     try {
-      await storage.saveWords(inputs);
+      await storage.saveWords(inputs, onProgress);
     } catch (failure) {
       const message = failure instanceof Error ? failure.message : '';
       const known = ['Vui lòng', 'Nội dung', 'Mã từ', 'Từ này'];

@@ -128,6 +128,79 @@ let upgradedHarness;
     ),
     "Every batch word starts at level 1 with fresh progress.",
   );
+  const largeBatchInputs = Array.from({ length: 1_200 }, (_, index) => ({
+    term: `large import term ${index + 1}`,
+    meaning: `Nghĩa của từ nhập ${index + 1}`,
+    ipa: "",
+    example: "",
+    note: "",
+  }));
+  const largeBatchProgress = [];
+  await repo.saveWords(largeBatchInputs, (completed, total) => {
+    largeBatchProgress.push({ completed, total });
+  });
+  assert.ok(
+    largeBatchProgress.length > 1 && largeBatchProgress.length <= 100,
+    "Large batch progress is reported periodically without flooding the UI.",
+  );
+  assert.deepEqual(largeBatchProgress.at(-1), {
+    completed: largeBatchInputs.length,
+    total: largeBatchInputs.length,
+  });
+  assert.equal(
+    (await repo.listWords()).filter((item) =>
+      item.term.startsWith("large import term "),
+    ).length,
+    largeBatchInputs.length,
+    "A large word batch is committed in full.",
+  );
+
+  const retryInputs = [
+    { ...input, term: "retry batch before failure" },
+    { ...input, term: "retry batch failure" },
+    { ...input, term: "retry batch after failure" },
+  ];
+  const wordCountBeforeRetryFailure = (await repo.listWords()).length;
+  const generationBeforeRetryFailure = await readSyncGeneration();
+  harness.db.exec(`
+    CREATE TRIGGER fail_retry_batch BEFORE INSERT ON words
+    WHEN NEW.term = 'retry batch failure'
+    BEGIN SELECT RAISE(ABORT, 'forced batch failure'); END;
+  `);
+  await assert.rejects(
+    repo.saveWords(retryInputs),
+    /forced batch failure/,
+    "An insertion failure in the middle of a batch is surfaced.",
+  );
+  harness.db.exec("DROP TRIGGER fail_retry_batch");
+  assert.equal((await repo.listWords()).length, wordCountBeforeRetryFailure);
+  assert.equal(await readSyncGeneration(), generationBeforeRetryFailure);
+  assert.ok(
+    !(await repo.listWords()).some((item) =>
+      item.term.startsWith("retry batch "),
+    ),
+    "The failed transaction leaves no partial words.",
+  );
+  const retryProgress = [];
+  await repo.saveWords(retryInputs, (completed, total) => {
+    retryProgress.push({ completed, total });
+  });
+  assert.deepEqual(retryProgress.at(-1), {
+    completed: retryInputs.length,
+    total: retryInputs.length,
+  });
+  assert.equal(
+    (await repo.listWords()).filter((item) =>
+      item.term.startsWith("retry batch "),
+    ).length,
+    retryInputs.length,
+    "The same batch can be retried and saved after the cause is removed.",
+  );
+  assert.equal(
+    (await repo.listWords()).some((item) => item.id === second.id),
+    true,
+    "Previously saved words remain available after a failed batch and retry.",
+  );
 
   const generationBeforeRejectedBatch = await readSyncGeneration();
   await assert.rejects(
@@ -148,7 +221,10 @@ let upgradedHarness;
 
   harness.db.close();
   const reopened = new DatabaseSync(join(root, 'vocabflow.db'));
-  assert.equal(reopened.prepare('SELECT COUNT(*) AS n FROM words').get().n, 4);
+  assert.equal(
+    reopened.prepare('SELECT COUNT(*) AS n FROM words').get().n,
+    4 + largeBatchInputs.length + retryInputs.length,
+  );
   assert.equal(reopened.prepare('SELECT completed FROM word_progress WHERE word_id = ?').get(second.id).completed, 1);
   reopened.close();
 

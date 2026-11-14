@@ -251,6 +251,10 @@ export default function CoursesScreen() {
   >(null);
   const [bulkAddConfirmationOpen, setBulkAddConfirmationOpen] = useState(false);
   const [bulkAddAcknowledged, setBulkAddAcknowledged] = useState(false);
+  const [bulkAddProgress, setBulkAddProgress] = useState<{
+    completed: number;
+    total: number;
+  } | null>(null);
   const [bulkCourseWordsSavedMessage, setBulkCourseWordsSavedMessage] =
     useState<string | null>(null);
   const { words: savedWords, saveWords } = useVocabulary();
@@ -337,6 +341,7 @@ export default function CoursesScreen() {
     setSelectedAnswer(null);
     setBulkAddConfirmationOpen(false);
     setBulkAddAcknowledged(false);
+    setBulkAddProgress(null);
     setBulkCourseWordsSavedMessage(null);
     setError(null);
   };
@@ -462,6 +467,7 @@ export default function CoursesScreen() {
   const openBulkAddConfirmation = () => {
     if (!activeCourse || saving || addableAllCourseWords.length === 0) return;
     setBulkAddAcknowledged(false);
+    setBulkAddProgress(null);
     setBulkCourseWordsSavedMessage(null);
     setError(null);
     setBulkAddConfirmationOpen(true);
@@ -485,6 +491,7 @@ export default function CoursesScreen() {
 
     const selected = addableAllCourseWords;
     setSaving(true);
+    setBulkAddProgress({ completed: 0, total: selected.length });
     setError(null);
     setBulkCourseWordsSavedMessage(null);
     try {
@@ -498,17 +505,20 @@ export default function CoursesScreen() {
             ? `Từ loại: ${candidate.partOfSpeech}`
             : "",
         })),
+        (completed, total) => setBulkAddProgress({ completed, total }),
       );
       setBulkCourseWordsSavedMessage(
         `Đã nạp ${selected.length.toLocaleString("vi-VN")} từ mới vào Sổ từ; bỏ qua ${alreadySavedCourseWords.toLocaleString("vi-VN")} từ đã có cùng nghĩa.`,
       );
       setBulkAddConfirmationOpen(false);
       setBulkAddAcknowledged(false);
+      setBulkAddProgress(null);
     } catch (failure) {
+      setBulkAddProgress(null);
       setError(
         failure instanceof Error
-          ? failure.message
-          : "Không thể nạp toàn bộ từ của khóa học. Hãy thử lại.",
+          ? `${failure.message} Dữ liệu đã có vẫn được giữ nguyên; hãy thử lại.`
+          : "Không thể nạp toàn bộ từ của khóa học. Dữ liệu đã có vẫn được giữ nguyên; hãy thử lại.",
       );
     } finally {
       setSaving(false);
@@ -1062,6 +1072,53 @@ export default function CoursesScreen() {
                 ) : null}
               </ScrollView>
 
+              {saving && bulkAddProgress ? (
+                <View
+                  testID={`${activeCourse.testIdPrefix}-bulk-add-progress`}
+                  accessibilityRole="progressbar"
+                  accessibilityValue={{
+                    min: 0,
+                    max: bulkAddProgress.total,
+                    now: bulkAddProgress.completed,
+                  }}
+                  style={styles.bulkAddProgress}
+                >
+                  <View style={styles.bulkAddProgressCopy}>
+                    <ActivityIndicator color={c.primary} size="small" />
+                    <Text
+                      style={[
+                        styles.bulkAddProgressText,
+                        { color: c.foreground },
+                      ]}
+                    >
+                      Đang nạp từ vào Sổ:{" "}
+                      {bulkAddProgress.completed.toLocaleString("vi-VN")} /{" "}
+                      {bulkAddProgress.total.toLocaleString("vi-VN")}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.bulkAddProgressTrack,
+                      { backgroundColor: c.muted },
+                    ]}
+                  >
+                    <View
+                      testID={`${activeCourse.testIdPrefix}-bulk-add-progress-fill`}
+                      style={[
+                        styles.bulkAddProgressFill,
+                        {
+                          backgroundColor: c.primary,
+                          width: `${
+                            (bulkAddProgress.completed / bulkAddProgress.total) *
+                            100
+                          }%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ) : null}
+
               <View style={styles.bulkAddActions}>
                 <Button
                   testID={`${activeCourse.testIdPrefix}-bulk-add-cancel`}
@@ -1073,7 +1130,11 @@ export default function CoursesScreen() {
                 />
                 <Button
                   testID={`${activeCourse.testIdPrefix}-bulk-add-confirm`}
-                  label={`Tôi hiểu, nạp ${addableAllCourseWords.length.toLocaleString("vi-VN")} từ`}
+                  label={
+                    saving
+                      ? "Đang nạp từ..."
+                      : `Tôi hiểu, nạp ${addableAllCourseWords.length.toLocaleString("vi-VN")} từ`
+                  }
                   onPress={() => void addAllCourseWords()}
                   disabled={
                     saving ||
@@ -1978,6 +2039,15 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   bulkAddError: { borderWidth: 1, borderRadius: 12, padding: 11 },
+  bulkAddProgress: { gap: 8, paddingVertical: 2 },
+  bulkAddProgressCopy: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+  bulkAddProgressText: { flex: 1, fontFamily: F.s, fontSize: 13 },
+  bulkAddProgressTrack: { height: 7, borderRadius: 5, overflow: "hidden" },
+  bulkAddProgressFill: { height: "100%", borderRadius: 5 },
   bulkAddActions: { flexDirection: "row", gap: 9, marginTop: 1 },
   bulkAddActionButton: { flex: 1, minHeight: 48 },
   errorBox: { borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },

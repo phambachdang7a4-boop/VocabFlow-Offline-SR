@@ -1799,8 +1799,13 @@ export function saveWord(input: WordInput, id?: number): Promise<void> {
   });
 }
 
+export type SaveWordsProgress = (completed: number, total: number) => void;
+
 /** Add multiple new words as one local transaction and one sync update. */
-export function saveWords(inputs: readonly WordInput[]): Promise<void> {
+export function saveWords(
+  inputs: readonly WordInput[],
+  onProgress?: SaveWordsProgress,
+): Promise<void> {
   if (inputs.length === 0) return Promise.resolve();
   return serialize(async () => {
     const entries = inputs.map((input) => {
@@ -1825,11 +1830,12 @@ export function saveWords(inputs: readonly WordInput[]): Promise<void> {
     const db = await database();
     const now = new Date().toISOString();
     const learnedOn = localDay(new Date(now));
+    const progressInterval = Math.max(1, Math.ceil(entries.length / 100));
     await db.withTransactionAsync(async () => {
       for (const { clean, entryId, senseId } of entries) {
         await assertWordIsNotDuplicate(db, clean, entryId, senseId);
       }
-      for (const { clean, entryId, senseId } of entries) {
+      for (const [index, { clean, entryId, senseId }] of entries.entries()) {
         const key = normalizeTerm(clean.term);
         const meaningKey = normalizeTerm(clean.meaning);
         const result = await db.runAsync(
@@ -1856,6 +1862,17 @@ export function saveWords(inputs: readonly WordInput[]): Promise<void> {
           progress.nextReviewOn,
           now,
         );
+        const completed = index + 1;
+        if (
+          onProgress &&
+          (completed % progressInterval === 0 || completed === entries.length)
+        ) {
+          try {
+            onProgress(completed, entries.length);
+          } catch {
+            // UI progress reporting must not interrupt the atomic database write.
+          }
+        }
       }
       await grantDailyMissionChests(db, learnedOn);
       await markSyncDirty(db);

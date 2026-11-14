@@ -76,7 +76,15 @@ function findAll(node, predicate, matches = []) {
   return matches;
 }
 
-function mount(initialSavedWords = []) {
+function textContent(node) {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textContent).join("");
+  return node && typeof node === "object"
+    ? textContent(node.props?.children)
+    : "";
+}
+
+function mount(initialSavedWords = [], options = {}) {
   const slots = [];
   const focusCallbacks = [];
   let cursor = 0;
@@ -139,13 +147,19 @@ function mount(initialSavedWords = []) {
     "@/contexts/VocabularyContext": {
       useVocabulary: () => ({
         words: savedWords,
-        saveWords: async (inputs) => {
-          const batch = [...inputs];
-          savedWordBatches.push(batch);
-          for (const input of batch) {
-            savedWordInputs.push(input);
-            savedWords.push({ ...input, id: savedWords.length + 1 });
-          }
+        saveWords: async (inputs, onProgress) => {
+          const commit = async () => {
+            const batch = [...inputs];
+            savedWordBatches.push(batch);
+            for (const input of batch) {
+              savedWordInputs.push(input);
+              savedWords.push({ ...input, id: savedWords.length + 1 });
+            }
+          };
+          if (options.saveWordsBehavior)
+            return options.saveWordsBehavior(inputs, onProgress, commit);
+          onProgress?.(inputs.length, inputs.length);
+          await commit();
         },
       }),
     },
@@ -565,13 +579,40 @@ function mount(initialSavedWords = []) {
   assert.ok(screen.byId("phrasal-verbs-words-added-message"));
 
   const officeEntries = officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES;
+  for (let index = 0; index < 1_200; index += 1) {
+    officeEntries[`synthetic course term ${index + 1}`] = {
+      definition: `Synthetic definition ${index + 1}`,
+      example: `A synthetic course term ${index + 1} appears here.`,
+      exampleTranslation: `Ví dụ ${index + 1}`,
+    };
+  }
   const firstOfficeTerm = Object.keys(officeEntries)[0];
-  const bulkScreen = mount([
+  let rejectFirstBulkSave;
+  const firstBulkSaveGate = new Promise((_, reject) => {
+    rejectFirstBulkSave = reject;
+  });
+  let shouldFailFirstBulkSave = true;
+  let bulkSaveAttempts = 0;
+  const bulkScreen = mount(
+    [
+      {
+        term: firstOfficeTerm,
+        meaning: officeEntries[firstOfficeTerm].definition,
+      },
+    ],
     {
-      term: firstOfficeTerm,
-      meaning: officeEntries[firstOfficeTerm].definition,
+      saveWordsBehavior: async (inputs, onProgress, commit) => {
+        bulkSaveAttempts += 1;
+        if (shouldFailFirstBulkSave) {
+          shouldFailFirstBulkSave = false;
+          onProgress(Math.floor(inputs.length / 3), inputs.length);
+          await firstBulkSaveGate;
+        }
+        await commit();
+        onProgress(inputs.length, inputs.length);
+      },
     },
-  ]);
+  );
   await bulkScreen.focus();
   bulkScreen.byId("office-apps-course-card").props.onPress();
   const allOfficeCandidates = courseWordSelectionDomain.buildCourseWordCandidates(
@@ -586,6 +627,10 @@ function mount(initialSavedWords = []) {
   const newOfficeWordCount = allOfficeCandidates.filter(
     (candidate) => !candidate.alreadySaved,
   ).length;
+  assert.ok(
+    newOfficeWordCount > 1_000,
+    "The bulk-save test exercises a course with more than one thousand new words.",
+  );
   assert.ok(bulkScreen.byId("office-apps-bulk-add-section"));
   assert.equal(
     bulkScreen.byId("office-apps-bulk-add-button").props.label,
@@ -635,7 +680,55 @@ function mount(initialSavedWords = []) {
     false,
   );
   bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
+    true,
+    "The confirmation is disabled immediately while the large course is being saved.",
+  );
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-cancel").props.disabled,
+    true,
+    "The learner cannot close the confirmation during the database transaction.",
+  );
+  const progress = bulkScreen.byId("office-apps-bulk-add-progress");
+  assert.ok(progress, "A visible progress status appears during the large save.");
+  assert.equal(progress.props.accessibilityValue.max, newOfficeWordCount);
+  assert.ok(
+    textContent(progress).includes(
+      `${Math.floor(newOfficeWordCount / 3).toLocaleString("vi-VN")} / ${newOfficeWordCount.toLocaleString("vi-VN")}`,
+    ),
+  );
+  assert.equal(
+    progress.props.accessibilityValue.now,
+    Math.floor(newOfficeWordCount / 3),
+    "The progress display reports completed words.",
+  );
+  assert.equal(bulkScreen.savedWords.length, 1);
+  bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
+  assert.equal(bulkSaveAttempts, 1, "A repeated tap cannot start a second save.");
+  rejectFirstBulkSave(new Error("Không thể lưu thay đổi."));
   await bulkScreen.settle();
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-confirmation").props.visible,
+    true,
+    "A failed save leaves the confirmation open so the learner can retry.",
+  );
+  assert.equal(bulkScreen.savedWords.length, 1);
+  assert.equal(bulkScreen.savedWordInputs.length, 0);
+  assert.ok(
+    textContent(bulkScreen.byId("office-apps-bulk-add-error")).includes(
+      "Dữ liệu đã có vẫn được giữ nguyên; hãy thử lại",
+    ),
+    "The failure message confirms existing words are kept and explains retry.",
+  );
+  assert.equal(
+    bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
+    false,
+    "The learner can retry after the failed transaction.",
+  );
+  bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
+  await bulkScreen.settle();
+  assert.equal(bulkSaveAttempts, 2, "The failed save can be retried once.");
   assert.equal(bulkScreen.savedWordInputs.length, newOfficeWordCount);
   assert.ok(
     bulkScreen.savedWordInputs.every((input) =>
