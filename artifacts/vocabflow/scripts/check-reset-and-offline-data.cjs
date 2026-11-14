@@ -2,7 +2,12 @@ const assert = require("node:assert/strict");
 const { mkdtempSync, readFileSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join } = require("node:path");
-const { createRepository, loadTs } = require("./test-support.cjs");
+const {
+  collectionArtworks,
+  createRepository,
+  loadTs,
+  missionChests,
+} = require("./test-support.cjs");
 
 const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
 
@@ -68,6 +73,37 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
     "Offline resources are retained if local reset fails.",
   );
 
+  const localOnlyCalls = [];
+  await reset.resetLocalOnly({
+    currentRevision: 14,
+    clearLocal: async (revision) => localOnlyCalls.push(`local:${revision}`),
+    clearOfflineResources: async () => localOnlyCalls.push("offline"),
+  });
+  assert.deepEqual(
+    localOnlyCalls,
+    ["local:15", "offline"],
+    "Guest reset clears local data and offline assets without requiring cloud.",
+  );
+
+  const failedGuestLocalCalls = [];
+  await assert.rejects(
+    () =>
+      reset.resetLocalOnly({
+        currentRevision: 14,
+        clearLocal: async () => {
+          failedGuestLocalCalls.push("local");
+          throw new Error("local");
+        },
+        clearOfflineResources: async () => failedGuestLocalCalls.push("offline"),
+      }),
+    /local/,
+  );
+  assert.deepEqual(
+    failedGuestLocalCalls,
+    ["local"],
+    "Guest offline resources are retained if local data reset fails.",
+  );
+
   const harness = createRepository(root);
   const values = new Map();
   const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
@@ -76,6 +112,8 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
       getItem: async (key) => values.get(key) ?? null,
       setItem: async (key, value) => values.set(key, value),
     },
+    "../domain/mission-chests": missionChests,
+    "../domain/collection-artworks": collectionArtworks,
   });
 
   await harness.repo.listWords();
@@ -183,11 +221,17 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(settings, /deleteOfflineRegionalIpa/);
   assert.match(settings, /testID="reset-app-data"/);
   assert.match(settings, /Xóa cloud và thiết bị/);
+  assert.match(settings, /Xóa dữ liệu thiết bị/);
+  assert.match(settings, /disabled=\{\s*!userLoaded/);
+  assert.match(settings, /if \(user && !sync\.online\)/);
   assert.match(context, /resetCloudFirst/);
+  assert.match(context, /resetLocalOnly/);
+  assert.match(context, /if \(userId && online !== true\)/);
+  assert.match(context, /reviewComboRewards:\s*\[\]/);
   assert.match(context, /cloudResetNeedsLocalRetry/);
   assert.match(audio, /digest\(["']SHA-256["']\)/);
   assert.match(audio, /audio_dictionary WHERE entry_id = \?/);
-  assert.match(dictionary, /onProgress: \(progress\)/);
+  assert.match(dictionary, /onProgress\?\.\(end \+ 1, DICTIONARY\.bytes\)/);
   assert.match(regionalIpa, /sha256Hex\(bytes\)/);
   assert.match(regionalIpa, /buildRegionalIpaSupplement/);
 

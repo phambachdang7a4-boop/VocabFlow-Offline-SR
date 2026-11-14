@@ -23,7 +23,7 @@ import {
 } from "@/data/vocabulary-sync";
 import { markSyncClean } from "@/data/vocabulary";
 import { clearLocalAccountAfterCloudReset } from "@/data/vocabulary-sync";
-import { resetCloudFirst } from "@/domain/data-reset";
+import { resetCloudFirst, resetLocalOnly } from "@/domain/data-reset";
 
 export type SyncState =
   "checking" | "offline" | "syncing" | "synced" | "pending" | "error";
@@ -147,9 +147,7 @@ export function SyncProvider({
 
   const resetAccountData = useCallback(
     async (clearOfflineResources: () => Promise<void>) => {
-      if (!userId)
-        throw new Error("Bạn cần đăng nhập để xóa dữ liệu tài khoản.");
-      if (online !== true)
+      if (userId && online !== true)
         throw new Error(
           "Cần kết nối Internet để xóa dữ liệu cloud. Dữ liệu trên thiết bị chưa bị thay đổi.",
         );
@@ -166,43 +164,61 @@ export function SyncProvider({
       let cloudCleared = false;
       let localCleared = false;
       try {
-        await resetCloudFirst({
-          replaceCloud: async () => {
-            const local = await exportSyncSnapshot();
-            const emptyPayload = {
-              ...local.payload,
-              words: [],
-              deletedWords: [],
-              courseProgress: [],
-              courseSelections: [],
-              reviewStats: [],
-              reviewSessions: [],
-              missionAwards: [],
-              missionChests: [],
-              collectionCrafts: [],
-              collectionPieceSpends: [],
-            };
-            const remote = await replaceRemote({ data: emptyPayload });
-            cloudCleared = true;
-            cloudResetNeedsLocalRetry.current = true;
-            return { revision: remote.revision ?? local.payload.revision + 1 };
-          },
-          clearLocal: async (revision) => {
-            await clearLocalAccountAfterCloudReset(revision);
-            localCleared = true;
-            cloudResetNeedsLocalRetry.current = false;
-          },
-          clearOfflineResources,
-        });
-        setState("synced");
-        setLastSyncedAt(new Date().toISOString());
+        const clearLocal = async (revision: number) => {
+          await clearLocalAccountAfterCloudReset(revision);
+          localCleared = true;
+          cloudResetNeedsLocalRetry.current = false;
+        };
+        if (userId) {
+          await resetCloudFirst({
+            replaceCloud: async () => {
+              const local = await exportSyncSnapshot();
+              const emptyPayload = {
+                ...local.payload,
+                words: [],
+                deletedWords: [],
+                courseProgress: [],
+                courseSelections: [],
+                reviewStats: [],
+                reviewSessions: [],
+                reviewComboRewards: [],
+                missionAwards: [],
+                missionChests: [],
+                collectionCrafts: [],
+                collectionPieceSpends: [],
+              };
+              const remote = await replaceRemote({ data: emptyPayload });
+              cloudCleared = true;
+              cloudResetNeedsLocalRetry.current = true;
+              return {
+                revision: remote.revision ?? local.payload.revision + 1,
+              };
+            },
+            clearLocal,
+            clearOfflineResources,
+          });
+          setState("synced");
+          setLastSyncedAt(new Date().toISOString());
+        } else {
+          const local = await exportSyncSnapshot();
+          await resetLocalOnly({
+            currentRevision: local.payload.revision,
+            clearLocal,
+            clearOfflineResources,
+          });
+          setState("offline");
+        }
         setMessage(null);
       } catch {
-        const userMessage = !cloudCleared
-          ? "Không thể xóa dữ liệu cloud. Dữ liệu trên thiết bị và tài nguyên offline vẫn được giữ nguyên."
+        const userMessage = userId
+          ? !cloudCleared
+            ? "Không thể xóa dữ liệu cloud. Dữ liệu trên thiết bị và tài nguyên offline vẫn được giữ nguyên."
+            : !localCleared
+              ? "Dữ liệu cloud đã xóa, nhưng dữ liệu trên thiết bị chưa được xóa hoàn tất. Hãy thử đặt lại lần nữa trước khi đồng bộ."
+              : "Dữ liệu học đã xóa; chưa xóa hết tài nguyên offline. Hãy thử xóa lại các gói offline trong Cài đặt."
           : !localCleared
-            ? "Dữ liệu cloud đã xóa, nhưng dữ liệu trên thiết bị chưa được xóa hoàn tất. Hãy thử đặt lại lần nữa trước khi đồng bộ."
-            : "Dữ liệu học đã xóa; chưa xóa hết tài nguyên offline. Hãy thử xóa lại các gói offline trong Cài đặt.";
+            ? "Không thể xóa dữ liệu trên thiết bị. Dữ liệu hiện tại và tài nguyên offline vẫn được giữ nguyên."
+            : "Dữ liệu học đã xóa; chưa xóa hết tài nguyên offline. Hãy thử đặt lại lần nữa.";
         setState("error");
         setMessage(userMessage);
         throw new Error(userMessage);

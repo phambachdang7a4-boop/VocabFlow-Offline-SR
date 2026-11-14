@@ -14,3 +14,19 @@ export async function resetCloudFirst(options: {
   await options.clearLocal(remote.revision);
   await options.clearOfflineResources();
 }
+
+export async function resetLocalOnly(options: {
+  currentRevision: number;
+  clearLocal: (revision: number) => Promise<void>;
+  clearOfflineResources: () => Promise<void>;
+}): Promise<void> {
+  if (
+    !Number.isSafeInteger(options.currentRevision) ||
+    options.currentRevision < 0 ||
+    options.currentRevision >= Number.MAX_SAFE_INTEGER
+  ) {
+    throw new Error("Phiên bản dữ liệu trên thiết bị không hợp lệ.");
+  }
+  await options.clearLocal(options.currentRevision + 1);
+  await options.clearOfflineResources();
+}

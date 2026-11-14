@@ -70,7 +70,7 @@ export default function SettingsScreen() {
   const sound = useSoundEffects();
   const sync = useSyncStatus();
   const { signOut } = useClerk();
-  const { user } = useUser();
+  const { user, isLoaded: userLoaded } = useUser();
   const [accountError, setAccountError] = React.useState<string | null>(null);
   const [transferState, setTransferState] = React.useState<
     "exporting" | "importing" | "restoring" | null
@@ -276,7 +276,11 @@ export default function SettingsScreen() {
 
   const handleResetAppData = async () => {
     if (resetBusy || offlineAction || transferState || syncBusy) return;
-    if (!sync.online) {
+    if (!userLoaded) {
+      setResetError("Đang kiểm tra tài khoản. Hãy thử lại sau giây lát.");
+      return;
+    }
+    if (user && !sync.online) {
       setResetError(
         "Cần kết nối Internet để xóa dữ liệu cloud. Dữ liệu chưa bị thay đổi.",
       );
@@ -295,7 +299,9 @@ export default function SettingsScreen() {
       await refreshOfflineStatus();
       setResetDialog(false);
       setResetNotice(
-        "Đã đặt lại dữ liệu tài khoản trên cloud và thiết bị này.",
+        user
+          ? "Đã đặt lại dữ liệu tài khoản trên cloud và thiết bị này."
+          : "Đã xóa dữ liệu học và tài nguyên offline trên thiết bị này.",
       );
     } catch (cause) {
       setResetError(
@@ -1148,9 +1154,9 @@ Nội dung tệp:
         >
           <MaterialSheen radius={c.radius} />
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            Xóa sổ từ, tiến độ và thống kê trên thiết bị này và toàn bộ tài
-            khoản trên các thiết bị khác. Từ điển, IPA và audio offline cũng sẽ bị
-            xóa. Không thể hoàn tác; cần Internet để xác nhận xóa cloud.
+            {user
+              ? "Xóa sổ từ, tiến độ và thống kê trên thiết bị này và toàn bộ tài khoản trên các thiết bị khác. Từ điển, IPA và audio offline cũng sẽ bị xóa. Không thể hoàn tác; cần Internet để xác nhận xóa cloud."
+              : "Xóa sổ từ, tiến độ, thống kê và tài nguyên offline trên thiết bị này. Không xóa dữ liệu cloud của tài khoản khác. Không thể hoàn tác."}
           </Text>
           <Button
             testID="reset-app-data"
@@ -1162,8 +1168,7 @@ Nội dung tệp:
               setResetDialog(true);
             }}
             disabled={
-              !user ||
-              !sync.online ||
+              !userLoaded ||
               syncBusy ||
               Boolean(offlineAction) ||
               transferState !== null ||
@@ -1183,10 +1188,10 @@ Nội dung tệp:
         <ConfirmDialog
           visible={resetDialog}
           title="Xóa mọi dữ liệu VocabFlow?"
-          message={
-            "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, IPA và audio offline cũng sẽ bị xóa khỏi thiết bị này.\n\nCần Internet. Nếu máy chủ không xác nhận xóa cloud, dữ liệu trên thiết bị và tài nguyên offline sẽ được giữ nguyên. Không thể hoàn tác."
-          }
-          confirmLabel="Xóa cloud và thiết bị"
+          message={user
+            ? "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, IPA và audio offline cũng sẽ bị xóa khỏi thiết bị này.\n\nCần Internet. Nếu máy chủ không xác nhận xóa cloud, dữ liệu trên thiết bị và tài nguyên offline sẽ được giữ nguyên. Không thể hoàn tác."
+            : "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này. Từ điển, IPA và audio offline cũng sẽ bị xóa khỏi thiết bị này. Không có dữ liệu cloud nào bị xóa. Không thể hoàn tác."}
+          confirmLabel={user ? "Xóa cloud và thiết bị" : "Xóa dữ liệu thiết bị"}
           onCancel={() => {
             if (!resetBusy) {
               setResetDialog(false);
