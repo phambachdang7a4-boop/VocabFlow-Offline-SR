@@ -130,6 +130,83 @@ export function useDownloadDictionaryAsset<TData = Awaited<ReturnType<typeof dow
 
 
 
+export const getDownloadUkIpaSupplementUrl = () => {
+
+
+
+
+  return `/api/dictionary/ipa-uk`
+}
+
+/**
+ * @summary Download the public UK IPA supplement for offline pronunciation lookup
+ */
+export const downloadUkIpaSupplement = async ( options?: Parameters<typeof customFetch>[1]): Promise<string> => {
+
+  return customFetch<string>(getDownloadUkIpaSupplementUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadUkIpaSupplementQueryKey = () => {
+    return [
+    `/api/dictionary/ipa-uk`
+    ] as const;
+    }
+
+
+export const getDownloadUkIpaSupplementQueryOptions = <TData = Awaited<ReturnType<typeof downloadUkIpaSupplement>>, TError = ErrorType<DictionaryAssetError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadUkIpaSupplement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadUkIpaSupplementQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadUkIpaSupplement>>> = ({ signal }) => downloadUkIpaSupplement({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadUkIpaSupplement>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadUkIpaSupplementQueryResult = NonNullable<Awaited<ReturnType<typeof downloadUkIpaSupplement>>>
+export type DownloadUkIpaSupplementQueryError = ErrorType<DictionaryAssetError>
+
+
+/**
+ * @summary Download the public UK IPA supplement for offline pronunciation lookup
+ */
+
+export function useDownloadUkIpaSupplement<TData = Awaited<ReturnType<typeof downloadUkIpaSupplement>>, TError = ErrorType<DictionaryAssetError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadUkIpaSupplement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadUkIpaSupplementQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getMergeUserSyncDataUrl = () => {
 
 

@@ -2,8 +2,8 @@ export const REGIONAL_IPA_DICTIONARY = {
   commit: "972cd67dd5f96bc5660e28070cde26e3928abcd7",
   repository: "https://github.com/open-dict-data/ipa-dict",
   filename: "vocabflow-regional-ipa.db",
-  sourceBytes: 4_864_391,
-  version: "ipa-dict-2026-11-12-v1",
+  sourceBytes: 7_887_890,
+  version: "ipa-dict-2026-11-12-v2-uk-supplement-b3ae7040",
   us: {
     accent: "us",
     label: "Anh-Mỹ",
@@ -20,12 +20,26 @@ export const REGIONAL_IPA_DICTIONARY = {
     sha256: "221394caef0cf723b4f2df81a98ac33191293257b88aed5b1fb89466d3a0dc77",
     license: "GPL-3.0",
   },
+  ukSupplement: {
+    accent: "uk",
+    label: "Anh-Anh bổ sung",
+    file: "dictionary_en_uk_slim.tsv",
+    endpoint: "/api/dictionary/ipa-uk",
+    bytes: 3_023_499,
+    sha256: "b3ae7040c0a2c7a479a93cd8be2cb0ae5c8d7dd58f84d54ad4d212d9983c9d9c",
+    entryCount: 104_738,
+    source:
+      "Các mục từ lấy từ tệp từ điển đã có; phiên âm UK được tra cứu bổ sung bằng Claude.",
+    license:
+      "Bản từ điển được ghi công trước đó chỉ có IPA Mỹ; chưa có giấy phép riêng được xác nhận cho IPA UK bổ sung.",
+  },
 } as const;
 
 export type RegionalIpaAccent = "us" | "uk";
 export type RegionalIpaSource =
   | (typeof REGIONAL_IPA_DICTIONARY)["us"]
-  | (typeof REGIONAL_IPA_DICTIONARY)["uk"];
+  | (typeof REGIONAL_IPA_DICTIONARY)["uk"]
+  | (typeof REGIONAL_IPA_DICTIONARY)["ukSupplement"];
 export interface RegionalIpaSourceEntry {
   term: string;
   ipa: string;
@@ -96,6 +110,7 @@ export function buildRegionalIpaSupplement(
 export const REGIONAL_IPA_ATTRIBUTION = [
   "IPA Anh-Mỹ lấy từ open-dict-data/ipa-dict, tệp en_US.txt, phiên bản commit 972cd67dd5f96bc5660e28070cde26e3928abcd7. Dữ liệu dựa trên modified cmudict-ipa; giấy phép MIT, bản quyền Lingliang Zhang.",
   "IPA Anh-Anh lấy từ open-dict-data/ipa-dict, tệp en_UK.txt, cùng phiên bản commit. Dữ liệu dựa trên ipacards và được phân phối theo GPL-3.0; giữ nguyên điều kiện của giấy phép khi phân phối.",
+  "IPA Anh-Anh bổ sung dùng các mục từ từ tệp từ điển đã có; phiên âm UK được tra cứu bằng Claude vì bản từ điển được ghi công trước đó chỉ có IPA Mỹ. Đây là mô tả quy trình, không phải giấy phép; chưa có giấy phép riêng được xác nhận cho dữ liệu IPA UK bổ sung.",
   "Nguồn: https://github.com/open-dict-data/ipa-dict/tree/972cd67dd5f96bc5660e28070cde26e3928abcd7",
   "Giấy phép MIT: https://opensource.org/license/mit",
   "Giấy phép GPL-3.0: https://www.gnu.org/licenses/gpl-3.0.html",

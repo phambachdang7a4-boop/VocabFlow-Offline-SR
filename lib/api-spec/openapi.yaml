@@ -30,6 +30,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DictionaryAssetError"
+  /dictionary/ipa-uk:
+    get:
+      operationId: downloadUkIpaSupplement
+      tags: [dictionary]
+      summary: Download the public UK IPA supplement for offline pronunciation lookup
+      responses:
+        "200":
+          description: Verified UK IPA text supplement
+          content:
+            text/plain:
+              schema:
+                type: string
+        "503":
+          description: UK IPA supplement storage temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DictionaryAssetError"
   /sync:
     post:
       operationId: mergeUserSyncData

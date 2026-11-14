@@ -36,7 +36,7 @@ export default function DictionarySourcesScreen() {
       <View style={{ gap: 6 }}>
         <Text style={[styles.title, { color: c.foreground }]}>Nguồn từ điển</Text>
         <Text style={[styles.p, { color: c.mutedForeground }]}>
-          Nghĩa tiếng Việt lấy từ Skypedia English–Vietnamese Dictionary; IPA Anh-Mỹ/Anh-Anh bổ sung từ ipa-dict. Trang này hiển thị thông tin nguồn và giấy phép để đối chiếu.
+          Nghĩa tiếng Việt lấy từ Skypedia English–Vietnamese Dictionary; IPA bổ sung từ ipa-dict. Phiên âm Anh-Anh bổ sung được tra cứu bằng Claude trên các mục từ từ điển đã có, vì bản được ghi công chỉ có IPA Mỹ.
         </Text>
       </View>
       <View style={[styles.block, { backgroundColor: c.secondary, borderColor: c.secondary, borderRadius: c.radius }]}>
@@ -63,6 +63,8 @@ export default function DictionarySourcesScreen() {
         {row('Phiên bản commit', REGIONAL_IPA_DICTIONARY.commit)}
         {row('IPA Anh-Mỹ', `MIT · SHA-256 ${REGIONAL_IPA_DICTIONARY.us.sha256}`)}
         {row('IPA Anh-Anh', `GPL-3.0 · SHA-256 ${REGIONAL_IPA_DICTIONARY.uk.sha256}`)}
+        {row('IPA Anh-Anh bổ sung', `${REGIONAL_IPA_DICTIONARY.ukSupplement.entryCount.toLocaleString('vi-VN')} từ · SHA-256 ${REGIONAL_IPA_DICTIONARY.ukSupplement.sha256}`)}
+        {row('Nguồn bổ sung', `${REGIONAL_IPA_DICTIONARY.ukSupplement.source} ${REGIONAL_IPA_DICTIONARY.ukSupplement.license}`)}
       </View>
       <Block
         testID="sources-regional-ipa"

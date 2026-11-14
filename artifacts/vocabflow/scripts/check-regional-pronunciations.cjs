@@ -17,15 +17,24 @@ const dictionaryDomain = loadDictionaryDomain();
 
 assert.equal(
   REGIONAL_IPA_DICTIONARY.sourceBytes,
-  REGIONAL_IPA_DICTIONARY.us.bytes + REGIONAL_IPA_DICTIONARY.uk.bytes,
+  REGIONAL_IPA_DICTIONARY.us.bytes +
+    REGIONAL_IPA_DICTIONARY.uk.bytes +
+    REGIONAL_IPA_DICTIONARY.ukSupplement.bytes,
 );
 assert.match(REGIONAL_IPA_DICTIONARY.us.sha256, /^[a-f0-9]{64}$/);
 assert.match(REGIONAL_IPA_DICTIONARY.uk.sha256, /^[a-f0-9]{64}$/);
+assert.match(REGIONAL_IPA_DICTIONARY.ukSupplement.sha256, /^[a-f0-9]{64}$/);
 assert.equal(REGIONAL_IPA_DICTIONARY.us.license, "MIT");
 assert.equal(REGIONAL_IPA_DICTIONARY.uk.license, "GPL-3.0");
+assert.equal(REGIONAL_IPA_DICTIONARY.ukSupplement.entryCount, 104_738);
+assert.match(REGIONAL_IPA_DICTIONARY.ukSupplement.source, /mục từ lấy từ tệp từ điển đã có/);
+assert.match(REGIONAL_IPA_DICTIONARY.ukSupplement.source, /Claude/);
+assert.match(REGIONAL_IPA_DICTIONARY.ukSupplement.license, /chưa có giấy phép riêng/);
 assert.match(REGIONAL_IPA_ATTRIBUTION, /commercial|phân phối/i);
 assert.match(REGIONAL_IPA_ATTRIBUTION, /GPL-3\.0/);
 assert.match(REGIONAL_IPA_ATTRIBUTION, /MIT/);
+assert.match(REGIONAL_IPA_ATTRIBUTION, /không phải giấy phép/i);
+assert.match(REGIONAL_IPA_ATTRIBUTION, /chưa có giấy phép riêng/i);
 
 assert.equal(normalizeRegionalIpaTerm("  MOTHER'S   "), "mother's");
 const us = parseRegionalIpaSource(
@@ -74,6 +83,28 @@ assert.deepEqual(
 assert.equal(
   supplement.some((record) => record.term === "not-in-dictionary"),
   false,
+);
+const layeredUkSupplement = buildRegionalIpaSupplement(
+  new Set(["hello", "new word"]),
+  new Set(),
+  [
+    { region: "uk", records: [{ term: "hello", ipa: "/first/" }] },
+    {
+      region: "uk",
+      records: [
+        { term: "hello", ipa: "/second/" },
+        { term: "new word", ipa: "/njuː wɜːd/" },
+      ],
+    },
+  ],
+);
+assert.deepEqual(
+  layeredUkSupplement,
+  [
+    { term: "hello", ipa: "/first/", region: "uk" },
+    { term: "new word", ipa: "/njuː wɜːd/", region: "uk" },
+  ],
+  "The supplemental database fills UK gaps without overwriting existing IPA.",
 );
 const verifiedUkSupplement = buildRegionalIpaSupplement(
   new Set(verifiedUkExamples.map((entry) => entry.term)),
@@ -154,6 +185,7 @@ async function checkOfflineLookupStates() {
     revision: REGIONAL_IPA_DICTIONARY.version,
     us_sha256: REGIONAL_IPA_DICTIONARY.us.sha256,
     uk_sha256: REGIONAL_IPA_DICTIONARY.uk.sha256,
+    uk_supplement_sha256: REGIONAL_IPA_DICTIONARY.ukSupplement.sha256,
     entry_count: 1,
   };
   const database = ({

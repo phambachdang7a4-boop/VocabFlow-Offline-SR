@@ -3,6 +3,7 @@ import { DownloadDictionaryAsset503Response } from "@workspace/api-zod";
 import {
   findAudioDictionaryAsset,
   findDictionaryAsset,
+  findUkIpaAsset,
 } from "../lib/dictionary-storage";
 
 const router: IRouter = Router();
@@ -122,6 +123,48 @@ router.get("/dictionary/audio", async (req, res): Promise<void> => {
     res.status(503).json({
       error: "Gói âm thanh offline tạm thời chưa tải được. Hãy thử lại.",
     });
+  }
+});
+
+router.get("/dictionary/ipa-uk", async (req, res): Promise<void> => {
+  try {
+    const file = await findUkIpaAsset();
+    const [metadata] = await file.getMetadata();
+    res.set({
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Length": String(metadata.size),
+      "Cache-Control": "public, max-age=86400",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Disposition": 'attachment; filename="dictionary_en_uk_slim.tsv"',
+      "X-UK-IPA-SHA256":
+        "b3ae7040c0a2c7a479a93cd8be2cb0ae5c8d7dd58f84d54ad4d212d9983c9d9c",
+    });
+    const stream = file.createReadStream();
+    res.on("close", () => {
+      if (!res.writableEnded) stream.destroy();
+    });
+    stream.on("error", (error) => {
+      req.log.error({ err: error }, "UK IPA asset stream failed");
+      if (res.headersSent) res.destroy(error);
+      else {
+        res.removeHeader("Content-Length");
+        res.removeHeader("Content-Disposition");
+        res.removeHeader("Cache-Control");
+        res.status(503).json(
+          DownloadDictionaryAsset503Response.parse({
+            error: "Gói IPA Anh-Anh bổ sung tạm thời chưa tải được. Hãy thử lại.",
+          }),
+        );
+      }
+    });
+    stream.pipe(res);
+  } catch (error) {
+    req.log.error({ err: error }, "Cannot serve the UK IPA supplement");
+    res.status(503).json(
+      DownloadDictionaryAsset503Response.parse({
+        error: "Gói IPA Anh-Anh bổ sung tạm thời chưa tải được. Hãy thử lại.",
+      }),
+    );
   }
 });
 

@@ -29,8 +29,13 @@ function sha256Hex(bytes: Uint8Array): string {
   ).join("");
 }
 
-function sourceUrl(file: string): string {
-  return `https://raw.githubusercontent.com/open-dict-data/ipa-dict/${REGIONAL_IPA_DICTIONARY.commit}/${file}`;
+function sourceUrl(source: RegionalIpaSource): string {
+  if ("endpoint" in source) {
+    const domain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
+    if (!domain) throw new Error("Không xác định được máy chủ tải IPA.");
+    return new URL(source.endpoint, `https://${domain}`).toString();
+  }
+  return `https://raw.githubusercontent.com/open-dict-data/ipa-dict/${REGIONAL_IPA_DICTIONARY.commit}/${source.file}`;
 }
 
 function openSupplementDatabase(): Promise<SQLiteDatabase> {
@@ -51,15 +56,18 @@ async function hasCurrentRevision(db: SQLiteDatabase): Promise<boolean> {
       revision: string;
       us_sha256: string;
       uk_sha256: string;
+      uk_supplement_sha256: string;
       entry_count: number;
     }>(
-      `SELECT revision, us_sha256, uk_sha256, entry_count
+      `SELECT revision, us_sha256, uk_sha256, uk_supplement_sha256, entry_count
        FROM ${metadataTable} LIMIT 1`,
     );
     return (
       metadata?.revision === REGIONAL_IPA_DICTIONARY.version &&
       metadata.us_sha256 === REGIONAL_IPA_DICTIONARY.us.sha256 &&
       metadata.uk_sha256 === REGIONAL_IPA_DICTIONARY.uk.sha256 &&
+      metadata.uk_supplement_sha256 ===
+        REGIONAL_IPA_DICTIONARY.ukSupplement.sha256 &&
       metadata.entry_count > 0
     );
   } catch {
@@ -71,7 +79,7 @@ async function fetchSource(
   source: RegionalIpaSource,
   signal: AbortSignal,
 ): Promise<string> {
-  const response = await fetch(sourceUrl(source.file), {
+  const response = await fetch(sourceUrl(source), {
     credentials: "omit",
     cache: "no-store",
     signal,
@@ -133,15 +141,18 @@ export async function getOfflineRegionalIpaStatus(): Promise<{
       revision: string;
       us_sha256: string;
       uk_sha256: string;
+      uk_supplement_sha256: string;
       entry_count: number;
     }>(
-      `SELECT revision, us_sha256, uk_sha256, entry_count
+      `SELECT revision, us_sha256, uk_sha256, uk_supplement_sha256, entry_count
        FROM ${metadataTable} LIMIT 1`,
     );
     if (
       metadata?.revision !== REGIONAL_IPA_DICTIONARY.version ||
       metadata.us_sha256 !== REGIONAL_IPA_DICTIONARY.us.sha256 ||
       metadata.uk_sha256 !== REGIONAL_IPA_DICTIONARY.uk.sha256 ||
+      metadata.uk_supplement_sha256 !==
+        REGIONAL_IPA_DICTIONARY.ukSupplement.sha256 ||
       metadata.entry_count <= 0
     ) {
       return { state: "damaged", bytes: 0, entryCount: 0 };
@@ -191,6 +202,14 @@ export async function installOfflineRegionalIpa(
         onProgress?.(stage, bytes, REGIONAL_IPA_DICTIONARY.sourceBytes),
       REGIONAL_IPA_DICTIONARY.us.bytes,
     );
+    const ukSupplement = await downloadAndParse(
+      REGIONAL_IPA_DICTIONARY.ukSupplement,
+      controller.signal,
+      (stage, bytes) =>
+        onProgress?.(stage, bytes, REGIONAL_IPA_DICTIONARY.sourceBytes),
+      REGIONAL_IPA_DICTIONARY.us.bytes +
+        REGIONAL_IPA_DICTIONARY.uk.bytes,
+    );
 
     onProgress?.(
       "Đang ghép IPA với từ điển",
@@ -235,7 +254,7 @@ export async function installOfflineRegionalIpa(
     const records = buildRegionalIpaSupplement(
       dictionaryTerms,
       existingAccents,
-      [us, uk],
+      [us, uk, ukSupplement],
     );
 
     if (records.length < 50_000) {
@@ -251,6 +270,7 @@ export async function installOfflineRegionalIpa(
         revision TEXT NOT NULL,
         us_sha256 TEXT NOT NULL,
         uk_sha256 TEXT NOT NULL,
+        uk_supplement_sha256 TEXT NOT NULL,
         entry_count INTEGER NOT NULL,
         us_count INTEGER NOT NULL,
         uk_count INTEGER NOT NULL
@@ -264,6 +284,15 @@ export async function installOfflineRegionalIpa(
       CREATE INDEX IF NOT EXISTS idx_${dataTable}_term
         ON ${dataTable}(term_key COLLATE NOCASE);
     `);
+    const metadataColumns = await db.getAllAsync<{ name: string }>(
+      `PRAGMA table_info(${metadataTable})`,
+    );
+    if (!metadataColumns.some((column) => column.name === "uk_supplement_sha256")) {
+      await db.execAsync(
+        `ALTER TABLE ${metadataTable}
+         ADD COLUMN uk_supplement_sha256 TEXT NOT NULL DEFAULT ''`,
+      );
+    }
 
     let usCount = 0;
     let ukCount = 0;
@@ -298,11 +327,13 @@ export async function installOfflineRegionalIpa(
       }
       await db.runAsync(
         `INSERT INTO ${metadataTable}
-         (revision, us_sha256, uk_sha256, entry_count, us_count, uk_count)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         (revision, us_sha256, uk_sha256, uk_supplement_sha256,
+          entry_count, us_count, uk_count)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         REGIONAL_IPA_DICTIONARY.version,
         REGIONAL_IPA_DICTIONARY.us.sha256,
         REGIONAL_IPA_DICTIONARY.uk.sha256,
+        REGIONAL_IPA_DICTIONARY.ukSupplement.sha256,
         new Set(records.map((record) => record.term)).size,
         usCount,
         ukCount,
@@ -388,15 +419,18 @@ export async function getRegionalIpaLookupForTerm(
         revision: string;
         us_sha256: string;
         uk_sha256: string;
+        uk_supplement_sha256: string;
         entry_count: number;
       }>(
-        `SELECT revision, us_sha256, uk_sha256, entry_count
+        `SELECT revision, us_sha256, uk_sha256, uk_supplement_sha256, entry_count
          FROM ${metadataTable} LIMIT 1`,
       );
       if (
         metadata?.revision !== REGIONAL_IPA_DICTIONARY.version ||
         metadata.us_sha256 !== REGIONAL_IPA_DICTIONARY.us.sha256 ||
         metadata.uk_sha256 !== REGIONAL_IPA_DICTIONARY.uk.sha256 ||
+        metadata.uk_supplement_sha256 !==
+          REGIONAL_IPA_DICTIONARY.ukSupplement.sha256 ||
         metadata.entry_count <= 0
       ) {
         return { state: "damaged" };

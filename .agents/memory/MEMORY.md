@@ -12,3 +12,4 @@
 - [Cừu Pan](vocabflow-scope.md) — Cừu Pan là nhân vật riêng, khác Corvi; hình tham chiếu của Pan đang quét dọn.
 - [Hình tượng sưu tập](statue-art-direction.md) — Ảnh tượng là bán thân cẩm thạch trắng, nền đen, 768px; hình AI phải ghi rõ không xác thực.
 - [Phẩm chất tượng](statue-rarity-tiers.md) — Tượng chỉ dùng Rare/Epic/Legendary; Common của rương vẫn giữ và dữ liệu Common cũ phải đọc được.
+- [Nguồn IPA Anh-Anh bổ sung](regional-ipa-provenance.md) — Dùng từ điển đã có làm danh sách mục từ; Claude hỗ trợ tra cứu UK vì bản ghi công trước đó chỉ có IPA Mỹ.

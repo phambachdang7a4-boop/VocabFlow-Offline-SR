@@ -19,6 +19,16 @@ export const DownloadDictionaryAsset503Response = zod.object({
 
 
 /**
+ * @summary Download the public UK IPA supplement for offline pronunciation lookup
+ */
+export const DownloadUkIpaSupplement200Response = zod.string()
+
+export const DownloadUkIpaSupplement503Response = zod.object({
+  "error": zod.string()
+})
+
+
+/**
  * @summary Merge the signed-in user's offline learning data
  */
 export const mergeUserSyncDataBodyRevisionMin = 0;
