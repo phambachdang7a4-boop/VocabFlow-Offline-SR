@@ -44,6 +44,9 @@ const phrasalVerbCourseDomain = loadTs(
 const courseWordSelectionDomain = loadTs(
   join(__dirname, "../domain/course-word-selection.ts"),
 );
+const savedWordMetadataDomain = loadTs(
+  join(__dirname, "../domain/saved-word-metadata.ts"),
+);
 const element = (type, props, ...children) => {
   if (typeof type === "function") return type(props ?? {});
   return { type, props: { ...props, children } };
@@ -517,12 +520,17 @@ function mount(initialSavedWords = [], options = {}) {
   );
   assert.ok(officeLessonSaves.length > 0);
   assert.ok(
-    officeLessonSaves.every(
-      (input) =>
+    officeLessonSaves.every((input) => {
+      const expectedPartOfSpeech =
+        officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES[input.term].partOfSpeech;
+      return (
         input.note ===
-        `Từ loại: ${officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES[input.term].partOfSpeech}`,
-    ),
-    "Saving selected Office words keeps each word's part of speech.",
+        (expectedPartOfSpeech ? `Từ loại: ${expectedPartOfSpeech}` : "") &&
+        savedWordMetadataDomain.getSavedWordPartOfSpeech(input.note) ===
+          (expectedPartOfSpeech || null)
+      );
+    }),
+    "Saving selected Office words keeps available part-of-speech labels.",
   );
   screen.byId("office-apps-leave-lesson").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
@@ -731,10 +739,24 @@ function mount(initialSavedWords = [], options = {}) {
   assert.equal(bulkSaveAttempts, 2, "The failed save can be retried once.");
   assert.equal(bulkScreen.savedWordInputs.length, newOfficeWordCount);
   assert.ok(
-    bulkScreen.savedWordInputs.every((input) =>
-      input.note.startsWith("Từ loại: "),
+    bulkScreen.savedWordInputs.every((input) => {
+      const expectedPartOfSpeech = officeEntries[input.term].partOfSpeech;
+      return (
+        input.note ===
+          (expectedPartOfSpeech ? `Từ loại: ${expectedPartOfSpeech}` : "") &&
+        savedWordMetadataDomain.getSavedWordPartOfSpeech(input.note) ===
+          (expectedPartOfSpeech || null)
+      );
+    }),
+    "Bulk-saved Office words keep available labels and omit blank part of speech.",
+  );
+  assert.ok(
+    bulkScreen.savedWordInputs.some(
+      (input) =>
+        !officeEntries[input.term].partOfSpeech &&
+        savedWordMetadataDomain.getSavedWordPartOfSpeech(input.note) === null,
     ),
-    "Office vocabulary saved in bulk keeps its part of speech in the existing note field.",
+    "Bulk-saved words without a part of speech do not produce an empty label.",
   );
   assert.equal(
     bulkScreen.savedWordInputs.find(

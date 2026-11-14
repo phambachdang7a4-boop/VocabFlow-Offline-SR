@@ -11,6 +11,7 @@ import { Button, ConfirmDialog, EmptyState, ErrorBanner, F, MaterialSheen, Skele
 import { formatDate } from '@/utils/text';
 import { getDictionaryDraft, getDictionaryEntry } from '@/data/dictionary';
 import { sameWordSense, validDictionaryId } from '@/domain/dictionary';
+import { getSavedWordPartOfSpeech } from '@/domain/saved-word-metadata';
 import { useDictionary } from '@/hooks/useDictionary';
 import { DictionaryGate } from '@/components/DictionaryGate';
 import { useSoundEffects } from '@/contexts/SoundEffectsContext';
@@ -82,6 +83,7 @@ function SavedWordInfoCard({ word }: { word: VocabularyWord }) {
     word.ipa,
   );
   const exampleTranslation = reviewExampleTranslation(word.example);
+  const partOfSpeech = getSavedWordPartOfSpeech(word.note);
 
   useEffect(() => {
     let active = true;
@@ -191,6 +193,19 @@ function SavedWordInfoCard({ word }: { word: VocabularyWord }) {
           {word.term}
         </Text>
       </View>
+      {partOfSpeech ? (
+        <View style={styles.infoGroup}>
+          <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
+            TỪ LOẠI
+          </Text>
+          <Text
+            testID="word-info-part-of-speech"
+            style={[styles.infoValue, { color: c.vocabCardForeground }]}
+          >
+            {partOfSpeech}
+          </Text>
+        </View>
+      ) : null}
       <View style={styles.infoGroup}>
         <Text style={[styles.infoLabel, { color: c.vocabCardMuted }]}>
           PHIÊN ÂM
