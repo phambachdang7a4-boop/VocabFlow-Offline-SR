@@ -283,23 +283,28 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.equal(screen.byId('dictionary-corvi-dialogue').props.children[0], 'X',
     'Corvi’s line appears one character at a time.');
   screen.byId('dictionary-corvi-talk').props.onPress();
-  assert.ok(screen.byId('dictionary-corvi-options'), 'Tapping Corvi opens dialogue choices.');
-  const compositionChildren = screen.byId('dictionary-corvi-composition').props.children.flat(Infinity);
-  const leftGroupIndex = compositionChildren.indexOf(screen.byId('dictionary-corvi-choice-group-left'));
-  const artIndex = compositionChildren.indexOf(screen.byId('dictionary-corvi-talk'));
-  const rightGroupIndex = compositionChildren.indexOf(screen.byId('dictionary-corvi-choice-group-right'));
-  assert.ok(leftGroupIndex < artIndex && artIndex < rightGroupIndex,
-    'Corvi stays centered between the two conversation choice groups.');
-  assert.equal(screen.byId('dictionary-corvi-idle-art').props.gazeToUser, true,
-    'Visible conversation choices lock Corvi into eye contact.');
+  assert.ok(screen.byId('dictionary-corvi-assistant-screen'),
+    'One tap opens a dedicated assistant screen instead of inline choices.');
+  assert.ok(screen.byId('dictionary-corvi-back'),
+    'The assistant screen has a back control like other app screens.');
+  assert.equal(screen.byId('dictionary-search'), undefined,
+    'The assistant screen replaces the dictionary search header while open.');
+  assert.equal(screen.byId('dictionary-corvi-assistant-name').props.children[0], 'Mr. Corvi — Quản gia');
+  assert.ok(screen.byId('dictionary-corvi-options'), 'All Corvi choices appear on the dedicated screen.');
+  assert.equal(screen.byId('dictionary-corvi-assistant-art').props.artSize, 236,
+    'Corvi is displayed larger on the assistant screen.');
+  assert.equal(screen.byId('dictionary-corvi-assistant-art').props.gazeToUser, true,
+    'Corvi keeps eye contact on the assistant screen.');
   for (const choice of ['lookup', 'extract', 'guide', 'review', 'recommend']) {
     assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`), `Corvi offers the ${choice} reply choice.`);
     assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`).props.accessibilityLabel,
       `${choice} remains explicitly labeled for assistive technology.`);
   }
   screen.byId('dictionary-corvi-choice-guide').props.onPress();
-  assert.equal(screen.byId('dictionary-corvi-idle-art').props.gazeToUser, false,
-    'Eye contact unlocks when the choice list closes.');
+  assert.ok(screen.byId('dictionary-corvi-assistant-screen'),
+    'Choosing an option keeps the assistant screen open while Corvi replies.');
+  assert.ok(screen.byId('dictionary-corvi-choice-lookup'),
+    'Choosing one option does not remove the remaining options.');
   assert.equal(screen.byId('dictionary-corvi-action-guide'), undefined,
     'The destination action waits until Corvi finishes typing his reply.');
   assert.notEqual(screen.byId('dictionary-corvi-dialogue').props.children[0],
@@ -366,7 +371,7 @@ function mount(file, services, personalWords = [], properties = {}) {
   for (let tap = 0; tap < 8; tap += 1) {
     screen.byId('dictionary-corvi-talk').props.onPress();
     assert.ok(screen.byId('dictionary-corvi-options'),
-      'Repeatedly tapping Corvi never hides the available choices.');
+      'Repeatedly tapping Corvi keeps the assistant menu visible.');
     for (const choice of ['lookup', 'extract', 'guide', 'review', 'recommend']) {
       assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`),
         `The ${choice} choice stays available after repeated taps.`);
@@ -374,6 +379,10 @@ function mount(file, services, personalWords = [], properties = {}) {
     assert.equal(screen.byId('dictionary-corvi-action-search'), undefined,
       'Repeated taps do not replace the choice list with a search-only action.');
   }
+  screen.byId('dictionary-corvi-back').props.onPress();
+  assert.equal(screen.byId('dictionary-corvi-assistant-screen'), undefined,
+    'The back control returns from Corvi to the dictionary.');
+  assert.ok(screen.byId('dictionary-search'));
 
   for (const [choice, action, route] of [
     ['lookup', 'search', null],
@@ -416,8 +425,10 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.equal(recommendationScreen.byType('DictionaryEntryView').props.backLabel, 'Về cuộc trò chuyện',
     'Returning from a suggestion returns to Corvi.');
   recommendationScreen.byType('DictionaryEntryView').props.onBack();
-  assert.ok(recommendationScreen.byId('dictionary-corvi-options'),
+  assert.ok(recommendationScreen.byId('dictionary-corvi-assistant-screen'),
     'The learner can continue the conversation after viewing a suggested word.');
+  assert.ok(recommendationScreen.byId('dictionary-corvi-choice-lookup'),
+    'Returning from a suggested word preserves the available choices.');
   screen.byId('dictionary-search').props.onChangeText('job');
   screen.byId('dictionary-submit').props.onPress();
   await screen.settle();

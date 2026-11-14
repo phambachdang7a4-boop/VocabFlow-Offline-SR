@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, BackHandler, FlatList, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -62,7 +62,7 @@ const GUIDE_PAGES = [
       ['Ôn tập', 'Tự nhớ từ đã đến hạn. Câu trả lời đúng hoặc sai sẽ cập nhật cấp ôn theo lịch của app.'],
       ['Sổ từ', 'Tìm từ đã lưu, lọc theo cấp ôn, đóng băng để tạm ẩn khỏi lượt ôn hoặc xóa từ không cần nữa.'],
       ['Nhiệm Vụ', 'Theo dõi mục tiêu trong ngày, mở rương nhận thưởng và xem mảnh tượng trong Bộ Sưu Tập.'],
-      ['Corvi', 'Chạm vào quản gia trong Thư Viện để mở lựa chọn tra từ, dùng Mắt Quạ, ôn tập, xin gợi ý từ mới hoặc đọc hướng dẫn.'],
+      ['Corvi', 'Chạm vào quản gia trong Thư Viện để mở màn hình trợ lý, rồi chọn tra từ, dùng Mắt Quạ, ôn tập, xin gợi ý từ mới hoặc đọc hướng dẫn.'],
     ],
   },
   {
@@ -147,6 +147,7 @@ export default function DictionaryScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const compactCorvi = windowWidth < 370;
   const corviArtSize = windowWidth < 420 ? (compactCorvi ? 160 : 180) : 220;
+  const corviAssistantArtSize = Math.min(280, Math.max(corviArtSize, 236));
   const reduceMotion = useReducedMotion();
   const corviBackgroundArt = c.dictPage === '#FBF7EE'
     ? require('../../assets/images/corvi-dictionary-background-light.png')
@@ -209,6 +210,16 @@ export default function DictionaryScreen() {
     setCorviDialogue(line);
   };
 
+  useEffect(() => {
+    if (!corviConversationOpen || Platform.OS === 'web') return;
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      setCorviConversationOpen(false);
+      setCorviPendingAction(null);
+      return true;
+    });
+    return () => backHandler.remove();
+  }, [corviConversationOpen]);
+
   const talkToCorvi = () => {
     setCorviPendingAction(null);
     setCorviConversationOpen(true);
@@ -216,7 +227,7 @@ export default function DictionaryScreen() {
   };
 
   const chooseCorviReply = (action: CorviAction) => {
-    setCorviConversationOpen(false);
+    setCorviConversationOpen(true);
     setCorviPendingAction(action);
     setCorviRecommendationError(null);
     showCorviLine(pickDifferentLine(CORVI_REPLY_VARIANTS[action], lastCorviLine.current));
@@ -385,7 +396,99 @@ export default function DictionaryScreen() {
   };
 
   let body: React.ReactNode;
-  if (!dict.ready) body = <DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} approveDownload={dict.approveDownload} />;
+  if (corviConversationOpen) body = (
+    <ScrollView
+      testID="dictionary-corvi-assistant-scroll"
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 18, paddingTop: 18, paddingBottom: bottom }}
+    >
+      <View testID="dictionary-corvi-assistant-screen" style={styles.corviAssistantScreen}>
+        <View style={styles.corviAssistantHero}>
+          <View style={[styles.corviAssistantBubble, { backgroundColor: c.dictChip, borderColor: c.dictLine }]}>
+            <Text testID="dictionary-corvi-assistant-name" style={[styles.dialogueName, { color: c.dictHead }]}>Mr. Corvi — Quản gia</Text>
+            <Text
+              testID="dictionary-corvi-dialogue"
+              accessibilityLabel={corviDialogue}
+              accessibilityLiveRegion="polite"
+              style={[styles.dialogueCopy, { color: c.dictInk }]}
+            >
+              {typedCorviDialogue}
+            </Text>
+          </View>
+          <Pressable
+            testID="dictionary-corvi-talk"
+            accessibilityRole="button"
+            accessibilityLabel="Nghe Corvi nói thêm"
+            onPress={talkToCorvi}
+            style={({ pressed }) => [
+              styles.corviAssistantArtTouch,
+              { width: corviAssistantArtSize, height: corviAssistantArtSize, opacity: pressed ? 0.82 : 1 },
+            ]}
+          >
+            <CorviBlinkingArtwork
+              testID="dictionary-corvi-assistant-art"
+              source={corviArt}
+              backgroundSource={corviBackgroundArt}
+              artSize={corviAssistantArtSize}
+              style={{ width: corviAssistantArtSize, height: corviAssistantArtSize }}
+              gazeToUser
+            />
+          </Pressable>
+        </View>
+        <View testID="dictionary-corvi-options" style={styles.corviAssistantOptions}>
+          <Text style={[styles.choicePrompt, { color: c.dictMuted }]}>Ngài muốn làm gì tiếp theo?</Text>
+          {CORVI_CHOICES.map((choice) => (
+            <Pressable
+              key={choice.testID}
+              testID={choice.testID}
+              accessibilityRole="button"
+              accessibilityLabel={choice.label}
+              onPress={() => chooseCorviReply(choice.action)}
+              style={({ pressed }) => [
+                styles.corviChoice,
+                {
+                  backgroundColor: pressed ? c.dictChip : c.dictPage,
+                  borderColor: c.dictLine,
+                  opacity: pressed ? 0.78 : 1,
+                },
+              ]}
+            >
+              <Feather name={choice.icon} size={18} color={c.dictHead} />
+              <Text style={[styles.corviAssistantChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
+              <Feather name="chevron-right" size={17} color={c.dictMuted} />
+            </Pressable>
+          ))}
+          {corviRecommendationError ? (
+            <Text testID="dictionary-corvi-recommend-error" style={[styles.talkHint, { color: c.destructive }]}>
+              {corviRecommendationError}
+            </Text>
+          ) : null}
+          {corviPendingAction && corviTypingComplete ? (
+            <Button
+              testID={corviPendingAction === 'extract'
+                ? 'dictionary-open-extract'
+                : `dictionary-corvi-action-${corviPendingAction}`}
+              label={corviPendingAction === 'search' ? 'Tìm từ ngay' :
+                corviPendingAction === 'extract' ? 'Mở Mắt Quạ' :
+                  corviPendingAction === 'guide' ? 'Mở hướng dẫn' :
+                    corviPendingAction === 'recommend' ? 'Gợi ý một từ' : 'Mở Ôn tập'}
+              icon={corviPendingAction === 'search' ? 'search' :
+                corviPendingAction === 'extract' ? 'eye' :
+                  corviPendingAction === 'guide' ? 'book-open' :
+                    corviPendingAction === 'recommend' ? 'bookmark' : 'repeat'}
+              onPress={followCorviAction}
+              style={styles.corviActionButton}
+            />
+          ) : corviPendingAction ? (
+            <Text style={[styles.talkHint, { color: c.dictMuted }]}>Corvi đang hồi âm...</Text>
+          ) : null}
+        </View>
+      </View>
+    </ScrollView>
+  );
+  else if (!dict.ready) body = <DictionaryGate stage={dict.stage} error={dict.error} retry={dict.retry} approveDownload={dict.approveDownload} />;
   else if (openId !== null) body = (
     <DictionaryEntryView key={openId} id={openId} bottomPad={bottom}
       backLabel={corviSuggestedEntry ? 'Về cuộc trò chuyện' : 'Kết quả tra cứu'}
@@ -419,26 +522,6 @@ export default function DictionaryScreen() {
           <View style={[styles.dialogueTail, { borderTopColor: c.dictChip }]} />
         </View>
         <View testID="dictionary-corvi-composition" style={[styles.corviComposition, compactCorvi && styles.corviCompositionCompact]}>
-          {!compactCorvi && corviConversationOpen ? (
-            <View testID="dictionary-corvi-choice-group-left" style={styles.choiceGroup}>
-              {CORVI_CHOICES.slice(0, 2).map((choice) => (
-                <Pressable
-                  key={choice.testID}
-                  testID={choice.testID}
-                  accessibilityRole="button"
-                  accessibilityLabel={choice.label}
-                  onPress={() => chooseCorviReply(choice.action)}
-                  style={({ pressed }) => [
-                    styles.corviChoice,
-                    { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 },
-                  ]}
-                >
-                  <Feather name={choice.icon} size={16} color={c.dictHead} />
-                  <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
           <Pressable
             testID="dictionary-corvi-talk"
             accessibilityRole="button"
@@ -452,85 +535,17 @@ export default function DictionaryScreen() {
               backgroundSource={corviBackgroundArt}
               artSize={corviArtSize}
               style={[styles.idleArt, { width: corviArtSize, height: corviArtSize }]}
-              gazeToUser={corviConversationOpen}
             />
           </Pressable>
-          {!compactCorvi && corviConversationOpen ? (
-            <View testID="dictionary-corvi-choice-group-right" style={styles.choiceGroup}>
-              {CORVI_CHOICES.slice(2).map((choice) => (
-                <Pressable
-                  key={choice.testID}
-                  testID={choice.testID}
-                  accessibilityRole="button"
-                  accessibilityLabel={choice.label}
-                  onPress={() => chooseCorviReply(choice.action)}
-                  style={({ pressed }) => [
-                    styles.corviChoice,
-                    { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 },
-                  ]}
-                >
-                  <Feather name={choice.icon} size={16} color={c.dictHead} />
-                  <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
         </View>
         {corviRecommendationLoading ? (
           <View testID="dictionary-corvi-recommend-loading" style={styles.recommendLoading}>
             <ActivityIndicator size="small" color={c.dictHead} />
             <Text style={[styles.talkHint, { color: c.dictMuted }]}>Corvi đang tìm một từ mới trong từ điển offline…</Text>
           </View>
-        ) : corviConversationOpen ? (
-          <View testID="dictionary-corvi-options" style={styles.corviOptions}>
-            <Text style={[styles.choicePrompt, { color: c.dictMuted }]}>Ngài muốn làm gì tiếp theo?</Text>
-            {compactCorvi ? <View testID="dictionary-corvi-choice-groups-compact" style={styles.compactChoiceGroups}>
-              <View testID="dictionary-corvi-choice-group-left" style={styles.choiceGroup}>
-                {CORVI_CHOICES.slice(0, 2).map((choice) => (
-                  <Pressable key={choice.testID} testID={choice.testID} accessibilityRole="button"
-                    accessibilityLabel={choice.label} onPress={() => chooseCorviReply(choice.action)}
-                    style={({ pressed }) => [styles.corviChoice, { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 }]}>
-                    <Feather name={choice.icon} size={16} color={c.dictHead} />
-                    <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View testID="dictionary-corvi-choice-group-right" style={styles.choiceGroup}>
-                {CORVI_CHOICES.slice(2).map((choice) => (
-                  <Pressable key={choice.testID} testID={choice.testID} accessibilityRole="button"
-                    accessibilityLabel={choice.label} onPress={() => chooseCorviReply(choice.action)}
-                    style={({ pressed }) => [styles.corviChoice, { backgroundColor: pressed ? c.dictChip : c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.78 : 1 }]}>
-                    <Feather name={choice.icon} size={16} color={c.dictHead} />
-                    <Text style={[styles.corviChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View> : null}
-            {corviRecommendationError ? (
-              <Text testID="dictionary-corvi-recommend-error" style={[styles.talkHint, { color: c.destructive }]}>
-                {corviRecommendationError}
-              </Text>
-            ) : null}
-          </View>
-        ) : corviPendingAction && corviTypingComplete ? (
-          <Button
-            testID={corviPendingAction === 'extract'
-              ? 'dictionary-open-extract'
-              : `dictionary-corvi-action-${corviPendingAction}`}
-            label={corviPendingAction === 'search' ? 'Tìm từ ngay' :
-              corviPendingAction === 'extract' ? 'Mở Mắt Quạ' :
-                corviPendingAction === 'guide' ? 'Mở hướng dẫn' :
-                  corviPendingAction === 'recommend' ? 'Gợi ý một từ' : 'Mở Ôn tập'}
-            icon={corviPendingAction === 'search' ? 'search' :
-              corviPendingAction === 'extract' ? 'eye' :
-                corviPendingAction === 'guide' ? 'book-open' :
-                  corviPendingAction === 'recommend' ? 'bookmark' : 'repeat'}
-            onPress={followCorviAction}
-            style={styles.corviActionButton}
-          />
         ) : (
           <Text style={[styles.talkHint, { color: c.dictMuted }]}>
-            {corviPendingAction ? 'Corvi đang hồi âm...' : 'Chạm vào Corvi để mở các lựa chọn'}
+            {corviPendingAction ? 'Corvi đang hồi âm...' : 'Chạm vào Corvi để mở màn hình trợ lý'}
           </Text>
         )}
       </View>
@@ -616,51 +631,70 @@ export default function DictionaryScreen() {
         elevation: 4,
       }]}>
         <MaterialSheen tone="navy" radius={0} />
-        <View style={[styles.search, {
-          backgroundColor: c.dictField,
-          borderRadius: c.radius,
-          borderColor: c.border,
-          opacity: dict.ready ? 1 : 0.6,
-          shadowColor: c.shade,
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.14,
-          shadowRadius: 6,
-          elevation: 3,
-        }]}>
-          <MaterialSheen radius={c.radius} />
-          <TextInput
-            ref={inputRef}
-            testID="dictionary-search"
-            accessibilityLabel="Nhập từ tiếng Anh"
-            value={q}
-            onChangeText={onChange}
-            onSubmitEditing={submit}
-            editable={dict.ready}
-            placeholder="Nhập từ tiếng Anh"
-            placeholderTextColor={c.dictMuted}
-            style={[styles.searchInput, { color: c.dictFieldInk }]}
-            autoCorrect={false}
-            autoCapitalize="none"
-            maxLength={200}
-            returnKeyType="search"
-          />
-          {loading && (items.length > 0 || openId !== null) ? <ActivityIndicator size="small" color={c.dictHead} /> : null}
-          {q ? (
-            <Pressable testID="dictionary-clear" onPress={() => { onChange(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="Xoá tìm kiếm">
-              <Feather name="x-circle" size={20} color={c.dictMuted} />
+        {corviConversationOpen ? (
+          <View style={styles.corviPageHeader}>
+            <Pressable
+              testID="dictionary-corvi-back"
+              accessibilityRole="button"
+              accessibilityLabel="Quay lại Thư viện"
+              onPress={() => { setCorviConversationOpen(false); setCorviPendingAction(null); }}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.corviHeaderBack,
+                { backgroundColor: pressed ? c.dictChip : 'transparent' },
+              ]}
+            >
+              <Feather name="arrow-left" size={22} color={c.dictHead} />
             </Pressable>
-          ) : null}
-          <Pressable testID="dictionary-open-sources" accessibilityLabel="Nguồn từ điển" onPress={() => router.push('/dictionary-sources')}
-            hitSlop={8} style={({ pressed }) => [styles.iconBtn, { opacity: pressed ? 0.6 : 1 }]}>
-            <Feather name="info" size={20} color={c.dictMuted} />
-          </Pressable>
-          <View style={[styles.divider, { backgroundColor: c.dictLine }]} />
-          <Pressable testID="dictionary-submit" accessibilityRole="button" accessibilityLabel="Tra ngay" onPress={submit}
-            disabled={!dict.ready || !q.trim()} hitSlop={6}
-            style={({ pressed }) => [styles.go, { opacity: pressed ? 0.6 : (!dict.ready || !q.trim()) ? 0.4 : 1 }]}>
-            <Feather name="search" size={22} color={c.dictHead} />
-          </Pressable>
-        </View>
+            <Text style={[styles.corviHeaderTitle, { color: c.dictHead }]}>Trợ lý Corvi</Text>
+          </View>
+        ) : (
+          <View style={[styles.search, {
+            backgroundColor: c.dictField,
+            borderRadius: c.radius,
+            borderColor: c.border,
+            opacity: dict.ready ? 1 : 0.6,
+            shadowColor: c.shade,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.14,
+            shadowRadius: 6,
+            elevation: 3,
+          }]}>
+            <MaterialSheen radius={c.radius} />
+            <TextInput
+              ref={inputRef}
+              testID="dictionary-search"
+              accessibilityLabel="Nhập từ tiếng Anh"
+              value={q}
+              onChangeText={onChange}
+              onSubmitEditing={submit}
+              editable={dict.ready}
+              placeholder="Nhập từ tiếng Anh"
+              placeholderTextColor={c.dictMuted}
+              style={[styles.searchInput, { color: c.dictFieldInk }]}
+              autoCorrect={false}
+              autoCapitalize="none"
+              maxLength={200}
+              returnKeyType="search"
+            />
+            {loading && (items.length > 0 || openId !== null) ? <ActivityIndicator size="small" color={c.dictHead} /> : null}
+            {q ? (
+              <Pressable testID="dictionary-clear" onPress={() => { onChange(''); inputRef.current?.focus(); }} hitSlop={10} accessibilityLabel="Xoá tìm kiếm">
+                <Feather name="x-circle" size={20} color={c.dictMuted} />
+              </Pressable>
+            ) : null}
+            <Pressable testID="dictionary-open-sources" accessibilityLabel="Nguồn từ điển" onPress={() => router.push('/dictionary-sources')}
+              hitSlop={8} style={({ pressed }) => [styles.iconBtn, { opacity: pressed ? 0.6 : 1 }]}>
+              <Feather name="info" size={20} color={c.dictMuted} />
+            </Pressable>
+            <View style={[styles.divider, { backgroundColor: c.dictLine }]} />
+            <Pressable testID="dictionary-submit" accessibilityRole="button" accessibilityLabel="Tra ngay" onPress={submit}
+              disabled={!dict.ready || !q.trim()} hitSlop={6}
+              style={({ pressed }) => [styles.go, { opacity: pressed ? 0.6 : (!dict.ready || !q.trim()) ? 0.4 : 1 }]}>
+              <Feather name="search" size={22} color={c.dictHead} />
+            </Pressable>
+          </View>
+        )}
       </View>
       <View style={{ flex: 1, backgroundColor: c.dictPage }}>{body}</View>
       <Modal
@@ -747,21 +781,26 @@ export default function DictionaryScreen() {
 
 const styles = StyleSheet.create({
   band: { position: 'relative', paddingHorizontal: 16, paddingBottom: 14 },
+  corviPageHeader: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  corviHeaderBack: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  corviHeaderTitle: { fontFamily: F.b, fontSize: 18 },
   iconBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
+  corviAssistantScreen: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: 16, paddingBottom: 18 },
+  corviAssistantHero: { alignItems: 'center', gap: 10 },
+  corviAssistantBubble: { width: '100%', maxWidth: 520, borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },
+  corviAssistantArtTouch: { alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
+  corviAssistantOptions: { width: '100%', maxWidth: 480, alignSelf: 'center', gap: 9 },
+  corviAssistantChoiceText: { flex: 1, fontFamily: F.s, fontSize: 14, lineHeight: 19 },
   idleState: { flexGrow: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 8 },
   corviComposition: { width: '100%', maxWidth: 620, minHeight: 202, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, flexShrink: 0 },
   corviCompositionCompact: { minHeight: 140 },
   corviTouchable: { maxWidth: '100%', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' },
   idleArt: { maxWidth: '100%' },
-  corviOptions: { width: '100%', maxWidth: 360, gap: 8, marginTop: 2 },
   recommendLoading: { alignItems: 'center', gap: 8, paddingVertical: 8 },
   choicePrompt: { fontFamily: F.m, fontSize: 12, textAlign: 'center' },
-  choiceGroup: { flex: 1, minWidth: 0, maxWidth: 150, gap: 8 },
-  compactChoiceGroups: { width: '100%', flexDirection: 'row', gap: 10, justifyContent: 'center' },
-  corviChoice: { width: '100%', minHeight: 48, borderWidth: 1, borderRadius: 13, paddingHorizontal: 8, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  corviChoiceText: { flexShrink: 1, fontFamily: F.s, fontSize: 12, lineHeight: 16, textAlign: 'center' },
+  corviChoice: { width: '100%', minHeight: 54, borderWidth: 1, borderRadius: 14, paddingHorizontal: 15, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 12 },
   corviActionButton: { width: '100%', maxWidth: 320, minHeight: 48, marginTop: 2 },
   dialogueWrap: { width: '100%', maxWidth: 520, alignItems: 'center', zIndex: 1 },
   dialogueBubble: { width: '100%', borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },
