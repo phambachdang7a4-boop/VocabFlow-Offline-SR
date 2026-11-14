@@ -17,6 +17,9 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useColors } from "@/hooks/useColors";
 import type { VocabularyWord } from "@/data/types";
+import { getDictionaryEntry } from "@/data/dictionary";
+import { getRegionalIpaForTerm } from "@/data/offline-regional-pronunciations";
+import type { DictionaryPronunciation } from "@/domain/dictionary";
 import {
   checkReviewAnswer,
   compactReviewAnswer,
@@ -24,6 +27,10 @@ import {
   isReviewExampleUsable,
   type ReviewExercise,
 } from "@/domain/review-exercises";
+import {
+  groupReviewPronunciations,
+  reviewExampleTranslation,
+} from "@/domain/review-result-details";
 import { Button, ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
@@ -105,6 +112,65 @@ export function ReviewCard({
 
   const answered = outcome !== null;
   const graded = outcome?.action === "grade" ? outcome : null;
+  const pronunciationLookupKey = `${word.id}:${word.dictionaryEntryId ?? ""}:${word.term}`;
+  const [pronunciationLookup, setPronunciationLookup] = useState<{
+    key: string;
+    pronunciations: DictionaryPronunciation[];
+  } | null>(null);
+  const pronunciationLines = groupReviewPronunciations(
+    pronunciationLookup?.key === pronunciationLookupKey
+      ? pronunciationLookup.pronunciations
+      : [],
+    word.ipa,
+  );
+  const exampleTranslation = reviewExampleTranslation(word.example);
+
+  useEffect(() => {
+    if (!answered) return;
+    let active = true;
+
+    const loadPronunciations = async () => {
+      let pronunciations: DictionaryPronunciation[] = [];
+      if (word.dictionaryEntryId != null) {
+        try {
+          pronunciations = (
+            await getDictionaryEntry(word.dictionaryEntryId)
+          ).pronunciations;
+        } catch {
+          // Saved IPA remains visible if the offline dictionary is unavailable.
+        }
+      }
+
+      if (
+        word.dictionaryEntryId == null ||
+        !groupReviewPronunciations(pronunciations, "").uk.length
+      ) {
+        try {
+          const supplemental = await getRegionalIpaForTerm(word.term);
+          pronunciations = [...pronunciations, ...supplemental];
+        } catch {
+          // The UK line will explain that the optional offline pack is missing.
+        }
+      }
+
+      if (active) {
+        setPronunciationLookup({
+          key: pronunciationLookupKey,
+          pronunciations,
+        });
+      }
+    };
+
+    void loadPronunciations();
+    return () => {
+      active = false;
+    };
+  }, [
+    answered,
+    pronunciationLookupKey,
+    word.dictionaryEntryId,
+    word.term,
+  ]);
 
   useEffect(() => {
     if (!answered || !graded || !speech.ready || !speech.autoRead) return;
@@ -769,27 +835,57 @@ export function ReviewCard({
               >
                 {word.term}
               </Text>
-              <View style={styles.ipaRow}>
-                {word.ipa ? (
-                  <Text style={[styles.small, { color: c.mutedForeground }]}>
-                    {word.ipa}
+              <View style={styles.ipaRows}>
+                <View style={styles.ipaRow}>
+                  <Text
+                    style={[
+                      styles.ipaAccent,
+                      { color: c.primary, borderColor: c.border },
+                    ]}
+                    accessibilityLabel="Phiên âm Anh-Mỹ"
+                  >
+                    🇺🇸 US
                   </Text>
-                ) : null}
-                <Pressable
-                  testID="review-result-speak-word"
-                  accessibilityRole="button"
-                  accessibilityLabel={`Phát âm ${word.term}`}
-                  onPress={() => {
-                    void speech.speakWord(word.term, word.dictionaryEntryId);
-                  }}
-                  hitSlop={10}
-                  style={({ pressed }) => [
-                    styles.resultAudioButton,
-                    { opacity: pressed ? 0.55 : 1 },
-                  ]}
-                >
-                  <Feather name="volume-2" size={20} color={c.primary} />
-                </Pressable>
+                  <Text
+                    testID="review-result-ipa-us"
+                    style={[styles.small, styles.ipaValue, { color: c.mutedForeground }]}
+                  >
+                    {pronunciationLines.us.join(" · ") || "Chưa có dữ liệu"}
+                  </Text>
+                  <Pressable
+                    testID="review-result-speak-word"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Phát âm ${word.term}`}
+                    onPress={() => {
+                      void speech.speakWord(word.term, word.dictionaryEntryId);
+                    }}
+                    hitSlop={10}
+                    style={({ pressed }) => [
+                      styles.resultAudioButton,
+                      { opacity: pressed ? 0.55 : 1 },
+                    ]}
+                  >
+                    <Feather name="volume-2" size={20} color={c.primary} />
+                  </Pressable>
+                </View>
+                <View style={styles.ipaRow}>
+                  <Text
+                    style={[
+                      styles.ipaAccent,
+                      { color: c.primary, borderColor: c.border },
+                    ]}
+                    accessibilityLabel="Phiên âm Anh-Anh"
+                  >
+                    🇬🇧 UK
+                  </Text>
+                  <Text
+                    testID="review-result-ipa-uk"
+                    style={[styles.small, styles.ipaValue, { color: c.mutedForeground }]}
+                  >
+                    {pronunciationLines.uk.join(" · ") ||
+                      "Chưa có dữ liệu · tải gói IPA trong Cài đặt"}
+                  </Text>
+                </View>
               </View>
               {exercise.kind === "cloze" ||
               exercise.kind === "idiom-dialogue" ||
@@ -800,12 +896,21 @@ export function ReviewCard({
               ) : null}
               {isReviewExampleUsable(word.example) ? (
                 <Text
+                  testID="review-result-example"
                   style={[
                     styles.small,
                     { color: c.foreground, fontStyle: "italic" },
                   ]}
                 >
                   {word.example}
+                </Text>
+              ) : null}
+              {exampleTranslation ? (
+                <Text
+                  testID="review-result-example-translation"
+                  style={[styles.small, { color: c.mutedForeground }]}
+                >
+                  Dịch: {exampleTranslation}
                 </Text>
               ) : null}
               <Text style={[styles.small, { color: c.mutedForeground }]}>
@@ -1285,7 +1390,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  ipaRows: { gap: 3 },
   ipaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  ipaAccent: {
+    minWidth: 48,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderRadius: 6,
+    fontFamily: F.b,
+    fontSize: 10,
+    lineHeight: 16,
+    textAlign: "center",
+    overflow: "hidden",
+  },
+  ipaValue: { flex: 1, flexWrap: "wrap" },
   resultAudioButton: {
     width: 36,
     height: 32,

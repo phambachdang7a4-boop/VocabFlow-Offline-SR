@@ -5,6 +5,10 @@ const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
 const dictionary = loadDictionaryDomain();
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
+const reviewResultDetails = loadTs(
+  join(__dirname, '../domain/review-result-details.ts'),
+  { './dictionary': dictionary },
+);
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
@@ -85,10 +89,17 @@ function mount(file, properties = {}, initial = {}) {
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
     '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => speechContext },
     '@/contexts/SoundEffectsContext': { useSoundEffects: () => soundContext },
+    '@/data/dictionary': {
+      getDictionaryEntry: async () => initial.dictionaryEntry ?? { pronunciations: [] },
+    },
+    '@/data/offline-regional-pronunciations': {
+      getRegionalIpaForTerm: async () => initial.regionalPronunciations ?? [],
+    },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
     '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,
     '@/domain/review-session': reviewSession,
+    '@/domain/review-result-details': reviewResultDetails,
     '@/domain/sound-cues': soundCues,
     '../assets/images/corvi-app-icon.png': 'corvi-avatar-asset',
     '@/components/KeyboardAwareScrollViewCompat': { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' },
@@ -434,6 +445,10 @@ async function startReview(screen) {
     exercise: sentenceExercise,
   }, {
     speechAutoRead: true,
+    regionalPronunciations: [
+      { ipa: '/test-us/', region: 'NAmE' },
+      { ipa: '/test-uk/', region: 'BrE' },
+    ],
     recordReview: async () => {},
     setWordFrozen: async (...args) => { resultFreezeCalls.push(args); },
   });
@@ -447,6 +462,10 @@ async function startReview(screen) {
   await sentenceCard.settle();
   assert.deepEqual(sentenceCard.speechCalls, ['test'],
     'Auto-pronounce the word when the multiple-choice result appears.');
+  assert.equal(sentenceCard.byId('review-result-ipa-us').props.children.join(''), '/test-us/',
+    'Show American IPA with its explicit US marker.');
+  assert.equal(sentenceCard.byId('review-result-ipa-uk').props.children.join(''), '/test-uk/',
+    'Show British IPA on a separate line with its explicit UK marker.');
   assert.ok(find(sentenceCard.byId('review-result'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
   'Show the dictionary example in the word information after a multiple-choice answer.');
@@ -480,6 +499,34 @@ async function startReview(screen) {
   assert.deepEqual(resultFreezeCalls, [[sentenceWord.id, true]],
     'Choosing “Có” freezes the answered word without grading it a second time.');
   assert.ok(sentenceCard.byId('review-result-frozen'));
+
+  const translatedWord = {
+    ...sentenceWord,
+    id: 93,
+    term: 'reciprocate',
+    example: 'It is important to reciprocate a favor kindly.',
+  };
+  const translatedExercise = exercises.createReviewExercise(
+    translatedWord,
+    1,
+    0,
+    [
+      translatedWord,
+      { ...word, id: 94, term: 'return' },
+      { ...word, id: 95, term: 'respond' },
+    ],
+  );
+  const translatedCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(translatedWord),
+    exercise: translatedExercise,
+  }, { recordReview: async () => {} });
+  translatedCard.byId('review-choice-0').props.onPress();
+  await translatedCard.settle();
+  assert.equal(
+    translatedCard.byId('review-result-example-translation').props.children.join(''),
+    'Dịch: Điều quan trọng là đáp lại một ân huệ một cách tử tế.',
+    'Display the Vietnamese translation beneath the saved English example.',
+  );
 
   let resolveSave;
   const calls = [], committed = [];

@@ -5,6 +5,10 @@ const { join } = require('node:path');
 const { loadTs, loadDictionaryDomain, srs, createRepository } = require('./test-support.cjs');
 const dictionary = loadDictionaryDomain();
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
+const resultDetails = loadTs(
+  join(__dirname, '../domain/review-result-details.ts'),
+  { './dictionary': dictionary },
+);
 const word = {
   id: 1, term: 'whimsical', meaning: 'kỳ quặc, giàu tưởng tượng', ipa: '', note: '',
   example: 'Whimsical paintings are whimsical.',
@@ -17,6 +21,26 @@ const notebookWords = [
   { ...word, id: 4, term: 'serious' },
 ];
 assert.equal(exercises.createReviewExercise(word, 0).kind, 'meaning');
+assert.deepEqual(
+  resultDetails.groupReviewPronunciations([
+    { ipa: '/rɪˈsɪprəkeɪt/', region: 'NAmE' },
+    { ipa: '/rɪˈsɪprəkeɪt/', region: 'BrE' },
+  ], ''),
+  { us: ['/rɪˈsɪprəkeɪt/'], uk: ['/rɪˈsɪprəkeɪt/'] },
+  'Keep American and British IPA in separately labeled groups.',
+);
+assert.deepEqual(
+  resultDetails.groupReviewPronunciations([], 'Anh-Mỹ: /test-us/ · Anh-Anh: /test-uk/'),
+  { us: ['/test-us/'], uk: ['/test-uk/'] },
+  'Recover regional labels from legacy saved IPA.',
+);
+assert.equal(
+  resultDetails.reviewExampleTranslation(
+    '  It is important to reciprocate a favor kindly.  ',
+  ),
+  'Điều quan trọng là đáp lại một ân huệ một cách tử tế.',
+  'Translate the example shown in the review result.',
+);
 const idiomWord = {
   ...word,
   term: 'break the ice',
