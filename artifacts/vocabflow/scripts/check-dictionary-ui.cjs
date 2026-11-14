@@ -152,8 +152,9 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/hooks/useDictionary': { useDictionary: () => ({ ready: true }) },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/components/ui': { Button: 'Button', EmptyState: 'EmptyState', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
-    '../../assets/images/corvi-dictionary-search.png': 1,
-    '../../assets/images/corvi-dictionary-search-light.png': 1,
+    '../../assets/images/corvi-dictionary-background.png': 'corvi-background-dark-asset',
+    '../../assets/images/corvi-dictionary-background-light.png': 'corvi-background-light-asset',
+    '../../assets/images/corvi-dictionary-character-alpha.png': 'corvi-character-asset',
     '@/components/ScreenHeader': { useBottomPad: () => 100 },
   };
   const loaded = loadTs(join(__dirname, file), dependencies, {
@@ -197,9 +198,17 @@ function mount(file, services, personalWords = [], properties = {}) {
     suggestDictionary: term => new Promise((resolve, reject) => suggestionCalls.push({ term, resolve, reject })),
   });
   const animatedArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
-    source: 1, testID: 'corvi-blink-test', artSize: 236, style: { width: 236, height: 236 },
+    source: 1, backgroundSource: 2, testID: 'corvi-blink-test', artSize: 236,
+    style: { width: 236, height: 236 },
   });
   assert.ok(animatedArt.byId('corvi-blink-test'), 'The animated artwork retains the original Corvi illustration.');
+  assert.equal(animatedArt.byId('corvi-blink-test-background').props.source, 2,
+    'A cleaned bookshelf background can render independently below Corvi.');
+  assert.ok(
+    animatedArt.byId('corvi-blink-test-frame').props.children.indexOf(animatedArt.byId('corvi-blink-test-background')) <
+      animatedArt.byId('corvi-blink-test-frame').props.children.indexOf(animatedArt.byId('corvi-blink-test')),
+    'The empty background is layered behind the transparent character.',
+  );
   assert.deepEqual(animatedArt.byId('corvi-blink-test').props.style.at(-1), { width: 236, height: 236 },
     'The base illustration receives explicit dimensions so it cannot collapse on mobile.');
   assert.ok(animatedArt.byId('corvi-blink-test-blink'), 'Corvi’s blinking eyelid is rendered above the eye.');
@@ -244,6 +253,10 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.equal(idleCorviArt.props.artSize, 180, 'The phone-sized idle artwork is larger and readable.');
   assert.deepEqual(idleCorviArt.props.style.at(-1), { width: 180, height: 180 },
     'Corvi receives explicit width and height in the idle state.');
+  assert.equal(idleCorviArt.props.source, 'corvi-character-asset',
+    'The enlarged library Corvi renders from an independent transparent character image.');
+  assert.equal(idleCorviArt.props.backgroundSource, 'corvi-background-light-asset',
+    'The light library theme uses the cleaned background without Corvi.');
   screenWidth = 320;
   const narrowScreen = mount('../app/(tabs)/dictionary.tsx', {
     searchDictionary: async () => ({ items: [], hasMore: false }),

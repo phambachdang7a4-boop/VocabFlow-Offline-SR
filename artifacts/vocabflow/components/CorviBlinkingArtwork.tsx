@@ -14,6 +14,7 @@ import { useColors } from '@/hooks/useColors';
 
 type CorviBlinkingArtworkProps = {
   source: ImageSourcePropType;
+  backgroundSource?: ImageSourcePropType;
   testID: string;
   artSize: number;
   style?: StyleProp<ViewStyle>;
@@ -21,7 +22,7 @@ type CorviBlinkingArtworkProps = {
 };
 
 /** Adds restrained pixel-art eye and book motions while leaving Corvi's illustration intact. */
-export function CorviBlinkingArtwork({ source, testID, artSize, style, gazeToUser = false }: CorviBlinkingArtworkProps) {
+export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize, style, gazeToUser = false }: CorviBlinkingArtworkProps) {
   const c = useColors();
   const reduceMotion = useReducedMotion();
   const blinkProgress = useSharedValue(0);
@@ -110,6 +111,15 @@ export function CorviBlinkingArtwork({ source, testID, artSize, style, gazeToUse
       testID={`${testID}-frame`}
       style={[styles.frame, { width: artSize, height: artSize }, style, gentleFloat]}
     >
+      {backgroundSource ? (
+        <Image
+          testID={`${testID}-background`}
+          accessible={false}
+          source={backgroundSource}
+          resizeMode="contain"
+          style={[styles.artwork, styles.backgroundArtwork, { width: artSize, height: artSize }]}
+        />
+      ) : null}
       <Image
         testID={testID}
         accessible={false}
@@ -175,6 +185,7 @@ export function CorviBlinkingArtwork({ source, testID, artSize, style, gazeToUse
 const styles = StyleSheet.create({
   frame: { position: 'relative', overflow: 'visible', flexShrink: 0 },
   artwork: { flexShrink: 0 },
+  backgroundArtwork: { position: 'absolute', left: 0, top: 0 },
   // Coordinates match the eye in the 236 px Corvi artwork shown on this screen.
   eyelid: {
     position: 'absolute',

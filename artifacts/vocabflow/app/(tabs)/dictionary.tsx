@@ -148,9 +148,10 @@ export default function DictionaryScreen() {
   const compactCorvi = windowWidth < 370;
   const corviArtSize = windowWidth < 420 ? (compactCorvi ? 160 : 180) : 220;
   const reduceMotion = useReducedMotion();
-  const corviArt = c.dictPage === '#FBF7EE'
-    ? require('../../assets/images/corvi-dictionary-search-light.png')
-    : require('../../assets/images/corvi-dictionary-search.png');
+  const corviBackgroundArt = c.dictPage === '#FBF7EE'
+    ? require('../../assets/images/corvi-dictionary-background-light.png')
+    : require('../../assets/images/corvi-dictionary-background.png');
+  const corviArt = require('../../assets/images/corvi-dictionary-character-alpha.png');
   const insets = useSafeAreaInsets();
   const top = Platform.OS === 'web' ? 67 : insets.top;
   const bottom = useBottomPad();
@@ -448,6 +449,7 @@ export default function DictionaryScreen() {
             <CorviBlinkingArtwork
               testID="dictionary-corvi-idle-art"
               source={corviArt}
+              backgroundSource={corviBackgroundArt}
               artSize={corviArtSize}
               style={[styles.idleArt, { width: corviArtSize, height: corviArtSize }]}
               gazeToUser={corviConversationOpen}
@@ -545,6 +547,7 @@ export default function DictionaryScreen() {
         <CorviBlinkingArtwork
           testID="dictionary-corvi-search-art"
           source={corviArt}
+          backgroundSource={corviBackgroundArt}
           artSize={236}
           style={styles.loadingArt}
         />
