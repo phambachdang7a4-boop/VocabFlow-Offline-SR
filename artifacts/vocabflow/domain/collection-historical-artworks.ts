@@ -1222,11 +1222,270 @@ const historicalQuotes: Record<
   },
 };
 
+const historicalPortraitSources: Record<
+  string,
+  Pick<
+    CollectionArtwork,
+    "sourceLabel" | "portraitSourceType" | "portraitSourceUrl"
+  >
+> = {
+  "julius-caesar-marble": {
+    sourceLabel: "Tượng chân dung Capitoline",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Retrato_de_Julio_C%C3%A9sar_(26724093101)_(cropped).jpg",
+  },
+  "isaac-newton-marble": {
+    sourceLabel: "Chân dung Newton năm 1689",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Portrait_of_Sir_Isaac_Newton,_1689_(brightened).jpg",
+  },
+  "socrates-marble": {
+    sourceLabel: "Tượng bán thân Socrates tại Louvre",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:Socrates_Louvre.jpg",
+  },
+  "aristotle-marble": {
+    sourceLabel: "Tượng bán thân Aristotle tại Bảo tàng Acropolis",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://www.theacropolismuseum.gr/en/bust-aristotle",
+  },
+  "archimedes-marble": {
+    sourceLabel: "Lịch sử chân dung Archimedes",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://exhibits.museogalileo.it/archimedes/section/Portrait.html",
+  },
+  "cleopatra-vii-marble": {
+    sourceLabel: "Các chân dung còn lại của Cleopatra",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://www.britannica.com/story/what-did-cleopatra-look-like",
+  },
+  "augustus-marble": {
+    sourceLabel: "Tượng Augustus tại Bảo tàng Nghệ thuật Metropolitan",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://www.metmuseum.org/art/collection/search/247993",
+  },
+  "confucius-marble": {
+    sourceLabel: "Nghiên cứu về hình tượng Khổng Tử",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://academic.oup.com/edited-volume/45499/chapter/392458224",
+  },
+  "michelangelo-marble": {
+    sourceLabel: "Chân dung Michelangelo của Daniele da Volterra",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Michelangelo_Daniele_da_Volterra_(dettaglio).jpg",
+  },
+  "william-shakespeare-marble": {
+    sourceLabel: "Chân dung Shakespeare của John Taylor",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:William_Shakespeare_by_John_Taylor,_edited.jpg",
+  },
+  "galileo-galilei-marble": {
+    sourceLabel: "Chân dung Galileo tại Royal Museums Greenwich",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://www.rmg.co.uk/collections/objects/rmgc-object-63964",
+  },
+  "plato-marble": {
+    sourceLabel: "Tượng chân dung Plato tại Capitoline",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Plato_Silanion_Musei_Capitolini_MC1377.png",
+  },
+  "pythagoras-marble": {
+    sourceLabel: "Tượng Pythagoras tại Roman Forum",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Pythagoras_in_the_Roman_Forum,_Colosseum.jpg",
+  },
+  "hippocrates-marble": {
+    sourceLabel: "Hình tượng truyền thống của Hippocrates",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:Hippocrates.jpg",
+  },
+  "homer-marble": {
+    sourceLabel: "Tượng bán thân Homer tại Bảo tàng Anh",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Homer_At_the_British_Museum_2024_(3x4_cropped).jpg",
+  },
+  "cicero-marble": {
+    sourceLabel: "Chân dung Cicero tại Galleria Borghese",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://www.collezionegalleriaborghese.it/en/opere/portrait-of-cicero",
+  },
+  "hannibal-marble": {
+    sourceLabel: "Tư liệu về các hình tượng Hannibal",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://www.britannica.com/biography/Hannibal-Carthaginian-general",
+  },
+  "dante-alighieri-marble": {
+    sourceLabel: "Tượng bán thân Dante tại V&A",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://collections.vam.ac.uk/item/O166402/dante-alighieri-bust-unknown/",
+  },
+  "nicolaus-copernicus-marble": {
+    sourceLabel: "Chân dung Copernicus thế kỷ 16",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Nikolaus_Kopernikus_MOT.jpg",
+  },
+  "johannes-kepler-marble": {
+    sourceLabel: "Chân dung Johannes Kepler",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:JKepler.jpg",
+  },
+  "voltaire-marble": {
+    sourceLabel: "Chân dung Voltaire của Nicolas de Largillière",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Nicolas_de_Largilli%C3%A8re_-_Portrait_de_Voltaire_(1694-1778)_en_1718_-_P208_-_mus%C3%A9e_Carnavalet_-_5_(cropped).jpg",
+  },
+  "charles-darwin-marble": {
+    sourceLabel: "Ảnh chân dung Charles Darwin",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Charles_Darwin_seated_crop.jpg",
+  },
+  "ludwig-van-beethoven-marble": {
+    sourceLabel: "Chân dung Beethoven của Joseph Karl Stieler",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Joseph_Karl_Stieler%27s_Beethoven_mit_dem_Manuskript_der_Missa_solemnis.jpg",
+  },
+  "wolfgang-amadeus-mozart-marble": {
+    sourceLabel: "Chân dung Mozart trong tranh gia đình",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:The_Mozart_Family_-_Wolfgang_Amadeus_Mozart_headshot.jpg",
+  },
+  "george-washington-marble": {
+    sourceLabel: "Chân dung tại Phòng trưng bày Chân dung Quốc gia Smithsonian",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://georgewashington.si.edu/portrait/index.html",
+  },
+  "euclid-marble": {
+    sourceLabel: "Hình tượng Euclid tại Getty",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://www.getty.edu/art/collection/object/108GV4",
+  },
+  "herodotus-marble": {
+    sourceLabel: "Tượng bán thân Herodotus tại Bảo tàng Nghệ thuật Metropolitan",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl: "https://www.metmuseum.org/art/collection/search/245829",
+  },
+  "pericles-marble": {
+    sourceLabel: "Tượng chân dung Pericles tại Bảo tàng Vatican",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Pericles_Pio-Clementino_Inv269_n2.jpg",
+  },
+  "demosthenes-marble": {
+    sourceLabel: "Tượng chân dung Demosthenes tại Getty",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl: "https://www.getty.edu/art/collection/object/103WJB",
+  },
+  "virgil-marble": {
+    sourceLabel: "Khảm chân dung Virgil tại Bảo tàng Bardo",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Virgil_mosaic_in_the_Bardo_National_Museum_(Tunis)_(12241228546).jpg",
+  },
+  "seneca-marble": {
+    sourceLabel: "Tư liệu về chân dung Seneca",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://www.britannica.com/biography/Lucius-Annaeus-Seneca",
+  },
+  "ptolemy-marble": {
+    sourceLabel: "Hình minh họa Ptolemy năm 1476",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Ptolemy_1476_with_armillary_sphere_model.jpg",
+  },
+  "charlemagne-marble": {
+    sourceLabel: "Đồng denier thời Charlemagne",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Charlemagne_denier_Mayence_812_814.jpg",
+  },
+  "avicenna-marble": {
+    sourceLabel: "Tư liệu chân dung Avicenna tại Thư viện Y khoa Quốc gia Hoa Kỳ",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl: "https://resource.nlm.nih.gov/101408284",
+  },
+  "marco-polo-marble": {
+    sourceLabel: "Minh họa trong ấn bản năm 1477",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Frontispice_%C3%A9dition_de_Nuremberg_1477_(cropped).png",
+  },
+  "johannes-gutenberg-marble": {
+    sourceLabel: "Tượng Gutenberg tại Mainz",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Mainz_Gutenbergdenkmal_2016_(cropped).jpg",
+  },
+  "erasmus-marble": {
+    sourceLabel: "Chân dung Erasmus của Hans Holbein",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://www.metmuseum.org/art/collection/search/336231",
+  },
+  "francis-bacon-marble": {
+    sourceLabel: "Chân dung Francis Bacon của John de Critz",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:Somer_Francis_Bacon.jpg",
+  },
+  "rene-descartes-marble": {
+    sourceLabel: "Chân dung René Descartes của Frans Hals",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Frans_Hals_-_Portret_van_Ren%C3%A9_Descartes.jpg",
+  },
+  "rembrandt-marble": {
+    sourceLabel: "Tự họa của Rembrandt",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Rembrandt_van_Rijn_-_Self-Portrait_-_Google_Art_Project.jpg",
+  },
+  "johann-sebastian-bach-marble": {
+    sourceLabel: "Chân dung Bach của Elias Gottlob Haussmann",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:Johann_Sebastian_Bach.jpg",
+  },
+  "johann-wolfgang-von-goethe-marble": {
+    sourceLabel: "Chân dung Goethe của Joseph Karl Stieler",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:Goethe_(Stieler_1828).jpg",
+  },
+  "victor-hugo-marble": {
+    sourceLabel: "Ảnh Victor Hugo năm 1876",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Victor_Hugo_in_1876_(49937840042).png",
+  },
+  "sun-tzu-marble": {
+    sourceLabel: "Tư liệu về Tôn Tử",
+    portraitSourceType: "uncertain-likeness",
+    portraitSourceUrl: "https://www.britannica.com/biography/Sunzi",
+  },
+};
+
 export const HISTORICAL_COLLECTION_ARTWORKS: CollectionArtwork[] =
   historicalStatues.map((statue) => {
     const quote = historicalQuotes[statue.imageAssetKey ?? ""];
     if (!quote) {
       throw new Error(`Missing famous quote for ${statue.title}.`);
     }
-    return { ...statue, ...quote };
+    const portraitSource = historicalPortraitSources[statue.imageAssetKey ?? ""];
+    if (!portraitSource) {
+      throw new Error(`Missing portrait source for ${statue.title}.`);
+    }
+    return { ...statue, ...portraitSource, ...quote };
   });

@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -104,6 +105,12 @@ const ARTWORK_IMAGE_SOURCES: Record<string, ImageSourcePropType> = {
 function rarityDisplayLabel(rarity: ChestRarity): string {
   return STATUE_RARITY_LABELS[rarity];
 }
+
+const PORTRAIT_SOURCE_TYPE_LABELS = {
+  contemporary: "Đương thời",
+  "later-portrait": "Chân dung về sau",
+  "uncertain-likeness": "Chưa rõ chân dung thật",
+} as const;
 
 export default function CollectionScreen() {
   const c = useColors();
@@ -677,12 +684,61 @@ export default function CollectionScreen() {
                     selectedStatue.description ??
                     "Chưa có thông tin."}
               </Text>
-              {selectedStatue.sourceLabel ? (
-                <Text
-                  style={[styles.sourceLabel, { color: c.mutedForeground }]}
-                >
-                  Nguồn tham khảo: {selectedStatue.sourceLabel}
-                </Text>
+              {selectedStatue.portraitSourceType ||
+              selectedStatue.sourceLabel ? (
+                <View style={styles.portraitSource}>
+                  {selectedStatue.portraitSourceType ? (
+                    <Text
+                      style={[
+                        styles.portraitSourceType,
+                        { color: c.mutedForeground },
+                      ]}
+                    >
+                      Loại chân dung:{" "}
+                      {PORTRAIT_SOURCE_TYPE_LABELS[
+                        selectedStatue.portraitSourceType
+                      ]}
+                    </Text>
+                  ) : null}
+                  {selectedStatue.sourceLabel &&
+                  selectedStatue.portraitSourceUrl ? (
+                    <Pressable
+                      testID={`statue-portrait-source-${selectedStatue.id}`}
+                      accessibilityRole="link"
+                      accessibilityLabel={`Mở nguồn chân dung: ${selectedStatue.sourceLabel}`}
+                      onPress={() => {
+                        void Linking.openURL(
+                          selectedStatue.portraitSourceUrl!,
+                        ).catch(() =>
+                          setError(
+                            "Không thể mở nguồn tham khảo trên thiết bị này.",
+                          ),
+                        );
+                      }}
+                      style={styles.portraitSourceLink}
+                    >
+                      <Text
+                        style={[
+                          styles.portraitSourceLinkText,
+                          { color: c.primary },
+                        ]}
+                      >
+                        {selectedStatue.sourceLabel}
+                      </Text>
+                      <Feather
+                        name="external-link"
+                        size={14}
+                        color={c.primary}
+                      />
+                    </Pressable>
+                  ) : selectedStatue.sourceLabel ? (
+                    <Text
+                      style={[styles.sourceLabel, { color: c.mutedForeground }]}
+                    >
+                      Nguồn tham khảo: {selectedStatue.sourceLabel}
+                    </Text>
+                  ) : null}
+                </View>
               ) : null}
             </ScrollView>
           </View>
@@ -866,7 +922,22 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   biography: { fontFamily: F.r, fontSize: 14, lineHeight: 22, marginTop: 4 },
-  sourceLabel: { fontFamily: F.r, fontSize: 12, lineHeight: 18, marginTop: 6 },
+  portraitSource: { gap: 3, marginTop: 6 },
+  portraitSourceType: { fontFamily: F.s, fontSize: 12, lineHeight: 18 },
+  portraitSourceLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 5,
+    paddingVertical: 4,
+  },
+  portraitSourceLinkText: {
+    fontFamily: F.s,
+    fontSize: 12,
+    lineHeight: 18,
+    textDecorationLine: "underline",
+  },
+  sourceLabel: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
   emptyCard: {
     position: "relative",
     borderWidth: 1,

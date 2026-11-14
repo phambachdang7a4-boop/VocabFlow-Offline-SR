@@ -17,6 +17,8 @@ export interface CollectionArtwork {
   quote?: string;
   quoteSource?: string;
   sourceLabel?: string;
+  portraitSourceType?: "contemporary" | "later-portrait" | "uncertain-likeness";
+  portraitSourceUrl?: string;
   unlockMode?: "automatic";
 }
 
@@ -47,6 +49,8 @@ export const COLLECTION_ARTWORKS: CollectionArtwork[] = [
       "Nguyễn Ái Quốc, vị lãnh tụ của dân tộc Việt Nam và Chủ tịch nước Việt Nam Dân chủ Cộng hòa từ năm 1945 đến năm 1969.",
     quote: "Không có gì quý hơn độc lập, tự do.",
     quoteSource: "Lời kêu gọi ngày 17 tháng 7 năm 1966",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://hochiminh.vn/",
     biography: `Chủ tịch Hồ Chí Minh (19.05.1890 – 02.09.1969) là vị lãnh tụ vĩ đại của dân tộc Việt Nam, nhà hoạt động lỗi lạc của phong trào cộng sản quốc tế.
 
 THÂN THẾ
@@ -100,6 +104,10 @@ LIFE AND REVOLUTIONARY CAREER
     icon: "award",
     imageAssetKey: "alexander-marble",
     material: "Cẩm thạch",
+    sourceLabel: "Khảm Alexander tại Pompeii",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Alexander_Mosaic_detail_of_Alexander_the_Great_(3x4_cropped).jpg",
     unlockMode: "automatic",
     quote: "There is nothing impossible to him who will try.",
     quoteSource: "Plutarch, Life of Alexander (attributed)",
@@ -154,6 +162,10 @@ Within 12 years of his reign, Alexander’s army built one of the largest empire
     icon: "award",
     imageAssetKey: "leonardo-marble",
     material: "Cẩm thạch",
+    sourceLabel: "Chân dung Leonardo của Francesco Melzi",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Francesco_Melzi_-_Portrait_of_Leonardo_(colour_correction).png",
     unlockMode: "automatic",
     quote: "Learning never exhausts the mind.",
     quoteSource: "Commonly attributed; source uncertain",
@@ -198,6 +210,10 @@ NOTABLE WORKS AND LEGACY
     icon: "award",
     imageAssetKey: "kant-marble",
     material: "Cẩm thạch",
+    sourceLabel: "Chân dung Immanuel Kant",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl:
+      "https://commons.wikimedia.org/wiki/File:Immanuel_Kant_-_Gemaelde_1.jpg",
     unlockMode: "automatic",
     quote:
       "Thoughts without content are empty; intuitions without concepts are blind.",
@@ -239,6 +255,9 @@ MAJOR PHILOSOPHICAL IDEAS
     icon: "award",
     imageAssetKey: "marcus-aurelius-marble",
     material: "Cẩm thạch",
+    sourceLabel: "Chân dung Marcus Aurelius trong bản thảo",
+    portraitSourceType: "later-portrait",
+    portraitSourceUrl: "https://commons.wikimedia.org/wiki/File:MSR-ra-61-b-1-DM.jpg",
     unlockMode: "automatic",
     quote: "You have power over your mind—not outside events.",
     quoteSource: "Meditations, 12.36 (paraphrased translation)",
@@ -281,6 +300,9 @@ LIFE AND CAREER
     icon: "award",
     imageAssetKey: "benjamin-franklin-marble",
     material: "Cẩm thạch",
+    sourceLabel: "Tượng bán thân Franklin của Houdon",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://www.philamuseum.org/objects/90227",
     unlockMode: "automatic",
     quote: "Well done is better than well said.",
     quoteSource: "Poor Richard's Almanack (1737)",
@@ -319,6 +341,9 @@ CAREER AND MAJOR CONTRIBUTIONS
     icon: "award",
     imageAssetKey: "napoleon-marble",
     material: "Cẩm thạch",
+    sourceLabel: "Tư liệu chân dung Napoléon",
+    portraitSourceType: "contemporary",
+    portraitSourceUrl: "https://www.britannica.com/biography/Napoleon-I",
     unlockMode: "automatic",
     quote: "Impossible is a word found only in the dictionary of fools.",
     quoteSource: "Traditionally attributed; source uncertain",
