@@ -33,7 +33,8 @@
     "check:vocabulary-extraction": "node scripts/check-vocabulary-extraction.cjs",
     "check:ielts-topic-course-data": "node scripts/check-ielts-topic-course-data.cjs",
     "check:toeic-topic-course-data": "node scripts/check-toeic-topic-course-data.cjs",
-    "check:historical-portrait-labels": "node scripts/check-historical-portrait-labels.cjs"
+    "check:historical-portrait-labels": "node scripts/check-historical-portrait-labels.cjs",
+    "check:collection-biographies": "node scripts/check-collection-biographies.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

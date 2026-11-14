@@ -1,5 +1,6 @@
 import type { ChestRarity } from "./mission-chests";
 import { HISTORICAL_COLLECTION_ARTWORKS } from "./collection-historical-artworks";
+import { COLLECTION_BIOGRAPHY_EXPANSIONS } from "./collection-biography-expansions";
 
 export interface CollectionArtwork {
   id: string;
@@ -34,7 +35,7 @@ export interface CollectionCraft {
 
 export const FIRST_STATUE_ID = "legendary-ho-chi-minh-marble";
 
-export const COLLECTION_ARTWORKS: CollectionArtwork[] = [
+const collectionArtworkDefinitions: CollectionArtwork[] = [
   {
     id: FIRST_STATUE_ID,
     rarity: "legendary",
@@ -71,10 +72,7 @@ QUÁ TRÌNH HOẠT ĐỘNG VÀ SỰ NGHIỆP
 • 1941: Trở về nước sau hơn 30 năm hoạt động ở nước ngoài; trực tiếp lãnh đạo phong trào cách mạng trong nước và thành lập Mặt trận Việt Minh.
 • 1945: Lãnh đạo Cách mạng Tháng Tám thành công. Ngày 2 tháng 9, tại Quảng trường Ba Đình (Hà Nội), đọc Tuyên ngôn Độc lập, khai sinh nước Việt Nam Dân chủ Cộng hòa.
 • 1945–1969: Giữ cương vị Chủ tịch nước Việt Nam Dân chủ Cộng hòa, lãnh đạo nhân dân trong kháng chiến chống Pháp (1946–1954) và kháng chiến chống Mỹ cứu nước.`,
-    biographyEn: `“Nothing is more precious than independence and freedom.”
-— President Ho Chi Minh
-
-President Ho Chi Minh (May 19, 1890 – September 2, 1969) was the great leader of the Vietnamese people and an outstanding activist in the international communist movement.
+    biographyEn: `President Ho Chi Minh (May 19, 1890 – September 2, 1969) was a Vietnamese revolutionary leader and an activist in the international communist movement.
 
 PERSONAL BACKGROUND
 • Birth name: Nguyen Sinh Cung
@@ -113,45 +111,45 @@ LIFE AND REVOLUTIONARY CAREER
     quoteSource: "Plutarch, Life of Alexander (attributed)",
     description:
       "Vua Macedonia, nhà chinh phạt và chiến lược gia quân sự thời cổ đại.",
-    biography: `Alexander Đại đế (Alexandros III của Macedonia, 356 TCN – 323 TCN) là một trong những vị quân vương và nhà chiến lược quân sự vĩ đại, thành công nhất lịch sử nhân loại. Ông chưa từng thất bại trong bất kỳ trận đánh nào suốt cuộc đời chinh phạt của mình.
+    biography: `Alexander Đại đế (Alexandros III của Macedonia, 356 TCN – 323 TCN) là vua Macedonia và một trong những nhà chinh phạt nổi bật của thế giới cổ đại. Các nguồn hiện còn không ghi nhận ông thất bại trong một trận đánh lớn.
 
 1. THÂN THẾ VÀ GIÁO DỤC
-• Xuất thân: Sinh tại Pella, Macedonia, ông là con trai của Vua Philip II (người thống nhất Hy Lạp cổ đại) và Hoàng hậu Olympias.
+• Xuất thân: Sinh tại Pella, Macedonia, ông là con trai của Vua Philip II (người đặt phần lớn Hy Lạp dưới quyền bá chủ Macedonia) và Hoàng hậu Olympias.
 • Học vấn: Từ năm 342 TCN đến năm 340 TCN, ông được triết gia vĩ đại Aristotle trực tiếp giảng dạy, khơi dậy niềm đam mê về khoa học, văn học và triết học Hy Lạp.
 • Lên ngôi: Ông trở thành vị vua thứ 14 của vương triều Argead (Macedonia) vào năm 336 TCN ở tuổi 20, sau khi vua cha bị ám sát.
 
 2. CÁC CUỘC CHINH PHẠT LỚN
-Chỉ trong vòng 12 năm trị vì, quân đội của Alexander đã kiến tạo nên một trong những đế chế rộng lớn nhất thế giới cổ đại, trải dài khoảng 5 triệu km² từ Hy Lạp qua Ai Cập đến tận Tây Bắc Ấn Độ:
+Chỉ trong vòng 12 năm trị vì, quân đội của Alexander đã kiến tạo nên một trong những đế chế rộng lớn nhất thế giới cổ đại, trải dài từ Hy Lạp qua Ai Cập đến Tây Bắc Ấn Độ:
 • Chinh phục Đế chế Ba Tư (Achaemenid): Ông đánh bại quân đội Ba Tư trong những trận chiến kinh điển như Granicus (334 TCN), Issus (333 TCN) và đỉnh cao là trận Gaugamela (331 TCN) trước Vua Darius III.
-• Ai Cập và Cận Đông: Ông được người Ai Cập chào đón như người giải phóng họ khỏi ách thống trị của Ba Tư. Tại đây, ông đã thành lập thành phố Alexandria trứ danh đầu tiên.
+• Ai Cập và Cận Đông: Ông được một bộ phận người Ai Cập chào đón sau khi Ba Tư thất bại. Tại đây, ông thành lập thành phố Alexandria ở Ai Cập.
 • Mở rộng sang Ấn Độ: Ông tiến quân tới vùng Punjab và giành chiến thắng tại trận sông Hydaspes (326 TCN) trước Vua Porus. Tuy nhiên, do binh sĩ quá kiệt sức sau nhiều năm hành quân liên miên, ông buộc phải đồng ý rút quân trở về.
 
 3. DI SẢN VÀ CHÍNH SÁCH
-• Hellen hóa (Hy Lạp hóa): Alexander thúc đẩy sự giao thoa văn hóa giữa Hy Lạp và các vùng đất bị chinh phục. Ông đã lập nên khoảng 70 thành phố mang tên Alexandria để truyền bá ngôn ngữ, nghệ thuật và mô hình xã hội Hy Lạp.
+• Hellen hóa (Hy Lạp hóa): Alexander thúc đẩy giao lưu văn hóa giữa người Hy Lạp và các vùng đất trong đế chế; nhiều thành phố mới hoặc được mở rộng mang tên Alexandria.
 • Chiến thuật quân sự: Ông hoàn thiện nghệ thuật tác chiến bằng cách kết hợp kỵ binh hạng nặng với đội hình bộ binh giáo dài (phalanx Macedonia), tạo nên một cỗ máy chiến tranh bất bại thời bấy giờ.
 
 4. CÁI CHẾT VÀ NHỮNG BÍ ẨN
-• Qua đời: Alexander Đại đế mất vào ngày 10, 11 hoặc 13 tháng 6 năm 323 TCN tại Babylon khi mới 32 tuổi. Nguyên nhân cái chết của ông vẫn gây tranh cãi với nhiều giả thuyết như sốt rét, thương hàn, viêm não hoặc bị đầu độc.
+• Qua đời: Alexander Đại đế mất tại Babylon vào tháng 6 năm 323 TCN, khi mới 32 tuổi. Ngày chính xác và nguyên nhân cái chết chưa được xác định; các giả thuyết gồm bệnh truyền nhiễm hoặc đầu độc.
 • Hậu quả: Vì không kịp chỉ định người kế vị rõ ràng, đế chế của ông nhanh chóng tan rã và bị chia cắt bởi các tướng lĩnh qua nhiều thập kỷ tranh giành quyền lực. Cho đến nay, vị trí lăng mộ của ông vẫn là một trong những bí ẩn lớn nhất của ngành khảo cổ học.`,
-    biographyEn: `Alexander the Great (Alexander III of Macedon, 356 BC – 323 BC) was one of the greatest and most successful monarchs and military strategists in human history. He remained undefeated in battle throughout his entire life of conquest.
+    biographyEn: `Alexander the Great (Alexander III of Macedon, 356 BC – 323 BC) was king of Macedon and one of the ancient world’s most prominent conquerors. The surviving accounts do not record his defeat in a major battle.
 
 1. EARLY LIFE AND EDUCATION
-• Family Background: Born in Pella, Macedonia, he was the son of King Philip II (who unified ancient Greece) and Queen Olympias.
+• Family Background: Born in Pella, Macedonia, he was the son of King Philip II (who brought much of Greece under Macedonian hegemony) and Queen Olympias.
 • Tutoring: From 342 BC to 340 BC, he was directly tutored by the great philosopher Aristotle, who inspired his interest in Greek science, literature, and philosophy.
 • Ascension to the Throne: He became the 14th King of the Argead dynasty (Macedonia) in 336 BC at the age of 20, following the assassination of his father.
 
 2. MAJOR CONQUESTS
-Within 12 years of his reign, Alexander’s army built one of the largest empires in the ancient world, stretching approximately 5 million square kilometers from Greece through Egypt to northwestern India:
+Within 12 years of his reign, Alexander’s army built one of the largest empires in the ancient world, stretching from Greece through Egypt to northwestern India:
 • Conquest of the Persian Empire (Achaemenid): He defeated Persian forces in classic battles such as Granicus (334 BC), Issus (333 BC), and culminated at the Battle of Gaugamela (331 BC) against King Darius III.
-• Egypt and the Near East: He was welcomed by the Egyptians as a liberator from Persian rule, and it was here that he founded the first famous city of Alexandria.
+• Egypt and the Near East: He was welcomed by some Egyptians after Persian rule ended, and founded the city of Alexandria in Egypt.
 • Expansion to India: He marched to the Punjab region and achieved victory at the Battle of the Hydaspes (326 BC) against King Porus. Exhausted after years of relentless campaigning, his troops eventually forced him to turn back.
 
 3. LEGACY AND POLICIES
-• Hellenization: Alexander promoted cultural fusion between Greece and the conquered lands, founding around 70 cities named Alexandria to spread Greek language, art, and social structures.
+• Hellenization: Alexander encouraged cultural exchange between Greek and other peoples of his empire; several new or expanded cities bore the name Alexandria.
 • Military Tactics: He refined tactics by combining heavy cavalry with long-spear infantry (the Macedonian phalanx), creating an undefeated military machine of its era.
 
 4. DEATH AND MYSTERIES
-• Passing: Alexander the Great died on June 10/11 or 13, 323 BC, in Babylon at the age of 32. The exact cause of his death remains debated, with theories ranging from malaria, typhoid fever, and encephalitis to poisoning.
+• Passing: Alexander the Great died in Babylon in June 323 BC at the age of 32. The exact date and cause are uncertain; proposed explanations include infectious disease and poisoning.
 • Aftermath: Because he failed to name a clear successor, his empire rapidly collapsed and was fractured by his generals through decades of power struggles. To this day, the location of his tomb remains one of archaeology's greatest mysteries.`,
   },
   {
@@ -180,7 +178,7 @@ THÔNG TIN CƠ BẢN
 
 CUỘC ĐỜI VÀ SỰ NGHIỆP
 • Tuổi trẻ và học nghề: Khoảng 14 tuổi, Leonardo bắt đầu làm việc và học nghề trong xưởng ở Florence của bậc thầy Andrea del Verrocchio.
-• Đặc điểm cá nhân: Ông thuận cả hai tay, có thói quen viết chữ ngược như soi gương, ăn chay nghiêm ngặt và yêu động vật. Ông không kết hôn và không có con.
+• Đặc điểm cá nhân: Ông thuận cả hai tay, có lúc viết chữ ngược như soi gương và thường được mô tả là yêu động vật. Nhận định ông ăn chay nghiêm ngặt chưa chắc chắn. Ông không kết hôn và không có con.
 • Những người bảo trợ: Ông làm việc cho nhiều nhân vật quyền lực và triều đình ở Florence và Milan dưới thời Ludovico Sforza, phục vụ Cesare Borgia, làm việc tại Vatican dưới thời Giáo hoàng Leo X, rồi sống những năm cuối đời ở Pháp theo lời mời của Vua Francis I.
 
 TÁC PHẨM VÀ DI SẢN
@@ -195,7 +193,7 @@ BASIC INFORMATION
 
 LIFE AND CAREER
 • Youth and Apprenticeship: Around the age of 14, Leonardo began working and apprenticing in the Florence workshop of the renowned master Andrea del Verrocchio.
-• Personal Traits: He was ambidextrous, had a habit of writing backward in mirror script, followed a strict vegetarian diet, and loved animals. He remained unmarried and had no children.
+• Personal Traits: He was ambidextrous, wrote in mirror script in some notebooks, and is often described as caring deeply about animals. Claims that he followed a strict vegetarian diet are not certain. He remained unmarried and had no children.
 • Major Patrons: He worked for several powerful figures and courts in Florence and Milan (under Ludovico Sforza), served Cesare Borgia, worked at the Vatican under Pope Leo X, and spent his final years in France at the invitation of King Francis I.
 
 NOTABLE WORKS AND LEGACY
@@ -317,9 +315,9 @@ THÔNG TIN CƠ BẢN
 
 SỰ NGHIỆP VÀ ĐÓNG GÓP
 • In ấn và văn học: Bắt đầu học nghề in năm 12 tuổi dưới sự hướng dẫn của anh trai. Ông sở hữu tờ Pennsylvania Gazette, xuất bản Poor Richard's Almanack và viết Tự truyện của Benjamin Franklin, tác phẩm kinh điển thể hiện tinh thần tự lập.
-• Khoa học và phát minh: Ông có những nghiên cứu nền tảng về điện, nhận diện điện tích dương và âm, đồng thời đề xuất nguyên lý bảo toàn điện tích. Các phát minh của ông gồm cột thu lôi, bếp Franklin và kính hai tròng.
+• Khoa học và phát minh: Ông có những nghiên cứu nền tảng về điện và phát triển các ứng dụng thực tiễn như cột thu lôi, bếp Franklin và kính hai tròng.
 • Chính trị và ngoại giao: Ông tham gia soạn thảo và ký Tuyên ngôn Độc lập Hoa Kỳ năm 1776. Với vai trò đại sứ Hoa Kỳ tại Pháp trong Cách mạng Mỹ, ông góp phần quan trọng giúp Hoa Kỳ giành viện trợ quân sự và tài chính từ Pháp. Ông tham gia soạn thảo Hiến pháp Hoa Kỳ và là người duy nhất ký cả bốn văn kiện lập quốc lớn của Hoa Kỳ.
-• Hoạt động cộng đồng: Ông sáng lập thư viện cho mượn sách công cộng đầu tiên và đội cứu hỏa tình nguyện đầu tiên của Hoa Kỳ. Ông từng giữ chức Chủ tịch Pennsylvania và về cuối đời trở thành người kiên quyết đấu tranh chống chế độ nô lệ.`,
+• Hoạt động cộng đồng: Ông góp phần lập thư viện cho mượn sách công cộng và đội cứu hỏa tình nguyện ở Philadelphia, từng giữ chức Chủ tịch Pennsylvania. Trong những năm đầu, ông từng sở hữu người bị nô dịch; về cuối đời, ông công khai phản đối chế độ nô lệ và tham gia tổ chức bãi nô tại Pennsylvania.`,
     biographyEn: `Benjamin Franklin was one of the greatest Founding Fathers of the United States, renowned for his polymathic talents across politics, diplomacy, science, and literature.
 
 BASIC INFORMATION
@@ -329,9 +327,9 @@ BASIC INFORMATION
 
 CAREER AND MAJOR CONTRIBUTIONS
 • Printing and Literature: Began apprenticing as a printer at age 12 under his older brother. He owned the Pennsylvania Gazette and published the famous Poor Richard's Almanack. He wrote The Autobiography of Benjamin Franklin, a classic work embodying the spirit of the self-made man.
-• Science and Inventions: Conducted foundational research into the nature of electricity, identifying positive and negative charges and formulating the principle of conservation of charge. He invented the lightning rod, the Franklin stove, and bifocal glasses.
+• Science and Inventions: He conducted foundational research into electricity and developed practical devices including the lightning rod, the Franklin stove, and bifocal glasses.
 • Politics and Diplomacy: Helped draft and signed the United States Declaration of Independence (1776). He served as the U.S. minister to France during the American Revolution, playing a crucial role in securing French military and financial aid for American independence. He participated in drafting the U.S. Constitution and was the only person to sign all four major founding documents of the United States.
-• Civic Activities: Founded America's first public lending library and first volunteer fire company. He served as President of Pennsylvania and became an ardent abolitionist later in life.`,
+• Civic Activities: He helped establish a public lending library and volunteer fire company in Philadelphia and served as President of Pennsylvania. Earlier in life he enslaved people; later he publicly opposed slavery and joined Pennsylvania’s abolition movement.`,
   },
   {
     id: "legendary-napoleon-bonaparte-marble",
@@ -359,7 +357,7 @@ CAREER AND MAJOR CONTRIBUTIONS
 
 2. SỰ NGHIỆP QUÂN SỰ VÀ CON ĐƯỜNG NẮM QUYỀN
 • Thành công ban đầu: Khởi đầu là sĩ quan pháo binh trẻ, ông nhanh chóng thăng tiến trong Cách mạng Pháp nhờ tài năng chiến lược.
-• Chiến thắng: Ông tham chiến hơn 60 trận và giành chiến thắng hơn 51 trận, trong đó có các chiến thắng nổi tiếng ở Marengo và Austerlitz.
+• Chiến thắng: Ông giành nhiều chiến thắng nổi tiếng, trong đó có các trận Marengo và Austerlitz, nhưng cũng phải đối mặt với những thất bại và tổn thất lớn.
 • Hoàng đế Pháp: Năm 1804, ông tự đăng quang Hoàng đế Pháp và lập nên Đế chế Pháp thứ nhất.
 
 3. CÁC CẢI CÁCH LỚN
@@ -368,9 +366,9 @@ CAREER AND MAJOR CONTRIBUTIONS
 
 4. THẤT BẠI, LƯU ĐÀY VÀ QUA ĐỜI
 • Cuộc xâm lược Nga (1812): Cuộc xâm lược thảm họa vào Nga đánh dấu bước ngoặt trong vận mệnh của ông.
-• Thoái vị lần thứ nhất (1814): Sau khi bị liên quân châu Âu đánh bại tại trận Leipzig, ông buộc phải thoái vị và bị lưu đày đến đảo Elba.
+• Thoái vị lần thứ nhất (1814): Sau thất bại của Pháp tại Leipzig năm 1813 và khi quân liên minh tiến vào Paris năm 1814, ông buộc phải thoái vị và bị lưu đày đến đảo Elba.
 • Một trăm ngày (1815): Ông trốn khỏi Elba và trở lại nắm quyền trong 100 ngày, trước khi chịu thất bại cuối cùng trước quân Anh và Phổ tại trận Waterloo.
-• Lưu đày lần cuối và qua đời: Người Anh đày ông đến đảo Saint Helena xa xôi. Ông mất tại đó ngày 5 tháng 5 năm 1821, thọ 51 tuổi, do ung thư dạ dày. Năm 1840, hài cốt ông được đưa về Paris an táng.`,
+• Lưu đày lần cuối và qua đời: Người Anh đày ông đến Saint Helena. Ông mất tại đó ngày 5 tháng 5 năm 1821, thọ 51 tuổi; báo cáo khám nghiệm thời đó ghi nhận ung thư dạ dày, nhưng nguyên nhân vẫn được bàn luận. Năm 1840, hài cốt ông được đưa về Paris an táng.`,
     biographyEn: `Napoleon Bonaparte was an eminent French military commander and political leader. He reshaped European politics and history during the late 18th and early 19th centuries.
 
 1. EARLY LIFE AND EDUCATION
@@ -381,7 +379,7 @@ CAREER AND MAJOR CONTRIBUTIONS
 
 2. MILITARY CAREER AND RISE TO POWER
 • Early Success: Starting as a young artillery officer, he rose rapidly during the French Revolution thanks to his strategic brilliance.
-• Victories: He fought in over 60 battles and won more than 51 of them, including famous victories at Marengo and Austerlitz.
+• Victories: He won notable battles including Marengo and Austerlitz, but also faced major defeats and losses.
 • Emperor of the French: In 1804, he crowned himself Emperor of the French, establishing the First French Empire.
 
 3. MAJOR REFORMS
@@ -390,12 +388,38 @@ CAREER AND MAJOR CONTRIBUTIONS
 
 4. DOWNFALL, EXILE, AND DEATH
 • Invasion of Russia (1812): A disastrous invasion of Russia marked the turning point in his fortunes.
-• First Abdication (1814): Defeated by European coalitions at the Battle of Leipzig, he was forced to abdicate and was exiled to the island of Elba.
+• First Abdication (1814): After the French defeat at Leipzig in 1813 and the coalition's entry into Paris in 1814, he was forced to abdicate and was exiled to Elba.
 • The Hundred Days (1815): He escaped Elba and returned to power for 100 days, before suffering a final defeat by British and Prussian forces at the Battle of Waterloo.
-• Final Exile and Death: The British exiled him to the remote island of Saint Helena, where he died on May 5, 1821, at age 51 from stomach cancer. In 1840, his remains were returned to Paris for burial.`,
+• Final Exile and Death: The British exiled him to Saint Helena. He died there on May 5, 1821, aged 51; the contemporary autopsy recorded stomach cancer, though the cause continues to be discussed. His remains were returned to Paris for burial in 1840.`,
   },
   ...HISTORICAL_COLLECTION_ARTWORKS,
 ];
+
+function insertBiographyExpansion(
+  biography: string,
+  expansion: string,
+): string {
+  const firstParagraphEnd = biography.indexOf("\n\n");
+  if (firstParagraphEnd < 0) return `${biography}\n\n${expansion}`;
+  return `${biography.slice(0, firstParagraphEnd)}\n\n${expansion}\n\n${biography.slice(firstParagraphEnd + 2)}`;
+}
+
+export const COLLECTION_ARTWORKS: CollectionArtwork[] =
+  collectionArtworkDefinitions.map((artwork) => {
+    const expansion = COLLECTION_BIOGRAPHY_EXPANSIONS[artwork.id];
+    if (!expansion) return artwork;
+    return {
+      ...artwork,
+      biography: insertBiographyExpansion(
+        artwork.biography ?? artwork.description ?? "",
+        expansion.vi,
+      ),
+      biographyEn: insertBiographyExpansion(
+        artwork.biographyEn ?? artwork.description ?? "",
+        expansion.en,
+      ),
+    };
+  });
 
 const LEGACY_PAINTING_IDS = new Set([
   "common-sunrise",
