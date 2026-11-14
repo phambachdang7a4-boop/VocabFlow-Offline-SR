@@ -38,6 +38,26 @@ assert.deepEqual(us, [
   { term: "mother's", ipa: "/ˈmʌðərz/" },
   { term: "child", ipa: "/tʃaɪld/" },
 ]);
+const verifiedUkExamples = parseRegionalIpaSource(
+  "about\t/ɐbˈaʊt/\neither\t/ˈaɪðɐ/\nfamily\t/fˈæmɪli/\nhello\t/həlˈəʊ/\nimportant\t/ɪmpˈɔːtənt/\nlearn\t/lˈɜːn/\npeople\t/pˈiːpəl/\nschedule\t/ʃˈɛdjuːl/\ntomato\t/təmˈɑːtəʊ/\nwater\t/wˈɔːtɐ/\nword\t/wˈɜːd/\n",
+);
+assert.deepEqual(
+  verifiedUkExamples,
+  [
+    { term: "about", ipa: "/ɐbˈaʊt/" },
+    { term: "either", ipa: "/ˈaɪðɐ/" },
+    { term: "family", ipa: "/fˈæmɪli/" },
+    { term: "hello", ipa: "/həlˈəʊ/" },
+    { term: "important", ipa: "/ɪmpˈɔːtənt/" },
+    { term: "learn", ipa: "/lˈɜːn/" },
+    { term: "people", ipa: "/pˈiːpəl/" },
+    { term: "schedule", ipa: "/ʃˈɛdjuːl/" },
+    { term: "tomato", ipa: "/təmˈɑːtəʊ/" },
+    { term: "water", ipa: "/wˈɔːtɐ/" },
+    { term: "word", ipa: "/wˈɜːd/" },
+  ],
+  "Keep exact British IPA for representative common words parseable.",
+);
 const supplement = buildRegionalIpaSupplement(
   new Set(["Mother's", "child", "grandmother"]),
   new Set(["mother's|uk"]),
@@ -54,6 +74,16 @@ assert.deepEqual(
 assert.equal(
   supplement.some((record) => record.term === "not-in-dictionary"),
   false,
+);
+const verifiedUkSupplement = buildRegionalIpaSupplement(
+  new Set(verifiedUkExamples.map((entry) => entry.term)),
+  new Set(),
+  [{ region: "uk", records: verifiedUkExamples }],
+);
+assert.equal(verifiedUkSupplement.length, verifiedUkExamples.length);
+assert.ok(
+  verifiedUkSupplement.every((record) => record.region === "uk"),
+  "Representative source-verified British pronunciations stay marked as UK rows.",
 );
 assert.equal(
   dictionaryDomain.formatDictionaryPronunciations([
@@ -102,4 +132,87 @@ assert.match(settings, /offline-regional-ipa-delete/);
 assert.match(settings, /deleteOfflineRegionalIpa/);
 assert.match(dictionary, /getRegionalIpaForTerm/);
 assert.match(sources, /sources-regional-ipa/);
-console.log("PASS: pinned commercial-use IPA sources, exact-match import, offline controls, and attribution.");
+
+async function checkOfflineLookupStates() {
+  const loadOfflineData = (database) => loadTs(
+    join(__dirname, "../data/offline-regional-pronunciations.ts"),
+    {
+      "expo-sqlite": {
+        openDatabaseAsync: async () => database,
+        deleteDatabaseAsync: async () => {},
+      },
+      "@noble/hashes/sha2.js": { sha256: () => new Uint8Array() },
+      "./sqlite-connection": { openDatabaseSafely: (open) => open() },
+      "../domain/dictionary": {
+        DICTIONARY: { wordCount: 100 },
+        pronunciationAccent: dictionaryDomain.pronunciationAccent,
+      },
+      "../domain/regional-pronunciations": domain,
+    },
+  );
+  const validMetadata = {
+    revision: REGIONAL_IPA_DICTIONARY.version,
+    us_sha256: REGIONAL_IPA_DICTIONARY.us.sha256,
+    uk_sha256: REGIONAL_IPA_DICTIONARY.uk.sha256,
+    entry_count: 1,
+  };
+  const database = ({
+    hasTable = true,
+    metadata = validMetadata,
+    rows = [],
+    failQuery = false,
+  } = {}) => ({
+    getFirstAsync: async (sql) => {
+      if (sql.includes("sqlite_master")) {
+        return hasTable ? { name: "vocabflow_regional_ipa_meta" } : null;
+      }
+      return metadata;
+    },
+    getAllAsync: async (sql, term) => {
+      assert.match(sql, /CASE region WHEN 'us' THEN 'NAmE' ELSE 'BrE' END/);
+      assert.equal(term, "water");
+      if (failQuery) throw new Error("simulated local query failure");
+      return rows;
+    },
+    execAsync: async () => {},
+  });
+  const found = loadOfflineData(database({
+    rows: [{ ipa: "/wˈɔːtɐ/", region: "BrE" }],
+  }));
+  assert.deepEqual(await found.getRegionalIpaLookupForTerm(" Water "), {
+    state: "found",
+    pronunciations: [{ ipa: "/wˈɔːtɐ/", region: "BrE" }],
+  });
+
+  const absent = loadOfflineData(database({ hasTable: false }));
+  assert.deepEqual(await absent.getRegionalIpaLookupForTerm("water"), {
+    state: "not-installed",
+  });
+  const missingTerm = loadOfflineData(database());
+  assert.deepEqual(await missingTerm.getRegionalIpaLookupForTerm("water"), {
+    state: "not-found",
+  });
+  const damaged = loadOfflineData(database({
+    metadata: { ...validMetadata, revision: "old-revision" },
+  }));
+  assert.deepEqual(await damaged.getRegionalIpaLookupForTerm("water"), {
+    state: "damaged",
+  });
+  const failed = loadOfflineData(database({ failQuery: true }));
+  assert.deepEqual(await failed.getRegionalIpaLookupForTerm("water"), {
+    state: "failed",
+  });
+  const unavailable = loadOfflineData({
+    getFirstAsync: async () => { throw new Error("simulated database open failure"); },
+  });
+  assert.deepEqual(await unavailable.getRegionalIpaLookupForTerm("water"), {
+    state: "failed",
+  });
+}
+
+checkOfflineLookupStates().then(() => {
+  console.log("PASS: pinned British source rows, exact regional labels, distinct offline lookup states, and attribution.");
+}).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

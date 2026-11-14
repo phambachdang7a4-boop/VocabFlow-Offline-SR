@@ -18,7 +18,10 @@ import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useColors } from "@/hooks/useColors";
 import type { VocabularyWord } from "@/data/types";
 import { getDictionaryEntry } from "@/data/dictionary";
-import { getRegionalIpaForTerm } from "@/data/offline-regional-pronunciations";
+import {
+  getRegionalIpaLookupForTerm,
+  type RegionalIpaLookupResult,
+} from "@/data/offline-regional-pronunciations";
 import type { DictionaryPronunciation } from "@/domain/dictionary";
 import {
   checkReviewAnswer,
@@ -117,7 +120,12 @@ export function ReviewCard({
   const [pronunciationLookup, setPronunciationLookup] = useState<{
     key: string;
     pronunciations: DictionaryPronunciation[];
+    regionalState: RegionalIpaLookupResult["state"] | "loading" | "not-needed";
   } | null>(null);
+  const pronunciationState =
+    pronunciationLookup?.key === pronunciationLookupKey
+      ? pronunciationLookup.regionalState
+      : "loading";
   const pronunciationLines = groupReviewPronunciations(
     pronunciationLookup?.key === pronunciationLookupKey
       ? pronunciationLookup.pronunciations
@@ -132,25 +140,34 @@ export function ReviewCard({
 
     const loadPronunciations = async () => {
       let pronunciations: DictionaryPronunciation[] = [];
+      let dictionaryLookupFailed = false;
       if (word.dictionaryEntryId != null) {
         try {
           pronunciations = (
             await getDictionaryEntry(word.dictionaryEntryId)
           ).pronunciations;
         } catch {
-          // Saved IPA remains visible if the offline dictionary is unavailable.
+          dictionaryLookupFailed = true;
         }
       }
 
+      let regionalState: RegionalIpaLookupResult["state"] | "not-needed" =
+        "not-needed";
       if (
         word.dictionaryEntryId == null ||
         !groupReviewPronunciations(pronunciations, "").uk.length
       ) {
         try {
-          const supplemental = await getRegionalIpaForTerm(word.term);
-          pronunciations = [...pronunciations, ...supplemental];
+          const result = await getRegionalIpaLookupForTerm(word.term);
+          regionalState =
+            dictionaryLookupFailed && result.state !== "found"
+              ? "failed"
+              : result.state;
+          if (result.state === "found") {
+            pronunciations = [...pronunciations, ...result.pronunciations];
+          }
         } catch {
-          // The UK line will explain that the optional offline pack is missing.
+          regionalState = "failed";
         }
       }
 
@@ -158,6 +175,7 @@ export function ReviewCard({
         setPronunciationLookup({
           key: pronunciationLookupKey,
           pronunciations,
+          regionalState,
         });
       }
     };
@@ -1096,9 +1114,42 @@ export function ReviewCard({
                         ]}
                       >
                         {pronunciationLines.uk.join(" · ") ||
-                          "Chưa có dữ liệu · tải gói IPA trong Cài đặt"}
+                          (pronunciationState === "loading"
+                            ? "Đang tra cứu IPA Anh-Anh…"
+                            : pronunciationState === "not-found"
+                              ? "Gói đã cài nhưng không có mục Anh-Anh cho từ này"
+                              : pronunciationState === "damaged"
+                                ? "Gói IPA bị lỗi · hãy cài lại trong Cài đặt"
+                                : pronunciationState === "failed"
+                                  ? "Tra cứu IPA Anh-Anh thất bại · hãy thử lại"
+                                  : pronunciationState === "not-needed"
+                                    ? "Chưa có dữ liệu Anh-Anh"
+                                    : "Chưa cài gói IPA Anh-Anh · tải gói trong Cài đặt")}
                       </Text>
                     </View>
+                    {pronunciationLines.unspecified.length ? (
+                      <View style={styles.ipaRow}>
+                        <Text
+                          style={[
+                            styles.ipaAccent,
+                            { color: c.primary, borderColor: c.border },
+                          ]}
+                          accessibilityLabel="Phiên âm chưa xác định vùng"
+                        >
+                          —
+                        </Text>
+                        <Text
+                          testID="review-result-ipa-unspecified"
+                          style={[
+                            styles.small,
+                            styles.ipaValue,
+                            { color: c.mutedForeground },
+                          ]}
+                        >
+                          {pronunciationLines.unspecified.join(" · ")}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
                 <View style={styles.resultDetailsGroup}>

@@ -13,6 +13,11 @@ const reviewResultDetails = loadTs(
     './dictionary-local-additions': localDictionaryAdditions,
   },
 );
+assert.deepEqual(
+  reviewResultDetails.groupReviewPronunciations([], '/teɪk/'),
+  { us: [], uk: [], unspecified: ['/teɪk/'] },
+  'Do not label an untagged saved pronunciation as US or UK.',
+);
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
@@ -97,7 +102,10 @@ function mount(file, properties = {}, initial = {}) {
       getDictionaryEntry: async () => initial.dictionaryEntry ?? { pronunciations: [] },
     },
     '@/data/offline-regional-pronunciations': {
-      getRegionalIpaForTerm: async () => initial.regionalPronunciations ?? [],
+      getRegionalIpaLookupForTerm: async () => initial.regionalLookup ??
+        (initial.regionalPronunciations
+          ? { state: 'found', pronunciations: initial.regionalPronunciations }
+          : { state: 'not-installed' }),
     },
     '@/hooks/useColors': { useColors: () => ({ ...palette, radius: 14 }) },
     '@/hooks/useReviewClock': { useReviewClock: () => now },
@@ -475,6 +483,8 @@ async function startReview(screen) {
     'Show American IPA with its explicit US marker.');
   assert.equal(sentenceCard.byId('review-result-ipa-uk').props.children.join(''), '/test-uk/',
     'Show British IPA on a separate line with its explicit UK marker.');
+  assert.equal(sentenceCard.byId('review-result-ipa-unspecified'), undefined,
+    'Do not add a regional IPA row when there is no unlabelled saved pronunciation.');
   assert.ok(find(sentenceCard.byId('review-result-details'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
   'Show the dictionary example inside the word-information popup.');
@@ -521,6 +531,56 @@ async function startReview(screen) {
   assert.deepEqual(resultFreezeCalls, [[sentenceWord.id, true]],
     'Choosing “Có” freezes the answered word without grading it a second time.');
   assert.ok(sentenceCard.byId('review-result-frozen'));
+  sentenceCard.unmount();
+
+  for (const [state, expected] of [
+    ['not-installed', 'Chưa cài gói IPA Anh-Anh · tải gói trong Cài đặt'],
+    ['not-found', 'Gói đã cài nhưng không có mục Anh-Anh cho từ này'],
+    ['damaged', 'Gói IPA bị lỗi · hãy cài lại trong Cài đặt'],
+    ['failed', 'Tra cứu IPA Anh-Anh thất bại · hãy thử lại'],
+  ]) {
+    const missingIpaCard = mount('../components/ReviewCard.tsx', {
+      ...makeProps({ ...word, dictionaryEntryId: null, ipa: '' }),
+    }, {
+      regionalLookup: { state },
+      recordReview: async () => {},
+    });
+    missingIpaCard.byId('review-answer-input').props.onChangeText('test');
+    missingIpaCard.byId('review-check').props.onPress();
+    await missingIpaCard.settle();
+    assert.equal(
+      missingIpaCard.byId('review-result-ipa-uk').props.children.join(''),
+      expected,
+      `Report ${state} distinctly in the UK IPA row.`,
+    );
+    assert.equal(
+      missingIpaCard.byId('review-result-ipa-us').props.children.join(''),
+      'Chưa có dữ liệu',
+      `Do not present a missing ${state} lookup as US IPA.`,
+    );
+    missingIpaCard.unmount();
+  }
+
+  const untaggedIpaCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps({ ...word, dictionaryEntryId: null, ipa: '/æmbɪɡjuəs/' }),
+  }, {
+    regionalLookup: { state: 'not-installed' },
+    recordReview: async () => {},
+  });
+  untaggedIpaCard.byId('review-answer-input').props.onChangeText('test');
+  untaggedIpaCard.byId('review-check').props.onPress();
+  await untaggedIpaCard.settle();
+  assert.equal(
+    untaggedIpaCard.byId('review-result-ipa-us').props.children.join(''),
+    'Chưa có dữ liệu',
+    'Do not guess that an old untagged saved IPA is American.',
+  );
+  assert.equal(
+    untaggedIpaCard.byId('review-result-ipa-unspecified').props.children.join(''),
+    '/æmbɪɡjuəs/',
+    'Show an untagged saved IPA without assigning it to either accent.',
+  );
+  untaggedIpaCard.unmount();
 
   const translatedWord = {
     ...sentenceWord,

@@ -7,6 +7,7 @@ import { ALL_LOCAL_DICTIONARY_ADDITIONS } from "./dictionary-local-additions";
 export interface ReviewPronunciationLines {
   us: string[];
   uk: string[];
+  unspecified: string[];
 }
 
 function uniqueIpa(values: string[]): string[] {
@@ -14,7 +15,7 @@ function uniqueIpa(values: string[]): string[] {
 }
 
 function parseSavedPronunciations(value: string): ReviewPronunciationLines {
-  const result: ReviewPronunciationLines = { us: [], uk: [] };
+  const result: ReviewPronunciationLines = { us: [], uk: [], unspecified: [] };
   const unlabelled: string[] = [];
 
   for (const segment of value.split(/\s*·\s*/u).map((part) => part.trim())) {
@@ -38,8 +39,12 @@ function parseSavedPronunciations(value: string): ReviewPronunciationLines {
     }
   }
 
-  if (!result.us.length && !result.uk.length) result.us.push(...unlabelled);
-  return { us: uniqueIpa(result.us), uk: uniqueIpa(result.uk) };
+  result.unspecified.push(...unlabelled);
+  return {
+    us: uniqueIpa(result.us),
+    uk: uniqueIpa(result.uk),
+    unspecified: uniqueIpa(result.unspecified),
+  };
 }
 
 export function groupReviewPronunciations(
@@ -61,6 +66,7 @@ export function groupReviewPronunciations(
   return {
     us: us.length ? us : saved.us,
     uk: uk.length ? uk : saved.uk,
+    unspecified: saved.unspecified,
   };
 }
 

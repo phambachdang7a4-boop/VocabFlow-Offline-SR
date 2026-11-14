@@ -359,6 +359,68 @@ export async function getRegionalIpaForTerm(
   }
 }
 
+export type RegionalIpaLookupResult =
+  | { state: "found"; pronunciations: { ipa: string; region: string }[] }
+  | { state: "not-installed" }
+  | { state: "not-found" }
+  | { state: "damaged" }
+  | { state: "failed" };
+
+export async function getRegionalIpaLookupForTerm(
+  term: string,
+): Promise<RegionalIpaLookupResult> {
+  let db: SQLiteDatabase;
+  try {
+    db = await openSupplementDatabase();
+  } catch {
+    return { state: "failed" };
+  }
+
+  try {
+    if (installedRevision !== true) {
+      const metadataTableExists = await db.getFirstAsync<{ name: string }>(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        metadataTable,
+      );
+      if (!metadataTableExists) return { state: "not-installed" };
+
+      const metadata = await db.getFirstAsync<{
+        revision: string;
+        us_sha256: string;
+        uk_sha256: string;
+        entry_count: number;
+      }>(
+        `SELECT revision, us_sha256, uk_sha256, entry_count
+         FROM ${metadataTable} LIMIT 1`,
+      );
+      if (
+        metadata?.revision !== REGIONAL_IPA_DICTIONARY.version ||
+        metadata.us_sha256 !== REGIONAL_IPA_DICTIONARY.us.sha256 ||
+        metadata.uk_sha256 !== REGIONAL_IPA_DICTIONARY.uk.sha256 ||
+        metadata.entry_count <= 0
+      ) {
+        return { state: "damaged" };
+      }
+      installedRevision = true;
+      await db.execAsync("PRAGMA query_only = ON;");
+    }
+
+    const pronunciations = await db.getAllAsync<{
+      ipa: string;
+      region: string;
+    }>(
+      `SELECT ipa, CASE region WHEN 'us' THEN 'NAmE' ELSE 'BrE' END AS region
+       FROM ${dataTable} WHERE term_key = ? COLLATE NOCASE ORDER BY region`,
+      normalizeRegionalIpaTerm(term),
+    );
+    return pronunciations.length
+      ? { state: "found", pronunciations }
+      : { state: "not-found" };
+  } catch {
+    return { state: "failed" };
+  }
+}
+
 export async function deleteOfflineRegionalIpa(): Promise<void> {
   activeDownload?.abort();
   activeDownload = null;
