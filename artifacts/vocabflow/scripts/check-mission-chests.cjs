@@ -620,17 +620,34 @@ for (const artwork of namedHistoricalStatues) {
   assert.ok(artwork.biography, `${artwork.title} has a Vietnamese biography.`);
   assert.ok(artwork.biographyEn, `${artwork.title} has an English biography.`);
   assert.ok(artwork.imageAssetKey, `${artwork.title} has an image key.`);
+}
+
+for (const artwork of COLLECTION_ARTWORKS.filter((item) => item.imageAssetKey)) {
+  const imageFile = `${artwork.imageAssetKey}.png`;
+  const imagePath = join(__dirname, `../assets/images/${imageFile}`);
   assert.ok(
-    existsSync(
-      join(__dirname, `../assets/images/${artwork.imageAssetKey}.png`),
-    ),
-    `${artwork.title}'s image is bundled for offline display.`,
+    existsSync(imagePath),
+    `${artwork.title} (${imageFile}) is bundled for offline display.`,
   );
   assert.ok(
     collectionScreen.includes(
-      `"${artwork.imageAssetKey}": require("../assets/images/${artwork.imageAssetKey}.png")`,
+      `"${artwork.imageAssetKey}": require("../assets/images/${imageFile}")`,
     ),
-    `${artwork.title}'s image is registered for the collection screen.`,
+    `${artwork.title} (${imageFile}) is registered for the collection screen.`,
+  );
+
+  const image = readFileSync(imagePath);
+  assert.ok(
+    image.length >= 24 &&
+      image.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+    `${artwork.title} (${imageFile}) is not a valid PNG image.`,
+  );
+  const width = image.readUInt32BE(16);
+  const height = image.readUInt32BE(20);
+  assert.equal(
+    `${width}x${height}`,
+    "768x768",
+    `${artwork.title} (${imageFile}) must be 768x768; found ${width}x${height}.`,
   );
 }
 assert.equal(isCollectionArtwork("legendary", statue.id), true);
