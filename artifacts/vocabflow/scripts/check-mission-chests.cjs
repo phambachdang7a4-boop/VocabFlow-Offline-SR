@@ -436,11 +436,18 @@ const kant = COLLECTION_ARTWORKS.find(
   (item) => item.id === "legendary-immanuel-kant-marble",
 );
 assert.ok(kant);
-assert.equal(kant.rarity, "common");
+assert.equal(kant.rarity, "rare");
 assert.equal(kant.title, "Tượng Immanuel Kant");
 assert.equal(kant.shortTitle, "Kant");
 assert.equal(kant.material, "Cẩm thạch");
 assert.equal(kant.unlockMode, "automatic");
+assert.equal(kant.id, "legendary-immanuel-kant-marble");
+assert.equal(isCollectionArtwork("rare", kant.id), true);
+assert.equal(
+  isValidCollectionCraftArtwork("common", 1, kant.id),
+  true,
+  "Existing backups may still refer to promoted statues as Common.",
+);
 assert.ok(kant.biography.includes("Chủ nghĩa duy tâm siêu nghiệm"));
 assert.ok(kant.biography.includes("Phê phán lý tính thuần túy"));
 assert.ok(kant.biographyEn.includes("Transcendental Idealism"));
@@ -524,6 +531,11 @@ assert.match(
 );
 assert.match(
   collectionScreen,
+  /const GALLERY_RARITY_ORDER: ChestRarity\[\] = \[\s*"legendary",\s*"epic",\s*"rare",?\s*\];/,
+  "Common is no longer shown as a statue rarity.",
+);
+assert.match(
+  collectionScreen,
   /testID=\{`collection-section-\$\{group\.key\}`\}/,
   "Each statue rarity group has its own identifiable section.",
 );
@@ -535,9 +547,9 @@ assert.match(
 assert.match(
   collectionScreen,
   /collectionGroup !== "bonus"/,
-  "The special Hồ Chí Minh statue is kept outside the sixty-person rank counts.",
+  "The special Hồ Chí Minh statue is kept outside the 110 named-statue rank counts.",
 );
-assert.equal(COLLECTION_ARTWORKS.length, 61);
+assert.equal(COLLECTION_ARTWORKS.length, 111);
 assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
   "All currently available statues are unlocked without fragments.",
@@ -549,7 +561,21 @@ assert.ok(
 const namedHistoricalStatues = COLLECTION_ARTWORKS.filter(
   (item) => item.collectionGroup !== "bonus",
 );
-assert.equal(namedHistoricalStatues.length, 60);
+assert.equal(namedHistoricalStatues.length, 110);
+assert.ok(
+  namedHistoricalStatues.every((item) => item.rarity !== "common"),
+  "No named statue remains in the Common tier.",
+);
+const formerlyCommonStatues = namedHistoricalStatues.filter((item) =>
+  item.id.startsWith("common-"),
+);
+assert.equal(formerlyCommonStatues.length, 39);
+assert.ok(
+  formerlyCommonStatues.every(
+    (item) => item.rarity === "rare" && isCollectionArtwork("common", item.id),
+  ),
+  "Former Common statues are promoted while old rarity records remain readable.",
+);
 assert.equal(statue.collectionGroup, "bonus");
 assert.deepEqual(
   Object.fromEntries(
@@ -558,8 +584,8 @@ assert.deepEqual(
       namedHistoricalStatues.filter((item) => item.rarity === rarity).length,
     ]),
   ),
-  { common: 20, uncommon: 0, rare: 19, epic: 14, legendary: 7 },
-  "The sixty-person statue roster has the specified tier counts.",
+  { common: 0, uncommon: 0, rare: 74, epic: 24, legendary: 12 },
+  "The 110-person statue roster has the specified tier counts.",
 );
 const expectedHistoricalNames = [
   "Alexander Đại đế",
@@ -622,13 +648,73 @@ const expectedHistoricalNames = [
   "Phan Châu Trinh",
   "Võ Nguyên Giáp",
   "Thích Nhất Hạnh",
+  "Albert Einstein",
+  "Mahatma Gandhi",
+  "Marie Curie",
+  "Thành Cát Tư Hãn",
+  "Nelson Mandela",
+  "Ramses II",
+  "Hatshepsut",
+  "Ashoka Đại đế",
+  "Tần Thủy Hoàng",
+  "Ibn Khaldun",
+  "Saladin",
+  "Joan of Arc",
+  "Elizabeth I",
+  "Ada Lovelace",
+  "Nikola Tesla",
+  "Hammurabi",
+  "Cyrus Đại đế",
+  "Ibn Battuta",
+  "Rumi",
+  "Al-Khwarizmi",
+  "Omar Khayyam",
+  "Akbar Đại đế",
+  "Tokugawa Ieyasu",
+  "Florence Nightingale",
+  "Harriet Tubman",
+  "Frederick Douglass",
+  "Michael Faraday",
+  "Louis Pasteur",
+  "Raphael",
+  "Vincent van Gogh",
+  "Catherine Đại đế",
+  "Peter Đại đế",
+  "Nữ hoàng Victoria",
+  "Abraham Lincoln",
+  "Martin Luther King Jr.",
+  "Simón Bolívar",
+  "José de San Martín",
+  "Tôn Trung Sơn",
+  "Rabindranath Tagore",
+  "Katsushika Hokusai",
+  "Frida Kahlo",
+  "Claude Monet",
+  "Charles Dickens",
+  "Jane Austen",
+  "Miguel de Cervantes",
+  "Karl Marx",
+  "Sigmund Freud",
+  "Mary Wollstonecraft",
+  "Alexander Fleming",
+  "Emmeline Pankhurst",
 ].sort();
 assert.deepEqual(
   namedHistoricalStatues
     .map((item) => item.title.replace(/^Tượng /, ""))
     .sort(),
   expectedHistoricalNames,
-  "The catalog contains the fifty requested international figures and ten additional Vietnamese figures.",
+  "The catalog contains one hundred international figures and ten additional Vietnamese figures.",
+);
+const aiRecreatedStatues = namedHistoricalStatues.filter((item) =>
+  item.sourceLabel?.includes("Tượng nghệ thuật AI tái hiện"),
+);
+assert.equal(aiRecreatedStatues.length, 50);
+assert.ok(
+  aiRecreatedStatues.every(
+    (item) => item.portraitSourceType === "uncertain-likeness",
+  ),
+  "AI-recreated portraits are identified as artistic likenesses, not authenticated portraits.",
 );
 for (const artwork of namedHistoricalStatues) {
   assert.ok(artwork.biography, `${artwork.title} has a Vietnamese biography.`);

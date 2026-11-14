@@ -11,8 +11,10 @@ function historicalStatue(
   biographyEn: string,
 ): CollectionArtwork {
   return {
+    // Keep rarity-prefixed IDs stable for saved collection records.
     id: `${rarity}-${slug}-marble`,
-    rarity,
+    // Common is no longer a displayed statue tier.
+    rarity: rarity === "common" ? "rare" : rarity,
     title: `Tượng ${name}`,
     shortTitle: shortName,
     icon: "award",

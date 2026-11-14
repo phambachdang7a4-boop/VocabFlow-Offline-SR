@@ -59,11 +59,15 @@ const historicalCollectionArtworks = loadTs(
 const collectionBiographyExpansions = loadTs(
   join(__dirname, "../domain/collection-biography-expansions.ts"),
 );
+const worldExpansionStatues = loadTs(
+  join(__dirname, "../domain/collection-world-expansion.ts"),
+);
 const collectionArtworks = loadTs(
   join(__dirname, "../domain/collection-artworks.ts"),
   {
     "./mission-chests": missionChests,
     "./collection-historical-artworks": historicalCollectionArtworks,
+    "./collection-world-expansion": worldExpansionStatues,
     "./collection-biography-expansions": collectionBiographyExpansions,
   },
 );

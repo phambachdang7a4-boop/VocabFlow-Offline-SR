@@ -465,9 +465,9 @@ function mount(initialSavedWords = []) {
   screen.byId("office-apps-lesson-1").props.onPress();
   for (let index = 0; index < officeLesson.questions.length; index++) {
     const question = officeLesson.questions[index];
-    const translation =
-      officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES[question.term]
-        .exampleTranslation;
+    const officeEntry =
+      officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES[question.term];
+    const translation = officeEntry.exampleTranslation;
     assert.deepEqual(
       screen.byId("office-apps-question-prompt").props.children,
       [question.prompt],
@@ -481,10 +481,35 @@ function mount(initialSavedWords = []) {
       ),
       "Office-apps feedback shows the Vietnamese example translation.",
     );
+    assert.ok(
+      find(
+        screen.byId("office-apps-answer-feedback"),
+        (node) => node.props?.children?.includes?.(
+          `Từ loại: ${officeEntry.partOfSpeech}`,
+        ),
+      ),
+      "Office-apps feedback shows the example-based part of speech.",
+    );
     screen.byId("office-apps-next").props.onPress();
     await screen.settle();
   }
   assert.ok(screen.byId("office-apps-lesson-complete"));
+  assert.ok(screen.byId("office-apps-word-selection"));
+  const savedBeforeOfficeLesson = screen.savedWordInputs.length;
+  screen.byId("office-apps-add-selected-words").props.onPress();
+  await screen.settle();
+  const officeLessonSaves = screen.savedWordInputs.slice(
+    savedBeforeOfficeLesson,
+  );
+  assert.ok(officeLessonSaves.length > 0);
+  assert.ok(
+    officeLessonSaves.every(
+      (input) =>
+        input.note ===
+        `Từ loại: ${officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES[input.term].partOfSpeech}`,
+    ),
+    "Saving selected Office words keeps each word's part of speech.",
+  );
   screen.byId("office-apps-leave-lesson").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
   assert.ok(screen.byId("phrasal-verbs-course-card"));
@@ -554,6 +579,10 @@ function mount(initialSavedWords = []) {
     new Map(Object.entries(officeEntries)),
     bulkScreen.savedWords,
   );
+  const firstNewOfficeCandidate = allOfficeCandidates.find(
+    (candidate) => !candidate.alreadySaved,
+  );
+  assert.ok(firstNewOfficeCandidate);
   const newOfficeWordCount = allOfficeCandidates.filter(
     (candidate) => !candidate.alreadySaved,
   ).length;
@@ -608,6 +637,19 @@ function mount(initialSavedWords = []) {
   bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
   await bulkScreen.settle();
   assert.equal(bulkScreen.savedWordInputs.length, newOfficeWordCount);
+  assert.ok(
+    bulkScreen.savedWordInputs.every((input) =>
+      input.note.startsWith("Từ loại: "),
+    ),
+    "Office vocabulary saved in bulk keeps its part of speech in the existing note field.",
+  );
+  assert.equal(
+    bulkScreen.savedWordInputs.find(
+      (input) => input.term === firstNewOfficeCandidate.term,
+    )
+      ?.note,
+    `Từ loại: ${officeEntries[firstNewOfficeCandidate.term].partOfSpeech}`,
+  );
   assert.equal(
     bulkScreen.savedWordBatches.length,
     1,

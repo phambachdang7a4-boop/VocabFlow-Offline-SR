@@ -11,7 +11,7 @@ Với Mắt Quạ, dán/đọc văn bản và tra từ phải dùng dữ liệu 
 
 **How to apply:** Không thêm API cho bước trích xuất hay tra nghĩa. Dùng hàm lưu từ hiện có và không tạo cơ chế đồng bộ riêng cho các từ này.
 
-Ưu tiên lấy ví dụ nguyên văn từ SQLite từ điển offline. Khi người dùng yêu cầu, có thể biên soạn ví dụ riêng cho khóa học nếu từ điển thiếu ví dụ phù hợp; không tự ghi nội dung khóa học vào từ điển gốc nếu chưa được yêu cầu.
+Từ vựng khóa học dùng chung nguồn dữ liệu mục từ với từ điển offline; không tạo bản sao riêng của cùng một từ. Cấu trúc bài, câu hỏi và thứ tự học vẫn thuộc khóa học. Ưu tiên ví dụ nguyên văn trong từ điển; nếu cần ví dụ theo ngữ cảnh, khóa học có thể giữ câu riêng theo yêu cầu.
 
 Với khóa ngữ pháp, mỗi câu trắc nghiệm cần có một đáp án tự nhiên, rõ ràng; nghĩa nên ghi cụm gần tương đương và điểm khác nhau khi người học dễ nhầm.
 
@@ -25,9 +25,9 @@ Từ đã lưu chỉ được xem, đóng băng/bỏ đóng băng hoặc xóa; k
 
 **How to apply:** Trước khi viết code phải tóm tắt kế hoạch tối đa 10 dòng và chờ đồng ý. Sau đó làm từng bước nhỏ chạy được; sau mỗi bước báo cách kiểm tra trên điện thoại. Giữ giao diện từ đã lưu ở chế độ chỉ đọc; không hiển thị trường ghi chú, không xóa ghi chú cũ nếu chưa được yêu cầu rõ. Trong Sổ từ, từ đã đóng băng không xuất hiện khi lọc Cấp 1–6 nhưng vẫn tính vào tổng số từ; bỏ lọc thì có thể tra cứu từ đó. Không tự thêm truyện, nội dung từ điển, hay kế hoạch thu phí nếu chưa được yêu cầu. Phạm vi sản phẩm và các lựa chọn hiện tại được ghi trong `replit.md`.
 
-**Why:** Người dùng yêu cầu ưu tiên nội dung từ điển offline nhưng cho phép tự biên soạn câu ví dụ còn thiếu cho khóa IELTS.
+**Why:** Người dùng yêu cầu dữ liệu mục từ trong khóa học và từ điển offline phải được dùng chung, đồng thời muốn từ điển offline là nguồn tra cứu chính.
 
-**How to apply:** Giữ nội dung biên soạn trong khóa học, ghi rõ nguồn, và chỉ sửa SQLite từ điển gốc khi người dùng yêu cầu trực tiếp.
+**How to apply:** Liên kết từ khóa học tới mục từ dùng chung và tái sử dụng dữ liệu hiện có; không tự tạo hoặc ghi đè mục từ còn thiếu cho đến khi người dùng chốt cách xử lý trường hợp đó.
 
 ## Corvi
 Corvi là linh vật chính thức của VocabFlow. Hình pixel-art người dùng gửi là mẫu tham chiếu: quạ đen đeo kính, mặc áo vest/nơ đỏ và đứng trong thư viện. Phẩm chất rương cao nhất mang tên Corvi, chủ đề Hắc Diệu Thạch màu đen.

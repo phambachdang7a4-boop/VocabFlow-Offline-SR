@@ -23,6 +23,7 @@ import {
 import { getOfflineRegionalIpaStatus } from "@/data/offline-regional-pronunciations";
 import {
   dictionaryDraft,
+  dictionaryPartOfSpeechLabel,
   exampleSegments,
   pronunciationAccent,
   sameWordSense,
@@ -540,7 +541,10 @@ export function DictionaryEntryView({
     item: DictionarySense;
     index: number;
   }) => {
-    const kind = [item.pos, item.subPos].filter(Boolean).join(" · ");
+    const kind = [
+      dictionaryPartOfSpeechLabel(item.pos),
+      item.subPos?.trim(),
+    ].filter(Boolean).join(" · ");
     return (
       <View
         testID={`entry-sense-${item.id}`}

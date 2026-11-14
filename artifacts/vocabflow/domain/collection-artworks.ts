@@ -1,5 +1,6 @@
 import type { ChestRarity } from "./mission-chests";
 import { HISTORICAL_COLLECTION_ARTWORKS } from "./collection-historical-artworks";
+import { WORLD_EXPANSION_STATUES } from "./collection-world-expansion";
 import { COLLECTION_BIOGRAPHY_EXPANSIONS } from "./collection-biography-expansions";
 
 export interface CollectionArtwork {
@@ -202,7 +203,7 @@ NOTABLE WORKS AND LEGACY
   },
   {
     id: "legendary-immanuel-kant-marble",
-    rarity: "common",
+    rarity: "rare",
     title: "Tượng Immanuel Kant",
     shortTitle: "Kant",
     icon: "award",
@@ -393,6 +394,7 @@ CAREER AND MAJOR CONTRIBUTIONS
 • Final Exile and Death: The British exiled him to Saint Helena. He died there on May 5, 1821, aged 51; the contemporary autopsy recorded stomach cancer, though the cause continues to be discussed. His remains were returned to Paris for burial in 1840.`,
   },
   ...HISTORICAL_COLLECTION_ARTWORKS,
+  ...WORLD_EXPANSION_STATUES,
 ];
 
 function insertBiographyExpansion(
@@ -450,6 +452,13 @@ export function isLegacyCollectionPaintingId(id: string): boolean {
 const artworkById = new Map(
   COLLECTION_ARTWORKS.map((artwork) => [artwork.id, artwork]),
 );
+// Accept old Common rarity values in existing backups for statues now ranked Rare.
+const LEGACY_COMMON_STATUE_IDS = new Set([
+  ...COLLECTION_ARTWORKS.filter((artwork) =>
+    artwork.id.startsWith("common-"),
+  ).map((artwork) => artwork.id),
+  "legendary-immanuel-kant-marble",
+]);
 
 export function artworkForCraft(
   rarity: ChestRarity,
@@ -474,7 +483,10 @@ export function isValidCollectionCraftArtwork(
   artworkId: string,
 ): boolean {
   const artwork = artworkById.get(artworkId);
-  if (!artwork || artwork.rarity !== rarity) return false;
+  const legacyCommonRarity =
+    rarity === "common" && LEGACY_COMMON_STATUE_IDS.has(artworkId);
+  if (!artwork || (artwork.rarity !== rarity && !legacyCommonRarity))
+    return false;
   if (artwork.unlockMode === "automatic") return true;
   try {
     return artworkForCraft(rarity, craftIndex).id === artworkId;
@@ -487,7 +499,11 @@ export function isCollectionArtwork(
   rarity: ChestRarity,
   artworkId: string,
 ): boolean {
-  return artworkById.get(artworkId)?.rarity === rarity;
+  const artwork = artworkById.get(artworkId);
+  return (
+    artwork?.rarity === rarity ||
+    (rarity === "common" && LEGACY_COMMON_STATUE_IDS.has(artworkId))
+  );
 }
 
 function stableHash(value: string): number {

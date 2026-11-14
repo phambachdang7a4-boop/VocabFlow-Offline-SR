@@ -1,6 +1,7 @@
 export interface CourseWordEntry {
   definition: string;
   example: string;
+  partOfSpeech?: string;
 }
 
 export interface SavedCourseWord {
@@ -14,6 +15,7 @@ export interface CourseWordCandidate {
   meaning: string;
   example: string;
   ipa: string;
+  partOfSpeech?: string;
   alreadySaved: boolean;
 }
 
@@ -47,6 +49,7 @@ export function buildCourseWordCandidates(
       meaning,
       example: entry.example.trim(),
       ipa: "",
+      ...(entry.partOfSpeech ? { partOfSpeech: entry.partOfSpeech } : {}),
       alreadySaved: savedKeys.has(key),
     });
   }

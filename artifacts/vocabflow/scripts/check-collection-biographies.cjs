@@ -12,11 +12,11 @@ function wordCount(value) {
   return value.trim().split(/\s+/u).filter(Boolean).length;
 }
 
-assert.equal(artworks.length, 61, "The collection should contain 61 statues.");
+assert.equal(artworks.length, 111, "The collection should contain 111 statues.");
 assert.equal(
   Object.keys(expansions).length,
-  44,
-  "All 44 shorter historical biographies should receive a context section.",
+  94,
+  "All 94 shorter historical biographies should receive a context section.",
 );
 
 for (const artwork of artworks) {

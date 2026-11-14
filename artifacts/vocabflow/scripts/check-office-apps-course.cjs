@@ -20,6 +20,14 @@ assert.deepEqual(
 assert.ok(topics.every((topic) => topic.terms.length === 60));
 assert.equal(terms.length, 180, "All course terms are unique.");
 assert.deepEqual(missingTranslations, [], "Every example has a Vietnamese translation.");
+assert.ok(
+  terms.every((term) => entries[term].partOfSpeech?.trim()),
+  "Every Office vocabulary item has a part-of-speech label.",
+);
+assert.equal(entries["active cell"].partOfSpeech, "Cụm danh từ");
+assert.equal(entries["freeze panes"].partOfSpeech, "Cụm động từ");
+assert.equal(entries.bold.partOfSpeech, "Tính từ");
+assert.equal(entries["after previous"].partOfSpeech, "Cụm giới từ");
 assert.equal(lessons.length, 15);
 
 const seenTerms = [];

@@ -363,4 +363,504 @@ export const COLLECTION_BIOGRAPHY_EXPANSIONS: Record<
 • Tradition places Sun Tzu in the Spring and Autumn period, but no contemporary biography securely confirms his dates, origins, or campaigns. The Art of War may reflect layers of compilation and accumulated military experience rather than a complete work by one person.
 • The text stresses knowing oneself and an opponent, gathering intelligence, and adapting to circumstances to avoid prolonged war. East Asian states studied it for centuries; modern readers should distinguish its strategic arguments from popular sayings later attributed to Sun Tzu.`,
   },
+  "legendary-albert-einstein-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Năm 1905, khi làm việc tại văn phòng cấp bằng sáng chế ở Bern, Einstein công bố nhiều bài báo có ảnh hưởng về lượng tử ánh sáng, chuyển động Brown và thuyết tương đối hẹp.
+• Sau khi chủ nghĩa Quốc xã lên nắm quyền, ông rời Đức và định cư tại Hoa Kỳ. Ông tiếp tục nghiên cứu, lên tiếng về hòa bình và trách nhiệm của khoa học.
+• Các ý tưởng của Einstein được kiểm nghiệm và phát triển bởi cộng đồng khoa học rộng lớn; ông không phải người duy nhất tạo nên vật lý hiện đại.`,
+    en: `CONTEXT AND LEGACY
+• In 1905, while working at a patent office in Bern, Einstein published influential papers on light quanta, Brownian motion, and special relativity.
+• After the Nazi rise to power, he left Germany and settled in the United States. He continued research and spoke publicly about peace and science.
+• Einstein's ideas were tested and developed by a broad scientific community; modern physics was not created by one person alone.`,
+  },
+  "legendary-mahatma-gandhi-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Gandhi học luật tại London rồi làm việc ở Nam Phi, nơi ông tổ chức phản kháng chống phân biệt đối xử với người Ấn.
+• Trở về Ấn Độ năm 1915, ông tham gia các chiến dịch bất tuân dân sự, trong đó có cuộc Tuần hành Muối năm 1930.
+• Phương pháp bất bạo động ảnh hưởng nhiều phong trào sau này, nhưng di sản của ông cũng được xem xét phê bình trong bối cảnh xã hội và chính trị.`,
+    en: `CONTEXT AND LEGACY
+• Gandhi studied law in London and later worked in South Africa, where he organized resistance to discrimination against Indians.
+• Returning to India in 1915, he joined campaigns of civil disobedience, including the Salt March of 1930.
+• His nonviolent methods influenced later movements, while his legacy is also critically examined in social and political context.`,
+  },
+  "legendary-marie-curie-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Sinh tại Warsaw với tên Maria Skłodowska, bà chuyển đến Paris để học tại Sorbonne khi cơ hội giáo dục cho phụ nữ ở quê nhà còn hạn chế.
+• Sau khi Pierre Curie qua đời, bà tiếp tục giảng dạy và nghiên cứu, trở thành nữ giáo sư đầu tiên tại Sorbonne.
+• Việc xử lý vật liệu phóng xạ trong điều kiện an toàn chưa được hiểu rõ thời đó đã gây nguy hiểm cho sức khỏe của bà.`,
+    en: `CONTEXT AND LEGACY
+• Born Maria Skłodowska in Warsaw, she moved to Paris to study at the Sorbonne when educational opportunities for women at home were limited.
+• After Pierre Curie's death, she continued teaching and research and became the Sorbonne's first female professor.
+• Working with radioactive materials before their hazards were understood exposed her to serious health risks.`,
+  },
+  "legendary-genghis-khan-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Temüjin trải qua thời thơ ấu giữa các xung đột bộ lạc và xây dựng liên minh bằng chiến tranh, ngoại giao cùng quan hệ trung thành cá nhân.
+• Quân đội Mông Cổ nổi bật nhờ kỵ binh cơ động, liên lạc và tổ chức theo đơn vị; các cuộc chinh phục vẫn gây thương vong lớn.
+• Sau khi ông mất, những người kế vị tiếp tục mở rộng đế quốc, tạo mạng lưới trao đổi Á–Âu nhưng cũng để lại các cuộc tàn phá.`,
+    en: `CONTEXT AND LEGACY
+• Temüjin grew up amid intertribal conflict and built alliances through warfare, diplomacy, and personal bonds of loyalty.
+• Mongol forces were known for mobile cavalry, communication, and unit organization; their conquests also caused enormous loss of life.
+• After his death, successors expanded the empire, creating Eurasian connections while continuing campaigns of severe destruction.`,
+  },
+  "legendary-nelson-mandela-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Mandela gia nhập Đại hội Dân tộc Phi và tham gia vận động chống apartheid; sau khi phản kháng ôn hòa bị đàn áp, ông cũng gắn với cánh vũ trang của phong trào.
+• Phiên tòa Rivonia năm 1964 đưa ông vào tù dài hạn. Những cuộc thương lượng cuối thập niên 1980 góp phần chấm dứt chế độ thiểu số da trắng.
+• Chính phủ của ông thúc đẩy hòa giải dân tộc, nhưng nhiều bất bình đẳng kinh tế vẫn tiếp tục sau chuyển đổi chính trị.`,
+    en: `CONTEXT AND LEGACY
+• Mandela joined the African National Congress and opposed apartheid; after peaceful protest was suppressed, he was also associated with the movement's armed wing.
+• The 1964 Rivonia Trial led to his long imprisonment. Negotiations in the late 1980s helped bring white-minority rule to an end.
+• His government promoted national reconciliation, though many economic inequalities persisted after the political transition.`,
+  },
+  "epic-ramses-ii-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Ramses lên ngôi khi Ai Cập cạnh tranh ảnh hưởng với đế quốc Hittite tại vùng Levant. Trận Kadesh được ghi lại bằng văn bia và phù điêu hoàng gia.
+• Các văn bản Ai Cập mô tả trận đánh như chiến thắng của pharaoh, trong khi giới nghiên cứu hiện đại thận trọng với tuyên truyền cung đình.
+• Những công trình đồ sộ và nhiều tượng của ông khiến tên Ramses còn hiện diện trong cảnh quan Ai Cập ngày nay.`,
+    en: `CONTEXT AND LEGACY
+• Ramses came to power while Egypt competed with the Hittite Empire for influence in the Levant. Royal inscriptions and reliefs recorded the Battle of Kadesh.
+• Egyptian texts presented the battle as a pharaoh's victory, while modern historians treat court propaganda cautiously.
+• His monumental building program and many statues keep his name visible in Egypt's landscape today.`,
+  },
+  "epic-hatshepsut-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Hatshepsut ban đầu cùng trị vì với Thutmose III, rồi nắm quyền pharaoh trong nhiều năm. Triều đình dùng danh hiệu và hình tượng hoàng gia để củng cố tính chính danh.
+• Đền tang lễ tại Deir el-Bahri kể về nguồn gốc thần thánh và chuyến đi Punt, phản ánh chương trình chính trị của triều đình.
+• Một số hình ảnh của bà bị phá hủy hoặc sửa đổi sau khi bà mất; nguyên nhân và thời điểm cụ thể vẫn được thảo luận.`,
+    en: `CONTEXT AND LEGACY
+• Hatshepsut first ruled alongside Thutmose III and later held pharaonic power for years. Her court used royal titles and imagery to establish legitimacy.
+• Her mortuary temple at Deir el-Bahri presents a divine birth narrative and the Punt expedition, reflecting the court's political program.
+• Some images of her were erased or altered after her death; the motives and timing remain debated.`,
+  },
+  "epic-ashoka-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Các sắc lệnh của Ashoka được khắc trên đá và cột đá tại nhiều vùng, sử dụng ngôn ngữ địa phương để truyền đạt thông điệp của nhà nước.
+• Ông khuyến khích lòng khoan dung giữa các cộng đồng tôn giáo và quan tâm đến phúc lợi của người dân, động vật.
+• Mức độ ông trực tiếp cải đạo sau chiến tranh Kalinga được mô tả khác nhau trong các nguồn; văn bia là bằng chứng quan trọng nhất còn lại.`,
+    en: `CONTEXT AND LEGACY
+• Ashoka's edicts were carved on rocks and pillars across the empire, often using local languages to communicate state messages.
+• They promoted tolerance among religious communities and expressed concern for the welfare of people and animals.
+• Sources differ on the extent of his personal conversion after Kalinga; the inscriptions remain the strongest surviving evidence.`,
+  },
+  "epic-qin-shi-huang-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Qin Shi Huang thừa hưởng một nhà nước đã phát triển quân đội và bộ máy hành chính mạnh, rồi dùng chiến tranh để khuất phục sáu nước đối thủ.
+• Nhà Tần thống nhất một số quy chuẩn nhưng áp dụng cai trị hà khắc, dẫn đến nổi dậy ngay sau khi ông qua đời.
+• Lăng mộ với đội quân đất nung cho thấy quy mô quyền lực và nguồn lực mà triều đình huy động.`,
+    en: `CONTEXT AND LEGACY
+• Qin Shi Huang inherited a state with a strong army and administration, then used warfare to defeat six rival kingdoms.
+• The Qin standardized several systems but governed harshly, and rebellions followed soon after his death.
+• The mausoleum and its Terracotta Army reveal the scale of power and resources mobilized by the court.`,
+  },
+  "epic-ibn-khaldun-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Ibn Khaldun sống giữa các triều đại thay đổi nhanh ở Bắc Phi và Andalusia, nhiều lần làm quan, ngoại giao và giảng dạy.
+• Trong Muqaddimah, ông xem xét cách đoàn kết nhóm, kinh tế, địa lý và quyền lực góp phần tạo nên hoặc làm suy yếu nhà nước.
+• Những khái niệm của ông thường được so sánh với xã hội học hiện đại, nhưng cần đặt trong bối cảnh lịch sử Hồi giáo thế kỷ XIV.`,
+    en: `CONTEXT AND LEGACY
+• Ibn Khaldun lived through rapidly changing dynasties in North Africa and al-Andalus and served repeatedly in government, diplomacy, and teaching.
+• In the Muqaddimah, he examined how group solidarity, economics, geography, and power helped states form or weaken.
+• His concepts are often compared with modern sociology but should be read within the context of fourteenth-century Islamic history.`,
+  },
+  "epic-saladin-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Saladin trưởng thành trong mạng lưới quyền lực của người Zengid và trở thành tể tướng Fatimid trước khi lập triều Ayyubid.
+• Việc chiếm lại Jerusalem năm 1187 dẫn tới Thập tự chinh thứ ba; các cuộc đàm phán với Richard I kết thúc bằng thỏa thuận cho phép người hành hương đến thành phố.
+• Hình ảnh hiệp sĩ hào hiệp của ông được cả nguồn Hồi giáo và châu Âu về sau xây dựng, đôi khi khác với thực tế chính trị phức tạp.`,
+    en: `CONTEXT AND LEGACY
+• Saladin rose through the Zengid network and became vizier of the Fatimid caliphate before founding the Ayyubid dynasty.
+• His recapture of Jerusalem in 1187 prompted the Third Crusade; negotiations with Richard I ended in an agreement permitting pilgrimages.
+• Later Muslim and European accounts shaped his image as a chivalrous ruler, sometimes simplifying complex political realities.`,
+  },
+  "epic-joan-of-arc-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Joan đến gặp thái tử Charles trong thời điểm quân Anh và đồng minh kiểm soát nhiều vùng của Pháp. Bà mặc giáp và đồng hành cùng quân đội, nhưng không phải là tổng chỉ huy duy nhất.
+• Sau khi bị bắt tại Compiègne, bà bị xét xử tại Rouen trong một tòa án chịu ảnh hưởng chính trị của Anh.
+• Phiên tòa được xem xét lại năm 1456 và tuyên bố bản án trước đó vô hiệu; hình tượng của bà tiếp tục được diễn giải theo nhiều mục đích khác nhau.`,
+    en: `CONTEXT AND LEGACY
+• Joan met the dauphin Charles while English forces and their allies controlled much of France. She wore armor and traveled with troops but was not their sole commander.
+• Captured near Compiègne, she was tried at Rouen in a court operating under English political influence.
+• A review in 1456 nullified the earlier verdict; her image has since been interpreted for many different purposes.`,
+  },
+  "epic-elizabeth-i-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Elizabeth là con gái của Henry VIII và Anne Boleyn, lên ngôi sau một thời kỳ tranh chấp tôn giáo và kế vị.
+• Đạo luật Thống nhất năm 1559 định hình Giáo hội Anh; triều đình cũng phải đối phó với các âm mưu và mâu thuẫn giữa các cường quốc châu Âu.
+• Thời Elizabeth chứng kiến Shakespeare và nhiều nhà viết kịch khác hoạt động, nhưng không nên quy toàn bộ thành tựu văn hóa của thời kỳ cho riêng nữ hoàng.`,
+    en: `CONTEXT AND LEGACY
+• Elizabeth, daughter of Henry VIII and Anne Boleyn, came to the throne after years of religious and succession disputes.
+• The 1559 Act of Uniformity shaped the Church of England; her government also faced plots and rivalry among European powers.
+• Shakespeare and other playwrights flourished during her reign, though the era's cultural achievements cannot be credited to the queen alone.`,
+  },
+  "epic-ada-lovelace-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Lovelace là con gái của nhà thơ Lord Byron và được mẹ khuyến khích học toán, khoa học thay vì chỉ theo chương trình giáo dục dành cho phụ nữ thời đó.
+• Khi dịch bài viết của Luigi Menabrea về máy phân tích, bà bổ sung ghi chú dài hơn bản dịch và giải thích khả năng xử lý ký hiệu của máy.
+• Bản thiết kế máy chưa hoàn thành khi bà còn sống; vì vậy vai trò của bà được hiểu qua văn bản và nghiên cứu lịch sử máy tính.`,
+    en: `CONTEXT AND LEGACY
+• Lovelace, daughter of poet Lord Byron, was encouraged by her mother to study mathematics and science beyond the usual education offered to women.
+• While translating Luigi Menabrea's article on the Analytical Engine, she added notes longer than the original and explained its symbolic operations.
+• The machine was never completed in her lifetime, so her role is understood through her writing and later computer history.`,
+  },
+  "epic-nikola-tesla-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Tesla học kỹ thuật tại châu Âu và chuyển đến Hoa Kỳ năm 1884. Ông từng làm việc với Thomas Edison trước khi theo đuổi các dự án riêng.
+• Hệ thống điện xoay chiều nhiều pha của ông được cấp bằng sáng chế và thương mại hóa cùng nhiều kỹ sư, doanh nghiệp khác.
+• Tesla còn thử nghiệm truyền thông không dây và điện áp cao; một số ý tưởng của ông nổi tiếng hơn mức chúng được triển khai thực tế.`,
+    en: `CONTEXT AND LEGACY
+• Tesla studied engineering in Europe and moved to the United States in 1884. He briefly worked with Thomas Edison before pursuing independent projects.
+• His polyphase alternating-current system was patented and commercialized alongside work by many other engineers and companies.
+• He also experimented with wireless communication and high voltage; some of his ideas became more famous than their practical implementation.`,
+  },
+  "rare-hammurabi-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Hammurabi củng cố Babylon bằng chiến tranh, ngoại giao và quản lý các thành phố trong khu vực Lưỡng Hà.
+• Bộ luật được khắc trên một tấm bia đá bazan cao, hiện lưu giữ tại Bảo tàng Louvre; văn bản gồm các phán quyết mẫu và nguyên tắc pháp lý.
+• Hình phạt trong bộ luật khác nhau theo địa vị xã hội, phản ánh cấu trúc thứ bậc của xã hội cổ đại.`,
+    en: `CONTEXT AND LEGACY
+• Hammurabi strengthened Babylon through warfare, diplomacy, and administration of Mesopotamian cities.
+• The code was carved on a tall basalt stele, now held at the Louvre; it contains model judgments and legal principles.
+• Penalties differed by social status, reflecting the hierarchical structure of ancient society.`,
+  },
+  "rare-cyrus-the-great-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Cyrus đánh bại người Media, Lydia và Babylon, tạo nên một đế quốc đa dân tộc trải dài từ Trung Á đến Tây Á.
+• Các nguồn Ba Tư, Hy Lạp và Babylon mô tả ông theo những cách khác nhau; nhiều câu chuyện đời ông được viết lại về sau.
+• Trụ Cyrus ghi lại lời tuyên bố hoàng gia về việc chiếm Babylon, nhưng cách gọi đây là văn bản nhân quyền hiện đại còn gây tranh luận.`,
+    en: `CONTEXT AND LEGACY
+• Cyrus defeated the Medes, Lydia, and Babylon, building a multiethnic empire stretching across western and central Asia.
+• Persian, Greek, and Babylonian sources portray him differently; many stories about his life were written later.
+• The Cyrus Cylinder records a royal account of Babylon's conquest, though calling it a modern human-rights charter remains debated.`,
+  },
+  "rare-ibn-battuta-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Ibn Battuta rời Tangier năm 1325 với mục tiêu hành hương đến Mecca, rồi tiếp tục nhận việc tại các triều đình và thành phố ông ghé qua.
+• Phạm vi hành trình của ông dựa phần lớn vào lời kể được ghi lại sau khi trở về Maroc, chứ không phải nhật ký viết hằng ngày còn nguyên vẹn.
+• Rihla cung cấp tư liệu về giao thương, luật Hồi giáo và đời sống đô thị ở nhiều vùng thế kỷ XIV.`,
+    en: `CONTEXT AND LEGACY
+• Ibn Battuta left Tangier in 1325 for pilgrimage to Mecca, then continued traveling through appointments and opportunities in cities he visited.
+• The itinerary is based largely on the account recorded after his return to Morocco, not on a surviving day-by-day journal.
+• The Rihla offers evidence about trade, Islamic law, and urban life across several regions in the fourteenth century.`,
+  },
+  "rare-rumi-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Rumi sống tại Konya, khi ấy thuộc vương quốc Seljuk Rum, và giảng dạy luật Hồi giáo trước khi gặp nhà thần bí Shams of Tabriz.
+• Cuộc gặp gỡ được xem là bước ngoặt trong thơ ca của ông; nhiều chi tiết về mối quan hệ này được kể lại qua truyền thống sau đó.
+• Các tác phẩm của Rumi được đọc trong bối cảnh thi ca Sufi, với nhiều bản dịch hiện đại đã phóng tác hoặc diễn giải tự do.`,
+    en: `CONTEXT AND LEGACY
+• Rumi lived in Konya, then part of the Seljuk Sultanate of Rum, and taught Islamic law before meeting the mystic Shams of Tabriz.
+• Their encounter is treated as a turning point in his poetry, though many details come through later traditions.
+• Rumi's works belong to Sufi literary contexts, and many modern English versions are adaptations rather than literal translations.`,
+  },
+  "rare-al-khwarizmi-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Al-Khwarizmi làm việc trong môi trường nghiên cứu của Baghdad, nơi các học giả dịch và phát triển toán học từ nhiều truyền thống.
+• Sách đại số của ông trình bày các phép biến đổi phương trình bằng lời và ví dụ số, phục vụ cả nhu cầu tính toán thực tế.
+• Các bản dịch Latin giúp phương pháp này lan rộng tại châu Âu; lịch sử đại số còn có đóng góp của nhiều học giả Ấn Độ, Hy Lạp và Ả Rập.`,
+    en: `CONTEXT AND LEGACY
+• Al-Khwarizmi worked in Baghdad's scholarly milieu, where researchers translated and extended mathematics from many traditions.
+• His algebra book explained equation transformations in words and numerical examples for practical calculation.
+• Latin translations carried these methods into Europe; algebra's history also includes contributions from Indian, Greek, and other Arabic scholars.`,
+  },
+  "rare-omar-khayyam-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Khayyam làm việc dưới triều Seljuk và tham gia nhóm học giả cải cách lịch theo yêu cầu của Malik-Shah.
+• Ông viết về hình học và phương trình, đồng thời sáng tác rubaiyat; nhiều bài thơ được gán cho ông nhưng việc xác định tác giả từng bài không phải lúc nào cũng chắc chắn.
+• Bản dịch tự do của FitzGerald thế kỷ XIX tạo hình ảnh Khayyam nổi bật trong văn học tiếng Anh. Văn bản Ba Tư còn lại qua nhiều truyền bản, đôi khi khác nhau về tác giả và cách sắp xếp.`,
+    en: `CONTEXT AND LEGACY
+• Khayyam worked under the Seljuk dynasty and joined a scholarly group revising the calendar at Malik-Shah's request.
+• He wrote on geometry and equations as well as rubaiyat; poems attributed to him are not all securely authenticated.
+• FitzGerald's free nineteenth-century adaptation made Khayyam a major figure in English-language literature. The Persian poems survive in manuscript traditions that sometimes differ on authorship and arrangement.`,
+  },
+  "rare-akbar-the-great-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Akbar lên ngôi khi còn nhỏ, trong giai đoạn đế quốc Mughal phải củng cố quyền lực tại Bắc Ấn Độ.
+• Ông dựa vào mạng lưới quan chức nhiều nguồn gốc, cải tổ thuế đất và mở rộng quan hệ với các thủ lĩnh địa phương.
+• Các cuộc thảo luận tôn giáo tại triều đình được ghi lại trong văn bản của Abu'l-Fazl, người đồng thời xây dựng hình ảnh chính thống về hoàng đế. Triều đại của Akbar cũng thay đổi quan hệ giữa quyền lực trung ương và giới tinh hoa địa phương.`,
+    en: `CONTEXT AND LEGACY
+• Akbar came to the throne as a child while the Mughal Empire was still consolidating power in northern India.
+• He used officials from diverse backgrounds, reformed land revenue, and expanded alliances with local rulers.
+• Court religious debates were recorded by Abu'l-Fazl, whose writings also helped shape the emperor's official image. Akbar's reign reshaped relations between imperial authority and local elites across a diverse population.`,
+  },
+  "rare-tokugawa-ieyasu-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Ieyasu trải qua thời Sengoku với nhiều liên minh thay đổi, từng phục vụ Oda Nobunaga rồi Toyotomi Hideyoshi trước khi củng cố quyền lực riêng.
+• Sau Sekigahara, ông phân phối đất đai và chức vụ cho các lãnh chúa để ổn định trật tự mới.
+• Mạc phủ Tokugawa duy trì hòa bình tương đối lâu dài, nhưng xã hội Edo vẫn có phân tầng nghiêm ngặt và kiểm soát chính trị chặt chẽ.`,
+    en: `CONTEXT AND LEGACY
+• Ieyasu lived through the Sengoku era of shifting alliances, serving Oda Nobunaga and Toyotomi Hideyoshi before securing his own power.
+• After Sekigahara, he distributed land and offices among lords to stabilize the new order.
+• The Tokugawa shogunate maintained relative peace for a long period, while Edo society retained strict status divisions and political control.`,
+  },
+  "rare-florence-nightingale-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Nightingale xuất thân từ gia đình khá giả nhưng chọn nghề điều dưỡng khi công việc này chưa được xem trọng tại Anh.
+• Trong Chiến tranh Crimea, bà và đội ngũ cải thiện vệ sinh bệnh viện; biểu đồ thống kê giúp bà trình bày mối liên hệ giữa điều kiện chăm sóc và tử vong.
+• Bà tiếp tục vận động cải cách y tế công cộng và đào tạo chuyên môn sau khi trở về. Mô hình Nightingale cũng ảnh hưởng đến quy hoạch bệnh viện và việc thu thập thống kê sức khỏe.`,
+    en: `CONTEXT AND LEGACY
+• Nightingale came from a wealthy family but chose nursing when the work was not highly regarded in Britain.
+• During the Crimean War, she and her team improved hospital sanitation; statistical charts helped show links between care conditions and deaths.
+• After returning home, she continued advocating for public-health reform and professional training. Her model also influenced hospital planning and the collection of health statistics.`,
+  },
+  "rare-harriet-tubman-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Tubman lớn lên trong cảnh nô lệ tại Maryland, chịu bạo lực và chấn thương đầu có ảnh hưởng lâu dài đến sức khỏe.
+• Sau khi tự trốn thoát, bà nhiều lần dẫn người thân và những người khác đi về phía các bang tự do, bất chấp nguy cơ bị bắt.
+• Những câu chuyện về bà được các nhà báo và người viết tiểu sử ghi lại, đôi khi khác nhau về số chuyến đi và người được giải cứu.`,
+    en: `CONTEXT AND LEGACY
+• Tubman was enslaved in Maryland and endured violence and a head injury that affected her health for life.
+• After escaping, she repeatedly guided relatives and others toward free states despite the danger of capture.
+• Journalists and biographers recorded her story, with accounts sometimes differing on the number of trips and people rescued.`,
+  },
+  "rare-frederick-douglass-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Douglass tự học đọc và viết khi còn bị nô lệ, rồi trốn đến miền Bắc và diễn thuyết công khai về chế độ nô lệ.
+• Ông xuất bản báo North Star, tham gia các chiến dịch bãi nô và gặp Tổng thống Lincoln trong Nội chiến.
+• Sau năm 1865, ông giữ nhiều chức vụ liên bang và tiếp tục vận động cho quyền của người Mỹ gốc Phi. Các bài diễn thuyết và tự truyện của ông trở thành tư liệu bền vững cho phong trào bãi nô.`,
+    en: `CONTEXT AND LEGACY
+• Douglass secretly learned to read and write while enslaved, then escaped north and spoke publicly about slavery.
+• He published the newspaper North Star, joined abolitionist campaigns, and met President Lincoln during the Civil War.
+• After 1865, he held several federal posts and continued advocating for African Americans' rights. His speeches and autobiographies became lasting sources for the abolitionist cause.`,
+  },
+  "rare-michael-faraday-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Faraday không được học đại học; khi làm thợ đóng sách, ông đọc các sách khoa học và tự học hóa học, vật lý.
+• Ông trở thành trợ lý của Humphry Davy tại Viện Hoàng gia rồi tiến hành thí nghiệm nổi tiếng về điện và từ.
+• Faraday từ chối nhiều danh hiệu cao quý, nhưng các bài giảng khoa học đại chúng của ông thu hút đông đảo người nghe. Các phát hiện của ông khiến thí nghiệm trở thành trọng tâm trong giáo dục khoa học đại chúng.`,
+    en: `CONTEXT AND LEGACY
+• Faraday did not attend university; while working as a bookbinder, he read scientific books and taught himself chemistry and physics.
+• He became Humphry Davy's assistant at the Royal Institution and later conducted landmark experiments on electricity and magnetism.
+• Faraday declined several honors, while his public science lectures attracted large audiences. His discoveries also made experiment central to public science education.`,
+  },
+  "rare-louis-pasteur-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Pasteur ban đầu nghiên cứu hóa học tinh thể trước khi chuyển sang lên men và vi sinh vật học.
+• Thí nghiệm với bình cổ thiên nga bác bỏ quan niệm vi sinh vật tự sinh trong điều kiện thông thường.
+• Vaccine phòng bệnh dại được thử nghiệm năm 1885; thành quả dựa trên nghiên cứu của Pasteur và công sức của cộng sự trong phòng thí nghiệm. Những phương pháp này thúc đẩy an toàn thực phẩm và nghiên cứu bệnh truyền nhiễm, đồng thời làm thay đổi thực hành y tế công cộng.`,
+    en: `CONTEXT AND LEGACY
+• Pasteur first studied the chemistry of crystals before turning to fermentation and microbiology.
+• His swan-neck flask experiments challenged the idea that microorganisms spontaneously arose under ordinary conditions.
+• A rabies vaccine was tested in 1885; the achievement depended on Pasteur's research and the work of laboratory collaborators. These methods advanced food safety and infectious-disease research and changed public-health practice.`,
+  },
+  "rare-raphael-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Raphael học nghề ở Urbino và Perugia trước khi đến Florence, nơi ông nghiên cứu tác phẩm của Leonardo và Michelangelo.
+• Giáo hoàng Julius II giao cho ông trang trí các phòng trong Vatican; nhiều trợ lý cùng tham gia hoàn thiện những dự án lớn.
+• Ông qua đời ở tuổi 37, nhưng xưởng và các tác phẩm của ông tiếp tục ảnh hưởng tới hội họa châu Âu. Xưởng của ông đào tạo nghệ sĩ trẻ và giúp lan tỏa phong cách Phục Hưng Ý.`,
+    en: `CONTEXT AND LEGACY
+• Raphael trained in Urbino and Perugia before moving to Florence, where he studied the work of Leonardo and Michelangelo.
+• Pope Julius II commissioned him to decorate rooms in the Vatican, with assistants helping complete large projects.
+• He died at thirty-seven, but his workshop and paintings continued to influence European art. His workshop trained younger artists and helped spread a coherent style across Italy.`,
+  },
+  "rare-vincent-van-gogh-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Van Gogh từng làm việc trong ngành nghệ thuật, giảng dạy và truyền giáo trước khi tập trung vẽ tranh.
+• Ông sống tại Hà Lan, Paris, Arles và Saint-Rémy; những nơi này tạo nên nhiều thay đổi trong màu sắc và phong cách.
+• Em dâu Johanna van Gogh-Bonger bảo quản thư từ, tổ chức triển lãm và góp phần đưa tác phẩm của ông đến công chúng.`,
+    en: `CONTEXT AND LEGACY
+• Van Gogh worked in the art trade, teaching, and missionary activity before concentrating on painting.
+• He lived in the Netherlands, Paris, Arles, and Saint-Rémy; each place shaped changes in his color and style.
+• His sister-in-law Johanna van Gogh-Bonger preserved letters, organized exhibitions, and helped bring his work to wider audiences.`,
+  },
+  "common-catherine-the-great-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Catherine sinh tại một gia đình quý tộc Đức, đến Nga khi kết hôn với người thừa kế Peter III và học tiếng Nga.
+• Bà lên ngôi sau cuộc đảo chính năm 1762; các cuộc chiến mở rộng ảnh hưởng của Nga về phía Biển Đen và Ba Lan.
+• Những cải cách giáo dục và văn hóa cùng việc duy trì chế độ nông nô khiến di sản của bà vừa có thành tựu vừa gây tranh luận. Thư từ của bà với các triết gia châu Âu góp phần quảng bá hình ảnh chuyên chế khai sáng.`,
+    en: `CONTEXT AND LEGACY
+• Catherine was born into a German noble family, moved to Russia through marriage, and learned the Russian language.
+• She took power after the 1762 coup; wars expanded Russian influence toward the Black Sea and Poland.
+• Educational and cultural reforms coexisted with continued serfdom, leaving a legacy of achievement and controversy. Her correspondence with European thinkers helped promote an image of enlightened absolutism.`,
+  },
+  "common-peter-the-great-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Peter đi cùng một phái đoàn ngoại giao tới Tây Âu và học hỏi về đóng tàu, quân sự cùng kỹ thuật.
+• Ông thành lập hải quân thường trực, xây dựng Saint Petersburg và cải tổ nhiều cơ quan nhà nước.
+• Các thay đổi của ông tăng sức mạnh đế quốc nhưng cũng đòi hỏi thuế cao và lao động cưỡng bức từ dân chúng. Cải cách tác động đến trang phục, giáo dục và nghĩa vụ của tầng lớp tinh hoa.`,
+    en: `CONTEXT AND LEGACY
+• Peter traveled with a diplomatic mission to western Europe and studied shipbuilding, military practice, and technology.
+• He established a permanent navy, founded Saint Petersburg, and reformed many state institutions.
+• His changes strengthened the empire but also demanded heavy taxes and forced labor from the population. Reforms affected dress, education, and obligations among the elite.`,
+  },
+  "common-queen-victoria-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Victoria lên ngôi năm 18 tuổi và kết hôn với Hoàng thân Albert năm 1840; họ có chín người con.
+• Sau khi Albert qua đời năm 1861, bà để tang lâu dài và rút khỏi nhiều hoạt động công chúng trong một thời gian.
+• Đế quốc Anh mở rộng dưới triều đại bà, trong khi quyền lực ngày càng chuyển sang nghị viện và chính phủ.`,
+    en: `CONTEXT AND LEGACY
+• Victoria became queen at eighteen and married Prince Albert in 1840; they had nine children.
+• After Albert's death in 1861, she remained in prolonged mourning and withdrew from many public duties for a time.
+• The British Empire expanded during her reign as political authority increasingly shifted toward Parliament and government.`,
+  },
+  "common-abraham-lincoln-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Lincoln trưởng thành tại vùng biên giới Kentucky, Indiana và Illinois, tự học luật rồi trở thành luật sư và chính khách.
+• Ông thắng cử tổng thống năm 1860 trong lúc xung đột về nô lệ và quyền của các bang ngày càng căng thẳng.
+• Tu chính án thứ 13 bãi bỏ chế độ nô lệ trên toàn quốc sau khi ông qua đời, trong tiến trình tái thiết còn nhiều tranh chấp. Diễn văn Gettysburg vẫn là một phần tiêu biểu của ngôn ngữ chính trị Hoa Kỳ.`,
+    en: `CONTEXT AND LEGACY
+• Lincoln grew up on the Kentucky, Indiana, and Illinois frontier, studied law independently, and became a lawyer and politician.
+• He won the presidency in 1860 as conflict over slavery and states' rights intensified.
+• The Thirteenth Amendment abolished slavery nationwide after his death, amid a contested Reconstruction process. The Gettysburg Address remains a defining piece of American political rhetoric.`,
+  },
+  "common-martin-luther-king-jr-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• King trở thành mục sư tại Montgomery, Alabama, và giữ vai trò lãnh đạo trong cuộc tẩy chay xe buýt năm 1955–1956.
+• Các cuộc tuần hành và chiến dịch do nhiều nhà hoạt động tổ chức đã góp phần tạo áp lực cho Đạo luật Dân quyền 1964.
+• Ông cũng lên tiếng về nghèo đói và chiến tranh; di sản của phong trào rộng hơn vai trò của bất kỳ một lãnh đạo nào. Các chiến dịch dựa vào mạng lưới nhà thờ, sinh viên và cộng đồng địa phương.`,
+    en: `CONTEXT AND LEGACY
+• King became a pastor in Montgomery, Alabama, and helped lead the 1955–1956 bus boycott.
+• Marches and campaigns organized by many activists helped build support for the Civil Rights Act of 1964.
+• He also spoke about poverty and war; the movement's legacy extends beyond any single leader. Campaigns depended on networks of churches, students, and local communities.`,
+  },
+  "common-simon-bolivar-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Bolívar sinh trong một gia đình giàu có ở Caracas, mất cha mẹ khi còn nhỏ và được giáo dục tại châu Âu.
+• Các chiến dịch quân sự của ông dựa vào liên minh giữa nhiều nhóm địa phương và trải qua những thất bại trước khi giành thắng lợi.
+• Kế hoạch thống nhất các nước mới độc lập trong Gran Colombia tan rã vì khác biệt khu vực và tranh chấp quyền lực.`,
+    en: `CONTEXT AND LEGACY
+• Bolívar was born into a wealthy Caracas family, lost both parents young, and received part of his education in Europe.
+• His military campaigns relied on alliances among diverse local groups and suffered setbacks before eventual victories.
+• His plan to unite the new states in Gran Colombia weakened amid regional differences and political rivalries.`,
+  },
+  "common-jose-de-san-martin-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• San Martín sinh tại vùng nay thuộc Argentina nhưng gia nhập quân đội Tây Ban Nha khi còn trẻ.
+• Ông trở về Nam Mỹ năm 1812, tổ chức Quân đội Andes và phối hợp với các lực lượng địa phương chống lại quân đội hoàng gia.
+• Sau cuộc gặp với Bolívar tại Guayaquil năm 1822, ông rút khỏi chiến trường và sống lưu vong tại châu Âu.`,
+    en: `CONTEXT AND LEGACY
+• San Martín was born in what is now Argentina but joined the Spanish army as a young man.
+• He returned to South America in 1812, organized the Army of the Andes, and coordinated with local forces against royalist troops.
+• After meeting Bolívar at Guayaquil in 1822, he withdrew from the campaign and lived in European exile.`,
+  },
+  "common-sun-yat-sen-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Sun học y khoa tại Hong Kong nhưng sớm chuyển sang hoạt động cách mạng, vận động cộng đồng người Hoa ở nước ngoài.
+• Cách mạng Tân Hợi lật đổ nhà Thanh năm 1911; ông trở thành tổng thống lâm thời nhưng nhanh chóng phải nhường chức.
+• Trung Quốc tiếp tục chia rẽ sau khi ông mất, và nhiều lực lượng chính trị khác nhau cùng nhận mình kế thừa tư tưởng của ông.`,
+    en: `CONTEXT AND LEGACY
+• Sun studied medicine in Hong Kong but soon turned to revolutionary work, organizing Chinese communities abroad.
+• The 1911 Revolution ended the Qing dynasty; he became provisional president but soon yielded the office.
+• China remained divided after his death, and several political movements claimed parts of his legacy.`,
+  },
+  "common-rabindranath-tagore-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Tagore sinh trong một gia đình hoạt động văn hóa tại Bengal và bắt đầu sáng tác từ khi còn nhỏ.
+• Ông thành lập trường học Santiniketan, nhấn mạnh học tập ngoài trời, nghệ thuật và giao lưu giữa các nền văn hóa.
+• Năm 1919, ông trả lại tước hiệp sĩ để phản đối vụ thảm sát Amritsar, dù quan điểm chính trị của ông không hoàn toàn trùng với các phong trào dân tộc.`,
+    en: `CONTEXT AND LEGACY
+• Tagore was born into a culturally active Bengali family and began writing while still young.
+• He founded the Santiniketan school, emphasizing outdoor study, the arts, and exchange among cultures.
+• In 1919 he renounced his knighthood in protest against the Amritsar massacre, though his political views did not fully align with nationalist movements.`,
+  },
+  "common-katsushika-hokusai-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Hokusai đổi tên nghệ thuật nhiều lần và làm việc với tranh in, sách minh họa cùng bản vẽ hướng dẫn.
+• Ông tiếp tục sáng tác ở tuổi cao, thường chuyển nơi ở và tìm cách quan sát thiên nhiên từ nhiều góc nhìn.
+• Tranh in của ông được xuất khẩu sang châu Âu thế kỷ XIX và ảnh hưởng đến nhiều họa sĩ, nhà sưu tập phương Tây. Lời tự thuật muộn của Hokusai về việc học cách vẽ thiên nhiên thường được trích dẫn qua bản dịch.`,
+    en: `CONTEXT AND LEGACY
+• Hokusai used many artistic names and worked in prints, illustrated books, and instructional drawings.
+• He continued creating in old age, moved frequently, and sought new ways to observe nature.
+• His prints reached Europe in the nineteenth century and influenced many Western artists and collectors. His late reflection on learning to draw nature is often quoted in translation.`,
+  },
+  "common-frida-kahlo-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Một tai nạn xe buýt năm 1925 khiến Kahlo bị thương nặng và phải trải qua nhiều ca phẫu thuật.
+• Bà dùng tự họa để thể hiện cơ thể, bản sắc và trải nghiệm riêng; tác phẩm kết hợp biểu tượng dân gian, hiện thực và tưởng tượng.
+• Khi sinh thời bà được biết đến trong giới nghệ thuật, nhưng danh tiếng quốc tế rộng lớn tăng mạnh sau khi bà qua đời. Nhiều tác phẩm của bà hiện được lưu giữ trong gia đình và các bộ sưu tập ở Mexico.`,
+    en: `CONTEXT AND LEGACY
+• A 1925 bus accident left Kahlo seriously injured and led to many operations.
+• She used self-portraits to explore the body, identity, and personal experience, combining folk symbols with realism and fantasy.
+• She was known in artistic circles during her life, while her international fame grew greatly after her death. Many works remained with her family or in Mexican collections.`,
+  },
+  "common-claude-monet-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Monet từng gặp khó khăn tài chính và bị giới nghệ thuật chính thống phản đối khi cùng các họa sĩ khác tổ chức triển lãm độc lập.
+• Ông thường vẽ ngoài trời và quay lại cùng một cảnh vật để ghi nhận ánh sáng, thời tiết và thời điểm khác nhau.
+• Tại Giverny, ông thiết kế khu vườn và ao hoa súng, nơi trở thành chủ đề cho nhiều bức tranh cuối đời. Những thử nghiệm của ông cùng đồng nghiệp giúp định hình trường phái Ấn tượng.`,
+    en: `CONTEXT AND LEGACY
+• Monet faced financial hardship and resistance from the art establishment while organizing independent exhibitions with fellow painters.
+• He often painted outdoors and returned to the same scene to capture changing light, weather, and time.
+• At Giverny he designed a garden and water-lily pond that became subjects of many late paintings. Experiments shared with fellow painters helped define Impressionism.`,
+  },
+  "common-charles-dickens-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Khi còn nhỏ, Dickens từng làm việc trong nhà máy xi đánh giày sau khi cha bị giam vì nợ; trải nghiệm này ảnh hưởng đến văn chương của ông.
+• Ông nổi tiếng qua các kỳ phát hành truyện trên báo, thường kết hợp hồi hộp, hài hước và bình luận xã hội.
+• Dickens cũng đi diễn thuyết và đọc tác phẩm trước công chúng tại Anh và Hoa Kỳ.`,
+    en: `CONTEXT AND LEGACY
+• As a child, Dickens worked in a blacking factory after his father was imprisoned for debt; the experience shaped his writing.
+• He became famous through serialized fiction that mixed suspense, humor, and social criticism.
+• Dickens also toured Britain and the United States giving public readings of his work.`,
+  },
+  "common-jane-austen-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Austen sống phần lớn đời mình trong các cộng đồng nông thôn Anh và quan sát những giới hạn pháp lý, kinh tế của phụ nữ.
+• Bà viết bản thảo trong nhiều năm; các cuốn đầu được phát hành với dòng ghi tác giả là “một quý cô”.
+• Tiểu thuyết của bà tiếp tục được chuyển thể và nghiên cứu nhờ cấu trúc chặt chẽ, lời thoại tinh tế và cách nhìn về tầng lớp xã hội. Các nhà văn cùng thời và độc giả về sau đánh giá cao nghệ thuật kể chuyện của bà.`,
+    en: `CONTEXT AND LEGACY
+• Austen spent much of her life in English country communities and observed women's legal and economic constraints.
+• She worked on manuscripts for years; early books named their author only as “a lady.”
+• Her novels remain widely adapted and studied for structure, subtle dialogue, and insight into social class. Contemporary writers and later readers praised her narrative craft.`,
+  },
+  "common-miguel-de-cervantes-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Cervantes tham chiến tại Lepanto năm 1571 và bị thương ở tay trái; sau đó ông bị cướp biển bắt và giam tại Algiers nhiều năm.
+• Khi trở về Tây Ban Nha, ông làm nhiều nghề trước khi Don Quixote đem lại danh tiếng rộng lớn.
+• Tác phẩm thường được đọc như lời châm biếm truyện hiệp sĩ, đồng thời đặt câu hỏi về trí tưởng tượng, danh dự và đời sống thường nhật.`,
+    en: `CONTEXT AND LEGACY
+• Cervantes fought at Lepanto in 1571 and injured his left hand; pirates later captured him and held him in Algiers for years.
+• Back in Spain, he worked in several occupations before Don Quixote brought wide recognition.
+• The book satirizes chivalric romances while also exploring imagination, honor, and everyday life.`,
+  },
+  "common-karl-marx-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Marx rời Phổ và sống lưu vong tại Paris, Brussels rồi London, thường xuyên đối mặt với khó khăn tài chính.
+• Ông cộng tác lâu dài với Friedrich Engels; nhiều bản thảo được Engels biên tập và xuất bản sau khi Marx mất.
+• Các tổ chức lao động và phong trào cách mạng tiếp nhận tư tưởng của Marx theo nhiều cách khác nhau, dẫn tới những diễn giải và tranh luận lớn. Ảnh hưởng của ông lan rộng qua các công đoàn, đảng phái và trường đại học.`,
+    en: `CONTEXT AND LEGACY
+• Marx left Prussia and lived in exile in Paris, Brussels, and London, often facing financial hardship.
+• He collaborated closely with Friedrich Engels; several manuscripts were edited and published by Engels after Marx's death.
+• Labor organizations and revolutionary movements adopted Marx's ideas in different ways, producing lasting debate and competing interpretations. His influence spread through unions, political parties, and universities worldwide.`,
+  },
+  "common-sigmund-freud-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Freud làm việc tại Vienna và phát triển phương pháp phân tâm cùng các cộng sự, trong đó có Josef Breuer.
+• Năm 1938, sau khi Đức Quốc xã sáp nhập Áo, ông rời Vienna sang London; bốn chị em gái của ông sau đó bị sát hại trong Holocaust.
+• Phân tâm học ảnh hưởng đến văn học và nghệ thuật, dù nhiều giả thuyết của Freud khó kiểm chứng theo tiêu chuẩn khoa học hiện nay. Đồng nghiệp khi ấy cũng tranh luận về phương pháp và bằng chứng của ông.`,
+    en: `CONTEXT AND LEGACY
+• Freud worked in Vienna and developed psychoanalytic methods with colleagues, including Josef Breuer.
+• In 1938, after Nazi Germany annexed Austria, he left Vienna for London; four of his sisters were later murdered in the Holocaust.
+• Psychoanalysis influenced literature and art, although many Freudian hypotheses are difficult to test by current scientific standards. His methods and evidence also faced debate among contemporaries.`,
+  },
+  "common-mary-wollstonecraft-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Wollstonecraft làm gia sư, mở trường học và viết báo trong lúc phụ nữ có rất ít lựa chọn nghề nghiệp độc lập.
+• Bà sống tại Paris thời Cách mạng Pháp và ghi lại quan sát trong A Historical and Moral View of the French Revolution.
+• Con gái bà, Mary Shelley, trở thành tác giả Frankenstein; những tác phẩm của Wollstonecraft tiếp tục được đọc trong lịch sử tư tưởng nữ quyền.`,
+    en: `CONTEXT AND LEGACY
+• Wollstonecraft worked as a governess, opened a school, and wrote for publications when women had few independent career options.
+• She lived in Paris during the French Revolution and recorded her observations in A Historical and Moral View of the French Revolution.
+• Her daughter Mary Shelley became the author of Frankenstein; Wollstonecraft's work remains central to feminist intellectual history.`,
+  },
+  "common-alexander-fleming-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Fleming học y khoa tại Bệnh viện St Mary's ở London và phục vụ trong quân y ở Thế chiến thứ nhất.
+• Ông nhận thấy nấm mốc Penicillium ngăn vi khuẩn phát triển trong một đĩa nuôi cấy, rồi công bố kết quả nghiên cứu năm 1929.
+• Việc sản xuất penicillin quy mô lớn đòi hỏi công trình bổ sung của Florey, Chain và nhiều nhà khoa học, kỹ sư khác.`,
+    en: `CONTEXT AND LEGACY
+• Fleming studied medicine at St Mary's Hospital in London and served in military medicine during the First World War.
+• He observed that Penicillium mold inhibited bacteria in a culture dish and published the finding in 1929.
+• Mass production of penicillin required further work by Florey, Chain, and many other scientists and engineers.`,
+  },
+  "common-emmeline-pankhurst-marble": {
+    vi: `BỐI CẢNH VÀ DI SẢN
+• Pankhurst hoạt động trong các tổ chức đòi quyền bầu cử trước khi thành lập WSPU cùng các con gái.
+• Khẩu hiệu “Deeds, not words” gắn với chiến dịch trực tiếp; nhiều thành viên bị bắt và tuyệt thực trong tù.
+• Đạo luật năm 1918 trao quyền bầu cử cho một bộ phận phụ nữ Anh; quyền bình đẳng về độ tuổi được thông qua sau khi bà mất. Con gái Christabel và nhiều nhà hoạt động tiếp tục công việc tổ chức.`,
+    en: `CONTEXT AND LEGACY
+• Pankhurst worked in suffrage organizations before founding the WSPU with her daughters.
+• The slogan “Deeds, not words” became associated with direct action; many members were arrested and went on hunger strikes.
+• The 1918 law enfranchised some British women; equal voting age was enacted after her death. Her daughter Christabel and many activists carried the organizing work forward.`,
+  },
 };

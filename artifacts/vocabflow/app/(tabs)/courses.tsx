@@ -131,6 +131,7 @@ type CourseAnswer = {
   example: string;
   exampleTranslation?: string;
   spellingNote?: string;
+  partOfSpeech?: string;
 };
 
 type CourseCatalogItem = {
@@ -438,7 +439,9 @@ export default function CoursesScreen() {
           meaning: candidate.meaning,
           ipa: candidate.ipa,
           example: candidate.example,
-          note: "",
+          note: candidate.partOfSpeech
+            ? `Từ loại: ${candidate.partOfSpeech}`
+            : "",
         })),
       );
       setSelectedCourseWordKeys([]);
@@ -491,7 +494,9 @@ export default function CoursesScreen() {
           meaning: candidate.meaning,
           ipa: candidate.ipa,
           example: candidate.example,
-          note: "",
+          note: candidate.partOfSpeech
+            ? `Từ loại: ${candidate.partOfSpeech}`
+            : "",
         })),
       );
       setBulkCourseWordsSavedMessage(
@@ -1315,6 +1320,17 @@ function QuestionView({
                 >
                   {question.term}
                 </Text>
+                {answer?.partOfSpeech ? (
+                  <Text
+                    testID={`${testIdPrefix}-part-of-speech`}
+                    style={[
+                      styles.feedbackTranslation,
+                      { color: c.primary },
+                    ]}
+                  >
+                    {`Từ loại: ${answer.partOfSpeech}`}
+                  </Text>
+                ) : null}
                 {answer?.definition ? (
                   <Text style={[styles.feedbackMeaning, { color: c.foreground }]}>
                     {answer.definition}
@@ -1375,6 +1391,14 @@ function QuestionView({
           >
             {isCorrect ? "Chính xác!" : `Đáp án: ${question.term}`}
           </Text>
+          {answer.partOfSpeech ? (
+            <Text
+              testID={`${testIdPrefix}-part-of-speech`}
+              style={[styles.feedbackTranslation, { color: c.primary }]}
+            >
+              {`Từ loại: ${answer.partOfSpeech}`}
+            </Text>
+          ) : null}
           <Text style={[styles.feedbackMeaning, { color: c.foreground }]}>
             {answer.definition}
           </Text>

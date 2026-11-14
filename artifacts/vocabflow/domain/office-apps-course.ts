@@ -17,7 +17,16 @@ export interface OfficeAppsCourseEntry {
   definition: string;
   example: string;
   exampleTranslation: string;
+  partOfSpeech: OfficeAppsPartOfSpeech;
 }
+
+export type OfficeAppsPartOfSpeech =
+  | "Danh từ"
+  | "Động từ"
+  | "Tính từ"
+  | "Cụm danh từ"
+  | "Cụm động từ"
+  | "Cụm giới từ";
 
 type TermDefinition = readonly [term: string, definition: string];
 type ExampleGroup = {
@@ -604,6 +613,59 @@ const allTerms = TOPICS.flatMap((topic) =>
   topic.groups.flatMap((group) => group.terms.map(([term]) => term)),
 );
 
+// Classify Office terms by their grammatical role in the example sentence;
+// multiword terms are labeled by phrase function rather than by their headword alone.
+const OFFICE_TERM_PARTS: readonly {
+  partOfSpeech: OfficeAppsPartOfSpeech;
+  terms: string;
+}[] = [
+  {
+    partOfSpeech: "Danh từ",
+    terms: `spreadsheet|workbook|worksheet|row|column|ribbon|gridlines|formula|function|argument|operator|SUM|AVERAGE|COUNT|chart|document|section|header|footer|paragraph|italic|underline|strikethrough|style|heading|columns|index|table|caption|hyperlink|bookmark|cross-reference|footnote|endnote|find|replace|comment|label|presentation|slide|shape|picture|animation|duration|delay|trigger|slideshow|handout`,
+  },
+  {
+    partOfSpeech: "Động từ",
+    terms: `AutoFill|sort|filter|undo|redo|recalculate|crop`,
+  },
+  {
+    partOfSpeech: "Tính từ",
+    terms: `bold`,
+  },
+  {
+    partOfSpeech: "Cụm danh từ",
+    terms: `active cell|cell reference|cell range|sheet tab|formula bar|name box|IF function|relative reference|absolute reference|mixed reference|fill handle|named range|number format|currency format|percentage format|decimal places|text wrapping|horizontal alignment|font size|fill color|border style|conditional formatting|data validation|drop-down list|pivot table|chart axis|chart legend|source data|chart title|CSV file|protect sheet|hidden row|hidden column|page layout|page margin|page orientation|page number|line spacing|first-line indent|hanging indent|tab stop|page break|section break|line break|character spacing|text highlight|font color|paragraph alignment|bullet list|numbered list|multilevel list|document theme|document template|page border|table of contents|table row|table column|cell shading|table border|navigation pane|spell check|grammar check|word count|track changes|revision markup|mail merge|recipient list|slide deck|slide layout|slide theme|presentation template|title slide|slide section|content placeholder|text box|slide object|presentation chart|slide table|SmartArt graphic|speaker notes|notes page|slide master|master layout|theme colors|slide size|widescreen format|duplicate slide|slide order|slide transition|entrance effect|emphasis effect|exit effect|motion path|animation timing|presenter view|closed captions|outline view|reading view|hide slide|kiosk mode|slide hyperlink`,
+  },
+  {
+    partOfSpeech: "Cụm động từ",
+    terms: `freeze panes|merge cells|insert a row|import data|export data|delete a column|accept changes|reject changes|group objects|ungroup objects|align objects|distribute objects|compress pictures|start on click|rehearse timings|record narration|loop continuously|embed video|embed audio|export as video|export as PDF`,
+  },
+  {
+    partOfSpeech: "Cụm giới từ",
+    terms: `after previous|with previous`,
+  },
+];
+const officePartOfSpeechByTerm: Record<string, OfficeAppsPartOfSpeech> = {};
+for (const group of OFFICE_TERM_PARTS) {
+  for (const term of group.terms.split("|")) {
+    if (officePartOfSpeechByTerm[term]) {
+      throw new Error(`Từ có nhiều nhãn từ loại trong khóa học: ${term}`);
+    }
+    officePartOfSpeechByTerm[term] = group.partOfSpeech;
+  }
+}
+const courseTermSet = new Set(allTerms);
+const unclassifiedOfficeTerms = allTerms.filter(
+  (term) => !officePartOfSpeechByTerm[term],
+);
+const unknownOfficePartTerms = Object.keys(officePartOfSpeechByTerm).filter(
+  (term) => !courseTermSet.has(term),
+);
+if (unclassifiedOfficeTerms.length || unknownOfficePartTerms.length) {
+  throw new Error(
+    `Phân loại từ loại Office chưa khớp: thiếu ${unclassifiedOfficeTerms.join(", ") || "không có"}; thừa ${unknownOfficePartTerms.join(", ") || "không có"}.`,
+  );
+}
+
 export const OFFICE_APPS_COURSE_WORD_COUNT = allTerms.length;
 export const OFFICE_APPS_COURSE_TOPIC_COUNT = TOPICS.length;
 
@@ -618,6 +680,7 @@ for (const topic of TOPICS) {
         definition,
         example: group.example,
         exampleTranslation: group.exampleTranslation,
+        partOfSpeech: officePartOfSpeechByTerm[term],
       };
     }
   }

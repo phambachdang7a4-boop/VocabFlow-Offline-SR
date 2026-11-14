@@ -111,12 +111,31 @@ function adapter(filename, readOnly = false) {
     ["A", "adjective"],
     ["D", "adverb"],
     ["adv", "adverb"],
+    ["E", "preposition"],
+    ["prep", "preposition"],
+    ["M", "determiner"],
+    ["det", "determiner"],
+    ["C", "conjunction"],
     ["idiom", "idiom"],
+    ["name", "noun"],
+    ["pron", "other"],
     [null, "other"],
+    ["", "other"],
     ["unknown", "other"],
   ]) {
     assert.equal(domain.dictionaryPartOfSpeech(tag), expected);
   }
+  assert.equal(domain.dictionaryPartOfSpeechLabel("E"), "Preposition");
+  assert.equal(domain.dictionaryPartOfSpeechLabel("M", "vi"), "Từ hạn định");
+  assert.equal(domain.dictionaryPartOfSpeechLabel(null), "Others");
+  assert.equal(
+    domain.dictionaryDraft(
+      { id: 1, term: "unknown-entry", pronunciations: [] },
+      { id: 1, definition: "nghĩa thử", pos: null, subPos: null, example: null },
+    ).meaning,
+    "(Others) nghĩa thử",
+    "Empty source labels remain visible as Others rather than dropping a sense label.",
+  );
   const bytes = readFileSync(source);
   assert.equal(bytes.length, DICTIONARY.bytes);
   assert.equal(
@@ -302,6 +321,42 @@ function adapter(filename, readOnly = false) {
     sinceDefault.senses.every(
       (row) => domain.dictionaryPartOfSpeech(row.pos) === "adverb",
     ),
+  );
+  const prepositionId = lookupWordId("in");
+  const prepositionEntry = await queries.entryInDictionary(
+    reference,
+    prepositionId,
+    0,
+    ["preposition"],
+  );
+  assert.ok(prepositionEntry.partsOfSpeech.includes("preposition"));
+  assert.ok(prepositionEntry.senses.length);
+  assert.ok(
+    prepositionEntry.senses.every(
+      (row) => domain.dictionaryPartOfSpeech(row.pos) === "preposition",
+    ),
+    "Filtering a headword with multiple senses returns only its preposition senses.",
+  );
+  const determinerId = lookupWordId("one");
+  const determinerEntry = await queries.entryInDictionary(
+    reference,
+    determinerId,
+    0,
+    ["determiner"],
+  );
+  assert.ok(determinerEntry.partsOfSpeech.includes("determiner"));
+  const numeralSense = determinerEntry.senses.find(
+    (row) => row.pos?.trim().toLowerCase() === "m",
+  );
+  assert.ok(numeralSense, "Numeral source senses are included in the determiner group.");
+  const determinerDraft = await queries.draftInDictionary(
+    reference,
+    determinerId,
+    numeralSense.id,
+  );
+  assert.ok(
+    determinerDraft.meaning.startsWith("(Determiner) "),
+    "Saved meanings use the same normalized type label as the filter.",
   );
   for (const selected of [
     ["verb"],

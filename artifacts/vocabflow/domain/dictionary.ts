@@ -26,18 +26,31 @@ export function pronunciationAccent(region: string | null): PronunciationAccent 
   return null;
 }
 export const DICTIONARY_PARTS = [
-  { id: 'verb', label: 'Verb', codes: ['v', 'verb', 'vt', 'vi'] },
-  { id: 'noun', label: 'Noun', codes: ['n', 'noun'] },
-  { id: 'adjective', label: 'Adjective', codes: ['a', 'adj', 'adjective'] },
-  { id: 'adverb', label: 'Adverb', codes: ['d', 'adv', 'adverb'] },
-  { id: 'conjunction', label: 'Conjunction', codes: ['conj', 'conjunction'] },
-  { id: 'idiom', label: 'Idiom', codes: ['idiom', 'idioms'] },
-  { id: 'other', label: 'Others', codes: [] },
+  { id: 'verb', label: 'Verb', viLabel: 'Động từ', codes: ['v', 'verb', 'vt', 'vi'] },
+  // Proper names share the noun filter; the source's M (numeral) tag shares the
+  // learner-facing determiner group because the dictionary has no separate numeral group.
+  { id: 'noun', label: 'Noun', viLabel: 'Danh từ', codes: ['n', 'noun', 'name'] },
+  { id: 'adjective', label: 'Adjective', viLabel: 'Tính từ', codes: ['a', 'adj', 'adjective'] },
+  { id: 'adverb', label: 'Adverb', viLabel: 'Trạng từ', codes: ['d', 'adv', 'adverb'] },
+  { id: 'preposition', label: 'Preposition', viLabel: 'Giới từ', codes: ['e', 'prep', 'preposition', 'prepositions'] },
+  { id: 'determiner', label: 'Determiner', viLabel: 'Từ hạn định', codes: ['m', 'det', 'determiner', 'determiners', 'numeral', 'numerals'] },
+  { id: 'conjunction', label: 'Conjunction', viLabel: 'Liên từ', codes: ['c', 'conj', 'conjunction', 'conjunctions'] },
+  { id: 'idiom', label: 'Idiom', viLabel: 'Thành ngữ', codes: ['idiom', 'idioms'] },
+  { id: 'other', label: 'Others', viLabel: 'Khác', codes: [] },
 ] as const;
 export type DictionaryPartOfSpeech = typeof DICTIONARY_PARTS[number]['id'];
 export function dictionaryPartOfSpeech(pos: string | null): DictionaryPartOfSpeech {
   const code = (pos ?? '').trim().toLowerCase();
   return DICTIONARY_PARTS.find(part => part.codes.some(value => value === code))?.id ?? 'other';
+}
+export function dictionaryPartOfSpeechLabel(
+  pos: string | null,
+  language: 'en' | 'vi' = 'en',
+): string {
+  const part = dictionaryPartOfSpeech(pos);
+  return DICTIONARY_PARTS.find((item) => item.id === part)?.[
+    language === 'vi' ? 'viLabel' : 'label'
+  ] ?? 'Others';
 }
 export interface DictionaryEntry {
   id: number;
@@ -130,7 +143,10 @@ export function exampleSegments(example: string, term: string): { text: string; 
 }
 
 export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
-  const kind = [sense.pos, sense.subPos].filter(Boolean).join(' · ');
+  const kind = [
+    dictionaryPartOfSpeechLabel(sense.pos),
+    sense.subPos?.trim(),
+  ].filter(Boolean).join(' · ');
   const isLocalAddition = ALL_LOCAL_DICTIONARY_ADDITIONS.some(
     (item) => item.term === entry.term,
   );
@@ -138,7 +154,7 @@ export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pr
     term: entry.term,
     dictionaryEntryId: entry.id,
     dictionarySenseId: sense.id,
-    meaning: `${kind ? `(${kind}) ` : ''}${sense.definition}`,
+    meaning: `(${kind}) ${sense.definition}`,
     ipa: formatDictionaryPronunciations(entry.pronunciations),
     example: sense.example ?? '',
     note: isLocalAddition

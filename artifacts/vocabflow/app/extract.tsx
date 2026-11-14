@@ -24,6 +24,7 @@ import { useVocabulary } from "@/contexts/VocabularyContext";
 import { useColors } from "@/hooks/useColors";
 import { useDictionary } from "@/hooks/useDictionary";
 import { getDictionaryDraft } from "@/data/dictionary";
+import { dictionaryPartOfSpeechLabel } from "@/domain/dictionary";
 import {
   MAX_EXTRACTION_TEXT_CHARACTERS,
   MAX_EXTRACTION_TEXT_BYTES,
@@ -43,16 +44,6 @@ type ResultRow = Awaited<ReturnType<typeof extractVocabularyFromText>>[number];
 
 function normalizedTerm(term: string): string {
   return term.normalize("NFKC").trim().toLocaleLowerCase("en");
-}
-
-function partOfSpeechLabel(pos: string | null): string {
-  const code = (pos ?? "").toLocaleLowerCase("en");
-  if (["n", "noun"].includes(code)) return "Danh từ";
-  if (["v", "verb", "vt", "vi"].includes(code)) return "Động từ";
-  if (["a", "adj", "adjective"].includes(code)) return "Tính từ";
-  if (["d", "adv", "adverb"].includes(code)) return "Trạng từ";
-  if (["conj", "conjunction"].includes(code)) return "Liên từ";
-  return pos?.trim() || "Khác";
 }
 
 export default function ExtractVocabularyScreen() {
@@ -391,7 +382,7 @@ export default function ExtractVocabularyScreen() {
               {[
                 item.entry.ipa,
                 item.entry.region?.toLocaleUpperCase("en"),
-                partOfSpeechLabel(firstSense?.pos ?? null),
+                dictionaryPartOfSpeechLabel(firstSense?.pos ?? null, "vi"),
               ]
                 .filter(Boolean)
                 .join(" · ")}
@@ -508,7 +499,7 @@ export default function ExtractVocabularyScreen() {
                 >
                   <View>
                     <Text style={[styles.sensePos, { color: c.primary }]}>
-                      {index + 1}. {partOfSpeechLabel(sense.pos)}
+                      {index + 1}. {dictionaryPartOfSpeechLabel(sense.pos, "vi")}
                       {sense.subPos ? ` · ${sense.subPos}` : ""}
                     </Text>
                     <Text
