@@ -13,6 +13,7 @@ import { getReviewStatistics } from '@/data/vocabulary';
 import type { ReviewStatistics } from '@/domain/review-statistics';
 import { localDay } from '@/domain/srs';
 import { NotebookStatistics } from '@/components/NotebookStatistics';
+import { NotebookWordInfoSheet } from '@/components/NotebookWordInfoSheet';
 
 const REVIEW_LEVELS = [1, 2, 3, 4, 5, 6] as const;
 
@@ -20,9 +21,13 @@ export default function VocabularyScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
   const top = Platform.OS === 'web' ? 67 : insets.top;
-  const { words, loading, error, reload } = useVocabulary();
+  const { words, loading, error, reload, setWordFrozen, deleteWord } = useVocabulary();
   const [q, setQ] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [selectedWord, setSelectedWord] = useState<VocabularyWord | null>(null);
+  const [wordActionBusy, setWordActionBusy] = useState(false);
+  const [wordActionError, setWordActionError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [statisticsMonth, setStatisticsMonth] = useState(() => `${localDay(new Date()).slice(0, 7)}-01`);
   const [statistics, setStatistics] = useState<ReviewStatistics | null>(null);
   const [statisticsLoading, setStatisticsLoading] = useState(true);
@@ -54,6 +59,50 @@ export default function VocabularyScreen() {
       void loadStatistics(statisticsMonth);
     }, [loadStatistics, statisticsMonth]),
   );
+
+  const closeWordInfo = () => {
+    if (wordActionBusy) return;
+    setSelectedWord(null);
+    setWordActionError(null);
+    setConfirmDelete(false);
+  };
+
+  const freezeSelectedWord = async () => {
+    if (!selectedWord || wordActionBusy) return;
+    setWordActionBusy(true);
+    setWordActionError(null);
+    try {
+      await setWordFrozen(selectedWord.id, !selectedWord.frozen);
+      setSelectedWord(null);
+    } catch (failure) {
+      setWordActionError(
+        failure instanceof Error
+          ? failure.message
+          : 'Không thể đổi trạng thái đóng băng.',
+      );
+    } finally {
+      setWordActionBusy(false);
+    }
+  };
+
+  const deleteSelectedWord = async () => {
+    if (!selectedWord || wordActionBusy) return;
+    setWordActionBusy(true);
+    setWordActionError(null);
+    try {
+      await deleteWord(selectedWord.id);
+      setConfirmDelete(false);
+      setSelectedWord(null);
+    } catch (failure) {
+      setWordActionError(
+        failure instanceof Error
+          ? failure.message
+          : 'Không thể xóa từ. Hãy thử lại.',
+      );
+    } finally {
+      setWordActionBusy(false);
+    }
+  };
 
   const addBtn = (
     <Pressable
@@ -164,7 +213,13 @@ export default function VocabularyScreen() {
   const renderItem = ({ item }: { item: VocabularyWord }) => (
     <Pressable
       testID={`word-${item.id}`}
-      onPress={() => router.push({ pathname: '/word', params: { id: String(item.id) } })}
+      accessibilityRole="button"
+      accessibilityLabel={`Xem thông tin từ ${item.term}`}
+      onPress={() => {
+        setWordActionError(null);
+        setConfirmDelete(false);
+        setSelectedWord(item);
+      }}
       style={({ pressed }) => [
         styles.card,
         {
@@ -249,6 +304,17 @@ export default function VocabularyScreen() {
           }
         />
       )}
+      <NotebookWordInfoSheet
+        word={selectedWord}
+        onClose={closeWordInfo}
+        onFreeze={() => void freezeSelectedWord()}
+        confirmDelete={confirmDelete}
+        onRequestDelete={() => setConfirmDelete(true)}
+        onCancelDelete={() => setConfirmDelete(false)}
+        onConfirmDelete={() => void deleteSelectedWord()}
+        busy={wordActionBusy}
+        actionError={wordActionError}
+      />
     </View>
   );
 }

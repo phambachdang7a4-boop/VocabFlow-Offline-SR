@@ -66,9 +66,22 @@ assert.deepEqual(
 );
 
 const screen = readFileSync(join(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+const infoSheet = readFileSync(
+  join(__dirname, "../components/NotebookWordInfoSheet.tsx"),
+  "utf8",
+);
 assert.match(screen, /styles\.notebookCount/);
 assert.match(screen, /\{words\.length\} từ trong sổ/);
 assert.match(screen, /data=\{filtered\}/);
+assert.match(screen, /setSelectedWord\(item\)/,
+  "Tapping a notebook word opens its information panel in place.");
+assert.doesNotMatch(screen, /router\.push\(\{ pathname: ['"]\/word['"], params: \{ id: String\(item\.id\) \} \}\)/,
+  "Tapping a notebook word must not navigate to a separate detail page.");
+assert.match(screen, /<NotebookWordInfoSheet/);
+assert.match(infoSheet, /testID="notebook-word-info-sheet"/);
+assert.match(infoSheet, /testID="notebook-word-info-example-translation"/);
+assert.match(infoSheet, /testID="notebook-word-freeze"/);
+assert.match(infoSheet, /testID="notebook-word-delete-confirm"/);
 assert.equal(words.length, 3, "Filtering the visible list does not change the saved-word total.");
 
 console.log(

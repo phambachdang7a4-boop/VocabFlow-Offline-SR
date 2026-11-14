@@ -11,10 +11,11 @@ function worldStatue(
   quoteSource: string,
   biography: string,
   biographyEn: string,
+  stableId?: string,
 ): CollectionArtwork {
   return {
     // Keep rarity-prefixed IDs stable for saved collection records.
-    id: `${rarity}-${slug}-marble`,
+    id: stableId ?? `${rarity}-${slug}-marble`,
     // Common is no longer a displayed statue tier.
     rarity: rarity === "common" ? "rare" : rarity,
     title: `Tượng ${name}`,
@@ -893,7 +894,7 @@ CAREER
     "karl-marx",
     "Karl Marx",
     "Karl Marx",
-    "common",
+    "epic",
     "Triết gia và nhà kinh tế học Đức, có ảnh hưởng lớn đến tư tưởng chính trị hiện đại.",
     "The philosophers have only interpreted the world; the point is to change it.",
     "Theses on Feuerbach, XI, 1845.",
@@ -907,6 +908,7 @@ TÁC PHẨM
 WORKS
 • He co-authored The Communist Manifesto with Friedrich Engels and wrote Capital.
 • His analyses of class and economics have had wide influence and remain contested in modern politics.`,
+    "common-karl-marx-marble",
   ),
   worldStatue(
     "sigmund-freud",

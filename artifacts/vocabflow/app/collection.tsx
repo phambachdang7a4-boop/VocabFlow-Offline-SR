@@ -16,6 +16,7 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
+import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
 import {
   craftCollectionArtwork,
   getMissionCollectionOverview,
@@ -268,6 +269,7 @@ export default function CollectionScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
+      <MissionCollectionTabs active="collection" />
       <Text style={[styles.intro, { color: c.mutedForeground }]}>
         Tất cả tượng hiện có đã được mở khóa sẵn. Chạm vào tượng để xem thông
         tin và tiểu sử song ngữ.

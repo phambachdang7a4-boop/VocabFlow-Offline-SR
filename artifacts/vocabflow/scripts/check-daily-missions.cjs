@@ -33,6 +33,19 @@ const missionScreen = readFileSync(
   join(__dirname, "../app/(tabs)/blank.tsx"),
   "utf8",
 );
+const collectionScreen = readFileSync(
+  join(__dirname, "../app/collection.tsx"),
+  "utf8",
+);
+const missionCollectionTabs = readFileSync(
+  join(__dirname, "../components/MissionCollectionTabs.tsx"),
+  "utf8",
+);
+assert.match(missionScreen, /<MissionCollectionTabs active="missions" \/>/);
+assert.match(collectionScreen, /<MissionCollectionTabs active="collection" \/>/);
+assert.match(missionCollectionTabs, /label: "Nhiệm Vụ", route: "\/\(tabs\)\/blank"/);
+assert.match(missionCollectionTabs, /label: "Bộ Sưu Tập", route: "\/collection"/);
+assert.doesNotMatch(missionScreen, /testID="open-collection"/);
 assert.match(
   missionScreen,
   /Rương \{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn thành/,

@@ -572,9 +572,13 @@ const formerlyCommonStatues = namedHistoricalStatues.filter((item) =>
 assert.equal(formerlyCommonStatues.length, 39);
 assert.ok(
   formerlyCommonStatues.every(
-    (item) => item.rarity === "rare" && isCollectionArtwork("common", item.id),
+    (item) =>
+      (item.title === "Tượng Karl Marx"
+        ? item.rarity === "epic"
+        : item.rarity === "rare") &&
+      isCollectionArtwork("common", item.id),
   ),
-  "Former Common statues are promoted while old rarity records remain readable.",
+  "Former Common statues are promoted, Karl Marx is Epic, and old rarity records remain readable.",
 );
 assert.equal(statue.collectionGroup, "bonus");
 assert.deepEqual(
@@ -584,7 +588,7 @@ assert.deepEqual(
       namedHistoricalStatues.filter((item) => item.rarity === rarity).length,
     ]),
   ),
-  { common: 0, uncommon: 0, rare: 74, epic: 24, legendary: 12 },
+  { common: 0, uncommon: 0, rare: 73, epic: 25, legendary: 12 },
   "The 110-person statue roster has the specified tier counts.",
 );
 const expectedHistoricalNames = [
@@ -750,6 +754,14 @@ for (const artwork of COLLECTION_ARTWORKS.filter((item) => item.imageAssetKey)) 
     `${artwork.title} (${imageFile}) must be 768x768; found ${width}x${height}.`,
   );
 }
+const karlMarxArtwork = COLLECTION_ARTWORKS.find(
+  (item) => item.title === "Tượng Karl Marx",
+);
+assert.ok(karlMarxArtwork, "Karl Marx remains in the statue collection.");
+assert.equal(karlMarxArtwork.rarity, "epic",
+  "Karl Marx is displayed in the Epic tier.");
+assert.equal(karlMarxArtwork.id, "common-karl-marx-marble",
+  "Promoting Karl Marx keeps the existing collection ID and biography record.");
 assert.equal(isCollectionArtwork("legendary", statue.id), true);
 assert.equal(isCollectionArtwork("legendary", alexander.id), true);
 assert.equal(isCollectionArtwork("legendary", leonardo.id), true);
