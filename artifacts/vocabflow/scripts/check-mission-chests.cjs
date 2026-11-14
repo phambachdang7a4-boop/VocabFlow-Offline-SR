@@ -432,13 +432,15 @@ const kant = COLLECTION_ARTWORKS.find(
   (item) => item.id === "legendary-immanuel-kant-marble",
 );
 assert.ok(kant);
-assert.equal(kant.rarity, "legendary");
+assert.equal(kant.rarity, "common");
 assert.equal(kant.title, "Tượng Immanuel Kant");
 assert.equal(kant.shortTitle, "Kant");
 assert.equal(kant.material, "Cẩm thạch");
 assert.equal(kant.unlockMode, "automatic");
-assert.ok(kant.biography.includes("triết gia người Đức"));
-assert.ok(kant.biographyEn.includes("philosopher of the Enlightenment"));
+assert.ok(kant.biography.includes("Chủ nghĩa duy tâm siêu nghiệm"));
+assert.ok(kant.biography.includes("Phê phán lý tính thuần túy"));
+assert.ok(kant.biographyEn.includes("Transcendental Idealism"));
+assert.ok(kant.biographyEn.includes("Critique of Practical Reason"));
 const marcus = COLLECTION_ARTWORKS.find(
   (item) => item.id === "epic-marcus-aurelius-marble",
 );
@@ -519,7 +521,7 @@ assert.ok(
 assert.equal(isCollectionArtwork("legendary", statue.id), true);
 assert.equal(isCollectionArtwork("legendary", alexander.id), true);
 assert.equal(isCollectionArtwork("legendary", leonardo.id), true);
-assert.equal(isCollectionArtwork("legendary", kant.id), true);
+assert.equal(isCollectionArtwork("common", kant.id), true);
 assert.equal(isCollectionArtwork("epic", marcus.id), true);
 assert.equal(isCollectionArtwork("rare", franklin.id), true);
 assert.equal(isCollectionArtwork("legendary", napoleon.id), true);

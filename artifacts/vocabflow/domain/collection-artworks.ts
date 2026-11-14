@@ -183,18 +183,41 @@ NOTABLE WORKS AND LEGACY
   },
   {
     id: "legendary-immanuel-kant-marble",
-    rarity: "legendary",
+    rarity: "common",
     title: "Tượng Immanuel Kant",
     shortTitle: "Kant",
     icon: "award",
     imageAssetKey: "kant-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
-    description: "Triết gia người Đức thời Khai sáng.",
-    biography:
-      "Immanuel Kant (1724–1804) là triết gia người Đức thời Khai sáng, có ảnh hưởng sâu rộng đến triết học hiện đại.",
-    biographyEn:
-      "Immanuel Kant (1724–1804) was a German philosopher of the Enlightenment whose work profoundly influenced modern philosophy.",
+    description:
+      "Triết gia Đức thời Khai sáng, người sáng lập Chủ nghĩa duy tâm siêu nghiệm.",
+    biography: `Immanuel Kant (22 tháng 4 năm 1724 – 12 tháng 2 năm 1804) là triết gia Đức có ảnh hưởng lớn trong Thời đại Khai sáng và là một trong những tư tưởng gia vĩ đại nhất của triết học phương Tây.
+
+TIỂU SỬ VÀ CUỘC ĐỜI
+• Sinh và mất: Ông sinh và qua đời tại Königsberg, Vương quốc Phổ (nay là Kaliningrad, Nga). Suốt đời, ông hiếm khi rời khỏi nơi sinh của mình.
+• Gia đình và học vấn: Ông là người con thứ tư trong một gia đình sùng đạo làm yên cương. Ông theo học trường trung học Friedrichskollegium, sau đó vào Đại học Königsberg (Albertina), nghiên cứu thần học, toán học và khoa học tự nhiên.
+• Sự nghiệp học thuật: Sau khi cha mất, ông có thời gian làm gia sư riêng. Năm 1755, ông nhận bằng tiến sĩ; sau đó trở thành giảng viên rồi giáo sư tại Đại học Königsberg.
+
+NHỮNG TƯ TƯỞNG TRIẾT HỌC CHÍNH
+• Trường phái: Ông sáng lập Chủ nghĩa duy tâm siêu nghiệm và đặt nền móng cho triết học cổ điển Đức.
+• Các tác phẩm lớn:
+  – Phê phán lý tính thuần túy (1781): Khảo sát giới hạn và cấu trúc của tri thức con người.
+  – Phê phán lý tính thực hành (1788): Bàn về đạo đức và Mệnh lệnh tuyệt đối.
+  – Phê phán năng lực phán đoán (1790): Bàn về mỹ học và mục đích luận.`,
+    biographyEn: `Immanuel Kant (April 22, 1724 – February 12, 1804) was an influential German philosopher of the Age of Enlightenment and one of the greatest thinkers in Western philosophy.
+
+BIOGRAPHY AND LIFE
+• Birth and Death: He was born and died in Königsberg, Kingdom of Prussia (now Kaliningrad, Russia). Throughout his life, he rarely left his birthplace.
+• Family and Education: He was the fourth child in a devout family of harness makers. He attended the Friedrichskollegium secondary school and later entered the University of Königsberg (Albertina) to study theology, mathematics, and natural sciences.
+• Academic Career: After his father's death, he worked as a private tutor for some time before earning his doctorate in 1755, eventually becoming a lecturer and then a professor at the University of Königsberg.
+
+MAJOR PHILOSOPHICAL IDEAS
+• School of Thought: He founded Transcendental Idealism and laid the foundation for German Classical Philosophy.
+• Major Works:
+  – Critique of Pure Reason (1781) examines the limits and structure of human knowledge.
+  – Critique of Practical Reason (1788) explores ethics and the Categorical Imperative.
+  – Critique of Judgment (1790) addresses aesthetics and teleology.`,
   },
   {
     id: "epic-marcus-aurelius-marble",
