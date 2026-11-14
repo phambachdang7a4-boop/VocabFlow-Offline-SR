@@ -241,8 +241,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(screen.byId('dictionary-search-idle-scroll'), 'The empty state can scroll when it exceeds the viewport');
   assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi artwork is visible before a search');
   const idleCorviArt = screen.byId('dictionary-corvi-idle-art');
-  assert.equal(idleCorviArt.props.artSize, 148, 'The phone-sized idle artwork has a nonzero size.');
-  assert.deepEqual(idleCorviArt.props.style.at(-1), { width: 148, height: 148 },
+  assert.equal(idleCorviArt.props.artSize, 180, 'The phone-sized idle artwork is larger and readable.');
+  assert.deepEqual(idleCorviArt.props.style.at(-1), { width: 180, height: 180 },
     'Corvi receives explicit width and height in the idle state.');
   screenWidth = 320;
   const narrowScreen = mount('../app/(tabs)/dictionary.tsx', {
@@ -250,8 +250,8 @@ function mount(file, services, personalWords = [], properties = {}) {
     suggestDictionary: async () => [],
   });
   const narrowArt = narrowScreen.byId('dictionary-corvi-idle-art');
-  assert.equal(narrowArt.props.artSize, 132, 'The narrow-phone layout keeps a readable Corvi illustration.');
-  assert.deepEqual(narrowArt.props.style.at(-1), { width: 132, height: 132 },
+  assert.equal(narrowArt.props.artSize, 160, 'The narrow-phone layout keeps the enlarged Corvi illustration readable.');
+  assert.deepEqual(narrowArt.props.style.at(-1), { width: 160, height: 160 },
     'The illustration retains explicit dimensions on a narrow phone.');
   screenWidth = 390;
   assert.equal(screen.byId('dictionary-corvi-name').props.children[0], 'Mr. Corvi — Quản gia',
@@ -350,29 +350,17 @@ function mount(file, services, personalWords = [], properties = {}) {
   screen.byId('dictionary-corvi-talk').props.onPress();
   const normalLineTwo = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
   assert.notEqual(normalLineTwo, normalLineOne, 'Normal Corvi greetings do not repeat consecutively.');
-  screen.byId('dictionary-corvi-talk').props.onPress();
-  assert.ok(
-    [
-      'Ngài hãy bấm vào thanh tìm kiếm, không phải vào tôi.',
-      'Cậu chủ ơi, ô tìm kiếm ở ngay phía trên kìa!',
-      'Muốn tra từ thì xin ngài gõ vào thanh tìm kiếm nhé.',
-      'Tôi chỉ là quạ thôi ạ; thanh tìm kiếm mới giúp ngài tra từ.',
-      'Xin đừng chạm lông tôi nữa, cậu chủ. Hãy dùng ô tìm kiếm phía trên nhé.',
-      'Nếu đang tìm một từ, ngài hãy nhập từ ấy vào ô phía trên giúp tôi.',
-      'Ta xin phép nhắc nhẹ: thanh tìm kiếm sẽ tra từ nhanh hơn, thưa cậu chủ.',
-    ].includes(screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel),
-    'Corvi reminds the learner to use search after the fourth tap.',
-  );
-  screen.tickIntervals(200);
-  assert.ok(screen.byId('dictionary-corvi-action-search'), 'Repeated taps lead to an explicit search action.');
-  assert.ok(screen.byId('dictionary-corvi-idle-art'), 'Corvi stays visible while the search reminder button is shown.');
-  screen.byId('dictionary-corvi-action-search').props.onPress();
-  assert.equal(screen.byId('dictionary-corvi-options'), undefined, 'The search reminder action closes the dialogue choices.');
-  screen.byId('dictionary-corvi-talk').props.onPress();
-  const reminderLineOne = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
-  screen.byId('dictionary-corvi-talk').props.onPress();
-  const reminderLineTwo = screen.byId('dictionary-corvi-dialogue').props.accessibilityLabel;
-  assert.notEqual(reminderLineTwo, reminderLineOne, 'Search reminders also avoid consecutive repeats.');
+  for (let tap = 0; tap < 8; tap += 1) {
+    screen.byId('dictionary-corvi-talk').props.onPress();
+    assert.ok(screen.byId('dictionary-corvi-options'),
+      'Repeatedly tapping Corvi never hides the available choices.');
+    for (const choice of ['lookup', 'extract', 'guide', 'review', 'recommend']) {
+      assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`),
+        `The ${choice} choice stays available after repeated taps.`);
+    }
+    assert.equal(screen.byId('dictionary-corvi-action-search'), undefined,
+      'Repeated taps do not replace the choice list with a search-only action.');
+  }
 
   for (const [choice, action, route] of [
     ['lookup', 'search', null],

@@ -6,24 +6,93 @@ import {
 } from "expo-sqlite";
 import { Directory, File, FileMode, Paths } from "expo-file-system";
 import { Platform } from "react-native";
-import { OFFLINE_AUDIO_DICTIONARY } from "../domain/offline-audio";
-
-const AUDIO_DOWNLOAD_CHUNK_BYTES = 8 * 1024 * 1024;
+import {
+  OFFLINE_AUDIO_CHUNK_BYTES,
+  OFFLINE_AUDIO_DICTIONARY,
+  offlineAudioResumeOffset,
+} from "../domain/offline-audio";
 
 let databaseConnection: Promise<SQLiteDatabase> | undefined;
 let activePlayer: AudioPlayer | null = null;
 let activeAudioFile: File | null = null;
 let playbackGeneration = 0;
 let activeDownload: AbortController | null = null;
+let activeDownloadTask: Promise<void> | null = null;
 
 function databaseFile(): File {
   return new File(Paths.document, "SQLite", OFFLINE_AUDIO_DICTIONARY.filename);
+}
+
+function partialDatabaseFile(): File {
+  return new File(
+    Paths.document,
+    "SQLite",
+    `${OFFLINE_AUDIO_DICTIONARY.filename}.download`,
+  );
 }
 
 function getDownloadUrl(): string {
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (!domain) throw new Error("Không tìm thấy địa chỉ máy chủ để tải audio.");
   return `https://${domain}${OFFLINE_AUDIO_DICTIONARY.assetPath}`;
+}
+
+function waitBeforeRetry(milliseconds: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, milliseconds);
+    const onAbort = () => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", onAbort);
+      reject(new Error("Đã hủy tải gói audio."));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    if (signal.aborted) onAbort();
+  });
+}
+
+async function downloadAudioChunk(
+  url: string,
+  start: number,
+  end: number,
+  signal: AbortSignal,
+): Promise<Uint8Array> {
+  const expectedBytes = end - start + 1;
+  let lastError = "máy chủ chưa trả dữ liệu";
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (signal.aborted) throw new Error("Đã hủy tải gói audio.");
+    try {
+      const response = await fetch(url, {
+        headers: { Range: `bytes=${start}-${end}` },
+        signal,
+      });
+      if (response.status !== 206) {
+        await response.body?.cancel().catch(() => undefined);
+        throw new Error(`máy chủ trả HTTP ${response.status}`);
+      }
+      const expectedRange = `bytes ${start}-${end}/${OFFLINE_AUDIO_DICTIONARY.bytes}`;
+      if (response.headers.get("content-range") !== expectedRange) {
+        await response.body?.cancel().catch(() => undefined);
+        throw new Error("máy chủ trả sai vị trí đoạn audio");
+      }
+      const chunk = new Uint8Array(await response.arrayBuffer());
+      if (chunk.byteLength !== expectedBytes) {
+        throw new Error("đoạn audio tải chưa đủ byte");
+      }
+      return chunk;
+    } catch (error) {
+      if (signal.aborted) throw new Error("Đã hủy tải gói audio.");
+      lastError = error instanceof Error ? error.message : String(error);
+      if (attempt < 2) await waitBeforeRetry(400 * 2 ** attempt, signal);
+    }
+  }
+
+  throw new Error(
+    `Không tải được đoạn audio ${start}-${end} sau 3 lần thử (${lastError}). Các đoạn đã tải vẫn được giữ lại; hãy tải lại để tiếp tục.`,
+  );
 }
 
 async function openAudioDatabase(): Promise<SQLiteDatabase> {
@@ -77,73 +146,77 @@ export async function downloadOfflineAudio(
     throw new Error("Tải audio offline khả dụng trong ứng dụng Android.");
   if (activeDownload) throw new Error("Đang tải gói audio. Hãy đợi tải xong.");
   const destination = databaseFile();
+  const downloadFile = partialDatabaseFile();
   const controller = new AbortController();
   activeDownload = controller;
-  try {
+  const task = (async () => {
     const sqliteDirectory = new Directory(Paths.document, "SQLite");
     if (!sqliteDirectory.exists)
       sqliteDirectory.create({ intermediates: true, idempotent: true });
-    if (destination.exists) destination.delete();
-    destination.create({ intermediates: true, overwrite: true });
-    const destinationHandle = destination.open(FileMode.WriteOnly);
-    let downloadedBytes = 0;
+    if ((downloadFile.size ?? 0) > OFFLINE_AUDIO_DICTIONARY.bytes)
+      downloadFile.delete();
+    if (!downloadFile.exists)
+      downloadFile.create({ intermediates: true, overwrite: true });
+
+    let downloadedBytes = offlineAudioResumeOffset(
+      downloadFile.size ?? 0,
+      OFFLINE_AUDIO_DICTIONARY.bytes,
+    );
+    const destinationHandle = downloadFile.open(FileMode.ReadWrite);
+    destinationHandle.offset = downloadedBytes;
+    onProgress?.(downloadedBytes, OFFLINE_AUDIO_DICTIONARY.bytes);
     try {
       const url = getDownloadUrl();
       while (downloadedBytes < OFFLINE_AUDIO_DICTIONARY.bytes) {
         const start = downloadedBytes;
         const end = Math.min(
-          start + AUDIO_DOWNLOAD_CHUNK_BYTES - 1,
+          start + OFFLINE_AUDIO_CHUNK_BYTES - 1,
           OFFLINE_AUDIO_DICTIONARY.bytes - 1,
         );
-        const expectedChunkBytes = end - start + 1;
-        const response = await fetch(url, {
-          headers: { Range: `bytes=${start}-${end}` },
-          signal: controller.signal,
-        });
-        if (response.status !== 206) {
-          await response.body?.cancel().catch(() => undefined);
-          throw new Error(
-            `Không thể tải đoạn audio ${start}-${end} (HTTP ${response.status}).`,
-          );
-        }
-        const expectedRange = `bytes ${start}-${end}/${OFFLINE_AUDIO_DICTIONARY.bytes}`;
-        if (response.headers.get("content-range") !== expectedRange) {
-          await response.body?.cancel().catch(() => undefined);
-          throw new Error("Máy chủ trả về đoạn audio không đúng vị trí.");
-        }
-        const chunk = new Uint8Array(await response.arrayBuffer());
-        if (chunk.byteLength !== expectedChunkBytes) {
-          throw new Error("Đoạn audio tải chưa đủ. Hãy thử lại.");
-        }
+        const chunk = await downloadAudioChunk(
+          url,
+          start,
+          end,
+          controller.signal,
+        );
+        destinationHandle.offset = start;
         await destinationHandle.writeBytes(chunk);
-        downloadedBytes += chunk.byteLength;
+        downloadedBytes = end + 1;
         onProgress?.(downloadedBytes, OFFLINE_AUDIO_DICTIONARY.bytes);
       }
     } finally {
       destinationHandle.close();
     }
-    const downloaded = destination;
-    if (downloaded.size !== OFFLINE_AUDIO_DICTIONARY.bytes) {
+    if (downloadFile.size !== OFFLINE_AUDIO_DICTIONARY.bytes) {
       throw new Error(
-        "Gói audio tải chưa đủ. Hãy thử lại với kết nối ổn định.",
+        "Gói audio tải chưa đủ. Phần đã tải được giữ lại; hãy thử tải tiếp.",
       );
     }
     if (
-      (await downloaded.digest("SHA-256")).toLowerCase() !==
+      (await downloadFile.digest("SHA-256")).toLowerCase() !==
       OFFLINE_AUDIO_DICTIONARY.sha256
     ) {
+      downloadFile.delete();
       throw new Error(
         "Gói audio không đúng phiên bản hoặc bị hỏng. Hãy tải lại.",
       );
     }
+    if (destination.exists) destination.delete();
+    await downloadFile.move(destination);
     databaseConnection = undefined;
     await openAudioDatabase();
+  })();
+  activeDownloadTask = task;
+  try {
+    await task;
   } catch (error) {
     databaseConnection = undefined;
-    if (destination.exists) destination.delete();
     throw error;
   } finally {
-    activeDownload = null;
+    if (activeDownload === controller) {
+      activeDownload = null;
+      activeDownloadTask = null;
+    }
   }
 }
 
@@ -222,8 +295,12 @@ export async function playOfflineDictionaryAudio(
 }
 
 export async function deleteOfflineAudio(): Promise<void> {
-  activeDownload?.abort();
+  const controller = activeDownload;
+  const task = activeDownloadTask;
+  controller?.abort();
+  if (task) await task.catch(() => undefined);
   activeDownload = null;
+  activeDownloadTask = null;
   stopOfflineAudioPlayback();
   const current = databaseConnection;
   databaseConnection = undefined;
@@ -237,6 +314,8 @@ export async function deleteOfflineAudio(): Promise<void> {
   const database = databaseFile();
   if (database.exists)
     await deleteDatabaseAsync(OFFLINE_AUDIO_DICTIONARY.filename);
+  const partial = partialDatabaseFile();
+  if (partial.exists) partial.delete();
   const cache = new Directory(Paths.cache, "vocabflow-pronunciation");
   if (cache.exists) cache.delete();
 }

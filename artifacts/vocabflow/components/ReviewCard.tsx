@@ -78,11 +78,12 @@ export function ReviewCard({
   const speech = useSpeechPreferences();
   const sound = useSoundEffects();
   const { height: windowHeight } = useWindowDimensions();
-  const resultPanelHeight = Math.round(windowHeight * 0.58);
+  const resultPanelHeight = Math.round(windowHeight * 0.34);
   const [typed, setTyped] = useState("");
   const [phase, setPhase] = useState<Phase>("answering");
   const [inputFocused, setInputFocused] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [resultDetailsVisible, setResultDetailsVisible] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [freezeDialogOpen, setFreezeDialogOpen] = useState(false);
   const [freezeBusy, setFreezeBusy] = useState(false);
@@ -242,6 +243,7 @@ export function ReviewCard({
     if (o.action === "grade" && o.typed !== "" && !o.typed.trim()) return;
     lock.current = true;
     outcomeRef.current = o;
+    if (o.action === "grade") setResultDetailsVisible(true);
     setOutcome(o);
     void persist();
   };
@@ -354,16 +356,8 @@ export function ReviewCard({
     }
   };
 
-  const tone = graded
-    ? graded.correct
-      ? c.successText
-      : c.destructiveText
-    : c.primary;
-  const toneSoft = graded
-    ? graded.correct
-      ? c.reviewRightSoft
-      : c.destructiveSoft
-    : c.secondary;
+  const tone = graded?.correct ? c.successText : c.primary;
+  const toneSoft = graded?.correct ? c.reviewRightSoft : c.secondary;
   const hintPattern =
     exercise.hint ??
     Array.from(word.term)
@@ -726,16 +720,12 @@ export function ReviewCard({
               <View style={styles.resultHeader}>
                 <View style={[styles.labelRow, styles.resultStatus]}>
                   <Feather
-                    name={graded.correct ? "check-circle" : "x-circle"}
+                    name={graded.correct ? "check-circle" : "book-open"}
                     size={20}
                     color={tone}
                   />
                   <Text style={[styles.resultTitle, { color: tone }]}>
-                    {graded.correct
-                      ? "Chính xác!"
-                      : graded.typed
-                        ? "Chưa đúng"
-                        : "Đã đánh dấu chưa thuộc"}
+                    {graded.correct ? "Chính xác!" : "Đáp án"}
                   </Text>
                 </View>
                 <View testID="review-result-actions" style={styles.resultActions}>
@@ -830,89 +820,25 @@ export function ReviewCard({
                 Đáp án
               </Text>
               <Text
-                testID="review-answer-correct"
                 style={[styles.answer, { color: c.foreground }]}
               >
                 {word.term}
               </Text>
-              <View style={styles.ipaRows}>
-                <View style={styles.ipaRow}>
-                  <Text
-                    style={[
-                      styles.ipaAccent,
-                      { color: c.primary, borderColor: c.border },
-                    ]}
-                    accessibilityLabel="Phiên âm Anh-Mỹ"
-                  >
-                    🇺🇸 US
-                  </Text>
-                  <Text
-                    testID="review-result-ipa-us"
-                    style={[styles.small, styles.ipaValue, { color: c.mutedForeground }]}
-                  >
-                    {pronunciationLines.us.join(" · ") || "Chưa có dữ liệu"}
-                  </Text>
-                  <Pressable
-                    testID="review-result-speak-word"
-                    accessibilityRole="button"
-                    accessibilityLabel={`Phát âm ${word.term}`}
-                    onPress={() => {
-                      void speech.speakWord(word.term, word.dictionaryEntryId);
-                    }}
-                    hitSlop={10}
-                    style={({ pressed }) => [
-                      styles.resultAudioButton,
-                      { opacity: pressed ? 0.55 : 1 },
-                    ]}
-                  >
-                    <Feather name="volume-2" size={20} color={c.primary} />
-                  </Pressable>
-                </View>
-                <View style={styles.ipaRow}>
-                  <Text
-                    style={[
-                      styles.ipaAccent,
-                      { color: c.primary, borderColor: c.border },
-                    ]}
-                    accessibilityLabel="Phiên âm Anh-Anh"
-                  >
-                    🇬🇧 UK
-                  </Text>
-                  <Text
-                    testID="review-result-ipa-uk"
-                    style={[styles.small, styles.ipaValue, { color: c.mutedForeground }]}
-                  >
-                    {pronunciationLines.uk.join(" · ") ||
-                      "Chưa có dữ liệu · tải gói IPA trong Cài đặt"}
-                  </Text>
-                </View>
-              </View>
-              {exercise.kind === "cloze" ||
-              exercise.kind === "idiom-dialogue" ||
-              exercise.kind === "multiple-choice" ? (
-                <Text style={[styles.small, { color: c.foreground }]}>
-                  {word.meaning}
+              <Pressable
+                testID="review-open-details"
+                accessibilityRole="button"
+                accessibilityLabel={`Mở thông tin từ ${word.term}`}
+                onPress={() => setResultDetailsVisible(true)}
+                style={({ pressed }) => [
+                  styles.resultDetailsOpen,
+                  { opacity: pressed ? 0.65 : 1 },
+                ]}
+              >
+                <Feather name="book-open" size={17} color={c.primary} />
+                <Text style={[styles.resultDetailsOpenText, { color: c.primary }]}>
+                  Xem thông tin từ
                 </Text>
-              ) : null}
-              {isReviewExampleUsable(word.example) ? (
-                <Text
-                  testID="review-result-example"
-                  style={[
-                    styles.small,
-                    { color: c.foreground, fontStyle: "italic" },
-                  ]}
-                >
-                  {word.example}
-                </Text>
-              ) : null}
-              {exampleTranslation ? (
-                <Text
-                  testID="review-result-example-translation"
-                  style={[styles.small, { color: c.mutedForeground }]}
-                >
-                  Dịch: {exampleTranslation}
-                </Text>
-              ) : null}
+              </Pressable>
               <Text style={[styles.small, { color: c.mutedForeground }]}>
                 {phase === "saved"
                   ? graded.correct
@@ -1025,6 +951,221 @@ export function ReviewCard({
             </Pressable>
           </>
         </View>
+      ) : null}
+
+      {graded ? (
+        <Modal
+          testID="review-result-modal"
+          visible={resultDetailsVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setResultDetailsVisible(false)}
+        >
+          <View
+            style={[
+              styles.resultDetailsOverlay,
+              { backgroundColor: c.overlay },
+            ]}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Đóng thông tin từ"
+              onPress={() => setResultDetailsVisible(false)}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              testID="review-result-details"
+              accessibilityViewIsModal
+              style={[
+                styles.resultDetailsModal,
+                {
+                  backgroundColor: c.card,
+                  borderColor: c.border,
+                  borderRadius: c.radius + 6,
+                  shadowColor: c.shade,
+                },
+              ]}
+            >
+              <View style={styles.resultDetailsHeader}>
+                <Text
+                  style={[
+                    styles.resultDetailsEyebrow,
+                    { color: c.mutedForeground },
+                  ]}
+                >
+                  THÔNG TIN TỪ
+                </Text>
+                <Pressable
+                  testID="review-result-close"
+                  accessibilityRole="button"
+                  accessibilityLabel="Đóng thông tin từ"
+                  onPress={() => setResultDetailsVisible(false)}
+                  hitSlop={10}
+                  style={[
+                    styles.resultDetailsClose,
+                    { backgroundColor: c.background },
+                  ]}
+                >
+                  <Feather name="x" size={20} color={c.foreground} />
+                </Pressable>
+              </View>
+              <ScrollView
+                testID="review-result-details-scroll"
+                style={styles.resultDetailsScroll}
+                contentContainerStyle={styles.resultDetailsContent}
+                showsVerticalScrollIndicator
+              >
+                <View style={styles.resultDetailsGroup}>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    ĐÁP ÁN
+                  </Text>
+                  <Text
+                    testID="review-answer-correct"
+                    style={[styles.answer, { color: c.foreground }]}
+                  >
+                    {word.term}
+                  </Text>
+                </View>
+                <View style={styles.resultDetailsGroup}>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    PHIÊN ÂM
+                  </Text>
+                  <View style={styles.ipaRows}>
+                    <View style={styles.ipaRow}>
+                      <Text
+                        style={[
+                          styles.ipaAccent,
+                          { color: c.primary, borderColor: c.border },
+                        ]}
+                        accessibilityLabel="Phiên âm Anh-Mỹ"
+                      >
+                        US
+                      </Text>
+                      <Text
+                        testID="review-result-ipa-us"
+                        style={[
+                          styles.small,
+                          styles.ipaValue,
+                          { color: c.mutedForeground },
+                        ]}
+                      >
+                        {pronunciationLines.us.join(" · ") || "Chưa có dữ liệu"}
+                      </Text>
+                      <Pressable
+                        testID="review-result-speak-word"
+                        accessibilityRole="button"
+                        accessibilityLabel={`Phát âm ${word.term}`}
+                        onPress={() => {
+                          void speech.speakWord(word.term, word.dictionaryEntryId);
+                        }}
+                        hitSlop={10}
+                        style={({ pressed }) => [
+                          styles.resultAudioButton,
+                          { opacity: pressed ? 0.55 : 1 },
+                        ]}
+                      >
+                        <Feather name="volume-2" size={20} color={c.primary} />
+                      </Pressable>
+                    </View>
+                    <View style={styles.ipaRow}>
+                      <Text
+                        style={[
+                          styles.ipaAccent,
+                          { color: c.primary, borderColor: c.border },
+                        ]}
+                        accessibilityLabel="Phiên âm Anh-Anh"
+                      >
+                        UK
+                      </Text>
+                      <Text
+                        testID="review-result-ipa-uk"
+                        style={[
+                          styles.small,
+                          styles.ipaValue,
+                          { color: c.mutedForeground },
+                        ]}
+                      >
+                        {pronunciationLines.uk.join(" · ") ||
+                          "Chưa có dữ liệu · tải gói IPA trong Cài đặt"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.resultDetailsGroup}>
+                  <Text
+                    style={[
+                      styles.resultDetailsLabel,
+                      { color: c.mutedForeground },
+                    ]}
+                  >
+                    NGHĨA TIẾNG VIỆT
+                  </Text>
+                  <Text
+                    testID="review-result-meaning"
+                    style={[
+                      styles.resultDetailsValue,
+                      { color: c.foreground },
+                    ]}
+                  >
+                    {word.meaning}
+                  </Text>
+                </View>
+                {isReviewExampleUsable(word.example) ? (
+                  <View style={styles.resultDetailsGroup}>
+                    <Text
+                      style={[
+                        styles.resultDetailsLabel,
+                        { color: c.mutedForeground },
+                      ]}
+                    >
+                      CÂU VÍ DỤ
+                    </Text>
+                    <Text
+                      testID="review-result-example"
+                      style={[
+                        styles.resultDetailsExample,
+                        { color: c.foreground },
+                      ]}
+                    >
+                      {word.example}
+                    </Text>
+                    {exampleTranslation ? (
+                      <View style={styles.resultDetailsGroup}>
+                        <Text
+                          style={[
+                            styles.resultDetailsLabel,
+                            { color: c.mutedForeground },
+                          ]}
+                        >
+                          DỊCH NGHĨA
+                        </Text>
+                        <Text
+                          testID="review-result-example-translation"
+                          style={[
+                            styles.resultDetailsValue,
+                            { color: c.foreground },
+                          ]}
+                        >
+                          {exampleTranslation}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
       ) : null}
 
       {freezeDialogOpen ? (
@@ -1410,6 +1551,66 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: "center",
     justifyContent: "center",
+  },
+  resultDetailsOpen: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 2,
+  },
+  resultDetailsOpenText: { fontFamily: F.s, fontSize: 13 },
+  resultDetailsOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 18,
+  },
+  resultDetailsModal: {
+    width: "100%",
+    maxWidth: 480,
+    maxHeight: "88%",
+    alignSelf: "center",
+    borderWidth: 1,
+    padding: 16,
+    overflow: "hidden",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  resultDetailsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  resultDetailsEyebrow: {
+    fontFamily: F.b,
+    fontSize: 11,
+    letterSpacing: 1.2,
+  },
+  resultDetailsClose: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resultDetailsScroll: { flexShrink: 1 },
+  resultDetailsContent: { gap: 15, paddingBottom: 4 },
+  resultDetailsGroup: { gap: 6 },
+  resultDetailsLabel: {
+    fontFamily: F.b,
+    fontSize: 11,
+    letterSpacing: 0.7,
+  },
+  resultDetailsValue: { fontFamily: F.r, fontSize: 15, lineHeight: 22 },
+  resultDetailsExample: {
+    fontFamily: F.s,
+    fontSize: 15,
+    lineHeight: 23,
+    fontStyle: "italic",
   },
   freezeModalOverlay: { flex: 1, justifyContent: "center", padding: 24 },
   freezeDialog: { padding: 22, gap: 12, borderWidth: 1 },

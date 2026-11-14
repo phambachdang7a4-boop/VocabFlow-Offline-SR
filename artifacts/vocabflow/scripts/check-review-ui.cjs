@@ -436,7 +436,7 @@ async function startReview(screen) {
   fragmentCard.byId('review-answer-input').props.onChangeText('terrific');
   fragmentCard.byId('review-check').props.onPress();
   await fragmentCard.settle();
-  assert.equal(find(fragmentCard.byId('review-result'), node =>
+  assert.equal(find(fragmentCard.byId('review-result-details'), node =>
     node.type === 'Text' && node.props.children === fragmentWord.example), undefined,
   'Do not repeat a malformed short fragment in review feedback.');
   const resultFreezeCalls = [];
@@ -462,14 +462,25 @@ async function startReview(screen) {
   await sentenceCard.settle();
   assert.deepEqual(sentenceCard.speechCalls, ['test'],
     'Auto-pronounce the word when the multiple-choice result appears.');
+  assert.equal(sentenceCard.byId('review-result-modal').props.visible, true,
+    'Open word information in a popup after grading an answer.');
+  assert.equal(find(sentenceCard.byId('review-result'), node =>
+    node.type === 'Text' && node.props.children === 'Chưa đúng'), undefined,
+  'Do not label an incorrect answer as “Chưa đúng”.');
   assert.equal(sentenceCard.byId('review-result-ipa-us').props.children.join(''), '/test-us/',
     'Show American IPA with its explicit US marker.');
   assert.equal(sentenceCard.byId('review-result-ipa-uk').props.children.join(''), '/test-uk/',
     'Show British IPA on a separate line with its explicit UK marker.');
-  assert.ok(find(sentenceCard.byId('review-result'), node =>
+  assert.ok(find(sentenceCard.byId('review-result-details'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === sentenceWord.example),
-  'Show the dictionary example in the word information after a multiple-choice answer.');
+  'Show the dictionary example inside the word-information popup.');
+  assert.equal(
+    sentenceCard.byId('review-result-meaning').props.children.join(''),
+    sentenceWord.meaning,
+    'Always include the saved Vietnamese meaning in the popup.',
+  );
   assert.ok(sentenceCard.byId('review-result-actions'));
+  sentenceCard.byId('review-result-close').props.onPress();
   sentenceCard.byId('review-result-report').props.onPress();
   assert.ok(sentenceCard.byId('review-report-dialog'));
   sentenceCard.byId('review-report-reason-example').props.onPress();
@@ -484,9 +495,11 @@ async function startReview(screen) {
   assert.match(sentenceCard.shareCalls[0].message, /Ghi chú: The example does not match this meaning\./u);
   assert.equal(sentenceCard.byId('review-report-dialog'), undefined,
     'Close the report form after opening the native share sheet.');
+  sentenceCard.byId('review-open-details').props.onPress();
   sentenceCard.byId('review-result-speak-word').props.onPress();
   assert.deepEqual(sentenceCard.speechCalls, ['test', 'test'],
     'Keep a manual pronunciation control beside the phonetic transcription.');
+  sentenceCard.byId('review-result-close').props.onPress();
   sentenceCard.byId('review-result-freeze').props.onPress();
   assert.ok(sentenceCard.byId('review-freeze-dialog'));
   assert.deepEqual(resultFreezeCalls, [], 'Opening the freeze confirmation must not freeze the word yet.');
@@ -524,8 +537,8 @@ async function startReview(screen) {
   await translatedCard.settle();
   assert.equal(
     translatedCard.byId('review-result-example-translation').props.children.join(''),
-    'Dịch: Điều quan trọng là đáp lại một ân huệ một cách tử tế.',
-    'Display the Vietnamese translation beneath the saved English example.',
+    'Điều quan trọng là đáp lại một ân huệ một cách tử tế.',
+    'Display the full Vietnamese translation inside the word-information popup.',
   );
 
   let resolveSave;
@@ -573,15 +586,17 @@ async function startReview(screen) {
   assert.deepEqual(committed, [1]);
   assert.ok(card.byId('review-result'));
   assert.ok(card.byId('review-answer-correct'));
+  assert.equal(card.byId('review-result-modal').props.visible, true);
   const resultPanelStyles = card.byId('review-result').props.style;
   assert.ok(resultPanelStyles.some(style => style?.position === 'absolute'),
-    'Keep result information and its action in one anchored panel.');
-  assert.equal(resultPanelStyles.find(style => style?.height)?.height, 464,
-    'The result panel occupies about 58% of the screen height.');
+    'Keep the compact answer summary anchored beneath the review question.');
+  assert.equal(resultPanelStyles.find(style => style?.height)?.height, 272,
+    'The answer summary stays compact while full information is shown in a popup.');
   assert.ok(find(card.byId('review-result'), node => node.props?.testID === 'review-continue'),
-    'Continue stays attached to the result information.');
+    'Continue stays available after closing the information popup.');
   assert.equal(card.byId('review-continue').props.style.minHeight, 68,
     'Continue button is larger for the full-screen review session');
+  card.byId('review-result-close').props.onPress();
   card.byId('review-continue').props.onPress();
   assert.equal(nexts, 1);
   assert.equal(calls.length, 1, 'Continue never persists another grade');
@@ -693,7 +708,7 @@ async function startReview(screen) {
   await idiomCard.settle();
   assert.deepEqual(idiomAnswerCalls, [[savedIdiom.id, true, 0]],
     'Dialogue idioms grade through the normal SRS review callback.');
-  assert.ok(find(idiomCard.byId('review-result'), node =>
+  assert.ok(find(idiomCard.byId('review-result-details'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === savedIdiom.meaning),
   'The idiom meaning is shown after answering.');
   const freezeCalls = [];

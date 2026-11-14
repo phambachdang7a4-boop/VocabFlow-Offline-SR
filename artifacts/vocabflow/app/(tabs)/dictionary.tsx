@@ -31,16 +31,6 @@ const CORVI_CHAT_VARIANTS = [
   'Từ mới thường bắt đầu bằng một câu hỏi nhỏ. Ta có thể dẫn đường.',
   'Ta luôn sẵn lòng giúp ngài tìm đúng công cụ học hôm nay.',
 ];
-const CORVI_SEARCH_REMINDERS = [
-  'Ngài hãy bấm vào thanh tìm kiếm, không phải vào tôi.',
-  'Cậu chủ ơi, ô tìm kiếm ở ngay phía trên kìa!',
-  'Muốn tra từ thì xin ngài gõ vào thanh tìm kiếm nhé.',
-  'Tôi chỉ là quạ thôi ạ; thanh tìm kiếm mới giúp ngài tra từ.',
-  'Xin đừng chạm lông tôi nữa, cậu chủ. Hãy dùng ô tìm kiếm phía trên nhé.',
-  'Nếu đang tìm một từ, ngài hãy nhập từ ấy vào ô phía trên giúp tôi.',
-  'Ta xin phép nhắc nhẹ: thanh tìm kiếm sẽ tra từ nhanh hơn, thưa cậu chủ.',
-];
-
 type CorviAction = 'search' | 'extract' | 'guide' | 'review' | 'recommend';
 type CorviChoice = { action: CorviAction; label: string; icon: React.ComponentProps<typeof Feather>['name']; testID: string };
 
@@ -156,7 +146,7 @@ export default function DictionaryScreen() {
   const c = useColors();
   const { width: windowWidth } = useWindowDimensions();
   const compactCorvi = windowWidth < 370;
-  const corviArtSize = windowWidth < 420 ? (compactCorvi ? 132 : 148) : 190;
+  const corviArtSize = windowWidth < 420 ? (compactCorvi ? 160 : 180) : 220;
   const reduceMotion = useReducedMotion();
   const corviArt = c.dictPage === '#FBF7EE'
     ? require('../../assets/images/corvi-dictionary-search-light.png')
@@ -183,7 +173,6 @@ export default function DictionaryScreen() {
   const [corviRecommendationLoading, setCorviRecommendationLoading] = useState(false);
   const [corviRecommendationError, setCorviRecommendationError] = useState<string | null>(null);
   const [corviSuggestedEntry, setCorviSuggestedEntry] = useState(false);
-  const corviTapCount = useRef(0);
   const lastCorviLine = useRef(CORVI_GREETING);
   const [corviDialogue, setCorviDialogue] = useState(CORVI_GREETING);
   const [typedCorviDialogue, setTypedCorviDialogue] = useState('');
@@ -220,13 +209,6 @@ export default function DictionaryScreen() {
   };
 
   const talkToCorvi = () => {
-    corviTapCount.current += 1;
-    if (corviTapCount.current > 3) {
-      setCorviConversationOpen(false);
-      setCorviPendingAction('search');
-      showCorviLine(pickDifferentLine(CORVI_SEARCH_REMINDERS, lastCorviLine.current));
-      return;
-    }
     setCorviPendingAction(null);
     setCorviConversationOpen(true);
     showCorviLine(pickDifferentLine(CORVI_CHAT_VARIANTS, lastCorviLine.current));
