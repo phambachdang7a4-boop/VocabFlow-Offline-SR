@@ -25,9 +25,9 @@ Từ đã lưu chỉ được xem, đóng băng/bỏ đóng băng hoặc xóa; k
 
 **How to apply:** Trước khi viết code phải tóm tắt kế hoạch tối đa 10 dòng và chờ đồng ý. Sau đó làm từng bước nhỏ chạy được; sau mỗi bước báo cách kiểm tra trên điện thoại. Giữ giao diện từ đã lưu ở chế độ chỉ đọc; không hiển thị trường ghi chú, không xóa ghi chú cũ nếu chưa được yêu cầu rõ. Trong Sổ từ, từ đã đóng băng không xuất hiện khi lọc Cấp 1–6 nhưng vẫn tính vào tổng số từ; bỏ lọc thì có thể tra cứu từ đó. Không tự thêm truyện, nội dung từ điển, hay kế hoạch thu phí nếu chưa được yêu cầu. Phạm vi sản phẩm và các lựa chọn hiện tại được ghi trong `replit.md`.
 
-**Why:** Người dùng yêu cầu dữ liệu mục từ trong khóa học và từ điển offline phải được dùng chung, đồng thời muốn từ điển offline là nguồn tra cứu chính.
+**Why:** Người dùng yêu cầu dữ liệu mục từ trong khóa học và từ điển offline phải được dùng chung, đồng thời chọn tự thêm mục từ còn thiếu vào từ điển.
 
-**How to apply:** Liên kết từ khóa học tới mục từ dùng chung và tái sử dụng dữ liệu hiện có; không tự tạo hoặc ghi đè mục từ còn thiếu cho đến khi người dùng chốt cách xử lý trường hợp đó.
+**How to apply:** Khi xử lý từ khóa học, trước tiên tìm và tái sử dụng mục từ khớp trong từ điển offline. Nếu chưa có, tạo một mục từ dùng chung từ dữ liệu sẵn có rồi để khóa học tham chiếu mục đó; tránh tạo bản sao hoặc ghi đè dữ liệu từ điển phong phú hơn. Giữ thứ tự bài và nội dung câu hỏi riêng trong khóa học.
 
 ## Corvi
 Corvi là linh vật chính thức của VocabFlow. Hình pixel-art người dùng gửi là mẫu tham chiếu: quạ đen đeo kính, mặc áo vest/nơ đỏ và đứng trong thư viện. Phẩm chất rương cao nhất mang tên Corvi, chủ đề Hắc Diệu Thạch màu đen.
