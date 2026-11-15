@@ -1,8 +1,15 @@
+import courseData from "./phrasal-verb-course-data.json";
+
 export interface PhrasalVerbCourseEntry {
   definition: string;
   example: string;
-  exampleTranslation: string;
+  exampleTranslation?: string;
   spellingNote?: string;
+  rootVerb?: string;
+  topicId?: string;
+  topicTitle?: string;
+  partOfSpeech?: string;
+  dictionarySource?: "offline";
 }
 
 export interface PhrasalVerbCourseQuestion {
@@ -15,7 +22,35 @@ export interface PhrasalVerbCourseLesson {
   id: string;
   title: string;
   focus: string;
+  topicId?: string;
+  topicTitle?: string;
   questions: readonly PhrasalVerbCourseQuestion[];
+}
+
+interface DictionaryPhrasalVerbEntry {
+  term: string;
+  definition: string;
+  example: string;
+  rootVerb: string;
+  topicId: string;
+  topicTitle: string;
+  partOfSpeech: string;
+  dictionarySource: "offline";
+}
+
+interface DictionaryPhrasalVerbTopic {
+  id: string;
+  title: string;
+  focus: string;
+  terms: string[];
+}
+
+interface DictionaryPhrasalVerbData {
+  generatedFrom: string;
+  sourceSha256: string;
+  uniqueTerms: number;
+  topics: DictionaryPhrasalVerbTopic[];
+  entries: Record<string, DictionaryPhrasalVerbEntry>;
 }
 
 type EntryRow = readonly [
@@ -27,6 +62,7 @@ type EntryRow = readonly [
 ];
 
 type Topic = {
+  id: string;
   title: string;
   focus: string;
   entries: readonly EntryRow[];
@@ -37,6 +73,7 @@ export const PHRASAL_VERB_COURSE_TITLE = "Cụm động từ thông dụng";
 
 const TOPICS: readonly Topic[] = [
   {
+    id: "curated-daily-life",
     title: "Sinh hoạt hằng ngày",
     focus: "Thức dậy, chuẩn bị và làm những việc thường nhật.",
     entries: [
@@ -63,6 +100,7 @@ const TOPICS: readonly Topic[] = [
     ],
   },
   {
+    id: "curated-home",
     title: "Nhà cửa và việc vặt",
     focus: "Sắp xếp nhà cửa, sửa đồ và xử lý việc cá nhân.",
     entries: [
@@ -89,6 +127,7 @@ const TOPICS: readonly Topic[] = [
     ],
   },
   {
+    id: "curated-work-study",
     title: "Học tập và công việc",
     focus: "Đọc, ghi chép, hoàn thành nhiệm vụ và phối hợp ở nơi làm việc.",
     entries: [
@@ -115,6 +154,7 @@ const TOPICS: readonly Topic[] = [
     ],
   },
   {
+    id: "curated-communication",
     title: "Giao tiếp và các mối quan hệ",
     focus: "Trao đổi, giữ liên lạc và ứng xử với người khác.",
     entries: [
@@ -141,6 +181,7 @@ const TOPICS: readonly Topic[] = [
     ],
   },
   {
+    id: "curated-travel",
     title: "Di chuyển và thay đổi",
     focus: "Đi lại, khởi hành, quay về và thích nghi với thay đổi.",
     entries: [
@@ -167,6 +208,7 @@ const TOPICS: readonly Topic[] = [
     ],
   },
   {
+    id: "curated-problem-solving",
     title: "Giải quyết tình huống",
     focus: "Đối phó với vấn đề, thay đổi hướng và tìm cách xử lý.",
     entries: [
@@ -204,40 +246,118 @@ function stableHash(value: string): number {
 
 const IRREGULAR_VERB_FORMS: Readonly<Record<string, string>> = {
   be: "was|were|been",
+  become: "became|become",
+  begin: "began|begun",
+  bend: "bent",
+  bet: "bet",
+  bind: "bound",
+  bite: "bit|bitten",
+  bleed: "bled",
+  blow: "blew|blown",
   bring: "brought",
   break: "broke|broken",
+  build: "built",
+  buy: "bought",
+  catch: "caught",
+  choose: "chose|chosen",
   come: "came",
+  cost: "cost",
+  creep: "crept",
+  cut: "cut",
+  deal: "dealt",
+  dig: "dug",
+  do: "did|done",
+  draw: "drew|drawn",
+  drink: "drank|drunk",
   drive: "drove|driven",
+  eat: "ate|eaten",
   fall: "fell",
+  feed: "fed",
+  feel: "felt",
+  fight: "fought",
+  find: "found",
+  flee: "fled",
+  fly: "flew|flown",
+  forget: "forgot|forgotten",
+  forgive: "forgave|forgiven",
+  freeze: "froze|frozen",
   get: "got|gotten",
   give: "gave|given",
   go: "went|gone",
   grow: "grew|grown",
-  hang: "hung",
+  hang: "hung|hanged",
+  have: "had",
+  hear: "heard",
+  hide: "hid|hidden",
+  hit: "hit",
   hold: "held",
+  hurt: "hurt",
+  keep: "kept",
+  know: "knew|known",
+  lay: "laid",
+  lead: "led",
+  leave: "left",
+  lend: "lent",
+  let: "let",
   lie: "lay|lain",
+  lose: "lost",
   make: "made",
+  mean: "meant",
+  meet: "met",
   pay: "paid",
+  put: "put",
   read: "read",
+  ride: "rode|ridden",
+  ring: "rang|rung",
+  rise: "rose|risen",
   run: "ran",
+  say: "said",
+  see: "saw|seen",
+  seek: "sought",
+  sell: "sold",
+  send: "sent",
   set: "set",
+  shake: "shook|shaken",
+  shoot: "shot",
+  show: "showed|shown",
+  shut: "shut",
+  sing: "sang|sung",
+  sink: "sank|sunk",
   sit: "sat",
+  sleep: "slept",
+  slide: "slid",
   speak: "spoke|spoken",
+  spend: "spent",
   stand: "stood",
+  steal: "stole|stolen",
+  stick: "stuck",
+  strike: "struck|stricken",
+  sweep: "swept",
+  swim: "swam|swum",
   take: "took|taken",
+  teach: "taught",
+  tear: "tore|torn",
+  tell: "told",
+  think: "thought",
   throw: "threw|thrown",
+  understand: "understood",
   wake: "woke|woken",
   wear: "wore|worn",
+  win: "won",
   write: "wrote|written",
 };
 
 function verbForms(verb: string): string[] {
   const irregular = IRREGULAR_VERB_FORMS[verb];
+  const doubleFinal =
+    /^[^aeiou]*[aeiou][^aeiouwxy]$/i.test(verb) && verb.length < 7
+      ? `${verb}${verb.at(-1)}`
+      : verb;
   const regularPast = verb.endsWith("e")
     ? `${verb}d`
     : verb.endsWith("y") && !/[aeiou]y$/.test(verb)
       ? `${verb.slice(0, -1)}ied`
-      : `${verb}ed`;
+      : `${doubleFinal}ed`;
   const regularThirdPerson = verb.endsWith("y") && !/[aeiou]y$/.test(verb)
     ? `${verb.slice(0, -1)}ies`
     : /(?:s|x|z|ch|sh|o)$/.test(verb)
@@ -247,7 +367,7 @@ function verbForms(verb: string): string[] {
     ? `${verb.slice(0, -2)}ying`
     : verb.endsWith("e") && !/(?:ee|ye|oe)$/.test(verb)
       ? `${verb.slice(0, -1)}ing`
-      : `${verb}ing`;
+      : `${doubleFinal}ing`;
   return [verb, ...regularPast.split("|"), ...regularThirdPerson.split("|"), ing,
     ...(irregular?.split("|") ?? [])];
 }
@@ -306,14 +426,25 @@ function choicesFor(term: string, lessonTerms: readonly string[]): string[] {
       mutuallySimilarPairs.has([existing, candidate].sort().join("|")),
     );
   const first = stableHash(`${term}:phrasal-distractors`) % lessonTerms.length;
-  for (
-    let offset = 0;
-    offset < lessonTerms.length && distractors.length < 3;
-    offset += 1
-  ) {
-    const candidate = lessonTerms[(first + offset) % lessonTerms.length];
-    if (candidate !== term && !conflictsWith(candidate))
+  const candidates = Array.from(
+    { length: lessonTerms.length },
+    (_, offset) => lessonTerms[(first + offset) % lessonTerms.length],
+  );
+  const termRoot = term.split(" ")[0];
+  const termParticle = term.split(" ").at(-1);
+  const preferred = candidates.filter(
+    (candidate) =>
+      candidate.split(" ")[0] !== termRoot &&
+      candidate.split(" ").at(-1) !== termParticle,
+  );
+  for (const candidate of [...preferred, ...candidates]) {
+    if (
+      candidate !== term &&
+      !distractors.includes(candidate) &&
+      !conflictsWith(candidate)
+    )
       distractors.push(candidate);
+    if (distractors.length === 3) break;
   }
   return [term, ...distractors].sort((left, right) =>
     stableHash(`${term}:phrasal-choice:${left}`) -
@@ -322,9 +453,7 @@ function choicesFor(term: string, lessonTerms: readonly string[]): string[] {
   );
 }
 
-export const PHRASAL_VERB_COURSE_ENTRIES: Readonly<
-  Record<string, PhrasalVerbCourseEntry>
-> = Object.fromEntries(
+const authoredEntries: Record<string, PhrasalVerbCourseEntry> = Object.fromEntries(
   TOPICS.flatMap((topic) =>
     topic.entries.map(([term, definition, example, exampleTranslation, note]) => [
       term,
@@ -332,27 +461,91 @@ export const PHRASAL_VERB_COURSE_ENTRIES: Readonly<
         definition,
         example,
         exampleTranslation,
+        topicId: topic.id,
+        topicTitle: topic.title,
         ...(note ? { spellingNote: `Cấu trúc: ${note}` } : {}),
       },
     ]),
   ),
 );
 
+const dictionaryData = courseData as DictionaryPhrasalVerbData;
+const dictionaryEntries: Record<string, PhrasalVerbCourseEntry> =
+  Object.fromEntries(
+    Object.entries(dictionaryData.entries).map(([term, entry]) => [
+      term,
+      {
+        definition: entry.definition,
+        example: entry.example,
+        rootVerb: entry.rootVerb,
+        topicId: entry.topicId,
+        topicTitle: entry.topicTitle,
+        partOfSpeech: entry.partOfSpeech,
+        dictionarySource: entry.dictionarySource,
+      },
+    ]),
+  );
+
+export const PHRASAL_VERB_COURSE_ENTRIES: Readonly<
+  Record<string, PhrasalVerbCourseEntry>
+> = {
+  ...dictionaryEntries,
+  ...authoredEntries,
+};
+
 export const PHRASAL_VERB_COURSE_WORD_COUNT = Object.keys(
   PHRASAL_VERB_COURSE_ENTRIES,
 ).length;
+export const PHRASAL_VERB_COURSE_TOPIC_COUNT =
+  TOPICS.length + dictionaryData.topics.length;
 
-export const PHRASAL_VERB_COURSE_LESSONS: readonly PhrasalVerbCourseLesson[] =
-  TOPICS.map((topic, lessonIndex) => {
+const authoredLessons: PhrasalVerbCourseLesson[] = TOPICS.map(
+  (topic, lessonIndex) => {
     const lessonTerms = topic.entries.map(([term]) => term);
     return {
       id: `${PHRASAL_VERB_COURSE_ID}-lesson-${String(lessonIndex + 1).padStart(3, "0")}`,
       title: `Bài ${lessonIndex + 1}: ${topic.title}`,
       focus: topic.focus,
+      topicId: topic.id,
+      topicTitle: topic.title,
       questions: topic.entries.map(([term, , example]) => ({
         term,
         prompt: blankHeadword(example, term),
         choices: choicesFor(term, lessonTerms),
       })),
     };
+  },
+);
+
+const dictionaryLessons: PhrasalVerbCourseLesson[] =
+  dictionaryData.topics.flatMap((topic) => {
+    const topicTerms = topic.terms.filter((term) => !authoredEntries[term]);
+    const lessons: PhrasalVerbCourseLesson[] = [];
+    for (let start = 0; start < topicTerms.length; start += 20) {
+      const lessonTerms = topicTerms.slice(start, start + 20);
+      const firstRoot = dictionaryEntries[lessonTerms[0]].rootVerb!;
+      const lastRoot = dictionaryEntries[lessonTerms.at(-1)!].rootVerb!;
+      const rootRange =
+        firstRoot === lastRoot ? firstRoot : `${firstRoot}–${lastRoot}`;
+      const lessonNumber = authoredLessons.length + dictionaryLessonsSoFar + lessons.length + 1;
+      lessons.push({
+        id: `${PHRASAL_VERB_COURSE_ID}-lesson-${String(lessonNumber).padStart(3, "0")}`,
+        title: `Bài ${lessonNumber}: ${topic.title} · ${rootRange}`,
+        focus: `${topic.focus} Các cụm được xếp theo động từ gốc (${rootRange}).`,
+        topicId: topic.id,
+        topicTitle: topic.title,
+        questions: lessonTerms.map((term) => ({
+          term,
+          prompt: blankHeadword(dictionaryEntries[term].example, term),
+          choices: choicesFor(term, lessonTerms),
+        })),
+      });
+    }
+    dictionaryLessonsSoFar += lessons.length;
+    return lessons;
   });
+
+export const PHRASAL_VERB_COURSE_LESSONS: readonly PhrasalVerbCourseLesson[] = [
+  ...authoredLessons,
+  ...dictionaryLessons,
+];
