@@ -10,6 +10,10 @@ const DATABASE_PATH = join(
 const DICTIONARY_DOMAIN_PATH = join(__dirname, "../domain/dictionary.ts");
 const PHRASAL_COURSE_PATH = join(__dirname, "../domain/phrasal-verb-course.ts");
 const TOPIC_MAP_PATH = join(__dirname, "../domain/phrasal-verb-topic-map.json");
+const EXAMPLE_TRANSLATIONS_PATH = join(
+  __dirname,
+  "../domain/phrasal-verb-example-translations.json",
+);
 const OUTPUT_PATH = join(
   __dirname,
   "../domain/phrasal-verb-course-data.json",
@@ -332,6 +336,13 @@ function main() {
     .digest("hex");
   if (actualHash !== expectedHash)
     throw new Error("Từ điển nguồn không khớp phiên bản đã ghim.");
+  const exampleTranslations = JSON.parse(
+    readFileSync(EXAMPLE_TRANSLATIONS_PATH, "utf8"),
+  );
+  if (exampleTranslations.sourceSha256 !== actualHash)
+    throw new Error(
+      "Bản dịch ví dụ không khớp phiên bản từ điển đã ghim.",
+    );
   const curatedTopicMap = JSON.parse(readFileSync(TOPIC_MAP_PATH, "utf8"));
 
   const db = new DatabaseSync(DATABASE_PATH, { readOnly: true });
@@ -396,8 +407,31 @@ function main() {
             a.rootVerb.localeCompare(b.rootVerb, "en") ||
             a.term.localeCompare(b.term, "en"),
         )
-        .map(({ score, ...entry }) => [entry.term, entry]),
+        .map(({ score, ...entry }) => {
+          const exampleTranslation =
+            exampleTranslations.translations[entry.term];
+          if (
+            typeof exampleTranslation !== "string" ||
+            !exampleTranslation.trim() ||
+            !/[à-ỹÀ-ỸđĐ]/u.test(exampleTranslation)
+          ) {
+            throw new Error(
+              `Thiếu bản dịch tiếng Việt cho ví dụ cụm động từ: ${entry.term}`,
+            );
+          }
+          return [
+            entry.term,
+            { ...entry, exampleTranslation: exampleTranslation.trim() },
+          ];
+        }),
     );
+    if (
+      Object.keys(exampleTranslations.translations).length !==
+      Object.keys(entries).length
+    )
+      throw new Error(
+        "Số bản dịch ví dụ không khớp số cụm động từ được tạo.",
+      );
     const topics = TOPICS.map((topic) => ({
       id: topic.id,
       title: topic.title,

@@ -4,6 +4,9 @@ const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 
 const data = require("../domain/phrasal-verb-course-data.json");
+const exampleTranslations = require(
+  "../domain/phrasal-verb-example-translations.json",
+);
 const topicMap = require("../domain/phrasal-verb-topic-map.json");
 const course = loadTs(
   join(__dirname, "../domain/phrasal-verb-course.ts"),
@@ -18,6 +21,33 @@ const dictionaryLessons = lessons.slice(6);
 
 assert.equal(course.PHRASAL_VERB_COURSE_ID, "phrasal-verbs-v1");
 assert.equal(data.uniqueTerms, dictionaryTerms.length);
+assert.equal(exampleTranslations.sourceSha256, data.sourceSha256);
+assert.equal(
+  Object.keys(exampleTranslations.translations).length,
+  dictionaryTerms.length,
+  "Every extracted phrasal verb has a reviewed Vietnamese example translation.",
+);
+const reviewedTopicSamples = {
+  "ask in": "Bạn nên mời vị khách đang chờ ngoài cửa vào nhà.",
+  "bash out": "Tôi đã viết vội bài luận đó vào đêm trước khi phải nộp.",
+  "sex up":
+    "Họ đã cố gắng làm cho tin tức trở nên hấp dẫn hơn bằng những chi tiết bổ sung.",
+  "back into": "Anh ấy thích lùi xe vào trong gara hơn.",
+  "auction off":
+    "Họ đã bán đấu giá tài sản của mình vì họ đang nợ nần chồng chất.",
+  "act up":
+    "Máy tính của tôi đang giở chứng; có lẽ nó bị nhiễm virus rồi.",
+  "agree with":
+    "Tôi cảm thấy tệ quá - món đó không hợp với dạ dày của tôi.",
+  "strike down": "Tòa phúc thẩm đã bác bỏ phán quyết của tòa cấp dưới.",
+  "stick at":
+    "Cô ấy thấy khóa học rất khó nhưng cô ấy vẫn kiên trì theo đuổi và cuối cùng đã làm tốt.",
+  "sit over":
+    "Chúng tôi vừa ngồi nhâm nhi bữa tối vừa thảo luận về các kế hoạch.",
+};
+for (const [term, translation] of Object.entries(reviewedTopicSamples)) {
+  assert.equal(data.entries[term]?.exampleTranslation, translation);
+}
 assert.ok(dictionaryTerms.length >= 1_500,
   "The filtered offline dictionary provides a broad course.");
 assert.ok(terms.length >= 1_900,
@@ -87,6 +117,16 @@ for (const term of dictionaryTerms) {
   assert.ok(dataTopicById.has(entry.topicId));
   assert.ok(entry.topicTitle);
   assert.equal(sourceEntry.partOfSpeech, "V");
+  assert.equal(
+    sourceEntry.exampleTranslation,
+    exampleTranslations.translations[term],
+    `${term} uses its checked Vietnamese example translation.`,
+  );
+  assert.ok(
+    sourceEntry.exampleTranslation?.trim() &&
+      /[à-ỹÀ-ỸđĐ]/u.test(sourceEntry.exampleTranslation),
+    `${term} has a non-empty Vietnamese example translation.`,
+  );
   const parts = term.split(" ");
   assert.ok(parts.length >= 2 && parts.length <= 4);
   assert.ok(allowedParticles.has(parts.at(-1)));
@@ -134,9 +174,11 @@ for (const lesson of lessons) {
         `${question.term} reviewed definition is written in Vietnamese.`,
       );
     }
-    if (entry.exampleTranslation) {
-      assert.ok(/[à-ỹÀ-ỸđĐ]/u.test(entry.exampleTranslation));
-    }
+    assert.ok(
+      entry.exampleTranslation?.trim() &&
+        /[à-ỹÀ-ỸđĐ]/u.test(entry.exampleTranslation),
+      `${question.term} has a non-empty Vietnamese example translation.`,
+    );
     if (!entry.dictionarySource) {
       assert.ok(
         entry.exampleTranslation?.trim(),

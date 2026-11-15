@@ -564,6 +564,9 @@ function mount(initialSavedWords = [], options = {}) {
     const entry = phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_ENTRIES[
       question.term
     ];
+    const savedTranslation = entry.exampleTranslation;
+    const simulateMissingTranslation = index === 1;
+    if (simulateMissingTranslation) entry.exampleTranslation = "   ";
     assert.deepEqual(
       screen.byId("phrasal-verbs-question-prompt").props.children,
       [question.prompt],
@@ -571,12 +574,23 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId(`phrasal-verbs-choice-${question.term}`).props.onPress();
     assert.ok(screen.byId("phrasal-verbs-answer-feedback"));
     assert.ok(
-      find(
-        screen.byId("phrasal-verbs-answer-feedback"),
-        (node) => node.props?.children?.includes?.(entry.exampleTranslation),
-      ),
-      "Correct-answer feedback includes the complete Vietnamese example translation.",
+      simulateMissingTranslation
+        ? !find(
+            screen.byId("phrasal-verbs-answer-feedback"),
+            (node) =>
+              node.type === "Text" &&
+              typeof node.props?.children === "string" &&
+              !node.props.children.trim(),
+          )
+        : find(
+            screen.byId("phrasal-verbs-answer-feedback"),
+            (node) => node.props?.children?.includes?.(entry.exampleTranslation),
+          ),
+      simulateMissingTranslation
+        ? "Phrasal-verb feedback omits the translation line when none is available."
+        : "Correct-answer feedback includes the complete Vietnamese example translation.",
     );
+    if (simulateMissingTranslation) entry.exampleTranslation = savedTranslation;
     screen.byId("phrasal-verbs-next").props.onPress();
     await screen.settle();
   }

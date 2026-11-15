@@ -31,6 +31,7 @@ interface DictionaryPhrasalVerbEntry {
   term: string;
   definition: string;
   example: string;
+  exampleTranslation: string;
   rootVerb: string;
   topicId: string;
   topicTitle: string;
@@ -484,6 +485,7 @@ const dictionaryEntries: Record<string, PhrasalVerbCourseEntry> =
       {
         definition: entry.definition,
         example: entry.example,
+        exampleTranslation: entry.exampleTranslation,
         rootVerb: entry.rootVerb,
         topicId: entry.topicId,
         topicTitle: entry.topicTitle,

@@ -1425,7 +1425,7 @@ function QuestionView({
                     {answer.spellingNote}
                   </Text>
                 ) : null}
-                {answer?.exampleTranslation ? (
+                {answer?.exampleTranslation?.trim() ? (
                   <Text style={[styles.feedbackTranslation, { color: c.mutedForeground }]}>
                     {answer.exampleTranslation}
                   </Text>
@@ -1490,7 +1490,7 @@ function QuestionView({
               {answer.spellingNote}
             </Text>
           ) : null}
-          {answer.exampleTranslation ? (
+          {answer.exampleTranslation?.trim() ? (
             <Text
               style={[
                 styles.feedbackTranslation,
