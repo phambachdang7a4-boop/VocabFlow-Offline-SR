@@ -277,7 +277,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       firstOverview.chests[0].ruleSet,
-      5,
+      6,
       "New missions use fixed Stone rewards and Points-based fragments.",
     );
     assert.equal(
@@ -749,7 +749,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
         "SELECT rarity, rule_set, super_upgrade FROM mission_chests WHERE chest_id = ?",
       )
       .get("old-untouched-chest");
-    assert.equal(migratedChest.rule_set, 5);
+    assert.equal(migratedChest.rule_set, 6);
     assert.equal(migratedChest.rarity, "uncommon");
     assert.equal(
       migratedChest.super_upgrade,

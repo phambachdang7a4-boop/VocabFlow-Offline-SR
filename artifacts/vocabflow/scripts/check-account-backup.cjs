@@ -118,7 +118,7 @@ const payload = {
       baseStone: 3,
       upgradeAttempts: 0,
       rarity: "common",
-      ruleSet: 4,
+      ruleSet: 6,
       superUpgrade: missionChests.hasSuperUpgradeChance(
         "mission-2026-11-08-lesson-1",
       ),

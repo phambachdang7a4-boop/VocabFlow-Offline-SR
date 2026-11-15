@@ -207,7 +207,7 @@ export const SyncMissionChestRarity = {
 } as const;
 
 /**
- * Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.
+ * Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions.
  */
 export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
 
@@ -218,6 +218,7 @@ export const SyncMissionChestRuleSet = {
   NUMBER_3: 3,
   NUMBER_4: 4,
   NUMBER_5: 5,
+  NUMBER_6: 6,
 } as const;
 
 export interface SyncMissionChest {
@@ -245,7 +246,7 @@ export interface SyncMissionChest {
      */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
-  /** Optional for legacy clients; rule 5 replaces each Common fragment with five Stone. */
+  /** Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions. */
   ruleSet?: SyncMissionChestRuleSet;
   /** Whether this chest has its guaranteed fourth upgrade. */
   superUpgrade?: boolean;

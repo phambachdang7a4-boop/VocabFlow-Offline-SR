@@ -936,10 +936,20 @@ router.post("/sync", requireAuth, async (req, res) => {
           : normalizedChest.ruleSet < current.ruleSet
             ? current
             : normalizedChest.ruleSet > current.ruleSet
-              ? current.upgradeAttempts === 0 ||
-                (current.ruleSet === 4 && normalizedChest.ruleSet === 5)
-                ? normalizedChest
-                : current
+              ? current.ruleSet === 5 &&
+                normalizedChest.ruleSet === 6 &&
+                !current.opened
+                ? current.upgradeAttempts > normalizedChest.upgradeAttempts
+                  ? {
+                      ...current,
+                      ruleSet: 6,
+                      updatedAt: normalizedChest.updatedAt,
+                    }
+                  : normalizedChest
+                : current.upgradeAttempts === 0 ||
+                  (current.ruleSet === 4 && normalizedChest.ruleSet === 5)
+                  ? normalizedChest
+                  : current
               : normalizedChest.upgradeAttempts > current.upgradeAttempts
                 ? normalizedChest
                 : normalizedChest.upgradeAttempts < current.upgradeAttempts
@@ -1829,7 +1839,8 @@ function isValidMissionChestRecord(chest: {
       ruleSet !== 2 &&
       ruleSet !== 3 &&
       ruleSet !== 4 &&
-      ruleSet !== 5) ||
+      ruleSet !== 5 &&
+      ruleSet !== 6) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
     !isChestRarity(chest.rarity)

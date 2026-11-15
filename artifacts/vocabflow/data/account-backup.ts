@@ -305,7 +305,8 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
       value.ruleSet !== 2 &&
       value.ruleSet !== 3 &&
       value.ruleSet !== 4 &&
-      value.ruleSet !== 5) ||
+      value.ruleSet !== 5 &&
+      value.ruleSet !== 6) ||
     (value.superUpgrade !== undefined &&
       typeof value.superUpgrade !== "boolean") ||
     !isChestRarity(value.rarity) ||
@@ -325,8 +326,10 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
     upgradeAttempts: value.upgradeAttempts,
     rarity: value.rarity,
     ruleSet:
-      value.ruleSet === 5
-        ? 5
+      value.ruleSet === 6
+        ? 6
+        : value.ruleSet === 5
+          ? 5
         : value.ruleSet === 4
           ? 4
           : value.ruleSet === 3

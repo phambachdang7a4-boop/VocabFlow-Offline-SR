@@ -6,7 +6,7 @@ export const CHEST_RARITIES = [
   "legendary",
 ] as const;
 export type ChestRarity = (typeof CHEST_RARITIES)[number];
-export type ChestRuleSet = 1 | 2 | 3 | 4 | 5;
+export type ChestRuleSet = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const CHEST_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Copper",
@@ -127,6 +127,8 @@ export function chestCommonFragmentStoneBonus(
   rarity: ChestRarity,
   ruleSet: ChestRuleSet = 1,
 ): number {
+  // Rule 5 chests already opened retain their historical payout when validated.
+  // Rule 6 is the current rule: Common and Uncommon fragments are not converted.
   if (ruleSet !== 5) return 0;
   return (
     rawChestFragmentReward(chestId, rarity, ruleSet).common *
@@ -345,7 +347,8 @@ export function isValidMissionChest(chest: MissionChest): boolean {
       ruleSet !== 2 &&
       ruleSet !== 3 &&
       ruleSet !== 4 &&
-      ruleSet !== 5) ||
+      ruleSet !== 5 &&
+      ruleSet !== 6) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== hasSuperUpgradeChance(chest.chestId)) ||
     !CHEST_RARITIES.includes(chest.rarity) ||

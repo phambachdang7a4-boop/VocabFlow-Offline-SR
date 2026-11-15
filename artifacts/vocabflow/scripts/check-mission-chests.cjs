@@ -215,6 +215,21 @@ assert.equal(
   chestStoneReward(2, "rare", 5) + convertedStone,
   "The chest Stone reward includes converted Common fragments.",
 );
+assert.equal(
+  chestCommonFragmentStoneBonus(convertedChestId, "rare", 6),
+  0,
+  "Current chests do not convert Common fragments to Stone.",
+);
+assert.equal(
+  chestTotalStoneReward(convertedChestId, 2, "rare", 6),
+  chestStoneReward(2, "rare", 6),
+  "Current chest payouts contain no Common or Uncommon conversion.",
+);
+assert.deepEqual(
+  chestFragmentReward(convertedChestId, "rare", 6),
+  chestFragmentReward(convertedChestId, "rare", 5),
+  "Removing fragment conversions does not alter the retained Rare-or-higher drops.",
+);
 const chestScreen = readFileSync(
   join(__dirname, "../app/chest/[chestId].tsx"),
   "utf8",

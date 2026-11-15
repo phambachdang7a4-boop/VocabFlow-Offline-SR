@@ -504,8 +504,8 @@ components:
           enum: [common, uncommon, rare, epic, legendary]
         ruleSet:
           type: integer
-          enum: [1, 2, 3, 4, 5]
-          description: Optional for legacy clients; rule 5 replaces each Common fragment with five Stone.
+          enum: [1, 2, 3, 4, 5, 6]
+          description: Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions.
         superUpgrade:
           type: boolean
           description: Whether this chest has its guaranteed fourth upgrade.

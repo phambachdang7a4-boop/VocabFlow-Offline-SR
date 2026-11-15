@@ -341,8 +341,10 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         missionChests: missionChests.map((chest) => ({
           ...chest,
           ruleSet:
-            chest.ruleSet === 5
-              ? 5
+            chest.ruleSet === 6
+              ? 6
+              : chest.ruleSet === 5
+                ? 5
               : chest.ruleSet === 4
                 ? 4
                 : chest.ruleSet === 3
@@ -1119,8 +1121,10 @@ async function mergeSnapshotIntoDatabase(
         ? {
             ...currentRow,
             ruleSet:
-              currentRow.ruleSet === 5
-                ? (5 as const)
+              currentRow.ruleSet === 6
+                ? (6 as const)
+                : currentRow.ruleSet === 5
+                  ? (5 as const)
                 : currentRow.ruleSet === 4
                   ? (4 as const)
                   : currentRow.ruleSet === 3
@@ -1137,10 +1141,20 @@ async function mergeSnapshotIntoDatabase(
         : incomingRuleSet < (current.ruleSet ?? 1)
           ? current
           : incomingRuleSet > (current.ruleSet ?? 1)
-            ? current.upgradeAttempts === 0 ||
-              ((current.ruleSet ?? 1) === 4 && incomingRuleSet === 5)
-              ? normalizedIncoming
-              : current
+            ? (current.ruleSet ?? 1) === 5 &&
+              incomingRuleSet === 6 &&
+              !current.opened
+              ? current.upgradeAttempts > normalizedIncoming.upgradeAttempts
+                ? {
+                    ...current,
+                    ruleSet: 6,
+                    updatedAt: normalizedIncoming.updatedAt,
+                  }
+                : normalizedIncoming
+              : current.upgradeAttempts === 0 ||
+                ((current.ruleSet ?? 1) === 4 && incomingRuleSet === 5)
+                ? normalizedIncoming
+                : current
             : normalizedIncoming.upgradeAttempts > current.upgradeAttempts
               ? normalizedIncoming
               : normalizedIncoming.upgradeAttempts < current.upgradeAttempts
