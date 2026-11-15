@@ -662,6 +662,10 @@ components:
         collateralUsed:
           type: boolean
           description: Optional for older clients; whether collateral was consumed after a risky failure.
+        forceMajeureHit:
+          type: boolean
+          nullable: true
+          description: Optional for older clients; whether this investment's one-time force majeure event was rolled.
     SyncInvestmentStudyDay:
       type: object
       required: [day, reviewed, studiedCourse, updatedAt]

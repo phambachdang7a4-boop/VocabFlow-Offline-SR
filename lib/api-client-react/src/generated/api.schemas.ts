@@ -441,6 +441,11 @@ export interface SyncStoneInvestment {
   capitalInvite?: SyncStoneInvestmentCapitalInvite;
   /** Optional for older clients; whether collateral was consumed after a risky failure. */
   collateralUsed?: boolean;
+  /**
+     * Optional for older clients; whether this investment's one-time force majeure event was rolled.
+     * @nullable
+     */
+  forceMajeureHit?: boolean | null;
 }
 
 export interface SyncInvestmentStudyDay {

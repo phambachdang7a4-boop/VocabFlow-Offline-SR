@@ -178,6 +178,7 @@ const payload = {
       lowInsuranceUsed: false,
       capitalInvite: null,
       collateralUsed: false,
+      forceMajeureHit: false,
       createdAt: "2026-11-08T10:00:00.000Z",
       settledAt: null,
     },

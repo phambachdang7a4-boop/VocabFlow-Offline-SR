@@ -116,12 +116,18 @@ export interface SyncMissionShopPurchase extends MissionShopPurchase {}
 
 export type SyncStoneInvestment = Omit<
   StoneInvestment,
-  "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+  | "lowInsuranceUsed"
+  | "capitalInvite"
+  | "collateralUsed"
+  | "forceMajeureHit"
 > &
   Partial<
     Pick<
       StoneInvestment,
-      "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+      | "lowInsuranceUsed"
+      | "capitalInvite"
+      | "collateralUsed"
+      | "forceMajeureHit"
     >
   >;
 
@@ -295,7 +301,8 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
           status, settlement_amount AS settlementAmount,
           low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
-          collateral_used AS collateralUsed, created_at AS createdAt,
+          collateral_used AS collateralUsed,
+          force_majeure_hit AS forceMajeureHit, created_at AS createdAt,
           settled_at AS settledAt
         FROM stone_investments ORDER BY created_at, investment_id
       `),
@@ -372,6 +379,10 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           lowInsuranceUsed: Boolean(investment.lowInsuranceUsed),
           capitalInvite: investment.capitalInvite ?? null,
           collateralUsed: Boolean(investment.collateralUsed),
+          forceMajeureHit:
+            investment.forceMajeureHit === null
+              ? null
+              : Boolean(investment.forceMajeureHit),
         })),
         investmentStudyDays: investmentStudyDays.map((day) => ({
           ...day,
@@ -728,8 +739,8 @@ async function replacePayloadData(
       `INSERT INTO stone_investments
         (investment_id, plan, principal, duration_days, start_day, end_day,
           status, settlement_amount, low_insurance_used, capital_invite,
-          collateral_used, created_at, settled_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          collateral_used, force_majeure_hit, created_at, settled_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       investment.investmentId,
       investment.plan,
       investment.principal,
@@ -741,6 +752,12 @@ async function replacePayloadData(
       investment.lowInsuranceUsed ?? false ? 1 : 0,
       investment.capitalInvite ?? null,
       investment.collateralUsed ?? false ? 1 : 0,
+      investment.forceMajeureHit === null ||
+      investment.forceMajeureHit === undefined
+        ? null
+        : investment.forceMajeureHit
+          ? 1
+          : 0,
       investment.createdAt,
       investment.settledAt,
     );
@@ -1240,7 +1257,8 @@ async function mergeSnapshotIntoDatabase(
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
           status, settlement_amount AS settlementAmount,
           low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
-          collateral_used AS collateralUsed, created_at AS createdAt,
+          collateral_used AS collateralUsed,
+          force_majeure_hit AS forceMajeureHit, created_at AS createdAt,
           settled_at AS settledAt
          FROM stone_investments WHERE investment_id = ?`,
         incoming.investmentId,
@@ -1257,7 +1275,10 @@ async function mergeSnapshotIntoDatabase(
               Boolean(incoming.lowInsuranceUsed)) ||
           (incoming.capitalInvite !== undefined &&
             (current.capitalInvite ?? null) !==
-              (incoming.capitalInvite ?? null)))
+              (incoming.capitalInvite ?? null)) ||
+          (incoming.forceMajeureHit !== undefined &&
+            Boolean(current.forceMajeureHit) !==
+              Boolean(incoming.forceMajeureHit)))
       ) {
         throw new Error("Thương Vụ đồng bộ có dữ liệu mâu thuẫn.");
       }
@@ -1274,8 +1295,8 @@ async function mergeSnapshotIntoDatabase(
         `INSERT INTO stone_investments
           (investment_id, plan, principal, duration_days, start_day, end_day,
             status, settlement_amount, low_insurance_used, capital_invite,
-            collateral_used, created_at, settled_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            collateral_used, force_majeure_hit, created_at, settled_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(investment_id) DO UPDATE SET
           status = excluded.status,
           settlement_amount = excluded.settlement_amount,
@@ -1292,6 +1313,12 @@ async function mergeSnapshotIntoDatabase(
         selected.lowInsuranceUsed ?? false ? 1 : 0,
         selected.capitalInvite ?? null,
         selected.collateralUsed ?? false ? 1 : 0,
+        selected.forceMajeureHit === null ||
+        selected.forceMajeureHit === undefined
+          ? null
+          : selected.forceMajeureHit
+            ? 1
+            : 0,
         selected.createdAt,
         selected.settledAt,
       );

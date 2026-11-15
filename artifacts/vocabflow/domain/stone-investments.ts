@@ -16,6 +16,7 @@ export interface StoneInvestment {
   lowInsuranceUsed: boolean;
   capitalInvite: StoneInvestmentCapitalInvite;
   collateralUsed: boolean;
+  forceMajeureHit: boolean | null;
   createdAt: string;
   settledAt: string | null;
 }
@@ -33,19 +34,25 @@ export const STONE_INVESTMENT_PLANS: Record<
 > = {
   safe: {
     title: "Đầu tư an toàn",
-    ratePercent: 5,
+    ratePercent: 2,
     failedSettlementPercent: 99,
   },
   balanced: {
     title: "Đầu tư trung cấp",
-    ratePercent: 10,
+    ratePercent: 4,
     failedSettlementPercent: 70,
   },
   risky: {
     title: "Đầu tư có rủi ro",
-    ratePercent: 40,
+    ratePercent: 8,
     failedSettlementPercent: -20,
   },
+};
+
+export const FORCE_MAJEURE_RATES: Record<StoneInvestmentPlan, number> = {
+  safe: 1,
+  balanced: 2,
+  risky: 5,
 };
 
 export function investmentRate(
@@ -89,9 +96,10 @@ export function investmentFailureSettlement(
   principal: number,
   capitalInvite: StoneInvestmentCapitalInvite = null,
   lowInsuranceUsed = false,
+  forceMajeureHit = false,
 ): number {
   assertPrincipal(principal);
-  if (lowInsuranceUsed) return principal;
+  if (lowInsuranceUsed && !forceMajeureHit) return principal;
   const lossMultiplier =
     capitalInvite === "low" ? 1.3 : capitalInvite === "high" ? 1.4 : 1;
   const baseNetLossPercent =
@@ -106,6 +114,16 @@ export function investmentNetResult(
   principal: number,
 ): number {
   return settlementAmount - principal;
+}
+
+export function forceMajeureOccurs(
+  investmentId: string,
+  plan: StoneInvestmentPlan,
+): boolean {
+  return (
+    stableHash(`force-majeure-v1:${investmentId}`) % 100 <
+    FORCE_MAJEURE_RATES[plan]
+  );
 }
 
 export function studyDaysRequired(
@@ -130,7 +148,10 @@ export function evaluateStoneInvestment(
     Partial<
       Pick<
         StoneInvestment,
-        "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+        | "lowInsuranceUsed"
+        | "capitalInvite"
+        | "collateralUsed"
+        | "forceMajeureHit"
       >
     >,
   completedStudyDays: ReadonlySet<string>,
@@ -160,6 +181,7 @@ export function evaluateStoneInvestment(
         investment.principal,
         investment.capitalInvite ?? null,
         investment.lowInsuranceUsed ?? false,
+        investment.forceMajeureHit === true,
       ),
     };
   }
@@ -167,6 +189,19 @@ export function evaluateStoneInvestment(
   const allDaysCompleted = requiredDays.every((day) =>
     completedStudyDays.has(day),
   );
+  if (today >= investment.endDay && investment.forceMajeureHit === true) {
+    return {
+      status: "failed",
+      settlementAmount: investmentFailureSettlement(
+        investment.plan,
+        investment.principal,
+        investment.capitalInvite ?? null,
+        false,
+        true,
+      ),
+    };
+  }
+
   if (allDaysCompleted && today >= investment.endDay) {
     return {
       status: "succeeded",
@@ -187,6 +222,7 @@ export function evaluateStoneInvestment(
         investment.principal,
         investment.capitalInvite ?? null,
         investment.lowInsuranceUsed ?? false,
+        investment.forceMajeureHit === true,
       ),
     };
   }
@@ -226,6 +262,7 @@ export function isValidStoneInvestment(
     lowInsuranceUsed = false,
     capitalInvite = null,
     collateralUsed = false,
+    forceMajeureHit = null,
   } = value;
   if (
     typeof investmentId !== "string" ||
@@ -234,9 +271,12 @@ export function isValidStoneInvestment(
     typeof lowInsuranceUsed !== "boolean" ||
     !(capitalInvite === null || capitalInvite === "low" || capitalInvite === "high") ||
     typeof collateralUsed !== "boolean" ||
+    (forceMajeureHit !== null && typeof forceMajeureHit !== "boolean") ||
     (lowInsuranceUsed && plan !== "risky") ||
     (collateralUsed &&
-      (plan !== "risky" || lowInsuranceUsed || status !== "failed")) ||
+      (plan !== "risky" ||
+        (lowInsuranceUsed && forceMajeureHit !== true) ||
+        status !== "failed")) ||
     typeof principal !== "number" ||
     !Number.isSafeInteger(principal) ||
     principal <= 0 ||
@@ -269,6 +309,7 @@ export function isValidStoneInvestment(
   }
   return status === "succeeded"
     ? !collateralUsed &&
+        !forceMajeureHit &&
         settlementAmount ===
           investmentSuccessSettlement(plan, principal, durationDays, capitalInvite)
     : settlementAmount ===
@@ -276,7 +317,8 @@ export function isValidStoneInvestment(
           plan,
           principal,
           capitalInvite,
-          lowInsuranceUsed || collateralUsed,
+          collateralUsed || lowInsuranceUsed,
+          forceMajeureHit === true,
         );
 }
 
@@ -303,4 +345,13 @@ function assertPrincipal(value: number): void {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stableHash(value: string): number {
+  let hash = 2_166_136_261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16_777_619);
+  }
+  return hash >>> 0;
 }

@@ -58,6 +58,7 @@ import {
 } from "../domain/mission-shop";
 import {
   evaluateStoneInvestment,
+  forceMajeureOccurs,
   investmentEndDay,
   isValidStoneInvestment,
   type InvestmentStudyDay,
@@ -361,7 +362,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 28) {
+    if ((version?.user_version ?? 0) > 29) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -1140,6 +1141,26 @@ async function initialize(): Promise<SQLiteDatabase> {
         await markSyncDirty(db);
       });
     }
+    if ((version?.user_version ?? 0) < 29) {
+      await db.withTransactionAsync(async () => {
+        const investmentColumns = new Set(
+          (
+            await db.getAllAsync<{ name: string }>(
+              "PRAGMA table_info(stone_investments)",
+            )
+          ).map((column) => column.name),
+        );
+        if (!investmentColumns.has("force_majeure_hit")) {
+          await db.execAsync(`
+            ALTER TABLE stone_investments
+              ADD COLUMN force_majeure_hit INTEGER
+                CHECK (force_majeure_hit IN (0, 1))
+          `);
+        }
+        await db.execAsync("PRAGMA user_version = 29");
+        await markSyncDirty(db);
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -1469,6 +1490,20 @@ async function readMissionShopInventory(
   return inventory;
 }
 
+function normalizeStoneInvestmentRow(
+  investment: StoneInvestment,
+): StoneInvestment {
+  return {
+    ...investment,
+    lowInsuranceUsed: Boolean(investment.lowInsuranceUsed),
+    collateralUsed: Boolean(investment.collateralUsed),
+    forceMajeureHit:
+      investment.forceMajeureHit === null
+        ? null
+        : Boolean(investment.forceMajeureHit),
+  };
+}
+
 export function getStoneInvestmentOverview(): Promise<StoneInvestmentOverview> {
   return serialize(async () => {
     const db = await database();
@@ -1486,10 +1521,11 @@ export function getStoneInvestmentOverview(): Promise<StoneInvestmentOverview> {
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
           status, settlement_amount AS settlementAmount,
           low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
-          collateral_used AS collateralUsed, created_at AS createdAt,
+          collateral_used AS collateralUsed,
+          force_majeure_hit AS forceMajeureHit, created_at AS createdAt,
           settled_at AS settledAt
          FROM stone_investments ORDER BY created_at DESC`,
-      ),
+      ).then((rows) => rows.map(normalizeStoneInvestmentRow)),
       db.getAllAsync<{
         day: string;
         reviewed: number;
@@ -1545,8 +1581,9 @@ export function createStoneInvestment(
     ) {
       throw new Error("Thư góp vốn không hợp lệ.");
     }
+    const investmentId = `investment:${Crypto.randomUUID()}`;
     const investment: StoneInvestment = {
-      investmentId: `investment:${Crypto.randomUUID()}`,
+      investmentId,
       plan,
       principal,
       durationDays,
@@ -1557,6 +1594,7 @@ export function createStoneInvestment(
       lowInsuranceUsed,
       capitalInvite,
       collateralUsed: false,
+      forceMajeureHit: forceMajeureOccurs(investmentId, plan),
       createdAt: now.toISOString(),
       settledAt: null,
     };
@@ -1585,8 +1623,8 @@ export function createStoneInvestment(
         `INSERT INTO stone_investments
           (investment_id, plan, principal, duration_days, start_day, end_day,
             status, settlement_amount, low_insurance_used, capital_invite,
-            collateral_used, created_at, settled_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, 0, ?, NULL)`,
+            collateral_used, force_majeure_hit, created_at, settled_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, 0, ?, ?, NULL)`,
         investment.investmentId,
         investment.plan,
         investment.principal,
@@ -1595,6 +1633,7 @@ export function createStoneInvestment(
         investment.endDay,
         investment.lowInsuranceUsed ? 1 : 0,
         investment.capitalInvite,
+        investment.forceMajeureHit ? 1 : 0,
         investment.createdAt,
       );
       await markSyncDirty(db);
@@ -1612,21 +1651,23 @@ export function useStoneInvestmentCollateral(
     let updated: StoneInvestment | undefined;
     await db.withTransactionAsync(async () => {
       await settleActiveStoneInvestments(db, localDay(new Date()));
-      const investment = await db.getFirstAsync<StoneInvestment>(
+      const row = await db.getFirstAsync<StoneInvestment>(
         `SELECT investment_id AS investmentId, plan, principal,
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
           status, settlement_amount AS settlementAmount,
           low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
-          collateral_used AS collateralUsed, created_at AS createdAt,
+          collateral_used AS collateralUsed,
+          force_majeure_hit AS forceMajeureHit, created_at AS createdAt,
           settled_at AS settledAt
          FROM stone_investments WHERE investment_id = ?`,
         investmentId,
       );
+      const investment = row ? normalizeStoneInvestmentRow(row) : null;
       if (
         !investment ||
         investment.status !== "failed" ||
         investment.plan !== "risky" ||
-        investment.lowInsuranceUsed ||
+        (investment.lowInsuranceUsed && !investment.forceMajeureHit) ||
         investment.collateralUsed
       ) {
         throw new Error("Khoản đầu tư này không thể dùng tài sản thế chấp.");
@@ -1680,15 +1721,17 @@ async function settleActiveStoneInvestments(
   db: SQLiteDatabase,
   today: string,
 ): Promise<boolean> {
-  const active = await db.getAllAsync<StoneInvestment>(
+  const rows = await db.getAllAsync<StoneInvestment>(
     `SELECT investment_id AS investmentId, plan, principal,
       duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
       status, settlement_amount AS settlementAmount,
       low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
-      collateral_used AS collateralUsed, created_at AS createdAt,
+      collateral_used AS collateralUsed,
+      force_majeure_hit AS forceMajeureHit, created_at AS createdAt,
       settled_at AS settledAt
      FROM stone_investments WHERE status = 'active'`,
   );
+  const active = rows.map(normalizeStoneInvestmentRow);
   if (!active.length) return false;
   const studyRows = await db.getAllAsync<{ day: string }>(
     "SELECT day FROM investment_study_days",

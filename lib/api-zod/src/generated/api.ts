@@ -293,7 +293,8 @@ export const MergeUserSyncDataBody = zod.object({
   "settledAt": zod.coerce.date().nullable(),
   "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
   "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
-  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.'),
+  "forceMajeureHit": zod.boolean().nullish().describe('Optional for older clients; whether this investment\'s one-time force majeure event was rolled.')
 })).max(mergeUserSyncDataBodyStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(mergeUserSyncDataBodyInvestmentStudyDaysItemDayRegExp),
@@ -565,7 +566,8 @@ export const MergeUserSyncData200Response = zod.object({
   "settledAt": zod.coerce.date().nullable(),
   "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
   "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
-  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.'),
+  "forceMajeureHit": zod.boolean().nullish().describe('Optional for older clients; whether this investment\'s one-time force majeure event was rolled.')
 })).max(mergeUserSyncData200ResponseStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(mergeUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp),
@@ -853,7 +855,8 @@ export const ReplaceUserSyncDataBody = zod.object({
   "settledAt": zod.coerce.date().nullable(),
   "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
   "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
-  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.'),
+  "forceMajeureHit": zod.boolean().nullish().describe('Optional for older clients; whether this investment\'s one-time force majeure event was rolled.')
 })).max(replaceUserSyncDataBodyStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(replaceUserSyncDataBodyInvestmentStudyDaysItemDayRegExp),
@@ -1125,7 +1128,8 @@ export const ReplaceUserSyncData200Response = zod.object({
   "settledAt": zod.coerce.date().nullable(),
   "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
   "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
-  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.'),
+  "forceMajeureHit": zod.boolean().nullish().describe('Optional for older clients; whether this investment\'s one-time force majeure event was rolled.')
 })).max(replaceUserSyncData200ResponseStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(replaceUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp),

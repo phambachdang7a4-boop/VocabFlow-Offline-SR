@@ -429,7 +429,7 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     ],
     stoneInvestments: [
       {
-        investmentId: "investment:backup-sync",
+        investmentId: "investment:backup-0",
         plan: "risky",
         principal: 100,
         durationDays: 7,
@@ -440,6 +440,7 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
         lowInsuranceUsed: true,
         capitalInvite: "high",
         collateralUsed: false,
+        forceMajeureHit: true,
         createdAt: "2026-11-08T10:00:00.000Z",
         settledAt: null,
       },
@@ -508,11 +509,14 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
         restoredSnapshot.payload.stoneInvestments[0].lowInsuranceUsed,
       capitalInvite: restoredSnapshot.payload.stoneInvestments[0].capitalInvite,
       collateralUsed: restoredSnapshot.payload.stoneInvestments[0].collateralUsed,
+      forceMajeureHit:
+        restoredSnapshot.payload.stoneInvestments[0].forceMajeureHit,
     },
     {
       lowInsuranceUsed: true,
       capitalInvite: "high",
       collateralUsed: false,
+      forceMajeureHit: true,
     },
     "Insurance and invite choices survive account sync and offline restore.",
   );

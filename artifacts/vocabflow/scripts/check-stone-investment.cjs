@@ -12,9 +12,9 @@ const {
 
 const dayOne = "2026-11-15";
 const planRates = {
-  safe: [5, 15, 99],
-  balanced: [10, 30, 70],
-  risky: [40, 120, -20],
+  safe: [2, 6, 99],
+  balanced: [4, 12, 70],
+  risky: [8, 24, -20],
 };
 
 for (const [plan, [sevenDayRate, fourteenDayRate, failurePayoutPercent]] of
@@ -29,21 +29,21 @@ for (const [plan, [sevenDayRate, fourteenDayRate, failurePayoutPercent]] of
 }
 assert.equal(
   stoneInvestments.investmentSuccessSettlement("safe", 100, 14),
-  115,
+  106,
 );
 assert.equal(
   stoneInvestments.investmentSuccessSettlement("balanced", 100, 14),
-  130,
+  112,
 );
 assert.equal(
   stoneInvestments.investmentSuccessSettlement("risky", 100, 14),
-  220,
+  124,
 );
-assert.equal(stoneInvestments.investmentRate("safe", 7, "low"), 5.75);
-assert.equal(stoneInvestments.investmentRate("risky", 7, "high"), 52);
+assert.equal(stoneInvestments.investmentRate("safe", 7, "low"), 2.3);
+assert.equal(stoneInvestments.investmentRate("risky", 7, "high"), 10.4);
 assert.equal(
   stoneInvestments.investmentSuccessSettlement("balanced", 100, 7, "low"),
-  112,
+  105,
   "A low capital invite multiplies the profit rate by 1.15.",
 );
 assert.equal(
@@ -55,6 +55,20 @@ assert.equal(
   stoneInvestments.investmentFailureSettlement("risky", 100, "high"),
   -68,
 );
+assert.deepEqual(stoneInvestments.FORCE_MAJEURE_RATES, {
+  safe: 1,
+  balanced: 2,
+  risky: 5,
+});
+for (const plan of ["safe", "balanced", "risky"]) {
+  let hitId = null;
+  for (let index = 0; index < 1000 && hitId === null; index += 1) {
+    const candidate = `investment:force-test-${index}`;
+    if (stoneInvestments.forceMajeureOccurs(candidate, plan)) hitId = candidate;
+  }
+  assert.ok(hitId, `The ${plan} force majeure roll can trigger.`);
+  assert.equal(stoneInvestments.forceMajeureOccurs(hitId, plan), true);
+}
 assert.equal(
   stoneInvestments.investmentFailureSettlement("risky", 100, null, true),
   100,
@@ -73,6 +87,7 @@ const contract = {
   lowInsuranceUsed: false,
   capitalInvite: null,
   collateralUsed: false,
+  forceMajeureHit: false,
   createdAt: `${dayOne}T12:00:00.000Z`,
   settledAt: null,
 };
@@ -89,19 +104,66 @@ assert.equal(
 const allSevenDays = new Set(
   stoneInvestments.studyDaysRequired(dayOne, 7),
 );
+const forceMajeureContract = {
+  ...contract,
+  investmentId: "investment:force-hit-16",
+  plan: "risky",
+  forceMajeureHit: true,
+};
+assert.deepEqual(
+  stoneInvestments.evaluateStoneInvestment(
+    forceMajeureContract,
+    allSevenDays,
+    "2026-11-21",
+  ),
+  { status: "failed", settlementAmount: -20 },
+  "A one-time force majeure roll fails the contract even after all study days.",
+);
+assert.deepEqual(
+  stoneInvestments.evaluateStoneInvestment(
+    {
+      ...forceMajeureContract,
+      lowInsuranceUsed: true,
+    },
+    new Set(),
+    "2026-11-16",
+  ),
+  { status: "failed", settlementAmount: -20 },
+  "Low insurance only covers missed study days, not force majeure.",
+);
+assert.equal(
+  stoneInvestments.isValidStoneInvestment({
+    ...forceMajeureContract,
+    lowInsuranceUsed: true,
+    status: "failed",
+    settlementAmount: -20,
+    settledAt: "2026-11-21T12:00:00.000Z",
+  }),
+  true,
+  "An insured risky contract can still fail under force majeure.",
+);
 assert.deepEqual(
   stoneInvestments.evaluateStoneInvestment(
     contract,
     allSevenDays,
     "2026-11-21",
   ),
-  { status: "succeeded", settlementAmount: 105 },
+  { status: "succeeded", settlementAmount: 102 },
+);
+assert.deepEqual(
+  stoneInvestments.evaluateStoneInvestment(
+    { ...contract, forceMajeureHit: null },
+    allSevenDays,
+    "2026-11-21",
+  ),
+  { status: "succeeded", settlementAmount: 102 },
+  "An older investment without a roll is not retroactively exposed.",
 );
 assert.equal(
   stoneInvestments.isValidStoneInvestment({
     ...contract,
     status: "succeeded",
-    settlementAmount: 105,
+    settlementAmount: 102,
     settledAt: "2026-11-21T12:00:00.000Z",
   }),
   true,
@@ -169,6 +231,7 @@ async function checkStorage() {
     const insured = createFundedHarness("investment-insured", 5000);
     const invited = createFundedHarness("investment-invite", 5000);
     const collateral = createFundedHarness("investment-collateral", 6000);
+  const forceEvent = createFundedHarness("investment-force-event", 6000);
   try {
     await success.fund();
     await success.harness.repo.createStoneInvestment("safe", 100, 7);
@@ -185,7 +248,7 @@ async function checkStorage() {
     }
     const completed = await success.harness.repo.getStoneInvestmentOverview();
     assert.equal(completed.investments[0].status, "succeeded");
-    assert.equal(completed.stoneBalance, 505);
+    assert.equal(completed.stoneBalance, 502);
     assert.equal(completed.studyDays.length, 7);
     assert.equal(
       completed.studyDays.find((item) => item.day === dayOne).studiedCourse,
@@ -259,8 +322,8 @@ async function checkStorage() {
       const invitedResult =
         await invited.harness.repo.getStoneInvestmentOverview();
       assert.equal(invitedResult.investments[0].status, "succeeded");
-      assert.equal(invitedResult.investments[0].settlementAmount, 112);
-      assert.equal(invitedResult.stoneBalance, 5000 - inviteCost - 100 + 112);
+      assert.equal(invitedResult.investments[0].settlementAmount, 105);
+      assert.equal(invitedResult.stoneBalance, 5000 - inviteCost - 100 + 105);
       assert.equal(
         invitedResult.inventory.low_capital_invite,
         0,
@@ -288,6 +351,51 @@ async function checkStorage() {
       assert.equal(rescuedOverview.stoneBalance, 6000 - collateralCost);
       assert.equal(rescuedOverview.inventory.collateral_asset, 0);
 
+      await forceEvent.fund();
+      const forceInsuranceCost = await purchaseShopItem(
+        forceEvent.harness,
+        "low_insurance",
+      );
+      const forceCollateralCost = await purchaseShopItem(
+        forceEvent.harness,
+        "collateral_asset",
+      );
+      await forceEvent.harness.repo.createStoneInvestment("risky", 100, 7, {
+        lowInsuranceUsed: true,
+      });
+      const forceInvestment =
+        (await forceEvent.harness.repo.getStoneInvestmentOverview())
+          .investments[0];
+      forceEvent.harness.db
+        .prepare(
+          "UPDATE stone_investments SET force_majeure_hit = 1 WHERE investment_id = ?",
+        )
+        .run(forceInvestment.investmentId);
+      for (const day of stoneInvestments.studyDaysRequired(dayOne, 7)) {
+        forceEvent.harness.db
+          .prepare(
+            `INSERT INTO investment_study_days
+              (day, reviewed, studied_course, updated_at)
+             VALUES (?, 1, 0, ?)`,
+          )
+          .run(day, `${day}T12:00:00.000Z`);
+      }
+      forceEvent.harness.setDay("2026-11-21");
+      const forceResult =
+        await forceEvent.harness.repo.getStoneInvestmentOverview();
+      assert.equal(forceResult.investments[0].forceMajeureHit, true);
+      assert.equal(forceResult.investments[0].status, "failed");
+      assert.equal(forceResult.investments[0].settlementAmount, -20);
+      const forceRescued =
+        await forceEvent.harness.repo.useStoneInvestmentCollateral(
+          forceResult.investments[0].investmentId,
+        );
+      assert.equal(forceRescued.settlementAmount, 100);
+      assert.equal(
+        (await forceEvent.harness.repo.getStoneInvestmentOverview()).stoneBalance,
+        6000 - forceInsuranceCost - forceCollateralCost,
+      );
+
     const review = createFundedHarness("investment-review-event", 200);
     try {
       await review.fund();
@@ -314,6 +422,7 @@ async function checkStorage() {
       insured.cleanup();
       invited.cleanup();
       collateral.cleanup();
+    forceEvent.cleanup();
   }
 }
 

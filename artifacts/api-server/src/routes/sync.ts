@@ -205,6 +205,7 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
         lowInsuranceUsed: investment.lowInsuranceUsed ?? false,
         capitalInvite: investment.capitalInvite ?? null,
         collateralUsed: investment.collateralUsed ?? false,
+        forceMajeureHit: investment.forceMajeureHit ?? null,
         createdAt: toTimestamp(investment.createdAt),
         settledAt: investment.settledAt
           ? toTimestamp(investment.settledAt)
@@ -455,6 +456,7 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
             lowInsuranceUsed: investment.lowInsuranceUsed,
             capitalInvite: investment.capitalInvite,
             collateralUsed: investment.collateralUsed,
+            forceMajeureHit: investment.forceMajeureHit ?? null,
             createdAt: investment.createdAt,
             settledAt: investment.settledAt,
           })),
@@ -709,6 +711,7 @@ router.post("/sync", requireAuth, async (req, res) => {
           lowInsuranceUsed: investment.lowInsuranceUsed ?? false,
           capitalInvite: investment.capitalInvite ?? null,
           collateralUsed: investment.collateralUsed ?? false,
+          forceMajeureHit: investment.forceMajeureHit ?? null,
           createdAt: toTimestamp(investment.createdAt),
           settledAt: investment.settledAt
             ? toTimestamp(investment.settledAt)
@@ -1035,7 +1038,10 @@ router.post("/sync", requireAuth, async (req, res) => {
                 Boolean(incoming.lowInsuranceUsed)) ||
             (incoming.capitalInvite !== undefined &&
               (current.capitalInvite ?? null) !==
-                (incoming.capitalInvite ?? null))
+                (incoming.capitalInvite ?? null)) ||
+            (incoming.forceMajeureHit !== undefined &&
+              Boolean(current.forceMajeureHit) !==
+                Boolean(incoming.forceMajeureHit))
           )
         ) {
           throw new Error("Thương Vụ đồng bộ có dữ liệu mâu thuẫn.");
@@ -1054,6 +1060,7 @@ router.post("/sync", requireAuth, async (req, res) => {
             lowInsuranceUsed: incoming.lowInsuranceUsed ?? false,
             capitalInvite: incoming.capitalInvite ?? null,
             collateralUsed: incoming.collateralUsed ?? false,
+            forceMajeureHit: incoming.forceMajeureHit ?? null,
             createdAt: incoming.createdAt,
             settledAt: incoming.settledAt,
           });
@@ -1501,6 +1508,7 @@ function hasInvalidStoneInvestments(
     lowInsuranceUsed?: boolean;
     capitalInvite?: "low" | "high" | null;
     collateralUsed?: boolean;
+    forceMajeureHit?: boolean | null;
     createdAt: string | Date;
     settledAt: string | Date | null;
   }>,
@@ -1518,6 +1526,7 @@ function hasInvalidStoneInvestments(
       lowInsuranceUsed = false,
       capitalInvite = null,
       collateralUsed = false,
+      forceMajeureHit = null,
       createdAt,
       settledAt,
     } = investment;
@@ -1527,9 +1536,12 @@ function hasInvalidStoneInvestments(
       typeof lowInsuranceUsed !== "boolean" ||
       !(capitalInvite === null || capitalInvite === "low" || capitalInvite === "high") ||
       typeof collateralUsed !== "boolean" ||
+      (forceMajeureHit !== null && typeof forceMajeureHit !== "boolean") ||
       (lowInsuranceUsed && plan !== "risky") ||
       (collateralUsed &&
-        (plan !== "risky" || lowInsuranceUsed || status !== "failed")) ||
+        (plan !== "risky" ||
+          (lowInsuranceUsed && forceMajeureHit !== true) ||
+          status !== "failed")) ||
       !Number.isSafeInteger(principal) ||
       principal <= 0 ||
       principal > 900_000_000 ||
@@ -1558,7 +1570,7 @@ function hasInvalidStoneInvestments(
       return true;
     }
     if (status === "succeeded") {
-      const rate = plan === "safe" ? 5 : plan === "balanced" ? 10 : 40;
+      const rate = plan === "safe" ? 2 : plan === "balanced" ? 4 : 8;
       const inviteMultiplier =
         capitalInvite === "low" ? 1.15 : capitalInvite === "high" ? 1.3 : 1;
       const interest = Math.round(
@@ -1568,9 +1580,13 @@ function hasInvalidStoneInvestments(
           inviteMultiplier) /
           100,
       );
-      return collateralUsed || settlementAmount !== principal + interest;
+      return (
+        collateralUsed ||
+        forceMajeureHit === true ||
+        settlementAmount !== principal + interest
+      );
     }
-    if (lowInsuranceUsed || collateralUsed) {
+    if (collateralUsed || (lowInsuranceUsed && forceMajeureHit !== true)) {
       return settlementAmount !== principal;
     }
     const baseNetLossPercent =

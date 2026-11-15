@@ -231,6 +231,7 @@ export const userStoneInvestments = pgTable(
     lowInsuranceUsed: boolean("low_insurance_used").notNull().default(false),
     capitalInvite: text("capital_invite"),
     collateralUsed: boolean("collateral_used").notNull().default(false),
+    forceMajeureHit: boolean("force_majeure_hit"),
     createdAt: timestampColumn("created_at").notNull(),
     settledAt: timestampColumn("settled_at"),
   },

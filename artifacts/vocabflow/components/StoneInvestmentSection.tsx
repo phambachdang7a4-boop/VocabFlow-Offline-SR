@@ -19,6 +19,7 @@ import {
   type StoneInvestmentOverview,
 } from "@/data/vocabulary";
 import {
+  FORCE_MAJEURE_RATES,
   investmentFailureSettlement,
   investmentNetResult,
   investmentRate,
@@ -135,10 +136,12 @@ export function StoneInvestmentSection({
     const netFailure = Math.abs(failureNet);
     const lossDescription =
       useLowInsurance
-        ? "Bảo hiểm sẽ hoàn lại vốn nếu lỡ đúng một ngày học/ôn; dự án vẫn ghi nhận thất bại."
+        ? "Bảo hiểm chỉ hoàn lại vốn nếu thất bại do lỡ ngày học/ôn; dự án vẫn ghi nhận thất bại."
         : plan === "risky"
           ? `Thất bại sẽ làm mất ${netFailure.toLocaleString("vi-VN")} Stone (${Math.abs(config.failedSettlementPercent - 100)}% vốn trước thư góp vốn) và số dư có thể âm.`
           : `Thất bại chỉ hoàn ${failedSettlement.toLocaleString("vi-VN")} Stone.`;
+    const forceMajeureDescription =
+      ` Force majeure có xác suất ${FORCE_MAJEURE_RATES[plan]}% cho khoản này; nếu xảy ra, khoản đầu tư thất bại theo mức lỗ của gói dù đã học đủ. Bảo hiểm không che sự cố này.`;
     const inviteDescription =
       capitalInvite === "low"
         ? " Thư góp vốn thấp sẽ tiêu hao ngay; lãi nhân 1,15 lần và mức lỗ nhân 1,3 lần."
@@ -147,7 +150,7 @@ export function StoneInvestmentSection({
           : "";
     Alert.alert(
       "Xác nhận đầu tư",
-      `${principal.toLocaleString("vi-VN")} Stone trong ${duration} ngày. Nếu hoàn thành đủ ngày, nhận ${successSettlement.toLocaleString("vi-VN")} Stone (lãi ${rate}%). ${lossDescription}${inviteDescription} Bỏ lỡ một ngày ôn hoặc học sẽ tính là thất bại.`,
+      `${principal.toLocaleString("vi-VN")} Stone trong ${duration} ngày. Nếu hoàn thành đủ ngày, nhận ${successSettlement.toLocaleString("vi-VN")} Stone (lãi ${rate}%). ${lossDescription}${inviteDescription}${forceMajeureDescription} Bỏ lỡ một ngày ôn hoặc học sẽ tính là thất bại.`,
       [
         { text: "Hủy", style: "cancel" },
         {
@@ -260,7 +263,8 @@ export function StoneInvestmentSection({
                 {config.title}
               </Text>
               <Text style={[styles.hint, { color: c.mutedForeground }]}>
-                Lãi {config.ratePercent}% trong 7 ngày · {failedLoss}
+                Lãi {config.ratePercent}%/7 ngày · Bất khả kháng{" "}
+                {FORCE_MAJEURE_RATES[choice]}% mỗi khoản · {failedLoss}
               </Text>
             </View>
             <Feather
@@ -555,7 +559,8 @@ export function StoneInvestmentSection({
                   </Text>
                   {investment.status === "failed" &&
                   investment.plan === "risky" &&
-                  !investment.lowInsuranceUsed &&
+                  (!investment.lowInsuranceUsed ||
+                    investment.forceMajeureHit) &&
                   !investment.collateralUsed &&
                   (overview.inventory.collateral_asset ?? 0) > 0 ? (
                     <Pressable
@@ -588,6 +593,11 @@ export function StoneInvestmentSection({
                   {investment.lowInsuranceUsed ? (
                     <Text style={[styles.hint, { color: c.mutedForeground }]}>
                       Đã dùng Bảo Hiểm cấp thấp
+                    </Text>
+                  ) : null}
+                  {investment.forceMajeureHit ? (
+                    <Text style={[styles.hint, { color: c.destructive }]}>
+                      Sự cố bất khả kháng đã xảy ra
                     </Text>
                   ) : null}
                   {investment.collateralUsed ? (
