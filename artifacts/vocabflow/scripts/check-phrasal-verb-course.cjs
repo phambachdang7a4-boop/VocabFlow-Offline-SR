@@ -1,12 +1,15 @@
 const assert = require("node:assert/strict");
+const { createHash } = require("node:crypto");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
+const { headwordPattern } = require("./build-phrasal-verb-course-data.cjs");
 
 const data = require("../domain/phrasal-verb-course-data.json");
 const exampleTranslations = require(
   "../domain/phrasal-verb-example-translations.json",
 );
+const exampleReviews = require("../domain/phrasal-verb-example-review.json");
 const topicMap = require("../domain/phrasal-verb-topic-map.json");
 const course = loadTs(
   join(__dirname, "../domain/phrasal-verb-course.ts"),
@@ -101,6 +104,58 @@ const allowedParticles = new Set([
   "to", "together", "under", "up", "upon", "with", "without",
 ]);
 const dataTopicById = new Map(data.topics.map((topic) => [topic.id, topic]));
+const automaticExampleFlags = (entry) => {
+  const flags = [];
+  if (!/^[“"'‘]?[A-Z]/u.test(entry.example.trim()))
+    flags.push("source-fragment");
+  if (/\.{2,}|\s[,.]/u.test(entry.example)) flags.push("punctuation");
+  if (/\b([A-Za-z]+)\s+\1\b/i.test(entry.example))
+    flags.push("repeated-word");
+  return flags;
+};
+
+assert.ok(
+  exampleReviews &&
+    typeof exampleReviews.reviews === "object" &&
+    !Array.isArray(exampleReviews.reviews),
+  "The phrasal-verb example review list is valid.",
+);
+for (const term of dictionaryTerms) {
+  assert.ok(
+    headwordPattern(term).test(data.entries[term].example),
+    `${term} must appear in its offline dictionary example.`,
+  );
+}
+for (const [term, review] of Object.entries(exampleReviews.reviews)) {
+  const entry = data.entries[term];
+  assert.ok(entry, `${term} remains present for example review.`);
+  assert.ok(
+    Array.isArray(review.flags) &&
+      review.flags.length > 0 &&
+      typeof review.note === "string" &&
+      review.note.trim(),
+    `${term} has a review category and reason.`,
+  );
+  assert.equal(
+    createHash("sha256").update(entry.example).digest("hex"),
+    review.exampleSha256,
+    `${term}'s source example changed; review its flags before updating the snapshot.`,
+  );
+  assert.equal(
+    createHash("sha256").update(entry.definition).digest("hex"),
+    review.definitionSha256,
+    `${term}'s selected meaning changed; review its example before updating the snapshot.`,
+  );
+}
+for (const [term, entry] of Object.entries(data.entries)) {
+  for (const flag of automaticExampleFlags(entry)) {
+    assert.ok(
+      exampleReviews.reviews[term]?.flags.includes(flag),
+      `${term} has a new ${flag} example issue; review it and add it to the review list.`,
+    );
+  }
+}
+
 assert.deepEqual(
   new Set(dictionaryTerms),
   new Set(data.topics.flatMap((topic) => topic.terms)),
@@ -220,4 +275,15 @@ assert.ok(
 
 console.log(
   `PASS: ${terms.length} unique multiword verbs across ${lessons.length} lessons and ${course.PHRASAL_VERB_COURSE_TOPIC_COUNT} groups; all extracted entries have dictionary meanings, examples, and root/topic ordering.`,
+);
+const reviewFlags = Object.values(exampleReviews.reviews)
+  .flatMap((review) => review.flags)
+  .reduce((counts, flag) => {
+    counts[flag] = (counts[flag] ?? 0) + 1;
+    return counts;
+  }, {});
+console.log(
+  `EXAMPLE REVIEW REQUIRED: ${Object.keys(exampleReviews.reviews).length} unchanged offline examples are flagged for human review (${Object.entries(reviewFlags)
+    .map(([flag, count]) => `${flag}: ${count}`)
+    .join(", ")}).`,
 );

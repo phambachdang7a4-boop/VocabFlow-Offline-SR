@@ -1,0 +1,166 @@
+{
+  "reviews": {
+    "butt in": {
+      "flags": ["punctuation"],
+      "note": "The source example has repeated terminal punctuation.",
+      "exampleSha256": "3d7ae15de5764e2302c65b41e0956c689efe8111b4856e7e4c0d35a69a573e04",
+      "definitionSha256": "7abda2769d0748a8aa89bd794182bf9f86ee58f4bc041eb5f8b858be61422d8d"
+    },
+    "lay into": {
+      "flags": ["punctuation"],
+      "note": "The source example has repeated terminal punctuation.",
+      "exampleSha256": "29d9af0f3e11c5569d7925564e2e250bf9a59ade98a50d23d0f88a0af00c749c",
+      "definitionSha256": "90b229cbef9324cf609b2852faca5df70591eecaa1f2e6537f81a01ce696f2be"
+    },
+    "walk back from": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "d191519a36ea1227e69a8132ee4b4d0bdf8443e69fd62b98b02274bff56c3f16",
+      "definitionSha256": "6571f661a8935035be8852c39401b048ee69cfc1fbec596def6c7ab4cc40a72e"
+    },
+    "clown about": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "99b2261a6988d35cf58871a90d2743876ed7c4a24fdb85a10a4450dec9498e35",
+      "definitionSha256": "696b839bf1bd79bdb18f3b8cda54cc4be394e288dd8fe0188840ac20d4e5efa5"
+    },
+    "load down": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "0da75f6caed365e130d17d451350ada6315b44a8c0b0686f76e18d859a26be6f",
+      "definitionSha256": "c7755ad7fa5c6ff69411831ec900dc16276759f3c22571c997282a7082570997"
+    },
+    "mooch around": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "c092e7d0845e4d053d0dbf21e520749f450010d4c5b190d979593f622d4593c5",
+      "definitionSha256": "c275afe7248d1231e713bcc26cbecc6e33d15ba97c198ae5a9b1339328de2f88"
+    },
+    "ebb away": {
+      "flags": ["source-fragment", "usage-review"],
+      "note": "The selected example starts with a leftover fragment; “His life was ebbed away” is also an unusual construction to review.",
+      "exampleSha256": "92c1bc76da2cc2211e6fd0c573fe7a0576aab3258977703293a55ef61ded2fd6",
+      "definitionSha256": "8b7449bd06457b9938afef39f95742b6a6f304a24ef902eba1d04573d06ca793"
+    },
+    "key down": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "ae4e46db2133936d25a70a5be84493d73ef5650d9c927de51fe532707051fafd",
+      "definitionSha256": "b3952a94ec0bc6e70206b77e26cdc9beb8ba815e98adad7c9ed65074800e3b7d"
+    },
+    "kick up": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "af592edcdf0a89a1b405e7e973da4d7d0aac2ea42b7b8a90cc9b42bed54897e8",
+      "definitionSha256": "c2ece00441bc0aac231e89d2f6564559ea335dd62d40aaf45acb9e2f790151b3"
+    },
+    "bargain on": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "9e92b3ee10dd4f5f1022f8d33cce7a58f1487a94c04f6b2a7aa5f33f176b244a",
+      "definitionSha256": "3b9f873d40b2ec8a35e9d26669c6220fda9bef53d044c41165d4d8cb27a8d925"
+    },
+    "drum up": {
+      "flags": ["source-fragment"],
+      "note": "The selected example includes an unrelated dictionary example before the target sentence.",
+      "exampleSha256": "c63613792128073ab37fe47896e578b21b846136ad88975458c045383aca0d96",
+      "definitionSha256": "fd92a43a057ef176a000139321a5832df85affe4729e6f056495a01b8d79baba"
+    },
+    "hose down": {
+      "flags": ["repeated-word", "sense-review"],
+      "note": "The example repeats a word at a join; its investment meaning and “hosed ... down ... with capital” construction need a human sense/usage check.",
+      "exampleSha256": "5b0a35a5dae9cdd38d95932cf03c16a730786148ef404388f2fe1ae195b8fe70",
+      "definitionSha256": "1c6701dfc8fa42a6ed6f5417cbacc89715d047e79bb89517a8c9c451b6015245"
+    },
+    "cast round for": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "117b83257032c8730fdb3323afcd6b74c357d9ac2685ab4e75c874c1563f18f0",
+      "definitionSha256": "a9cdc9d6ff6d9d61482eb5ae011f7c944bf2cdbc2cdad90c5fbbfee452de1d9e"
+    },
+    "fight it out": {
+      "flags": ["source-fragment", "grammar"],
+      "note": "The selected example starts with an unrelated fragment; the following “Their fighting IT out” is also malformed.",
+      "exampleSha256": "72b1eb1b58bc14eee05456e3ce5db6ceb096c47d8b0fa3aa107984c203584798",
+      "definitionSha256": "d38a68ca0a9c3061c8946bbe28b19f9b41e4d1d4659945ef243206a4ef47e454"
+    },
+    "queer up": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "747cc7a54dd316f9395a4d50e827a9c90990b399736b44233a4d1231d3c9a19e",
+      "definitionSha256": "a5e1242ffd0cb46874810c9da5fd71566718c3e5630f7b60f700b58c6e36afca"
+    },
+    "hack into": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "5ef6baca3f097fcc56eaa2948a8da790db3af8c2d137dec5bcfca3df3c9f9679",
+      "definitionSha256": "26670a6eeeb844f86134f33cb524044e2522a4bb53281f849ecfd442b5008a24"
+    },
+    "come from": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "15189178350cf81fd06914e9b1256566fd681bcc14e18e329920d16dc1c2a36d",
+      "definitionSha256": "ce1bb651d966282c4f841a6936f4fe3603c6c91dcc1f803b776a579ee0c3eeff"
+    },
+    "pull away": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "d96cb09860c6e0ea9c2cd5780824a06f4cb221b0f8556e43ecb08e2284649d80",
+      "definitionSha256": "1a886b6a2bc78bffe7d0b9ed796f64af0a9bdeae89119f130ecc1ee61bb77223"
+    },
+    "saddle up": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "013d8af43836135731e6272e9eb09796ad89528596b7b2b90aa157268dec80ee",
+      "definitionSha256": "c73249a7e5b0a8da56ed1b91d2a816c164ec0dfeb31fd94dd25fe91f3174d3c8"
+    },
+    "keep up at": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "50cbdef00654dfc58e15c140e310cdac9d3bbb5d4f8cb11ac76762ee2e5b9e13",
+      "definitionSha256": "95f2341f1a466898b0e229b7393dcd7dadd46c92113cb966833d7b68c32b8db6"
+    },
+    "pencil in": {
+      "flags": ["punctuation"],
+      "note": "The source example has repeated terminal punctuation.",
+      "exampleSha256": "fe8096b94aa7c96fa8312e6f1c452f0d0c8659b810dfe0b289139a2dc25d3fb1",
+      "definitionSha256": "e01c1ae913d1cc62bea8b1e3f8d8047c3eb9f02e2db99da1b048b8ce53f2bc7c"
+    },
+    "sit in on": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "b313cdbd83a2f82f1208560f177818775c8937b46a98587285aa37dc8b2e7ca6",
+      "definitionSha256": "f62951f2701c9071392eabd9c3cba7d57744573c9aecc852ed4c85d1ad865d91"
+    },
+    "zone in on": {
+      "flags": ["source-fragment"],
+      "note": "The selected example begins with leftover text from another dictionary example.",
+      "exampleSha256": "68028ee647ec17fb5da27b8ada5046bc6828665fa87eddb3780d216ca853a496",
+      "definitionSha256": "84c2101ab24d57ed99c6e202e0854f3c1635e14abd091f812e763e1467211158"
+    },
+    "cheer on": {
+      "flags": ["grammar"],
+      "note": "The example starts “Their cheered”; the subject and verb do not agree.",
+      "exampleSha256": "def55403c1918293afead56a8a5e5e9a13c17cb54d62c2c4c5b2d74070339c28",
+      "definitionSha256": "c3b28ed3a738e9729dce136add02494fd2a56e49280c7141a44e2e19dd22ce0d"
+    },
+    "look up to": {
+      "flags": ["grammar"],
+      "note": "The example starts “She’s looks”; the auxiliary and verb form conflict.",
+      "exampleSha256": "213fed629b15f5389f5471012a7f953d21cc4b6f2eb011b7e1aa1ea04efee571",
+      "definitionSha256": "dbec3b1f3304509a61119f47462813bf4884bdf0e22bf25c456671618935c0a7"
+    },
+    "face off": {
+      "flags": ["usage-review"],
+      "note": "“Faced off the competition” is an unusual construction; confirm it demonstrates the intended sense.",
+      "exampleSha256": "e06c583527550448634a7c130e243c5115b70b0c093f063013b99bd957a92a94",
+      "definitionSha256": "565100434b0533bd9e7cb4cccd1802566bcb9a758fe68fb767cb92ab72adc62b"
+    },
+    "kiss off": {
+      "flags": ["usage-review"],
+      "note": "“Kissed the criticism off” is an unusual construction; confirm it demonstrates the intended sense.",
+      "exampleSha256": "fe3f620c212ec09f584311bd258724b2a7a860ea2b12e02be75a853748313702",
+      "definitionSha256": "d8a5b63c86d7155aadf56923abbc9e7c02d886cbf758b4eb1920187062c5e799"
+    }
+  }
+}
