@@ -272,12 +272,14 @@ export const SyncCollectionCraftRarity = {
 } as const;
 
 /**
- * Optional for older clients and backups; omitted values preserve the original 20-piece cost.
+ * Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.
  */
 export type SyncCollectionCraftPieceCost = typeof SyncCollectionCraftPieceCost[keyof typeof SyncCollectionCraftPieceCost];
 
 
 export const SyncCollectionCraftPieceCost = {
+  NUMBER_MINUS_20: -20,
+  NUMBER_0: 0,
   NUMBER_20: 20,
   NUMBER_100: 100,
 } as const;
@@ -297,7 +299,7 @@ export interface SyncCollectionCraft {
      */
   artworkId: string;
   craftedAt: string;
-  /** Optional for older clients and backups; omitted values preserve the original 20-piece cost. */
+  /** Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost. */
   pieceCost?: SyncCollectionCraftPieceCost;
 }
 

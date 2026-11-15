@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/express";
-import { and, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { Router, type IRouter, type RequestHandler } from "express";
 import {
   db,
@@ -33,10 +33,13 @@ declare global {
 
 const router: IRouter = Router();
 const COURSE_SOURCE_MARKER = "Khóa học:";
-const FIRST_STATUE_ID = "legendary-ho-chi-minh-marble";
 
-function isCurrentStatueCraft(craft: { rarity: string; artworkId: string }) {
-  return craft.rarity === "legendary" && craft.artworkId === FIRST_STATUE_ID;
+function isCurrentStatueCraft(craft: {
+  craftId: string;
+  rarity: string;
+  artworkId: string;
+}) {
+  return craft.craftId.startsWith("cycle2-");
 }
 
 function isCourseGeneratedWord(word: { note: string }) {
@@ -516,15 +519,14 @@ router.post("/sync", requireAuth, async (req, res) => {
           )
           .onConflictDoNothing();
       }
-      // Remove obsolete painting rewards from the account during its first
-      // sync with this collection version. Older clients cannot re-add them:
-      // only the current statue ID is accepted below.
+      // Preserve historical piece spending, but lock all old statue rewards.
+      // Only cycle-two unlock IDs survive this collection reset.
       await tx
         .delete(userCollectionCrafts)
         .where(
           and(
             eq(userCollectionCrafts.userId, userId),
-            ne(userCollectionCrafts.artworkId, FIRST_STATUE_ID),
+            sql`${userCollectionCrafts.craftId} NOT LIKE 'cycle2-%'`,
           ),
         );
       await tx
@@ -1008,8 +1010,11 @@ router.post("/sync", requireAuth, async (req, res) => {
           collectionCrafts: allCrafts
             .filter((craft) => isCurrentStatueCraft(craft))
             .map(({ userId: _owner, ...craft }) => craft),
-          collectionPieceSpends: allPieceSpends.map(
-            ({ userId: _owner, ...spend }) => spend,
+          collectionPieceSpends: mergePieceSpends(
+            allPieceSpends.map(({ userId: _owner, ...spend }) => spend),
+            allCrafts
+              .filter((craft) => !isCurrentStatueCraft(craft))
+              .map(pieceSpendFromLegacyCraft),
           ),
         },
       };
@@ -1145,8 +1150,11 @@ async function readUserSyncSnapshot(userId: string) {
     collectionCrafts: allCrafts
       .filter((craft) => isCurrentStatueCraft(craft))
       .map(({ userId: _owner, ...craft }) => craft),
-    collectionPieceSpends: allPieceSpends.map(
-      ({ userId: _owner, ...spend }) => spend,
+    collectionPieceSpends: mergePieceSpends(
+      allPieceSpends.map(({ userId: _owner, ...spend }) => spend),
+      allCrafts
+        .filter((craft) => !isCurrentStatueCraft(craft))
+        .map(pieceSpendFromLegacyCraft),
     ),
   };
 }
@@ -1239,15 +1247,23 @@ function hasInvalidMissionData(
     chests.some((chest) => !isValidMissionChestRecord(chest)) ||
     crafts.some((craft) => {
       const rarity = isChestRarity(craft.rarity);
+      const expectedId =
+        craft.craftId === `craft-${craft.rarity}-${craft.craftIndex}` ||
+        craft.craftId === `cycle2-${craft.rarity}-${craft.craftIndex}` ||
+        craft.craftId.startsWith("cycle2-corvi-");
       return (
         !rarity ||
         !Number.isSafeInteger(craft.craftIndex) ||
         craft.craftIndex < 1 ||
-        craft.craftId !== `craft-${craft.rarity}-${craft.craftIndex}` ||
+        !expectedId ||
         !craft.artworkId.trim() ||
         (craft.pieceCost !== undefined &&
+          craft.pieceCost !== -20 &&
+          craft.pieceCost !== 0 &&
           craft.pieceCost !== 20 &&
           craft.pieceCost !== 100) ||
+        (craft.pieceCost === -20 &&
+          !craft.craftId.startsWith("cycle2-corvi-")) ||
         !Number.isFinite(Date.parse(toTimestamp(craft.craftedAt)))
       );
     })

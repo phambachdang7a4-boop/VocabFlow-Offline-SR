@@ -530,8 +530,8 @@ components:
           format: date-time
         pieceCost:
           type: integer
-          enum: [20, 100]
-          description: Optional for older clients and backups; omitted values preserve the original 20-piece cost.
+          enum: [-20, 0, 20, 100]
+          description: Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.
     SyncCollectionPieceSpend:
       type: object
       required: [spendId, rarity, pieceCost, spentAt]

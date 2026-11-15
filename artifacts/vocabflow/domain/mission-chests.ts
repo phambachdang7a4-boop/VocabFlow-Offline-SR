@@ -117,7 +117,8 @@ export function chestFragmentReward(
   ruleSet: ChestRuleSet = 1,
 ): CollectionFragmentReward {
   const reward = rawChestFragmentReward(chestId, rarity, ruleSet);
-  if (ruleSet === 5) reward.common = 0;
+  reward.common = 0;
+  reward.uncommon = 0;
   return reward;
 }
 

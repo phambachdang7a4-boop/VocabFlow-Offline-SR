@@ -23,6 +23,6 @@ export interface SyncCollectionCraft {
      */
   artworkId: string;
   craftedAt: Date;
-  /** Optional for older clients and backups; omitted values preserve the original 20-piece cost. */
+  /** Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost. */
   pieceCost?: SyncCollectionCraftPieceCost;
 }

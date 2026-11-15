@@ -124,14 +124,24 @@ const payload = {
   ],
   collectionCrafts: [
     {
-      craftId: "craft-legendary-1",
+      craftId: "cycle2-legendary-1234567890",
       rarity: "legendary",
-      craftIndex: 1,
+      craftIndex: 1234567890,
       artworkId: collectionArtworks.COLLECTION_ARTWORKS.find(
         (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
       ).id,
       craftedAt: "2026-11-08T10:00:00.000Z",
       pieceCost: 100,
+    },
+    {
+      craftId: "cycle2-corvi-mission-2026-11-08-lesson-1",
+      rarity: "rare",
+      craftIndex: 123,
+      artworkId: collectionArtworks.COLLECTION_ARTWORKS.find(
+        (item) => item.rarity === "rare",
+      ).id,
+      craftedAt: "2026-11-08T10:01:00.000Z",
+      pieceCost: -20,
     },
   ],
   collectionPieceSpends: [],

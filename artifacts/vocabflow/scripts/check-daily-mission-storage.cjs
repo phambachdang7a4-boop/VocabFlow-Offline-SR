@@ -471,6 +471,32 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       1000,
       "A Corvi chest awards the fixed total exactly once.",
     );
+    assert.ok(
+      superResult.awardedStatue,
+      "Every Corvi chest also grants a statue.",
+    );
+    if (superResult.awardedStatue.rarity === "legendary") {
+      assert.equal(
+        superResult.awardedStatue.id,
+        collectionArtworks.FIRST_STATUE_ID,
+        "Hồ Chí Minh is the first Legendary statue.",
+      );
+    }
+    assert.deepEqual(
+      await harness.repo.getMissionCorviStatueReward(superChestId),
+      {
+        artwork: superResult.awardedStatue,
+        compensationPieces: 0,
+      },
+      "A Corvi statue reward remains visible after reopening its chest screen.",
+    );
+    const corviRewardRow = harness.db
+      .prepare(
+        `SELECT craft_id AS craftId, piece_cost AS pieceCost
+         FROM collection_crafts WHERE craft_id = ?`,
+      )
+      .get(`cycle2-corvi-${superChestId}`);
+    assert.equal(corviRewardRow.pieceCost, 0);
     await harness.repo.recordReviewSessionResult({
       sessionId: "qualified-session-0",
       startedAt: new Date(`${day}T12:00:00`).getTime(),
@@ -520,7 +546,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     const commonBeforeCraft = await harness.repo.getMissionCollectionOverview();
     await assert.rejects(
       () => harness.repo.craftCollectionArtwork("common"),
-      /Chưa có tượng/,
+      /mở hết tượng/,
     );
     assert.equal(
       (await harness.repo.getMissionCollectionOverview()).fragments.common,
@@ -529,16 +555,146 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(commonBeforeCraft.fragments.common, 0);
 
-    const beforeLegendaryUnlock = await harness.repo.getMissionCollectionOverview();
-    await assert.rejects(
-      () => harness.repo.craftCollectionArtwork("legendary"),
-      /Chưa có tượng/,
-      "All current statues are unlocked automatically; none consumes fragments.",
+    let legendaryPieces = 0;
+    for (let offset = 0; legendaryPieces < 100 && offset < 10000; offset += 1) {
+      const chestId = `legendary-progress-${offset}`;
+      const reward = missionChests.chestFragmentReward(chestId, "legendary", 5);
+      if (reward.legendary === 0) continue;
+      const chestDay = new Date(Date.UTC(2024, 0, 1 + offset))
+        .toISOString()
+        .slice(0, 10);
+      harness.db
+        .prepare(
+          `INSERT INTO mission_chests
+            (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
+              rarity, rule_set, super_upgrade, opened, final_stone,
+              created_at, updated_at)
+           VALUES (?, ?, 'review-1', 5, 3, 'legendary', 5, 0, 1, 1000, ?, ?)`,
+        )
+        .run(
+          chestId,
+          chestDay,
+          `${chestDay}T08:00:00.000Z`,
+          `${chestDay}T08:00:00.000Z`,
+        );
+      legendaryPieces += reward.legendary;
+    }
+    assert.ok(legendaryPieces >= 100);
+    const beforeLegendaryUnlock =
+      await harness.repo.getMissionCollectionOverview();
+    const firstLegendaryCraft =
+      await harness.repo.craftCollectionArtwork("legendary");
+    const alreadyOwnedLegendary = beforeLegendaryUnlock.crafts.some(
+      (craft) => craft.rarity === "legendary",
+    );
+    assert.equal(
+      firstLegendaryCraft.artworkId === collectionArtworks.FIRST_STATUE_ID,
+      !alreadyOwnedLegendary,
+      "The first Legendary unlock is Hồ Chí Minh; later ones avoid repeats.",
     );
     assert.equal(
       (await harness.repo.getMissionCollectionOverview()).fragments.legendary,
-      beforeLegendaryUnlock.fragments.legendary,
-      "Trying to craft an already-unlocked statue cannot consume fragments.",
+      beforeLegendaryUnlock.fragments.legendary - 100,
+      "Unlocking a statue consumes exactly 100 matching fragments.",
+    );
+
+    const unlockedArtworkIds = new Set(
+      (await harness.repo.getMissionCollectionOverview()).crafts.map(
+        (craft) => craft.artworkId,
+      ),
+    );
+    let duplicateTestIndex = 5_000_000;
+    for (const artwork of collectionArtworks.COLLECTION_ARTWORKS) {
+      if (unlockedArtworkIds.has(artwork.id)) continue;
+      harness.db
+        .prepare(
+          `INSERT INTO collection_crafts
+            (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+           VALUES (?, ?, ?, ?, ?, 0)`,
+        )
+        .run(
+          `cycle2-${artwork.rarity}-${duplicateTestIndex}`,
+          artwork.rarity,
+          duplicateTestIndex,
+          artwork.id,
+          "2026-12-29T12:00:00.000Z",
+        );
+      duplicateTestIndex += 1;
+    }
+    const duplicateBalanceBefore =
+      await harness.repo.getMissionCollectionOverview();
+    let duplicateChestId;
+    for (let index = 0; index < 100_000; index += 1) {
+      const candidate = `duplicate-corvi-compensation-${index}`;
+      if (missionChests.hasSuperUpgradeChance(candidate)) continue;
+      const firstUpgrade = missionChests.resolveChestUpgrade(
+        candidate,
+        1,
+        "rare",
+        5,
+        false,
+      );
+      const secondUpgrade = firstUpgrade.success
+        ? missionChests.resolveChestUpgrade(
+            candidate,
+            2,
+            firstUpgrade.rarity,
+            5,
+            false,
+          )
+        : null;
+      if (
+        firstUpgrade.success &&
+        firstUpgrade.rarity === "epic" &&
+        secondUpgrade?.success &&
+        secondUpgrade.rarity === "legendary"
+      ) {
+        duplicateChestId = candidate;
+        break;
+      }
+    }
+    assert.ok(duplicateChestId, "A test chest can reach Corvi.");
+    harness.db
+      .prepare(
+        `INSERT INTO mission_chests
+          (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
+            rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+         VALUES (?, '2099-12-29', 'review-3', 5, 0, 'rare', 5, 0, 0,
+            NULL, '2099-12-29T12:00:00.000Z', '2099-12-29T12:00:00.000Z')`,
+      )
+      .run(duplicateChestId);
+    await harness.repo.attemptMissionChestUpgrade(duplicateChestId);
+    const duplicateResult =
+      await harness.repo.attemptMissionChestUpgrade(duplicateChestId);
+    assert.ok(duplicateResult.awardedStatue);
+    assert.equal(
+      duplicateResult.compensatedPieces,
+      20,
+      "A repeated Corvi statue grants 20 fragments.",
+    );
+    const duplicateCraftRow = harness.db
+      .prepare(
+        `SELECT rarity, piece_cost AS pieceCost FROM collection_crafts
+         WHERE craft_id = ?`,
+      )
+      .get(`cycle2-corvi-${duplicateChestId}`);
+    assert.equal(duplicateCraftRow.pieceCost, -20);
+    assert.equal(
+      (await harness.repo.getMissionCollectionOverview()).fragments[
+        duplicateCraftRow.rarity
+      ],
+      duplicateBalanceBefore.fragments[duplicateCraftRow.rarity] +
+        duplicateResult.awardedFragments[duplicateCraftRow.rarity] +
+        20,
+      "A duplicate Corvi reward adds 20 fragments beyond the chest's own drop.",
+    );
+    assert.deepEqual(
+      await harness.repo.getMissionCorviStatueReward(duplicateChestId),
+      {
+        artwork: duplicateResult.awardedStatue,
+        compensationPieces: 20,
+      },
+      "Duplicate compensation remains visible when the chest is reopened.",
     );
 
     const secondOverview = await harness.repo.getDailyMissionOverview(day);

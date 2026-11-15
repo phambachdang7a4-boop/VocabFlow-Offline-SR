@@ -238,7 +238,7 @@ export const MergeUserSyncDataBody = zod.object({
   "craftIndex": zod.number().int().min(1),
   "artworkId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
-  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
+  "pieceCost": zod.union([zod.literal(-20),zod.literal(0),zod.literal(20),zod.literal(100)]).optional().describe('Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.')
 })).max(mergeUserSyncDataBodyCollectionCraftsMax).optional(),
   "collectionPieceSpends": zod.array(zod.object({
   "spendId": zod.string().min(1).max(mergeUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax),
@@ -455,7 +455,7 @@ export const MergeUserSyncData200Response = zod.object({
   "craftIndex": zod.number().int().min(1),
   "artworkId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
-  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
+  "pieceCost": zod.union([zod.literal(-20),zod.literal(0),zod.literal(20),zod.literal(100)]).optional().describe('Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.')
 })).max(mergeUserSyncData200ResponseCollectionCraftsMax).optional(),
   "collectionPieceSpends": zod.array(zod.object({
   "spendId": zod.string().min(1).max(mergeUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax),
@@ -688,7 +688,7 @@ export const ReplaceUserSyncDataBody = zod.object({
   "craftIndex": zod.number().int().min(1),
   "artworkId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
-  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
+  "pieceCost": zod.union([zod.literal(-20),zod.literal(0),zod.literal(20),zod.literal(100)]).optional().describe('Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.')
 })).max(replaceUserSyncDataBodyCollectionCraftsMax).optional(),
   "collectionPieceSpends": zod.array(zod.object({
   "spendId": zod.string().min(1).max(replaceUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax),
@@ -905,7 +905,7 @@ export const ReplaceUserSyncData200Response = zod.object({
   "craftIndex": zod.number().int().min(1),
   "artworkId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionCraftsItemArtworkIdMax),
   "craftedAt": zod.coerce.date(),
-  "pieceCost": zod.union([zod.literal(20),zod.literal(100)]).optional().describe('Optional for older clients and backups; omitted values preserve the original 20-piece cost.')
+  "pieceCost": zod.union([zod.literal(-20),zod.literal(0),zod.literal(20),zod.literal(100)]).optional().describe('Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.')
 })).max(replaceUserSyncData200ResponseCollectionCraftsMax).optional(),
   "collectionPieceSpends": zod.array(zod.object({
   "spendId": zod.string().min(1).max(replaceUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax),

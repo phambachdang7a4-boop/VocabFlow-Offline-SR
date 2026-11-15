@@ -13,6 +13,8 @@ import type { DailyReviewGrade } from "../domain/daily-missions";
 import type { MissionChest } from "../domain/mission-chests";
 import { reopenPrematureMissionChest } from "../domain/mission-chests";
 import {
+  COLLECTION_CYCLE_PREFIX,
+  isCurrentCycleCollectionCraft,
   isCollectionArtwork,
   type CollectionCraft,
 } from "../domain/collection-artworks";
@@ -132,12 +134,35 @@ const LEGACY_IMPORT_KEY = "vocabflow.sync.legacy-imported-account";
 const COURSE_SOURCE_MARKER = "Khóa học:";
 
 function discardRemovedCourseData(payload: SyncPayload): SyncPayload {
+  const oldCraftSpends: SyncCollectionPieceSpend[] = (
+    payload.collectionCrafts ?? []
+  )
+    .filter((craft) => !isCurrentCycleCollectionCraft(craft))
+    .map((craft) => ({
+      spendId: `legacy:${craft.craftId}`,
+      rarity: craft.rarity,
+      pieceCost: craft.pieceCost === 100 ? 100 : 20,
+      spentAt: craft.craftedAt,
+    }));
+  const collectionPieceSpends = new Map(
+    (payload.collectionPieceSpends ?? []).map((spend) => [
+      spend.spendId,
+      spend,
+    ]),
+  );
+  for (const spend of oldCraftSpends) {
+    if (!collectionPieceSpends.has(spend.spendId)) {
+      collectionPieceSpends.set(spend.spendId, spend);
+    }
+  }
   return {
     ...payload,
-    collectionCrafts: (payload.collectionCrafts ?? []).filter((craft) =>
-      isCollectionArtwork(craft.rarity, craft.artworkId),
+    collectionCrafts: (payload.collectionCrafts ?? []).filter(
+      (craft) =>
+        craft.craftId.startsWith(COLLECTION_CYCLE_PREFIX) &&
+        isCollectionArtwork(craft.rarity, craft.artworkId),
     ),
-    collectionPieceSpends: payload.collectionPieceSpends ?? [],
+    collectionPieceSpends: [...collectionPieceSpends.values()],
     words: payload.words.filter(
       (word) => !word.note.includes(COURSE_SOURCE_MARKER),
     ),
@@ -265,8 +290,10 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           superUpgrade: Boolean(chest.superUpgrade),
           opened: Boolean(chest.opened),
         })),
-        collectionCrafts: collectionCrafts.filter((craft) =>
-          isCollectionArtwork(craft.rarity, craft.artworkId),
+        collectionCrafts: collectionCrafts.filter(
+          (craft) =>
+            isCurrentCycleCollectionCraft(craft) &&
+            isCollectionArtwork(craft.rarity, craft.artworkId),
         ),
         collectionPieceSpends: (
           await db.getAllAsync<{

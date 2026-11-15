@@ -38,7 +38,13 @@ import {
   type MissionChest,
 } from "../domain/mission-chests";
 import {
+  artworkForCorviChest,
   artworkForCraft,
+  COLLECTION_CYCLE_PREFIX,
+  COLLECTION_ARTWORKS,
+  collectionCraftIndex,
+  isCurrentCycleCollectionCraft,
+  type CollectionArtwork,
   type CollectionCraft,
 } from "../domain/collection-artworks";
 
@@ -65,6 +71,13 @@ export interface MissionChestUpgradeResult {
   finished: boolean;
   awardedStone: number | null;
   awardedFragments: Record<ChestRarity, number> | null;
+  awardedStatue: CollectionArtwork | null;
+  compensatedPieces: number;
+}
+
+export interface CorviStatueReward {
+  artwork: CollectionArtwork;
+  compensationPieces: number;
 }
 
 export interface ReviewSessionResultInput {
@@ -309,7 +322,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 22) {
+    if ((version?.user_version ?? 0) > 24) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -895,6 +908,61 @@ async function initialize(): Promise<SQLiteDatabase> {
         if ((pendingChests?.count ?? 0) > 0) await markSyncDirty(db);
       });
     }
+    if ((version?.user_version ?? 0) < 23) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE collection_crafts_v23 (
+            craft_id TEXT PRIMARY KEY NOT NULL,
+            rarity TEXT NOT NULL
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            craft_index INTEGER NOT NULL CHECK (craft_index >= 1),
+            artwork_id TEXT NOT NULL,
+            crafted_at TEXT NOT NULL,
+            piece_cost INTEGER NOT NULL DEFAULT 20
+              CHECK (piece_cost IN (0, 20, 100)),
+            UNIQUE (rarity, craft_index)
+          );
+          INSERT INTO collection_crafts_v23
+            (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+          SELECT craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost
+          FROM collection_crafts;
+          DROP TABLE collection_crafts;
+          ALTER TABLE collection_crafts_v23 RENAME TO collection_crafts;
+          INSERT OR IGNORE INTO collection_piece_spends
+            (spend_id, rarity, piece_cost, spent_at)
+          SELECT 'legacy:' || craft_id, rarity, piece_cost, crafted_at
+          FROM collection_crafts
+          WHERE craft_id NOT LIKE 'cycle2-%';
+          DELETE FROM collection_crafts WHERE craft_id NOT LIKE 'cycle2-%';
+          PRAGMA user_version = 23;
+        `);
+        await markSyncDirty(db);
+      });
+    }
+    if ((version?.user_version ?? 0) < 24) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE collection_crafts_v24 (
+            craft_id TEXT PRIMARY KEY NOT NULL,
+            rarity TEXT NOT NULL
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            craft_index INTEGER NOT NULL CHECK (craft_index >= 1),
+            artwork_id TEXT NOT NULL,
+            crafted_at TEXT NOT NULL,
+            piece_cost INTEGER NOT NULL DEFAULT 20
+              CHECK (piece_cost IN (-20, 0, 20, 100)),
+            UNIQUE (rarity, craft_index)
+          );
+          INSERT INTO collection_crafts_v24
+            (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+          SELECT craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost
+          FROM collection_crafts;
+          DROP TABLE collection_crafts;
+          ALTER TABLE collection_crafts_v24 RENAME TO collection_crafts;
+          PRAGMA user_version = 24;
+        `);
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -1168,6 +1236,30 @@ export function getMissionChest(chestId: string): Promise<MissionChest | null> {
   });
 }
 
+export function getMissionCorviStatueReward(
+  chestId: string,
+): Promise<CorviStatueReward | null> {
+  return serialize(async () => {
+    const craft = await (
+      await database()
+    ).getFirstAsync<Pick<CollectionCraft, "artworkId" | "pieceCost">>(
+      `SELECT artwork_id AS artworkId, piece_cost AS pieceCost
+       FROM collection_crafts
+       WHERE craft_id = ?`,
+      `${COLLECTION_CYCLE_PREFIX}corvi-${chestId}`,
+    );
+    const artwork = COLLECTION_ARTWORKS.find(
+      (item) => item.id === craft?.artworkId,
+    );
+    return artwork
+      ? {
+          artwork,
+          compensationPieces: craft?.pieceCost === -20 ? 20 : 0,
+        }
+      : null;
+  });
+}
+
 export function attemptMissionChestUpgrade(
   chestId: string,
 ): Promise<MissionChestUpgradeResult> {
@@ -1239,6 +1331,10 @@ export function attemptMissionChestUpgrade(
       if (update.changes !== 1)
         throw new Error("Rương đã được cập nhật trên thiết bị.");
       await markSyncDirty(db);
+      const corviReward =
+        finished && rarity === "legendary"
+          ? await awardCorviStatue(db, chestId)
+          : null;
       result = {
         chest: next,
         succeeded: upgrade.success,
@@ -1251,6 +1347,8 @@ export function attemptMissionChestUpgrade(
               ruleSet,
             )
           : null,
+        awardedStatue: corviReward?.artwork ?? null,
+        compensatedPieces: corviReward?.compensationPieces ?? 0,
       };
     });
     notifySyncListeners();
@@ -1272,20 +1370,27 @@ export function craftCollectionArtwork(
     const db = await database();
     let craft: CollectionCraft | undefined;
     await db.withTransactionAsync(async () => {
-      const [overview, previous] = await Promise.all([
+      const [overview, nextCraft] = await Promise.all([
         readMissionCollectionOverview(db),
-        db.getFirstAsync<{ nextIndex: number | null }>(
-          "SELECT MAX(craft_index) + 1 AS nextIndex FROM collection_crafts WHERE rarity = ?",
+        db.getFirstAsync<{ nextOrdinal: number }>(
+          `SELECT COUNT(*) + 1 AS nextOrdinal FROM collection_crafts
+           WHERE rarity = ? AND craft_id LIKE ? AND piece_cost > 0`,
           rarity,
+          `${COLLECTION_CYCLE_PREFIX}${rarity}-%`,
         ),
       ]);
-      const craftIndex = previous?.nextIndex ?? 1;
-      const artwork = artworkForCraft(rarity, craftIndex);
+      const craftIndex = collectionCraftIndex(
+        `${rarity}:${nextCraft?.nextOrdinal ?? 1}`,
+      );
+      const unlockedArtworkIds = new Set(
+        overview.crafts.map((item) => item.artworkId),
+      );
+      const artwork = artworkForCraft(rarity, craftIndex, unlockedArtworkIds);
       if (overview.fragments[rarity] < 100) {
         throw new Error("Cần đủ 100 mảnh cùng phẩm chất để mở khóa tượng.");
       }
       const next: CollectionCraft = {
-        craftId: `craft-${rarity}-${craftIndex}`,
+        craftId: `${COLLECTION_CYCLE_PREFIX}${rarity}-${craftIndex}`,
         rarity,
         craftIndex,
         artworkId: artwork.id,
@@ -1336,7 +1441,7 @@ async function readMissionCollectionBalance(
     `SELECT chest_id AS chestId, rarity, rule_set AS ruleSet
      FROM mission_chests WHERE opened = 1`,
   );
-  const crafts = await db.getAllAsync<CollectionCraft>(
+  const allCrafts = await db.getAllAsync<CollectionCraft>(
     `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
       artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
      FROM collection_crafts ORDER BY crafted_at DESC, craft_id DESC`,
@@ -1373,20 +1478,108 @@ async function readMissionCollectionBalance(
     }
   }
 
-  for (const craft of crafts) {
-    fragments[craft.rarity] = Math.max(
-      0,
-      fragments[craft.rarity] - (craft.pieceCost ?? 20),
-    );
+  const spentPieces: Record<ChestRarity, number> = {
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    epic: 0,
+    legendary: 0,
+  };
+  const compensatedPieces: Record<ChestRarity, number> = {
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    epic: 0,
+    legendary: 0,
+  };
+  for (const craft of allCrafts) {
+    const pieceDelta = craft.pieceCost ?? 20;
+    if (pieceDelta < 0) compensatedPieces[craft.rarity] += -pieceDelta;
+    else spentPieces[craft.rarity] += pieceDelta;
   }
   for (const spend of historicalSpends) {
-    fragments[spend.rarity] = Math.max(
-      0,
-      fragments[spend.rarity] - spend.pieceCost,
-    );
+    spentPieces[spend.rarity] += spend.pieceCost;
+  }
+  for (const rarity of Object.keys(fragments) as ChestRarity[]) {
+    fragments[rarity] =
+      Math.max(0, fragments[rarity] - spentPieces[rarity]) +
+      compensatedPieces[rarity];
   }
   fragments.common = 0;
-  return { fragments, crafts };
+  fragments.uncommon = 0;
+  return {
+    fragments,
+    crafts: allCrafts.filter(isCurrentCycleCollectionCraft),
+  };
+}
+
+async function awardCorviStatue(
+  db: SQLiteDatabase,
+  chestId: string,
+): Promise<CorviStatueReward> {
+  const craftId = `${COLLECTION_CYCLE_PREFIX}corvi-${chestId}`;
+  const existing = await db.getFirstAsync<CollectionCraft>(
+    `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
+      artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
+     FROM collection_crafts WHERE craft_id = ?`,
+    craftId,
+  );
+  if (existing) {
+    const savedArtwork = COLLECTION_ARTWORKS.find(
+      (artwork) => artwork.id === existing.artworkId,
+    );
+    if (savedArtwork) {
+      return {
+        artwork: savedArtwork,
+        compensationPieces: existing.pieceCost === -20 ? 20 : 0,
+      };
+    }
+    throw new Error("Tượng thưởng trong rương Corvi không hợp lệ.");
+  }
+
+  const overview = await readMissionCollectionOverview(db);
+  const unlockedArtworkIds = new Set(
+    overview.crafts.map((item) => item.artworkId),
+  );
+  const artwork = artworkForCorviChest(
+    chestId,
+    unlockedArtworkIds,
+  );
+  const compensationPieces = unlockedArtworkIds.has(artwork.id) ? 20 : 0;
+  const craft: CollectionCraft = {
+    craftId,
+    rarity: artwork.rarity,
+    craftIndex: collectionCraftIndex(`corvi:${chestId}`),
+    artworkId: artwork.id,
+    craftedAt: new Date().toISOString(),
+    pieceCost: compensationPieces > 0 ? -20 : 0,
+  };
+  await db.runAsync(
+    `INSERT OR IGNORE INTO collection_crafts
+      (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    craft.craftId,
+    craft.rarity,
+    craft.craftIndex,
+    craft.artworkId,
+    craft.craftedAt,
+     craft.pieceCost ?? 100,
+  );
+  const saved = await db.getFirstAsync<CollectionCraft>(
+    `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
+      artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
+     FROM collection_crafts WHERE craft_id = ?`,
+    craftId,
+  );
+  if (!saved) throw new Error("Không thể lưu tượng thưởng từ rương Corvi.");
+  const savedArtwork = COLLECTION_ARTWORKS.find(
+    (item) => item.id === saved.artworkId,
+  );
+  if (!savedArtwork) throw new Error("Tượng thưởng trong rương Corvi không hợp lệ.");
+  return {
+    artwork: savedArtwork,
+    compensationPieces: saved.pieceCost === -20 ? 20 : 0,
+  };
 }
 
 // Serialize operations so reads cannot observe a partially applied write.

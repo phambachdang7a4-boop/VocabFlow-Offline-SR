@@ -30,7 +30,10 @@ const {
 } = missionChests;
 const {
   COLLECTION_ARTWORKS,
+  artworkForCorviChest,
   artworkForCraft,
+  collectionCraftIndex,
+  isCurrentCycleCollectionCraft,
   isCollectionArtwork,
   isValidCollectionCraftArtwork,
 } = collectionArtworks;
@@ -137,11 +140,12 @@ for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"]) {
       total + count * COLLECTION_FRAGMENT_POINT_COSTS[pieceRarity],
     0,
   );
-  assert.equal(
-    spent,
-    chestFragmentPointBudget(chestId, rarity),
-    "A drop uses its full hidden budget without exceeding it.",
+  assert.ok(
+    spent <= chestFragmentPointBudget(chestId, rarity),
+    "A drop never exceeds its hidden budget after low-rarity pieces are removed.",
   );
+  assert.equal(reward.common, 0);
+  assert.equal(reward.uncommon, 0);
   assert.deepEqual(
     reward,
     chestFragmentReward(chestId, rarity, 4),
@@ -164,14 +168,14 @@ for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"]) {
 const observedDistributions = new Set();
 let mixedRarityDrop = false;
 for (let index = 0; index < 500; index += 1) {
-  const reward = chestFragmentReward(`varied-drop-${index}`, "uncommon", 4);
+  const reward = chestFragmentReward(`varied-drop-${index}`, "epic", 4);
   observedDistributions.add(JSON.stringify(reward));
   mixedRarityDrop ||=
     Object.values(reward).filter((count) => count > 0).length > 1;
 }
 assert.ok(
   observedDistributions.size > 1 && mixedRarityDrop,
-  "Random-looking chest drops vary and can award multiple fragment rarities.",
+  "Random-looking high-tier chest drops vary across the retained fragment rarities.",
 );
 const twoPointCopperChest = Array.from(
   { length: 500 },
@@ -180,8 +184,8 @@ const twoPointCopperChest = Array.from(
 assert.ok(twoPointCopperChest, "A Copper chest can roll exactly two Points.");
 assert.deepEqual(
   chestFragmentReward(twoPointCopperChest, "common", 4),
-  { common: 2, uncommon: 0, rare: 0, epic: 0, legendary: 0 },
-  "Two hidden Points from a Copper chest award exactly two Copper fragments.",
+  { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0 },
+  "Copper chests no longer award removed low-rarity fragments.",
 );
 assert.deepEqual(
   chestFragmentReward("legacy-chest", "epic", 3),
@@ -192,21 +196,23 @@ const convertedChestId = Array.from(
   { length: 500 },
   (_, index) => `common-fragment-conversion-${index}`,
 ).find(
-  (chestId) => chestFragmentReward(chestId, "rare", 4).common > 0,
+  (chestId) => chestCommonFragmentStoneBonus(chestId, "rare", 5) > 0,
 );
-assert.ok(convertedChestId, "A chest can include Common fragments to convert.");
-const legacyConvertedDrop = chestFragmentReward(convertedChestId, "rare", 4);
-const newConvertedDrop = chestFragmentReward(convertedChestId, "rare", 5);
-assert.equal(newConvertedDrop.common, 0);
+assert.ok(convertedChestId, "A compatible chest can retain its Stone conversion.");
+const convertedStone = chestCommonFragmentStoneBonus(
+  convertedChestId,
+  "rare",
+  5,
+);
+assert.ok(convertedStone > 0);
 assert.equal(
-  chestCommonFragmentStoneBonus(convertedChestId, "rare", 5),
-  legacyConvertedDrop.common * STONE_PER_COMMON_FRAGMENT,
+  convertedStone % STONE_PER_COMMON_FRAGMENT,
+  0,
   "Each removed Common fragment becomes five Stone.",
 );
 assert.equal(
   chestTotalStoneReward(convertedChestId, 2, "rare", 5),
-  chestStoneReward(2, "rare", 5) +
-    legacyConvertedDrop.common * STONE_PER_COMMON_FRAGMENT,
+  chestStoneReward(2, "rare", 5) + convertedStone,
   "The chest Stone reward includes converted Common fragments.",
 );
 const chestScreen = readFileSync(
@@ -402,8 +408,8 @@ assert.equal(isValidMissionChest(upgradedChest), true);
 
 assert.throws(
   () => artworkForCraft("common", 1),
-  /Chưa có tượng/,
-  "Rarities without statues cannot consume fragments.",
+  /mở hết tượng/,
+  "Common fragments are disabled for statue unlocks.",
 );
 const statue = COLLECTION_ARTWORKS.find(
   (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
@@ -519,10 +525,29 @@ assert.throws(
   /không hợp lệ/,
   "Legendary craft indices must remain positive.",
 );
-assert.throws(
-  () => artworkForCraft("legendary", 1),
-  /Chưa có tượng/,
-  "All currently available statues are unlocked without fragment costs.",
+const firstLegendary = artworkForCraft("legendary", 1);
+assert.equal(
+  firstLegendary.id,
+  collectionArtworks.FIRST_STATUE_ID,
+  "The first Legendary unlock is always Hồ Chí Minh.",
+);
+assert.notEqual(
+  artworkForCraft("legendary", 2, new Set([firstLegendary.id])).id,
+  firstLegendary.id,
+  "A later Legendary unlock cannot repeat the first statue.",
+);
+assert.notEqual(
+  artworkForCorviChest("corvi-first", new Set()).rarity,
+  "legendary",
+  "Corvi does not reveal another Legendary before Hồ Chí Minh.",
+);
+assert.ok(
+  isCurrentCycleCollectionCraft({ craftId: "cycle2-corvi-example" }),
+);
+assert.equal(
+  isCurrentCycleCollectionCraft({ craftId: "craft-legendary-1" }),
+  false,
+  "Pre-cycle statue unlocks are locked again.",
 );
 assert.equal(
   isValidCollectionCraftArtwork("legendary", 1, statue.id),
@@ -533,16 +558,42 @@ const collectionScreen = readFileSync(
   join(__dirname, "../app/collection.tsx"),
   "utf8",
 );
+const rootLayout = readFileSync(join(__dirname, "../app/_layout.tsx"), "utf8");
+const bottomTabsLayout = readFileSync(
+  join(__dirname, "../app/(tabs)/_layout.tsx"),
+  "utf8",
+);
 assert.match(
-  collectionScreen,
-  /statue\.unlockMode === "automatic"/,
-  "Automatically unlocked statues appear without saved craft records.",
+  rootLayout,
+  /name="collection"\s+options=\{\{\s*headerShown:\s*false,\s*animation:\s*"slide_from_right"/,
+  "The collection route has no extra title bar and enters from the right.",
+);
+assert.match(
+  rootLayout,
+  /name="\(\s*tabs\s*\)"\s+options=\{\{[\s\S]*?animation:\s*"slide_from_left"/,
+  "Returning to missions slides the screen in from the left.",
+);
+assert.equal(
+  (bottomTabsLayout.match(/<NativeTabs\.Trigger name=/g) ?? []).length,
+  5,
+  "The native bottom navigation keeps its five existing tabs.",
+);
+assert.equal(
+  (bottomTabsLayout.match(/<Tabs\.Screen\s+name=/g) ?? []).length,
+  5,
+  "The classic bottom navigation keeps its five existing tabs.",
 );
 assert.match(
   collectionScreen,
-  /item\.unlockMode !== "automatic"/,
-  "Automatically unlocked statues are excluded from fragment crafting.",
+  /overview\?\.crafts\.map\(\(craft\) => craft\.artworkId\)/,
+  "Only saved cycle-two statue unlocks appear as owned.",
 );
+assert.match(
+  collectionScreen,
+  /FRAGMENT_RARITY_ORDER: ChestRarity\[\] = \["rare", "epic", "legendary"\]/,
+  "Fragment progress shows Rare and higher only.",
+);
+assert.match(collectionScreen, /progressTrack/);
 assert.match(
   collectionScreen,
   /width:\s*"23%"/,
@@ -570,8 +621,8 @@ assert.match(
 );
 assert.match(
   collectionScreen,
-  /group\.statues\.map\(\(statue\) =>/,
-  "Each rarity section contains only statues of that rarity.",
+  /group\.statues\.map\(\(\{ artwork: statue, unlocked \}\) =>/,
+  "Each rarity section includes locked and unlocked statues of its tier.",
 );
 assert.match(
   collectionScreen,
@@ -581,7 +632,7 @@ assert.match(
 assert.equal(COLLECTION_ARTWORKS.length, 111);
 assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
-  "All currently available statues are unlocked without fragments.",
+  "Legacy artwork metadata remains readable while cycle data controls ownership.",
 );
 assert.ok(
   COLLECTION_ARTWORKS.every(
@@ -876,10 +927,10 @@ assert.doesNotMatch(
   /translationBlock|translationLabel/,
   "The translated biography replaces the original instead of appearing below it.",
 );
-assert.throws(
-  () => artworkForCraft("epic", 1),
-  /Chưa có tượng/,
-  "Other qualities remain unavailable until their statue catalog is added.",
+assert.equal(
+  artworkForCraft("epic", 1).rarity,
+  "epic",
+  "Epic fragments unlock an Epic statue.",
 );
 
 assert.deepEqual(

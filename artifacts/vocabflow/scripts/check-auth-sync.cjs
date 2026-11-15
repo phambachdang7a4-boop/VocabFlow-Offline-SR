@@ -387,12 +387,32 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     missionChests: [syncedChest],
     collectionCrafts: [
       {
-        craftId: "craft-legendary-1",
+        craftId: "cycle2-legendary-1234567890",
         rarity: "legendary",
-        craftIndex: 1,
+        craftIndex: 1234567890,
         artworkId: artwork.id,
         craftedAt: "2026-11-08T10:00:00.000Z",
         pieceCost: 100,
+      },
+      {
+        craftId: "craft-rare-2",
+        rarity: "rare",
+        craftIndex: 2,
+        artworkId: collectionArtworks.COLLECTION_ARTWORKS.find(
+          (item) => item.rarity === "rare",
+        ).id,
+        craftedAt: "2026-11-08T09:30:00.000Z",
+        pieceCost: 100,
+      },
+      {
+        craftId: "cycle2-corvi-duplicate-compensation",
+        rarity: "rare",
+        craftIndex: 987654321,
+        artworkId: collectionArtworks.COLLECTION_ARTWORKS.find(
+          (item) => item.rarity === "rare",
+        ).id,
+        craftedAt: "2026-11-08T10:01:00.000Z",
+        pieceCost: -20,
       },
     ],
     collectionPieceSpends: [
@@ -430,18 +450,25 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   );
   assert.equal(
     restoredSnapshot.payload.collectionCrafts.length,
-    1,
-    "Account replacement restores a crafted statue.",
+    2,
+    "Account replacement restores crafted statues and Corvi compensation.",
   );
   assert.equal(
     restoredSnapshot.payload.collectionCrafts[0].pieceCost,
     100,
     "Account replacement preserves the 100-fragment statue cost.",
   );
+  assert.equal(
+    restoredSnapshot.payload.collectionCrafts.find(
+      (craft) => craft.craftId === "cycle2-corvi-duplicate-compensation",
+    ).pieceCost,
+    -20,
+    "Account replacement preserves duplicate Corvi compensation.",
+  );
   assert.deepEqual(
-    restoredSnapshot.payload.collectionPieceSpends,
-    backupPayload.collectionPieceSpends,
-    "Account replacement restores previously spent fragments.",
+    restoredSnapshot.payload.collectionPieceSpends.map((spend) => spend.spendId).sort(),
+    ["legacy:craft-epic-2", "legacy:craft-rare-2"],
+    "Old statues stay locked while their historical fragment spending remains.",
   );
   assert.equal(
     await sync.hasPendingAccountReplacement(),

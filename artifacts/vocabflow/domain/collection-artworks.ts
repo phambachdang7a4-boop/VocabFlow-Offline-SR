@@ -32,11 +32,15 @@ export interface CollectionCraft {
   craftIndex: number;
   artworkId: string;
   craftedAt: string;
-  /** Older backups and clients omit this and retain their original 20-piece cost. */
-  pieceCost?: 20 | 100;
+  /**
+   * Older backups and clients omit this and retain their original 20-piece cost.
+   * A negative cost records a 20-piece duplicate compensation.
+   */
+  pieceCost?: -20 | 0 | 20 | 100;
 }
 
 export const FIRST_STATUE_ID = "legendary-ho-chi-minh-marble";
+export const COLLECTION_CYCLE_PREFIX = "cycle2-";
 
 const collectionArtworkDefinitions: CollectionArtwork[] = [
   {
@@ -473,18 +477,62 @@ const LEGACY_COMMON_STATUE_IDS = new Set([
 export function artworkForCraft(
   rarity: ChestRarity,
   craftIndex: number,
+  unlockedArtworkIds: ReadonlySet<string> = new Set(),
 ): CollectionArtwork {
   if (!Number.isSafeInteger(craftIndex) || craftIndex < 1)
     throw new Error("Lượt ghép tượng không hợp lệ.");
   const options = COLLECTION_ARTWORKS.filter(
-    (artwork) =>
-      artwork.rarity === rarity && artwork.unlockMode !== "automatic",
+    (artwork) => artwork.rarity === rarity && !unlockedArtworkIds.has(artwork.id),
   );
   if (options.length === 0) {
-    throw new Error("Chưa có tượng ở phẩm chất này để ghép.");
+    throw new Error("Bạn đã mở hết tượng ở phẩm chất này.");
+  }
+  if (
+    rarity === "legendary" &&
+    !COLLECTION_ARTWORKS.some(
+      (artwork) =>
+        artwork.rarity === "legendary" &&
+        unlockedArtworkIds.has(artwork.id),
+    )
+  ) {
+    return COLLECTION_ARTWORKS.find(
+      (artwork) => artwork.id === FIRST_STATUE_ID,
+    )!;
   }
   const index = stableHash(`${rarity}:${craftIndex}`) % options.length;
   return options[index];
+}
+
+export function artworkForCorviChest(
+  chestId: string,
+  unlockedArtworkIds: ReadonlySet<string>,
+): CollectionArtwork {
+  if (!chestId.trim()) throw new Error("Mã rương không hợp lệ.");
+  let options = COLLECTION_ARTWORKS.filter(
+    (artwork) => !unlockedArtworkIds.has(artwork.id),
+  );
+  const hasLegendary = COLLECTION_ARTWORKS.some(
+    (artwork) =>
+      artwork.rarity === "legendary" && unlockedArtworkIds.has(artwork.id),
+  );
+  if (!hasLegendary) {
+    options = options.filter(
+      (artwork) =>
+        artwork.rarity !== "legendary" || artwork.id === FIRST_STATUE_ID,
+    );
+  }
+  if (options.length === 0) options = COLLECTION_ARTWORKS;
+  return options[stableHash(`corvi-statue:${chestId}`) % options.length]!;
+}
+
+export function isCurrentCycleCollectionCraft(
+  craft: Pick<CollectionCraft, "craftId">,
+): boolean {
+  return craft.craftId.startsWith(COLLECTION_CYCLE_PREFIX);
+}
+
+export function collectionCraftIndex(seed: string): number {
+  return 1_000_000_000 + (stableHash(`collection-index:${seed}`) % 1_000_000_000);
 }
 
 export function isValidCollectionCraftArtwork(

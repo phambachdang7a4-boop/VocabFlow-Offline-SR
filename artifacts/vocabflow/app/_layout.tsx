@@ -70,8 +70,22 @@ function RootStack() {
         }}
       >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="collection" options={{ title: "Bộ Sưu Tập" }} />
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+          animation: "slide_from_left",
+          animationTypeForReplace: "push",
+        }}
+      />
+      <Stack.Screen
+        name="collection"
+        options={{
+          headerShown: false,
+          animation: "slide_from_right",
+          animationTypeForReplace: "push",
+        }}
+      />
       <Stack.Screen name="chest/[chestId]" options={{ title: "Mở rương" }} />
       <Stack.Screen name="word" options={{ title: "Từ vựng" }} />
       <Stack.Screen name="dictionary-entry" options={{ title: "Mục từ" }} />

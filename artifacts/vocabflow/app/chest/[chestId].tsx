@@ -21,7 +21,12 @@ import Animated, {
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { CorviChestArtwork } from "@/components/CorviChestArtwork";
-import { attemptMissionChestUpgrade, getMissionChest } from "@/data/vocabulary";
+import {
+  attemptMissionChestUpgrade,
+  getMissionChest,
+  getMissionCorviStatueReward,
+  type CorviStatueReward,
+} from "@/data/vocabulary";
 import {
   CHEST_RARITIES,
   CHEST_RARITY_COLORS,
@@ -38,6 +43,10 @@ function rarityDisplayLabel(rarity: ChestRarity): string {
   return rarity === "legendary"
     ? "Corvi · Hắc Diệu Thạch"
     : CHEST_RARITY_LABELS[rarity];
+}
+
+function fragmentRarityLabel(rarity: ChestRarity): string {
+  return CHEST_RARITY_LABELS[rarity];
 }
 
 function fragmentRewardLabel(
@@ -60,6 +69,8 @@ export default function MissionChestScreen() {
   const isRewardFlow = rewardFlow === "1";
   const id = Array.isArray(chestId) ? chestId[0] : chestId;
   const [chest, setChest] = useState<MissionChest | null>(null);
+  const [statueReward, setStatueReward] =
+    useState<CorviStatueReward | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -107,8 +118,12 @@ export default function MissionChestScreen() {
     }
     setLoading(true);
     try {
-      const saved = await getMissionChest(id);
+      const [saved, savedStatue] = await Promise.all([
+        getMissionChest(id),
+        getMissionCorviStatueReward(id),
+      ]);
       setChest(saved);
+      setStatueReward(savedStatue);
       lidProgress.value = saved?.opened ? 1 : 0;
       setError(saved ? null : "Không tìm thấy rương này trên thiết bị.");
     } catch {
@@ -166,6 +181,14 @@ export default function MissionChestScreen() {
     try {
       const result = await attemptMissionChestUpgrade(id);
       setChest(result.chest);
+      setStatueReward(
+        result.awardedStatue
+          ? {
+              artwork: result.awardedStatue,
+              compensationPieces: result.compensatedPieces,
+            }
+          : null,
+      );
       lidProgress.value = withSpring(
         result.finished ? 1 : result.succeeded ? 0.58 : 0,
         { damping: 12, stiffness: 170 },
@@ -179,10 +202,21 @@ export default function MissionChestScreen() {
         result.chest.superUpgrade &&
         result.chest.upgradeAttempts === 4;
       if (result.finished) {
+        const statueName = result.awardedStatue
+          ? result.awardedStatue.shortTitle ??
+            result.awardedStatue.title.replace(/^Tượng\s+/, "")
+          : "";
+        const statueBonus = result.awardedStatue
+          ? result.compensatedPieces > 0
+            ? ` Tượng ${statueName} đã có sẵn; được bồi thường 20 mảnh ${
+                fragmentRarityLabel(result.awardedStatue.rarity)
+              }.`
+            : ` Nhận thêm tượng ${statueName}.`
+          : "";
         setMessage(
           result.succeeded
-            ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.`
-            : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.`,
+            ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`
+            : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`,
         );
       }
     } catch (cause) {
@@ -380,6 +414,25 @@ export default function MissionChestScreen() {
                 <Text style={[styles.rewardLine, { color: c.foreground }]}>
                   {chest.finalStone} Stone · {fragmentRewardLabel(openedFragments)}
                 </Text>
+                {statueReward ? (
+                  <Text
+                    testID="corvi-statue-reward"
+                    style={[styles.rewardLine, { color: c.primary }]}
+                  >
+                    Tượng thưởng:{" "}
+                    {statueReward.artwork.shortTitle ??
+                      statueReward.artwork.title.replace(/^Tượng\s+/, "")}
+                  </Text>
+                ) : null}
+                {statueReward && statueReward.compensationPieces > 0 ? (
+                  <Text
+                    testID="corvi-duplicate-compensation"
+                    style={[styles.rewardLine, { color: c.accent }]}
+                  >
+                    Tượng đã có sẵn · +20 mảnh{" "}
+                    {fragmentRarityLabel(statueReward.artwork.rarity)}
+                  </Text>
+                ) : null}
               </Animated.View>
             ) : null}
           </View>

@@ -312,6 +312,13 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
 }
 
 function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
+  const currentCycleId =
+    isRecord(value) &&
+    typeof value.craftId === "string" &&
+    typeof value.rarity === "string" &&
+    isPositiveInteger(value.craftIndex) &&
+    (value.craftId === `cycle2-${value.rarity}-${value.craftIndex}` ||
+      value.craftId.startsWith("cycle2-corvi-"));
   if (
     !isRecord(value) ||
     !isString(value.craftId, 120, false) ||
@@ -320,9 +327,14 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
     !isString(value.artworkId, 80, false) ||
     !isTimestamp(value.craftedAt) ||
     (value.pieceCost !== undefined &&
+      value.pieceCost !== -20 &&
+      value.pieceCost !== 0 &&
       value.pieceCost !== 20 &&
       value.pieceCost !== 100) ||
-    value.craftId !== `craft-${value.rarity}-${value.craftIndex}` ||
+    (value.pieceCost === -20 &&
+      !String(value.craftId).startsWith("cycle2-corvi-")) ||
+    (value.craftId !== `craft-${value.rarity}-${value.craftIndex}` &&
+      !currentCycleId) ||
     !isCollectionArtwork(value.rarity, value.artworkId) ||
     !isValidCollectionCraftArtwork(
       value.rarity,
@@ -338,7 +350,14 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
     craftIndex: value.craftIndex as number,
     artworkId: value.artworkId,
     craftedAt: value.craftedAt,
-    pieceCost: value.pieceCost === 100 ? 100 : 20,
+    pieceCost:
+      value.pieceCost === -20
+        ? -20
+        : value.pieceCost === 0
+        ? 0
+        : value.pieceCost === 100
+          ? 100
+          : 20,
   };
 }
 
