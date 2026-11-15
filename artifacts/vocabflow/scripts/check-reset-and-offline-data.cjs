@@ -273,15 +273,27 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   );
   assert.match(settings, /testID="offline-dictionary-download"/);
   assert.match(settings, /testID="offline-audio-download"/);
-  assert.match(settings, /testID="offline-regional-ipa-download"/);
+  assert.match(settings, /"offline-regional-ipa-download"/);
+  assert.match(settings, /offline-regional-ipa-download-\$\{sourceId\}/);
   assert.match(settings, /deleteOfflineRegionalIpa/);
   assert.match(settings, /testID="reset-app-data"/);
+  assert.match(settings, /testID="reset-cloud-data"/);
+  assert.match(settings, /resetLocalData/);
+  assert.match(settings, /Dữ liệu cloud không bị xóa/);
+  assert.match(settings, /testID="graphics-quality-placeholder"/);
+  assert.match(settings, /HÌNH ẢNH/);
+  assert.match(settings, /ÂM THANH/);
+  assert.match(settings, /DỮ LIỆU HỌC TẬP/);
   assert.match(settings, /Xóa cloud và thiết bị/);
   assert.match(settings, /Xóa dữ liệu thiết bị/);
   assert.match(settings, /disabled=\{\s*!userLoaded/);
-  assert.match(settings, /if \(user && !sync\.online\)/);
+  assert.match(settings, /resetDialog === "cloud" && \(!user \|\| !sync\.online\)/);
   assert.match(context, /resetCloudFirst/);
   assert.match(context, /resetLocalOnly/);
+  assert.match(
+    context,
+    /if \(userId\) \{\s*await clearLocalAccountAfterCloudReset\(local\.payload\.revision\)/,
+  );
   assert.match(context, /if \(userId && online !== true\)/);
   assert.match(context, /reviewComboRewards:\s*\[\]/);
   assert.match(context, /cloudResetNeedsLocalRetry/);
@@ -290,6 +302,9 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(dictionary, /onProgress\?\.\(end \+ 1, DICTIONARY\.bytes\)/);
   assert.match(regionalIpa, /sha256Hex\(bytes\)/);
   assert.match(regionalIpa, /buildRegionalIpaSupplement/);
+  assert.match(regionalIpa, /sourceCacheTable/);
+  assert.match(regionalIpa, /downloadOfflineRegionalIpaPart/);
+  assert.match(regionalIpa, /getOfflineRegionalIpaPartsStatus/);
 
   await sync.activateGuestDatabase();
   harness.db.close();

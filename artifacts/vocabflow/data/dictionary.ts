@@ -27,6 +27,8 @@ import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
 import {
   getRegionalIpaForTerm,
   installOfflineRegionalIpa,
+  downloadOfflineRegionalIpaPart as downloadRegionalIpaPart,
+  type RegionalIpaSourceId,
 } from "./offline-regional-pronunciations";
 import {
   draftInDictionary,
@@ -425,6 +427,12 @@ export async function installOfflineRegionalPronunciations(
   onProgress?: (stage: string, bytesWritten: number, totalBytes: number) => void,
 ) {
   return installOfflineRegionalIpa(await openDictionary(), onProgress);
+}
+export async function downloadOfflineRegionalPronunciationPart(
+  id: RegionalIpaSourceId,
+  onProgress?: (stage: string, bytesWritten: number, totalBytes: number) => void,
+) {
+  return downloadRegionalIpaPart(await openDictionary(), id, onProgress);
 }
 export async function getDictionaryDraft(id: number, senseId: number) {
   return draftInDictionary(await openDictionary(), id, senseId);

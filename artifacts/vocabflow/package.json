@@ -27,7 +27,7 @@
     "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
     "check:offline-audio-download": "node scripts/check-offline-audio-download.cjs",
     "check:known-example-repair": "node scripts/check-known-example-repair.cjs",
-    "check:regional-ipa": "node scripts/check-regional-pronunciations.cjs",
+    "check:regional-ipa": "node scripts/check-regional-pronunciations.cjs && node scripts/check-regional-ipa-parts.cjs",
     "check:conjunction-course": "node scripts/check-conjunction-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "check:office-apps-course": "node scripts/check-office-apps-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "course:build-idioms": "node scripts/build-idiom-course-data.cjs",

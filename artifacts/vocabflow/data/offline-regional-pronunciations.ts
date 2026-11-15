@@ -19,9 +19,21 @@ import {
 const filename = REGIONAL_IPA_DICTIONARY.filename;
 const metadataTable = "vocabflow_regional_ipa_meta";
 const dataTable = "vocabflow_regional_ipa";
+const sourceCacheTable = "vocabflow_regional_ipa_sources";
 let databaseConnection: Promise<SQLiteDatabase> | undefined;
 let activeDownload: AbortController | null = null;
 let installedRevision: boolean | undefined;
+
+export type RegionalIpaSourceId = "us" | "uk" | "ukSupplement";
+
+const regionalSources: {
+  id: RegionalIpaSourceId;
+  source: RegionalIpaSource;
+}[] = [
+  { id: "us", source: REGIONAL_IPA_DICTIONARY.us },
+  { id: "uk", source: REGIONAL_IPA_DICTIONARY.uk },
+  { id: "ukSupplement", source: REGIONAL_IPA_DICTIONARY.ukSupplement },
+];
 
 function sha256Hex(bytes: Uint8Array): string {
   return Array.from(sha256(bytes), (byte) =>
@@ -78,6 +90,7 @@ async function hasCurrentRevision(db: SQLiteDatabase): Promise<boolean> {
 async function fetchSource(
   source: RegionalIpaSource,
   signal: AbortSignal,
+  onByteProgress?: (bytesRead: number) => void,
 ): Promise<string> {
   const response = await fetch(sourceUrl(source), {
     credentials: "omit",
@@ -89,8 +102,30 @@ async function fetchSource(
       `Không tải được IPA ${source.label} (HTTP ${response.status}). Hãy thử lại.`,
     );
   }
-  const textPromise = response.clone().text();
-  const bytes = new Uint8Array(await response.arrayBuffer());
+  let bytes: Uint8Array;
+  const reader = response.body?.getReader();
+  if (reader) {
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value);
+        total += value.byteLength;
+        onByteProgress?.(total);
+      }
+    }
+    bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+  } else {
+    bytes = new Uint8Array(await response.arrayBuffer());
+    onByteProgress?.(bytes.byteLength);
+  }
   if (bytes.byteLength !== source.bytes) {
     throw new Error(
       `Tệp IPA ${source.label} chưa tải đủ. Hãy thử lại khi có mạng ổn định.`,
@@ -101,7 +136,111 @@ async function fetchSource(
       `Tệp IPA ${source.label} không đúng phiên bản đã kiểm tra. Hãy thử lại.`,
     );
   }
-  return textPromise;
+  return new TextDecoder().decode(bytes);
+}
+
+async function ensureSourceCacheTable(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS ${sourceCacheTable} (
+      source_id TEXT PRIMARY KEY,
+      revision TEXT NOT NULL,
+      sha256 TEXT NOT NULL,
+      byte_count INTEGER NOT NULL,
+      contents TEXT NOT NULL
+    );
+  `);
+}
+
+async function getVerifiedCachedSource(
+  db: SQLiteDatabase,
+  id: RegionalIpaSourceId,
+  source: RegionalIpaSource,
+): Promise<string | null> {
+  const table = await db.getFirstAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+    sourceCacheTable,
+  );
+  if (!table) return null;
+  const row = await db.getFirstAsync<{
+    revision: string;
+    sha256: string;
+    byte_count: number;
+    contents: string;
+  }>(
+    `SELECT revision, sha256, byte_count, contents
+     FROM ${sourceCacheTable} WHERE source_id = ?`,
+    id,
+  );
+  if (!row) return null;
+  const bytes = new TextEncoder().encode(row.contents);
+  if (
+    row.revision !== REGIONAL_IPA_DICTIONARY.version ||
+    row.sha256 !== source.sha256 ||
+    row.byte_count !== source.bytes ||
+    bytes.byteLength !== source.bytes ||
+    sha256Hex(bytes) !== source.sha256
+  ) {
+    return null;
+  }
+  return row.contents;
+}
+
+async function cacheVerifiedSource(
+  db: SQLiteDatabase,
+  id: RegionalIpaSourceId,
+  source: RegionalIpaSource,
+  contents: string,
+): Promise<void> {
+  await ensureSourceCacheTable(db);
+  await db.runAsync(
+    `INSERT INTO ${sourceCacheTable}
+       (source_id, revision, sha256, byte_count, contents)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(source_id) DO UPDATE SET
+       revision = excluded.revision,
+       sha256 = excluded.sha256,
+       byte_count = excluded.byte_count,
+       contents = excluded.contents`,
+    id,
+    REGIONAL_IPA_DICTIONARY.version,
+    source.sha256,
+    source.bytes,
+    contents,
+  );
+}
+
+async function getOrDownloadSource(
+  db: SQLiteDatabase,
+  id: RegionalIpaSourceId,
+  source: RegionalIpaSource,
+  signal: AbortSignal,
+  onProgress?: (stage: string, bytesWritten: number) => void,
+  bytesBefore = 0,
+): Promise<{
+  region: RegionalIpaAccent;
+  records: RegionalIpaRecord[];
+  text: string;
+}> {
+  const cached = await getVerifiedCachedSource(db, id, source);
+  if (cached !== null) {
+    onProgress?.(`Đã xác minh IPA ${source.label} trên thiết bị`, bytesBefore + source.bytes);
+    return {
+      region: source.accent,
+      records: parseRegionalIpaSource(cached).map((entry) => ({
+        ...entry,
+        region: source.accent,
+      })),
+      text: cached,
+    };
+  }
+  const result = await downloadAndParse(
+    source,
+    signal,
+    onProgress,
+    bytesBefore,
+  );
+  await cacheVerifiedSource(db, id, source, result.text);
+  return result;
 }
 
 function progressYield(): Promise<void> {
@@ -113,16 +252,25 @@ async function downloadAndParse(
   signal: AbortSignal,
   onProgress?: (stage: string, bytesWritten: number) => void,
   bytesBefore = 0,
-): Promise<{ region: RegionalIpaAccent; records: RegionalIpaRecord[] }> {
+): Promise<{
+  region: RegionalIpaAccent;
+  records: RegionalIpaRecord[];
+  text: string;
+}> {
   onProgress?.(`Đang tải IPA ${source.label}`, bytesBefore);
-  const text = await fetchSource(source, signal);
+  const text = await fetchSource(source, signal, (bytesRead) => {
+    onProgress?.(
+      `Đang tải IPA ${source.label}`,
+      bytesBefore + bytesRead,
+    );
+  });
   const entries = parseRegionalIpaSource(text);
   const records: RegionalIpaRecord[] = entries.map((entry) => ({
     ...entry,
     region: source.accent,
   }));
   onProgress?.(`Đã tải IPA ${source.label}`, bytesBefore + source.bytes);
-  return { region: source.accent, records };
+  return { region: source.accent, records, text };
 }
 
 export async function getOfflineRegionalIpaStatus(): Promise<{
@@ -179,6 +327,79 @@ export async function getOfflineRegionalIpaStatus(): Promise<{
   }
 }
 
+export async function getOfflineRegionalIpaPartsStatus(): Promise<
+  Record<RegionalIpaSourceId, "missing" | "verified" | "installed">
+> {
+  const status = await getOfflineRegionalIpaStatus();
+  const db = await openSupplementDatabase();
+  const results = {} as Record<
+    RegionalIpaSourceId,
+    "missing" | "verified" | "installed"
+  >;
+  for (const { id, source } of regionalSources) {
+    results[id] =
+      status.state === "installed"
+        ? "installed"
+        : (await getVerifiedCachedSource(db, id, source)) !== null
+          ? "verified"
+          : "missing";
+  }
+  return results;
+}
+
+export async function downloadOfflineRegionalIpaPart(
+  dictionary: SQLiteDatabase,
+  id: RegionalIpaSourceId,
+  onProgress?: (stage: string, bytesWritten: number, totalBytes: number) => void,
+): Promise<{ complete: boolean; entryCount?: number }> {
+  if (activeDownload) {
+    throw new Error("Đang tải dữ liệu IPA. Hãy đợi tải xong.");
+  }
+  const selected = regionalSources.find((item) => item.id === id);
+  if (!selected) throw new Error("Không nhận diện được phần IPA cần tải.");
+  const controller = new AbortController();
+  activeDownload = controller;
+  try {
+    const db = await openSupplementDatabase();
+    await db.execAsync("PRAGMA query_only = OFF;");
+    const cached = await getVerifiedCachedSource(db, id, selected.source);
+    if (!cached) {
+      const result = await downloadAndParse(
+        selected.source,
+        controller.signal,
+        (stage, bytesWritten) =>
+          onProgress?.(stage, bytesWritten, selected.source.bytes),
+      );
+      await cacheVerifiedSource(db, id, selected.source, result.text);
+    } else {
+      onProgress?.(
+        `Đã xác minh IPA ${selected.source.label} trên thiết bị`,
+        selected.source.bytes,
+        selected.source.bytes,
+      );
+    }
+    await db.execAsync("PRAGMA query_only = ON;");
+  } catch (error) {
+    if (databaseConnection) {
+      try {
+        await (await databaseConnection).execAsync("PRAGMA query_only = ON;");
+      } catch {
+        // Keep a usable database connection after an interrupted source save.
+      }
+    }
+    throw error;
+  } finally {
+    activeDownload = null;
+  }
+
+  const parts = await getOfflineRegionalIpaPartsStatus();
+  if (regionalSources.some(({ id: sourceId }) => parts[sourceId] === "missing")) {
+    return { complete: false };
+  }
+  const installed = await installOfflineRegionalIpa(dictionary, onProgress);
+  return { complete: true, entryCount: installed.entryCount };
+}
+
 export async function installOfflineRegionalIpa(
   dictionary: SQLiteDatabase,
   onProgress?: (stage: string, bytesWritten: number, totalBytes: number) => void,
@@ -189,20 +410,29 @@ export async function installOfflineRegionalIpa(
   const controller = new AbortController();
   activeDownload = controller;
   try {
-    const us = await downloadAndParse(
+    const db = await openSupplementDatabase();
+    await db.execAsync("PRAGMA query_only = OFF;");
+    await ensureSourceCacheTable(db);
+    const us = await getOrDownloadSource(
+      db,
+      "us",
       REGIONAL_IPA_DICTIONARY.us,
       controller.signal,
       (stage, bytes) =>
         onProgress?.(stage, bytes, REGIONAL_IPA_DICTIONARY.sourceBytes),
     );
-    const uk = await downloadAndParse(
+    const uk = await getOrDownloadSource(
+      db,
+      "uk",
       REGIONAL_IPA_DICTIONARY.uk,
       controller.signal,
       (stage, bytes) =>
         onProgress?.(stage, bytes, REGIONAL_IPA_DICTIONARY.sourceBytes),
       REGIONAL_IPA_DICTIONARY.us.bytes,
     );
-    const ukSupplement = await downloadAndParse(
+    const ukSupplement = await getOrDownloadSource(
+      db,
+      "ukSupplement",
       REGIONAL_IPA_DICTIONARY.ukSupplement,
       controller.signal,
       (stage, bytes) =>
@@ -263,8 +493,6 @@ export async function installOfflineRegionalIpa(
       );
     }
 
-    const db = await openSupplementDatabase();
-    await db.execAsync("PRAGMA query_only = OFF;");
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS ${metadataTable} (
         revision TEXT NOT NULL,

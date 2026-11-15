@@ -45,13 +45,15 @@ import {
 } from "@/data/vocabulary-sync";
 import {
   deleteOfflineDictionary,
+  downloadOfflineRegionalPronunciationPart,
   getOfflineDictionaryStatus,
-  installOfflineRegionalPronunciations,
   openDictionary,
 } from "@/data/dictionary";
 import {
   deleteOfflineRegionalIpa,
+  getOfflineRegionalIpaPartsStatus,
   getOfflineRegionalIpaStatus,
+  type RegionalIpaSourceId,
 } from "@/data/offline-regional-pronunciations";
 import {
   deleteOfflineAudio,
@@ -91,13 +93,25 @@ export default function SettingsScreen() {
   const [regionalIpaStatus, setRegionalIpaStatus] = React.useState<
     "checking" | "missing" | "installed" | "damaged"
   >("checking");
+  const [regionalIpaParts, setRegionalIpaParts] = React.useState<
+    Record<
+      RegionalIpaSourceId,
+      "checking" | "missing" | "verified" | "installed"
+    >
+  >({
+    us: "checking",
+    uk: "checking",
+    ukSupplement: "checking",
+  });
   const [regionalIpaEntryCount, setRegionalIpaEntryCount] = React.useState(0);
   const [offlineAction, setOfflineAction] = React.useState<
     | "dictionary-download"
     | "dictionary-delete"
     | "audio-download"
     | "audio-delete"
-    | "regional-ipa-download"
+    | "regional-ipa-us-download"
+    | "regional-ipa-uk-download"
+    | "regional-ipa-ukSupplement-download"
     | "regional-ipa-delete"
     | null
   >(null);
@@ -107,7 +121,9 @@ export default function SettingsScreen() {
     totalBytes: 0,
   });
   const [offlineError, setOfflineError] = React.useState<string | null>(null);
-  const [resetDialog, setResetDialog] = React.useState(false);
+  const [resetDialog, setResetDialog] = React.useState<
+    "local" | "cloud" | null
+  >(null);
   const [resetBusy, setResetBusy] = React.useState(false);
   const [resetError, setResetError] = React.useState<string | null>(null);
   const [resetNotice, setResetNotice] = React.useState<string | null>(null);
@@ -119,19 +135,27 @@ export default function SettingsScreen() {
     : null;
   const refreshOfflineStatus = React.useCallback(async () => {
     try {
-      const [dictionary, audio, regionalIpa] = await Promise.all([
-        getOfflineDictionaryStatus(),
-        getOfflineAudioStatus(),
-        getOfflineRegionalIpaStatus(),
-      ]);
+      const [dictionary, audio, regionalIpa, regionalIpaPartsStatus] =
+        await Promise.all([
+          getOfflineDictionaryStatus(),
+          getOfflineAudioStatus(),
+          getOfflineRegionalIpaStatus(),
+          getOfflineRegionalIpaPartsStatus(),
+        ]);
       setDictionaryStatus(dictionary.state);
       setAudioStatus(audio.state);
       setRegionalIpaStatus(regionalIpa.state);
       setRegionalIpaEntryCount(regionalIpa.entryCount);
+      setRegionalIpaParts(regionalIpaPartsStatus);
     } catch {
       setDictionaryStatus("damaged");
       setAudioStatus("damaged");
       setRegionalIpaStatus("damaged");
+      setRegionalIpaParts({
+        us: "missing",
+        uk: "missing",
+        ukSupplement: "missing",
+      });
     }
   }, []);
   React.useEffect(() => {
@@ -210,24 +234,29 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleDownloadRegionalIpa = async () => {
+  const handleDownloadRegionalIpaPart = async (
+    sourceId: RegionalIpaSourceId,
+  ) => {
     if (offlineAction || syncBusy) return;
     setOfflineError(null);
-    setOfflineAction("regional-ipa-download");
-    setOfflineStage("Đang chuẩn bị IPA");
+    setOfflineAction(`regional-ipa-${sourceId}-download`);
+    setOfflineStage("Đang chuẩn bị dữ liệu IPA");
     setOfflineProgress({
       bytesWritten: 0,
-      totalBytes: REGIONAL_IPA_DICTIONARY.sourceBytes,
+      totalBytes: REGIONAL_IPA_DICTIONARY[sourceId].bytes,
     });
     try {
-      const result = await installOfflineRegionalPronunciations(
+      const result = await downloadOfflineRegionalPronunciationPart(
+        sourceId,
         (stage, bytesWritten, totalBytes) => {
           setOfflineStage(stage);
           setOfflineProgress({ bytesWritten, totalBytes });
         },
       );
       setOfflineStage(
-        `Đã cài ${result.entryCount.toLocaleString("vi-VN")} mục IPA`,
+        result.complete
+          ? `Đã cài ${result.entryCount?.toLocaleString("vi-VN") ?? 0} mục IPA`
+          : "Đã lưu phần IPA đã kiểm tra",
       );
     } catch (cause) {
       setOfflineError(
@@ -275,14 +304,15 @@ export default function SettingsScreen() {
   };
 
   const handleResetAppData = async () => {
-    if (resetBusy || offlineAction || transferState || syncBusy) return;
+    if (!resetDialog || resetBusy || offlineAction || transferState || syncBusy)
+      return;
     if (!userLoaded) {
       setResetError("Đang kiểm tra tài khoản. Hãy thử lại sau giây lát.");
       return;
     }
-    if (user && !sync.online) {
+    if (resetDialog === "cloud" && (!user || !sync.online)) {
       setResetError(
-        "Cần kết nối Internet để xóa dữ liệu cloud. Dữ liệu chưa bị thay đổi.",
+        "Cần đăng nhập và có kết nối Internet để xóa dữ liệu cloud. Dữ liệu chưa bị thay đổi.",
       );
       return;
     }
@@ -290,18 +320,23 @@ export default function SettingsScreen() {
     setResetNotice(null);
     setResetBusy(true);
     try {
-      await sync.resetAccountData(async () => {
+      const clearOfflineResources = async () => {
         await deleteOfflineAudio();
         await deleteOfflineRegionalIpa();
         await deleteOfflineDictionary();
-      });
+      };
+      if (resetDialog === "cloud") {
+        await sync.resetAccountData(clearOfflineResources);
+      } else {
+        await sync.resetLocalData(clearOfflineResources);
+      }
       await reload();
       await refreshOfflineStatus();
-      setResetDialog(false);
+      setResetDialog(null);
       setResetNotice(
-        user
-          ? "Đã đặt lại dữ liệu tài khoản trên cloud và thiết bị này."
-          : "Đã xóa dữ liệu học và tài nguyên offline trên thiết bị này.",
+        resetDialog === "cloud"
+          ? "Đã xóa dữ liệu học trên cloud và thiết bị này."
+          : "Đã xóa dữ liệu học và tài nguyên offline trên thiết bị này. Dữ liệu cloud không bị xóa.",
       );
     } catch (cause) {
       setResetError(
@@ -474,7 +509,7 @@ export default function SettingsScreen() {
       >
         {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          GIAO DIỆN
+          HÌNH ẢNH
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
           Bản sáng là mặc định. Lựa chọn áp dụng cho toàn bộ ứng dụng và được
@@ -577,6 +612,23 @@ export default function SettingsScreen() {
             );
           })}
         </View>
+        <View
+          testID="graphics-quality-placeholder"
+          style={[
+            styles.qualityPlaceholder,
+            { backgroundColor: c.card, borderColor: c.border },
+          ]}
+        >
+          <Feather name="image" size={18} color={c.mutedForeground} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+              Chất lượng đồ họa
+            </Text>
+            <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+              Sẽ bổ sung sau
+            </Text>
+          </View>
+        </View>
         {appearance.error ? (
           <ErrorBanner
             message={appearance.error}
@@ -602,7 +654,7 @@ export default function SettingsScreen() {
           </Text>
         ) : null}
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          PHÁT ÂM
+          ÂM THANH
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
           Ưu tiên audio từ điển offline nếu đã cài; nếu chưa, dùng giọng tiếng
@@ -679,8 +731,130 @@ export default function SettingsScreen() {
             }}
           />
         ) : null}
+        <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
+          Nhạc piano chỉ phát ở tab Ôn tập, tự tắt trong phiên làm bài và trò
+          nối từ. Âm lượng nhạc nhỏ hơn hiệu ứng; công tắc và mức âm lượng dưới
+          đây điều khiển cả hai.
+        </Text>
+        <View
+          style={[
+            styles.speechGroup,
+            {
+              backgroundColor: c.card,
+              borderColor: c.border,
+              borderRadius: c.radius,
+            },
+          ]}
+        >
+          <View style={styles.speechRow}>
+            <View style={styles.speechText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Âm thanh ứng dụng
+              </Text>
+              <Text
+                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+              >
+                Hiệu ứng nhẹ và nhạc nền piano.
+              </Text>
+            </View>
+            <Switch
+              testID="sfx-enabled"
+              accessibilityLabel="Âm thanh ứng dụng"
+              value={sound.enabled}
+              disabled={!sound.ready || sound.saving}
+              onValueChange={(value) => {
+                if (value) sound.unlockFromGesture();
+                void sound.setEnabled(value);
+              }}
+              trackColor={{ false: c.border, true: c.primary }}
+              thumbColor={c.card}
+            />
+          </View>
+          <View
+            style={[
+              styles.volumeRow,
+              { borderTopWidth: 1, borderTopColor: c.border },
+            ]}
+          >
+            <View style={styles.speechText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Âm lượng
+              </Text>
+              <Text
+                testID="sfx-volume-value"
+                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+              >
+                {Math.round(sound.volume * 100)}%
+              </Text>
+            </View>
+            <View style={styles.volumeControls}>
+              <Pressable
+                testID="sfx-volume-down"
+                accessibilityRole="button"
+                accessibilityLabel="Giảm âm lượng"
+                accessibilityState={{
+                  disabled: !sound.ready || sound.saving || sound.volume <= 0,
+                }}
+                disabled={!sound.ready || sound.saving || sound.volume <= 0}
+                onPress={() => {
+                  sound.unlockFromGesture();
+                  void sound.setVolume(sound.volume - 0.1);
+                }}
+                style={({ pressed }) => [
+                  styles.volumeButton,
+                  {
+                    backgroundColor: c.secondary,
+                    opacity:
+                      !sound.ready || sound.saving || sound.volume <= 0
+                        ? 0.45
+                        : pressed
+                          ? 0.65
+                          : 1,
+                  },
+                ]}
+              >
+                <Feather name="minus" size={19} color={c.primary} />
+              </Pressable>
+              <Pressable
+                testID="sfx-volume-up"
+                accessibilityRole="button"
+                accessibilityLabel="Tăng âm lượng"
+                accessibilityState={{
+                  disabled: !sound.ready || sound.saving || sound.volume >= 1,
+                }}
+                disabled={!sound.ready || sound.saving || sound.volume >= 1}
+                onPress={() => {
+                  sound.unlockFromGesture();
+                  void sound.setVolume(sound.volume + 0.1);
+                }}
+                style={({ pressed }) => [
+                  styles.volumeButton,
+                  {
+                    backgroundColor: c.secondary,
+                    opacity:
+                      !sound.ready || sound.saving || sound.volume >= 1
+                        ? 0.45
+                        : pressed
+                          ? 0.65
+                          : 1,
+                  },
+                ]}
+              >
+                <Feather name="plus" size={19} color={c.primary} />
+              </Pressable>
+            </View>
+          </View>
+        </View>
+        {sound.error ? (
+          <ErrorBanner
+            message={sound.error}
+            onRetry={() => {
+              void sound.retryLoad();
+            }}
+          />
+        ) : null}
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          TÀI KHOẢN & ĐỒNG BỘ
+          TÀI KHOẢN
         </Text>
         <View
           style={[
@@ -923,7 +1097,107 @@ Nội dung tệp:
           error={restoreError}
         />
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          DỮ LIỆU OFFLINE
+          ĐẶT LẠI TÀI KHOẢN
+        </Text>
+        <View
+          style={[
+            styles.resetCard,
+            {
+              backgroundColor: c.card,
+              borderColor: c.border,
+              borderRadius: c.radius,
+            },
+          ]}
+        >
+          <MaterialSheen radius={c.radius} />
+          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+            Đặt lại cục bộ chỉ xóa dữ liệu học và tài nguyên offline trên thiết
+            bị này; không xóa dữ liệu cloud. Dữ liệu cloud vẫn có thể đồng bộ
+            lại sau đó.
+          </Text>
+          <Button
+            testID="reset-app-data"
+            label="Đặt lại trên thiết bị"
+            icon="trash-2"
+            variant="danger"
+            onPress={() => {
+              setResetError(null);
+              setResetDialog("local");
+            }}
+            disabled={
+              !userLoaded ||
+              syncBusy ||
+              Boolean(offlineAction) ||
+              transferState !== null ||
+              resetBusy
+            }
+          />
+          {user ? (
+            <>
+              <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+                Xóa cloud là thao tác riêng: xóa dữ liệu học trên tài khoản và
+                thiết bị này, cần Internet và không thể hoàn tác.
+              </Text>
+              <Button
+                testID="reset-cloud-data"
+                label="Xóa cloud và thiết bị"
+                icon="cloud-off"
+                variant="danger"
+                onPress={() => {
+                  setResetError(null);
+                  setResetDialog("cloud");
+                }}
+                disabled={
+                  !userLoaded ||
+                  syncBusy ||
+                  Boolean(offlineAction) ||
+                  transferState !== null ||
+                  resetBusy
+                }
+              />
+            </>
+          ) : null}
+          {resetNotice ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.transferNotice, { color: c.successText }]}
+            >
+              {resetNotice}
+            </Text>
+          ) : null}
+          {resetError ? <ErrorBanner message={resetError} /> : null}
+        </View>
+        <ConfirmDialog
+          visible={resetDialog !== null}
+          title={
+            resetDialog === "cloud"
+              ? "Xóa dữ liệu cloud?"
+              : "Đặt lại dữ liệu trên thiết bị?"
+          }
+          message={
+            resetDialog === "cloud"
+              ? "Sẽ xóa vĩnh viễn sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, IPA và audio offline cũng bị xóa khỏi thiết bị này. Cần Internet. Nếu máy chủ không xác nhận, dữ liệu trên thiết bị và tài nguyên offline vẫn được giữ nguyên. Không thể hoàn tác."
+              : "Sẽ xóa sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và tài nguyên offline chỉ trên thiết bị này. Dữ liệu cloud không bị xóa và có thể đồng bộ lại sau đó. Không thể hoàn tác."
+          }
+          confirmLabel={
+            resetDialog === "cloud"
+              ? "Xóa cloud và thiết bị"
+              : "Xóa dữ liệu thiết bị"
+          }
+          onCancel={() => {
+            if (!resetBusy) {
+              setResetDialog(null);
+              setResetError(null);
+            }
+          }}
+          onConfirm={() => {
+            void handleResetAppData();
+          }}
+          busy={resetBusy}
+          error={resetError}
+        />
+        <Text style={[styles.section, { color: c.mutedForeground }]}>
+          DỮ LIỆU HỌC TẬP
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
           Từ điển, IPA và audio được tải riêng vào bộ nhớ ứng dụng, không nằm
@@ -1008,62 +1282,122 @@ Nội dung tệp:
             </View>
             <View style={styles.offlineResourceText}>
               <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
-                Phiên âm IPA Anh-Mỹ/Anh-Anh
+                IPA ngoại tuyến
               </Text>
               <Text
                 testID="offline-regional-ipa-status"
                 style={[styles.appearanceDetail, { color: c.mutedForeground }]}
               >
                 {regionalIpaStatus === "installed"
-                  ? `Đã cài · ${regionalIpaEntryCount.toLocaleString("vi-VN")} mục`
+                  ? `Đã cài đầy đủ · ${regionalIpaEntryCount.toLocaleString("vi-VN")} mục`
                   : regionalIpaStatus === "damaged"
-                    ? "Dữ liệu bị lỗi · cần tải lại"
+                    ? "Kho IPA lỗi · các phần đã xác minh vẫn được giữ"
                     : regionalIpaStatus === "checking"
                       ? "Đang kiểm tra…"
-                      : `Chưa cài · khoảng ${sizeLabel(REGIONAL_IPA_DICTIONARY.sourceBytes)}`}
+                      : `Tải riêng từng phần · tổng ${sizeLabel(REGIONAL_IPA_DICTIONARY.sourceBytes)}`}
               </Text>
             </View>
           </View>
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            Bổ sung IPA cho các từ có dữ liệu; tải một lần để tra cứu ngoại tuyến.
-            Cần cài từ điển trước.
+            Cần cài từ điển trước. Kho IPA chỉ dùng để tra cứu sau khi cả ba
+            phần được xác minh và ghép thành công.
           </Text>
-          <View style={styles.offlineActions}>
-            <Button
-              testID="offline-regional-ipa-download"
-              label={regionalIpaStatus === "damaged" ? "Tải lại IPA" : "Tải IPA"}
-              icon="download"
-              onPress={() => {
-                void handleDownloadRegionalIpa();
-              }}
-              loading={offlineAction === "regional-ipa-download"}
-              disabled={
-                Boolean(offlineAction) ||
-                syncBusy ||
-                dictionaryStatus !== "installed" ||
-                regionalIpaStatus === "installed" ||
-                regionalIpaStatus === "checking"
-              }
-              style={{ flex: 1 }}
-            />
-            <Button
-              testID="offline-regional-ipa-delete"
-              label="Xóa"
-              icon="trash-2"
-              variant="ghost"
-              onPress={() => {
-                void handleDeleteOfflineResource("regional-ipa");
-              }}
-              loading={offlineAction === "regional-ipa-delete"}
-              disabled={
-                Boolean(offlineAction) ||
-                syncBusy ||
-                regionalIpaStatus === "missing" ||
-                regionalIpaStatus === "checking"
-              }
-              style={{ flex: 1 }}
-            />
-          </View>
+          {([
+            ["us", REGIONAL_IPA_DICTIONARY.us.label],
+            ["uk", REGIONAL_IPA_DICTIONARY.uk.label],
+            ["ukSupplement", REGIONAL_IPA_DICTIONARY.ukSupplement.label],
+          ] as const).map(([sourceId, label]) => {
+            const partState = regionalIpaParts[sourceId];
+            const action = `regional-ipa-${sourceId}-download`;
+            const canRetryAssembly =
+              regionalIpaStatus !== "installed" &&
+              regionalIpaParts.us !== "missing" &&
+              regionalIpaParts.uk !== "missing" &&
+              regionalIpaParts.ukSupplement !== "missing";
+            const partStatus =
+              partState === "installed"
+                ? "Đã cài"
+                : partState === "verified"
+                  ? "Đã tải và xác minh · chờ đủ phần"
+                  : partState === "checking"
+                    ? "Đang kiểm tra…"
+                    : `Chưa tải · ${sizeLabel(REGIONAL_IPA_DICTIONARY[sourceId].bytes)}`;
+            return (
+              <View
+                key={sourceId}
+                style={[
+                  styles.ipaPartRow,
+                  { borderTopColor: c.border },
+                ]}
+              >
+                <View style={styles.offlineResourceText}>
+                  <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                    {label}
+                  </Text>
+                  <Text
+                    testID={`offline-regional-ipa-${sourceId}-status`}
+                    style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+                  >
+                    {partStatus}
+                  </Text>
+                </View>
+                <Button
+                  testID={
+                    sourceId === "us"
+                      ? "offline-regional-ipa-download"
+                      : `offline-regional-ipa-download-${sourceId}`
+                  }
+                  label={
+                    partState === "installed"
+                      ? "Đã cài"
+                      : partState === "verified" && canRetryAssembly
+                        ? "Thử ghép"
+                        : partState === "verified"
+                          ? "Đã xác minh"
+                          : "Tải phần"
+                  }
+                  icon={
+                    partState === "missing"
+                      ? "download"
+                      : partState === "verified" && canRetryAssembly
+                        ? "refresh-cw"
+                        : "check"
+                  }
+                  onPress={() => {
+                    void handleDownloadRegionalIpaPart(sourceId);
+                  }}
+                  loading={offlineAction === action}
+                  disabled={
+                    Boolean(offlineAction) ||
+                    syncBusy ||
+                    dictionaryStatus !== "installed" ||
+                    (partState === "verified" && !canRetryAssembly) ||
+                    partState === "installed" ||
+                    partState === "checking"
+                  }
+                />
+              </View>
+            );
+          })}
+          <Button
+            testID="offline-regional-ipa-delete"
+            label="Xóa dữ liệu IPA"
+            icon="trash-2"
+            variant="ghost"
+            onPress={() => {
+              void handleDeleteOfflineResource("regional-ipa");
+            }}
+            loading={offlineAction === "regional-ipa-delete"}
+            disabled={
+              Boolean(offlineAction) ||
+              syncBusy ||
+              (regionalIpaStatus === "missing" &&
+                regionalIpaParts.us === "missing" &&
+                regionalIpaParts.uk === "missing" &&
+                regionalIpaParts.ukSupplement === "missing") ||
+              regionalIpaStatus === "checking"
+            }
+          />
           <View style={[styles.offlineDivider, { borderColor: c.border }]} />
           <View style={styles.offlineResource}>
             <View
@@ -1139,196 +1473,6 @@ Nội dung tệp:
           ) : null}
           {offlineError ? <ErrorBanner message={offlineError} /> : null}
         </View>
-        <Text style={[styles.section, { color: c.mutedForeground }]}>
-          ĐẶT LẠI ỨNG DỤNG
-        </Text>
-        <View
-          style={[
-            styles.resetCard,
-            {
-              backgroundColor: c.card,
-              borderColor: c.border,
-              borderRadius: c.radius,
-            },
-          ]}
-        >
-          <MaterialSheen radius={c.radius} />
-          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            {user
-              ? "Xóa sổ từ, tiến độ và thống kê trên thiết bị này và toàn bộ tài khoản trên các thiết bị khác. Từ điển, IPA và audio offline cũng sẽ bị xóa. Không thể hoàn tác; cần Internet để xác nhận xóa cloud."
-              : "Xóa sổ từ, tiến độ, thống kê và tài nguyên offline trên thiết bị này. Không xóa dữ liệu cloud của tài khoản khác. Không thể hoàn tác."}
-          </Text>
-          <Button
-            testID="reset-app-data"
-            label="Đặt lại mọi dữ liệu"
-            icon="trash-2"
-            variant="danger"
-            onPress={() => {
-              setResetError(null);
-              setResetDialog(true);
-            }}
-            disabled={
-              !userLoaded ||
-              syncBusy ||
-              Boolean(offlineAction) ||
-              transferState !== null ||
-              resetBusy
-            }
-          />
-          {resetNotice ? (
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[styles.transferNotice, { color: c.successText }]}
-            >
-              {resetNotice}
-            </Text>
-          ) : null}
-          {resetError ? <ErrorBanner message={resetError} /> : null}
-        </View>
-        <ConfirmDialog
-          visible={resetDialog}
-          title="Xóa mọi dữ liệu VocabFlow?"
-          message={user
-            ? "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, IPA và audio offline cũng sẽ bị xóa khỏi thiết bị này.\n\nCần Internet. Nếu máy chủ không xác nhận xóa cloud, dữ liệu trên thiết bị và tài nguyên offline sẽ được giữ nguyên. Không thể hoàn tác."
-            : "Sẽ xóa vĩnh viễn sổ từ, cấp ôn, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này. Từ điển, IPA và audio offline cũng sẽ bị xóa khỏi thiết bị này. Không có dữ liệu cloud nào bị xóa. Không thể hoàn tác."}
-          confirmLabel={user ? "Xóa cloud và thiết bị" : "Xóa dữ liệu thiết bị"}
-          onCancel={() => {
-            if (!resetBusy) {
-              setResetDialog(false);
-              setResetError(null);
-            }
-          }}
-          onConfirm={() => {
-            void handleResetAppData();
-          }}
-          busy={resetBusy}
-          error={resetError}
-        />
-        <Text style={[styles.section, { color: c.mutedForeground }]}>
-          ÂM THANH
-        </Text>
-        <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
-          Nhạc piano chỉ phát ở tab Ôn tập, tự tắt trong phiên làm bài và trò
-          nối từ. Âm lượng nhạc nhỏ hơn hiệu ứng; công tắc và mức âm lượng dưới
-          đây điều khiển cả hai.
-        </Text>
-        <View
-          style={[
-            styles.speechGroup,
-            {
-              backgroundColor: c.card,
-              borderColor: c.border,
-              borderRadius: c.radius,
-            },
-          ]}
-        >
-          <View style={styles.speechRow}>
-            <View style={styles.speechText}>
-              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
-                Âm thanh ứng dụng
-              </Text>
-              <Text
-                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
-              >
-                Hiệu ứng nhẹ và nhạc nền piano.
-              </Text>
-            </View>
-            <Switch
-              testID="sfx-enabled"
-              accessibilityLabel="Âm thanh ứng dụng"
-              value={sound.enabled}
-              disabled={!sound.ready || sound.saving}
-              onValueChange={(value) => {
-                if (value) sound.unlockFromGesture();
-                void sound.setEnabled(value);
-              }}
-              trackColor={{ false: c.border, true: c.primary }}
-              thumbColor={c.card}
-            />
-          </View>
-          <View
-            style={[
-              styles.volumeRow,
-              { borderTopWidth: 1, borderTopColor: c.border },
-            ]}
-          >
-            <View style={styles.speechText}>
-              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
-                Âm lượng
-              </Text>
-              <Text
-                testID="sfx-volume-value"
-                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
-              >
-                {Math.round(sound.volume * 100)}%
-              </Text>
-            </View>
-            <View style={styles.volumeControls}>
-              <Pressable
-                testID="sfx-volume-down"
-                accessibilityRole="button"
-                accessibilityLabel="Giảm âm lượng"
-                accessibilityState={{
-                  disabled: !sound.ready || sound.saving || sound.volume <= 0,
-                }}
-                disabled={!sound.ready || sound.saving || sound.volume <= 0}
-                onPress={() => {
-                  sound.unlockFromGesture();
-                  void sound.setVolume(sound.volume - 0.1);
-                }}
-                style={({ pressed }) => [
-                  styles.volumeButton,
-                  {
-                    backgroundColor: c.secondary,
-                    opacity:
-                      !sound.ready || sound.saving || sound.volume <= 0
-                        ? 0.45
-                        : pressed
-                          ? 0.65
-                          : 1,
-                  },
-                ]}
-              >
-                <Feather name="minus" size={19} color={c.primary} />
-              </Pressable>
-              <Pressable
-                testID="sfx-volume-up"
-                accessibilityRole="button"
-                accessibilityLabel="Tăng âm lượng"
-                accessibilityState={{
-                  disabled: !sound.ready || sound.saving || sound.volume >= 1,
-                }}
-                disabled={!sound.ready || sound.saving || sound.volume >= 1}
-                onPress={() => {
-                  sound.unlockFromGesture();
-                  void sound.setVolume(sound.volume + 0.1);
-                }}
-                style={({ pressed }) => [
-                  styles.volumeButton,
-                  {
-                    backgroundColor: c.secondary,
-                    opacity:
-                      !sound.ready || sound.saving || sound.volume >= 1
-                        ? 0.45
-                        : pressed
-                          ? 0.65
-                          : 1,
-                  },
-                ]}
-              >
-                <Feather name="plus" size={19} color={c.primary} />
-              </Pressable>
-            </View>
-          </View>
-        </View>
-        {sound.error ? (
-          <ErrorBanner
-            message={sound.error}
-            onRetry={() => {
-              void sound.retryLoad();
-            }}
-          />
-        ) : null}
         <View
           style={[
             styles.stat,
@@ -1412,6 +1556,16 @@ const styles = StyleSheet.create({
   section: { fontFamily: F.b, fontSize: 12, letterSpacing: 1.6, marginTop: 6 },
   appearanceHint: { fontFamily: F.r, fontSize: 14, lineHeight: 20 },
   appearanceGroup: { borderWidth: 1, padding: 10, gap: 10 },
+  qualityPlaceholder: {
+    minHeight: 68,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   appearanceOption: {
     minHeight: 66,
     borderWidth: 1,
@@ -1436,6 +1590,14 @@ const styles = StyleSheet.create({
   },
   offlineResourceText: { flex: 1, gap: 3 },
   offlineActions: { flexDirection: "row", gap: 10 },
+  ipaPartRow: {
+    minHeight: 72,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   offlineDivider: { borderTopWidth: 1 },
   resetCard: { borderWidth: 1, padding: 14, gap: 12, overflow: "hidden" },
   speechRow: {

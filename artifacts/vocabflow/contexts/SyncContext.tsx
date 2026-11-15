@@ -37,6 +37,9 @@ interface SyncContextValue {
   resetAccountData: (
     clearOfflineResources: () => Promise<void>,
   ) => Promise<void>;
+  resetLocalData: (
+    clearOfflineResources: () => Promise<void>,
+  ) => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null);
@@ -231,6 +234,52 @@ export function SyncProvider({
     [online, replaceRemote, userId],
   );
 
+  const resetLocalData = useCallback(
+    async (clearOfflineResources: () => Promise<void>) => {
+      if (inFlight.current || resetInProgress.current)
+        throw new Error("Đang đồng bộ dữ liệu. Hãy đợi xong rồi thử lại.");
+      if (debounce.current) clearTimeout(debounce.current);
+      debounce.current = null;
+      resetInProgress.current = true;
+      inFlight.current = true;
+      syncAgain.current = false;
+      setState("syncing");
+      setMessage(null);
+      let localCleared = false;
+      try {
+        const local = await exportSyncSnapshot();
+        if (userId) {
+          await clearLocalAccountAfterCloudReset(local.payload.revision);
+          localCleared = true;
+          await clearOfflineResources();
+        } else {
+          await resetLocalOnly({
+            currentRevision: local.payload.revision,
+            clearLocal: async (revision) => {
+              await clearLocalAccountAfterCloudReset(revision);
+              localCleared = true;
+            },
+            clearOfflineResources,
+          });
+        }
+        setState(userId ? "synced" : "offline");
+      } catch (error) {
+        setState("error");
+        setMessage(localCleared
+          ? "Dữ liệu học trên thiết bị đã xóa nhưng chưa xóa hết tài nguyên offline. Dữ liệu cloud không bị thay đổi; hãy thử lại."
+          : error instanceof Error
+            ? error.message
+            : "Không thể đặt lại dữ liệu trên thiết bị. Dữ liệu hiện tại vẫn được giữ.");
+        throw error;
+      } finally {
+        resetInProgress.current = false;
+        inFlight.current = false;
+        syncAgain.current = false;
+      }
+    },
+    [userId],
+  );
+
   const refreshNetwork = useCallback(async () => {
     try {
       const network = await Network.getNetworkStateAsync();
@@ -297,8 +346,9 @@ export function SyncProvider({
       online: online === true,
       retry: syncNow,
       resetAccountData,
+      resetLocalData,
     }),
-    [lastSyncedAt, message, online, resetAccountData, state, syncNow],
+    [lastSyncedAt, message, online, resetAccountData, resetLocalData, state, syncNow],
   );
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
