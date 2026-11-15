@@ -204,31 +204,39 @@ export default function CollectionScreen() {
   const galleryGroups: {
     key: string;
     title: string;
+    total: number;
     statues: { artwork: CollectionArtwork; unlocked: boolean }[];
-  }[] = GALLERY_RARITY_ORDER.map((rarity) => ({
-    key: rarity,
-    title: rarityDisplayLabel(rarity),
-    statues: COLLECTION_ARTWORKS.filter(
+  }[] = GALLERY_RARITY_ORDER.map((rarity) => {
+    const rarityStatues = COLLECTION_ARTWORKS.filter(
       (statue) =>
-        statue.collectionGroup !== "bonus" &&
-        statue.rarity === rarity &&
-        unlockedStatueIds.has(statue.id),
-    ).map((artwork) => ({
+        statue.collectionGroup !== "bonus" && statue.rarity === rarity,
+    );
+    return {
+      key: rarity,
+      title: rarityDisplayLabel(rarity),
+      total: rarityStatues.length,
+      statues: rarityStatues
+        .filter((statue) => unlockedStatueIds.has(statue.id))
+        .map((artwork) => ({
+          artwork,
+          unlocked: true,
+        })),
+    };
+  });
+  const allBonusStatues = COLLECTION_ARTWORKS.filter(
+    (statue) => statue.collectionGroup === "bonus",
+  );
+  const bonusStatues = allBonusStatues
+    .filter((statue) => unlockedStatueIds.has(statue.id))
+    .map((artwork) => ({
       artwork,
       unlocked: true,
-    })),
-  })).filter((group) => group.statues.length > 0);
-  const bonusStatues = COLLECTION_ARTWORKS.filter(
-    (statue) =>
-      statue.collectionGroup === "bonus" && unlockedStatueIds.has(statue.id),
-  ).map((artwork) => ({
-    artwork,
-    unlocked: true,
-  }));
-  if (bonusStatues.length > 0) {
+    }));
+  if (allBonusStatues.length > 0) {
     galleryGroups.push({
       key: "bonus",
       title: "Đặc biệt",
+      total: allBonusStatues.length,
       statues: bonusStatues,
     });
   }
@@ -504,8 +512,7 @@ export default function CollectionScreen() {
                   {group.title}
                 </Text>
                 <Text style={[styles.caption, { color: c.mutedForeground }]}>
-                  {group.statues.filter((statue) => statue.unlocked).length} /{" "}
-                  {group.statues.length}
+                  {group.statues.length} / {group.total}
                 </Text>
               </View>
               <View style={styles.gallery}>

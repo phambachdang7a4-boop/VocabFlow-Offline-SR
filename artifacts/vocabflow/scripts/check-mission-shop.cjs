@@ -69,6 +69,10 @@ const storeScreen = readFileSync(
   join(__dirname, "../components/MissionShop.tsx"),
   "utf8",
 );
+const investmentScreen = readFileSync(
+  join(__dirname, "../components/StoneInvestmentSection.tsx"),
+  "utf8",
+);
 const rootTabs = readFileSync(
   join(__dirname, "../app/(tabs)/_layout.tsx"),
   "utf8",
@@ -78,6 +82,19 @@ assert.match(tabs, /params: \{ panel: "shop" \}/);
 assert.match(missionScreen, /<MissionShop \/>/);
 assert.match(storeScreen, /Mảnh đã mua không thể đổi ngược lại thành Stone/);
 assert.match(storeScreen, /testID="mission-shop-corvi-hero"/);
+assert.match(storeScreen, /testID="shop-stone-balance-badge"/);
+assert.equal(
+  (storeScreen.match(/testID="shop-stone-balance"/g) ?? []).length,
+  1,
+  "The current Stone balance is shown once in the hero image badge.",
+);
+assert.match(storeScreen, /testID="mission-shop-offers" style=\{styles\.offerGrid\}/);
+assert.match(storeScreen, /offerGrid:\s*\{\s*flexDirection:\s*"row"/);
+assert.doesNotMatch(
+  investmentScreen,
+  /Số dư:\s*\{\(overview\?\.stoneBalance/,
+  "The investment section no longer repeats the current balance.",
+);
 assert.match(
   storeScreen,
   /require\("\.\.\/assets\/images\/corvi-shop-counter\.png"\)/,

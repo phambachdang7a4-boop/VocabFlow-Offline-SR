@@ -142,18 +142,6 @@ export function StoneInvestmentSection() {
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.balanceCard,
-          { backgroundColor: c.card, borderColor: c.border },
-        ]}
-      >
-        <Feather name="circle" size={19} color={c.accent} />
-        <Text style={[styles.balanceText, { color: c.foreground }]}>
-          Số dư: {(overview?.stoneBalance ?? 0).toLocaleString("vi-VN")} Stone
-        </Text>
-      </View>
-
       <Text style={[styles.label, { color: c.foreground }]}>
         Chọn phương án
       </Text>
@@ -427,15 +415,6 @@ const styles = StyleSheet.create({
   sectionHeading: { gap: 3, marginTop: 5 },
   sectionTitle: { fontFamily: F.b, fontSize: 18 },
   hint: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
-  balanceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 9,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  balanceText: { fontFamily: F.b, fontSize: 14 },
   label: { fontFamily: F.s, fontSize: 13, marginTop: 2 },
   planCard: {
     borderWidth: 1,

@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Animated, { SlideInLeft, SlideInRight } from "react-native-reanimated";
 import {
   ActivityIndicator,
   Platform,
@@ -37,12 +38,20 @@ export default function BlankScreen() {
   const { panel } = useLocalSearchParams<{ panel?: string }>();
   const showingShop = panel === "shop";
   const showingCollection = panel === "collection";
+  const previousCollectionState = useRef<boolean | null>(null);
+  const shouldSlide =
+    previousCollectionState.current !== null &&
+    previousCollectionState.current !== showingCollection;
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    previousCollectionState.current = showingCollection;
+  }, [showingCollection]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,18 +78,29 @@ export default function BlankScreen() {
       testID="missions-screen"
       style={[styles.flex, { backgroundColor: c.background }]}
     >
-      {showingCollection ? (
-        <CollectionScreen />
-      ) : (
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            { paddingTop: top + 12, paddingBottom: bottom },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          <MissionCollectionTabs active={showingShop ? "shop" : "missions"} />
-          {showingShop ? <MissionShop /> : (
+      <Animated.View
+        key={showingCollection ? "collection-panel" : "mission-panel"}
+        entering={
+          shouldSlide
+            ? showingCollection
+              ? SlideInRight.duration(250)
+              : SlideInLeft.duration(250)
+            : undefined
+        }
+        style={styles.flex}
+      >
+        {showingCollection ? (
+          <CollectionScreen />
+        ) : (
+          <ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingTop: top + 12, paddingBottom: bottom },
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <MissionCollectionTabs active={showingShop ? "shop" : "missions"} />
+            {showingShop ? <MissionShop /> : (
             <>
             {error ? (
               <ErrorBanner message={error} onRetry={() => void load()} />
@@ -332,8 +352,9 @@ export default function BlankScreen() {
             </Text>
             </>
           )}
-        </ScrollView>
-      )}
+          </ScrollView>
+        )}
+      </Animated.View>
     </View>
   );
 }

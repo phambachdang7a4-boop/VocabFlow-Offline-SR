@@ -629,8 +629,13 @@ assert.match(
 );
 assert.match(
   collectionScreen,
-  /statue\.rarity === rarity &&\s*unlockedStatueIds\.has\(statue\.id\)/,
-  "Only unlocked statues are included in visible rarity groups.",
+  /statues:\s*rarityStatues\s*\.filter\(\(statue\) => unlockedStatueIds\.has\(statue\.id\)\)/,
+  "Only unlocked statues are included in the visible gallery tiles.",
+);
+assert.match(
+  collectionScreen,
+  /total:\s*rarityStatues\.length/,
+  "Rarity sections retain full unlock totals after hidden statues are filtered.",
 );
 assert.match(
   collectionScreen,
@@ -652,6 +657,8 @@ assert.match(
   /showingCollection \? \(\s*<CollectionScreen \/>/,
   "The collection is rendered inside the five-tab missions route.",
 );
+assert.match(missionsScreen, /SlideInRight\.duration\(250\)/);
+assert.match(missionsScreen, /SlideInLeft\.duration\(250\)/);
 assert.equal(COLLECTION_ARTWORKS.length, 111);
 assert.ok(
   COLLECTION_ARTWORKS.every((item) => item.unlockMode === "automatic"),
