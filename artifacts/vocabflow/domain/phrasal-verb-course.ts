@@ -245,7 +245,7 @@ function stableHash(value: string): number {
 }
 
 const IRREGULAR_VERB_FORMS: Readonly<Record<string, string>> = {
-  be: "was|were|been",
+  be: "am|are|is|was|were|been|being",
   become: "became|become",
   begin: "began|begun",
   bend: "bent",
@@ -358,6 +358,10 @@ function verbForms(verb: string): string[] {
     : verb.endsWith("y") && !/[aeiou]y$/.test(verb)
       ? `${verb.slice(0, -1)}ied`
       : `${doubleFinal}ed`;
+  const singleFinalPast =
+    doubleFinal !== verb && !verb.endsWith("e") && !verb.endsWith("y")
+      ? `${verb}ed`
+      : null;
   const regularThirdPerson = verb.endsWith("y") && !/[aeiou]y$/.test(verb)
     ? `${verb.slice(0, -1)}ies`
     : /(?:s|x|z|ch|sh|o)$/.test(verb)
@@ -368,7 +372,7 @@ function verbForms(verb: string): string[] {
     : verb.endsWith("e") && !/(?:ee|ye|oe)$/.test(verb)
       ? `${verb.slice(0, -1)}ing`
       : `${doubleFinal}ing`;
-  return [verb, ...regularPast.split("|"), ...regularThirdPerson.split("|"), ing,
+  return [verb, ...regularPast.split("|"), ...(singleFinalPast ? [singleFinalPast] : []), ...regularThirdPerson.split("|"), ing,
     ...(irregular?.split("|") ?? [])];
 }
 
@@ -398,7 +402,10 @@ function blankHeadword(example: string, term: string): string {
   if (!pattern.test(example)) {
     throw new Error(`Câu ví dụ không chứa nguyên cụm động từ: ${term}`);
   }
-  return example.replace(pattern, "_____");
+  return example.replace(
+    new RegExp(pattern.source, `${pattern.flags}g`),
+    "_____",
+  );
 }
 
 function choicesFor(term: string, lessonTerms: readonly string[]): string[] {
@@ -517,12 +524,20 @@ const authoredLessons: PhrasalVerbCourseLesson[] = TOPICS.map(
   },
 );
 
+let dictionaryLessonsSoFar = 0;
 const dictionaryLessons: PhrasalVerbCourseLesson[] =
   dictionaryData.topics.flatMap((topic) => {
     const topicTerms = topic.terms.filter((term) => !authoredEntries[term]);
     const lessons: PhrasalVerbCourseLesson[] = [];
-    for (let start = 0; start < topicTerms.length; start += 20) {
-      const lessonTerms = topicTerms.slice(start, start + 20);
+    const lessonCount = Math.ceil(topicTerms.length / 20);
+    const baseLessonSize = Math.floor(topicTerms.length / lessonCount);
+    const largerLessonCount = topicTerms.length % lessonCount;
+    let start = 0;
+    for (let batchIndex = 0; batchIndex < lessonCount; batchIndex += 1) {
+      const lessonSize =
+        baseLessonSize + (batchIndex < largerLessonCount ? 1 : 0);
+      const lessonTerms = topicTerms.slice(start, start + lessonSize);
+      start += lessonSize;
       const firstRoot = dictionaryEntries[lessonTerms[0]].rootVerb!;
       const lastRoot = dictionaryEntries[lessonTerms.at(-1)!].rootVerb!;
       const rootRange =

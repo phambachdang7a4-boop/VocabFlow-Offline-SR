@@ -65,6 +65,7 @@ import {
   PHRASAL_VERB_COURSE_ENTRIES,
   PHRASAL_VERB_COURSE_ID,
   PHRASAL_VERB_COURSE_LESSONS,
+  PHRASAL_VERB_COURSE_TOPIC_COUNT,
   PHRASAL_VERB_COURSE_TITLE,
   PHRASAL_VERB_COURSE_WORD_COUNT,
 } from "@/domain/phrasal-verb-course";
@@ -166,12 +167,13 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: PHRASAL_VERB_COURSE_ID,
     title: PHRASAL_VERB_COURSE_TITLE,
     description:
-      `Học ${PHRASAL_VERB_COURSE_WORD_COUNT} cụm động từ thông dụng qua 6 chủ đề sinh hoạt, học tập, giao tiếp và xử lý tình huống.`,
+      `Học ${PHRASAL_VERB_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm động từ đã lọc từ từ điển offline, có nghĩa và câu ví dụ; sắp xếp theo ${PHRASAL_VERB_COURSE_TOPIC_COUNT} nhóm chủ đề và động từ gốc.`,
     lessons: PHRASAL_VERB_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(PHRASAL_VERB_COURSE_ENTRIES)),
     icon: "message-circle",
     testIdPrefix: "phrasal-verbs",
     wordCount: PHRASAL_VERB_COURSE_WORD_COUNT,
+    topicCount: PHRASAL_VERB_COURSE_TOPIC_COUNT,
   },
   {
     id: CONJUNCTION_COURSE_ID,

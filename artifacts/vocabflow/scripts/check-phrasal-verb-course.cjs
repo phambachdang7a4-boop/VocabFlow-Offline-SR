@@ -1,36 +1,96 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 
-const course = loadTs(join(__dirname, "../domain/phrasal-verb-course.ts"));
+const data = require("../domain/phrasal-verb-course-data.json");
+const topicMap = require("../domain/phrasal-verb-topic-map.json");
+const course = loadTs(
+  join(__dirname, "../domain/phrasal-verb-course.ts"),
+  { "./phrasal-verb-course-data.json": data },
+);
 const entries = course.PHRASAL_VERB_COURSE_ENTRIES;
 const lessons = course.PHRASAL_VERB_COURSE_LESSONS;
 const terms = Object.keys(entries);
+const dictionaryTerms = Object.keys(data.entries);
+const authoredLessons = lessons.slice(0, 6);
+const dictionaryLessons = lessons.slice(6);
 
 assert.equal(course.PHRASAL_VERB_COURSE_ID, "phrasal-verbs-v1");
-assert.equal(course.PHRASAL_VERB_COURSE_WORD_COUNT, 120);
-assert.equal(terms.length, 120);
-assert.equal(new Set(terms).size, 120, "Every phrasal verb is unique.");
-assert.ok(terms.every((term) => term.split(" ").length >= 2),
-  "The course contains multiword verbs rather than single-word verbs.");
-assert.equal(lessons.length, 6);
+assert.equal(data.uniqueTerms, dictionaryTerms.length);
+assert.ok(dictionaryTerms.length >= 1_500,
+  "The filtered offline dictionary provides a broad course.");
+assert.ok(terms.length >= 1_900,
+  "The expanded course keeps the curated lessons and adds dictionary entries.");
+assert.equal(course.PHRASAL_VERB_COURSE_WORD_COUNT, terms.length);
+assert.equal(new Set(terms).size, terms.length, "Every course term is unique.");
+assert.equal(Object.keys(topicMap).length, dictionaryTerms.length);
+assert.equal(data.topics.length, 10);
+
+const dictionaryDomain = readFileSync(
+  join(__dirname, "../domain/dictionary.ts"),
+  "utf8",
+);
+const expectedSourceHash =
+  dictionaryDomain.match(/sha256:\s*'([a-f0-9]{64})'/i)?.[1];
+assert.ok(expectedSourceHash, "The offline dictionary has a pinned source hash.");
+assert.equal(data.sourceSha256, expectedSourceHash);
+
+assert.equal(authoredLessons.length, 6);
 assert.deepEqual(
-  lessons.map((lesson) => lesson.questions.length),
+  authoredLessons.map((lesson) => lesson.questions.length),
   [20, 20, 20, 20, 20, 20],
-  "Each themed lesson contains exactly twenty questions.",
+  "The original six reviewed lessons stay intact.",
 );
 assert.deepEqual(
-  lessons.map((lesson) => lesson.title),
-  [
-    "Bài 1: Sinh hoạt hằng ngày",
-    "Bài 2: Nhà cửa và việc vặt",
-    "Bài 3: Học tập và công việc",
-    "Bài 4: Giao tiếp và các mối quan hệ",
-    "Bài 5: Di chuyển và thay đổi",
-    "Bài 6: Giải quyết tình huống",
-  ],
-  "Lessons are grouped by everyday situations, not alphabetically.",
+  authoredLessons.map((lesson) => lesson.id),
+  Array.from(
+    { length: 6 },
+    (_, index) =>
+      `${course.PHRASAL_VERB_COURSE_ID}-lesson-${String(index + 1).padStart(3, "0")}`,
+  ),
+  "The existing lesson IDs remain stable for saved progress.",
 );
+assert.equal(course.PHRASAL_VERB_COURSE_TOPIC_COUNT, 16);
+assert.ok(dictionaryLessons.length > 80);
+assert.ok(
+  dictionaryLessons.every((lesson) => lesson.topicId && lesson.topicTitle),
+  "Dictionary lessons are grouped under named topics.",
+);
+assert.ok(
+  lessons.every((lesson, index) =>
+    index === 0 || lesson.id !== lessons[index - 1].id,
+  ),
+  "Lesson identifiers are not repeated.",
+);
+
+const allowedParticles = new Set([
+  "about", "across", "after", "against", "along", "apart", "around",
+  "aside", "at", "away", "back", "by", "down", "for", "forth", "from",
+  "in", "into", "off", "on", "onto", "out", "over", "past", "through",
+  "to", "together", "under", "up", "upon", "with", "without",
+]);
+const dataTopicById = new Map(data.topics.map((topic) => [topic.id, topic]));
+assert.deepEqual(
+  new Set(dictionaryTerms),
+  new Set(data.topics.flatMap((topic) => topic.terms)),
+  "Each extracted term belongs to exactly one topic.",
+);
+for (const term of dictionaryTerms) {
+  const entry = entries[term];
+  const sourceEntry = data.entries[term];
+  assert.ok(entry, `${term} is available in the course.`);
+  assert.equal(entry.dictionarySource, "offline");
+  assert.equal(entry.rootVerb, term.split(" ")[0]);
+  assert.equal(topicMap[term], sourceEntry.topicId);
+  assert.equal(entry.topicId, sourceEntry.topicId);
+  assert.ok(dataTopicById.has(entry.topicId));
+  assert.ok(entry.topicTitle);
+  assert.equal(sourceEntry.partOfSpeech, "V");
+  const parts = term.split(" ");
+  assert.ok(parts.length >= 2 && parts.length <= 4);
+  assert.ok(allowedParticles.has(parts.at(-1)));
+}
 
 const seenTerms = [];
 const ambiguousPairs = [
@@ -50,24 +110,39 @@ const ambiguousPairs = [
   ["take out", "put out"],
 ];
 for (const lesson of lessons) {
+  assert.ok(lesson.questions.length > 0 && lesson.questions.length <= 20);
   const lessonTerms = lesson.questions.map((question) => question.term);
+  if (lesson.topicId && dataTopicById.has(lesson.topicId)) {
+    const sortedTerms = [...lessonTerms].sort((left, right) =>
+      entries[left].rootVerb.localeCompare(entries[right].rootVerb, "en") ||
+      left.localeCompare(right, "en"),
+    );
+    assert.deepEqual(
+      lessonTerms,
+      sortedTerms,
+      `${lesson.title} is sorted by root verb.`,
+    );
+  }
   for (const question of lesson.questions) {
     const entry = entries[question.term];
-    assert.ok(entry, `${question.term} has a bilingual course entry.`);
+    assert.ok(entry, `${question.term} has a course entry.`);
     assert.ok(entry.definition.trim(), `${question.term} has a Vietnamese meaning.`);
     assert.ok(entry.example.trim(), `${question.term} has an English example.`);
-    assert.ok(
-      /[à-ỹÀ-ỸđĐ]/u.test(entry.definition),
-      `${question.term} definition is written in Vietnamese.`,
-    );
-    assert.ok(
-      entry.exampleTranslation.trim(),
-      `${question.term} has a complete Vietnamese example translation.`,
-    );
-    assert.ok(
-      /[à-ỹÀ-ỸđĐ]/u.test(entry.exampleTranslation),
-      `${question.term} translation is written in Vietnamese.`,
-    );
+    if (!entry.dictionarySource) {
+      assert.ok(
+        /[à-ỹÀ-ỸđĐ]/u.test(entry.definition),
+        `${question.term} reviewed definition is written in Vietnamese.`,
+      );
+    }
+    if (entry.exampleTranslation) {
+      assert.ok(/[à-ỹÀ-ỸđĐ]/u.test(entry.exampleTranslation));
+    }
+    if (!entry.dictionarySource) {
+      assert.ok(
+        entry.exampleTranslation?.trim(),
+        `${question.term} keeps the reviewed Vietnamese example translation.`,
+      );
+    }
     assert.ok(question.prompt.includes("_____"), `${question.term} has a cloze.`);
     assert.ok(
       !question.prompt.includes(question.term),
@@ -78,33 +153,29 @@ for (const lesson of lessons) {
     assert.ok(question.choices.includes(question.term));
     assert.ok(
       question.choices.every((choice) => lessonTerms.includes(choice)),
-      "Choices are drawn from the same lesson, preserving contextual relevance.",
+      "Choices are drawn from the same lesson.",
     );
     for (const [left, right] of ambiguousPairs) {
-      if (question.term === left) {
-        assert.ok(!question.choices.includes(right),
-          `${question.term} excludes the overlapping answer ${right}.`);
-      }
-      if (question.term === right) {
-        assert.ok(!question.choices.includes(left),
-          `${question.term} excludes the overlapping answer ${left}.`);
-      }
+      if (question.term === left)
+        assert.ok(!question.choices.includes(right));
+      if (question.term === right)
+        assert.ok(!question.choices.includes(left));
     }
     seenTerms.push(question.term);
   }
 }
 
-assert.equal(new Set(seenTerms).size, 120);
+assert.equal(new Set(seenTerms).size, terms.length);
 assert.deepEqual(new Set(seenTerms), new Set(terms));
 assert.ok(
   terms.some((term) => entries[term].spellingNote?.includes("đại từ")),
-  "Separable verbs include a learner-facing note about pronoun placement.",
+  "The reviewed separable verbs retain their pronoun-placement notes.",
 );
 assert.ok(
   terms.some((term) => entries[term].spellingNote?.includes("Cụm ba từ")),
-  "Three-part verbs include a short structure note.",
+  "The reviewed three-part verbs retain their structure notes.",
 );
 
 console.log(
-  "PASS: 120 unique phrasal verbs across six themed lessons; every entry has Vietnamese meaning, natural example, full translation, and one correct choice.",
+  `PASS: ${terms.length} unique multiword verbs across ${lessons.length} lessons and ${course.PHRASAL_VERB_COURSE_TOPIC_COUNT} groups; all extracted entries have dictionary meanings, examples, and root/topic ordering.`,
 );

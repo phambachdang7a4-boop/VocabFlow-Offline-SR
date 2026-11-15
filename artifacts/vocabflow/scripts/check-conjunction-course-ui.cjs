@@ -40,6 +40,11 @@ const idiomCourseDomain = loadTs(
 );
 const phrasalVerbCourseDomain = loadTs(
   join(__dirname, "../domain/phrasal-verb-course.ts"),
+  {
+    "./phrasal-verb-course-data.json": require(
+      "../domain/phrasal-verb-course-data.json",
+    ),
+  },
 );
 const courseWordSelectionDomain = loadTs(
   join(__dirname, "../domain/course-word-selection.ts"),
@@ -146,6 +151,7 @@ function mount(initialSavedWords = [], options = {}) {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
       markCourseLessonCompleted: async (lessonId) => completed.push(lessonId),
+      recordStoneInvestmentStudyDay: async () => undefined,
     },
     "@/contexts/VocabularyContext": {
       useVocabulary: () => ({
