@@ -10,11 +10,14 @@ import type { SyncCollectionPieceSpend } from './syncCollectionPieceSpend';
 import type { SyncCourseProgress } from './syncCourseProgress';
 import type { SyncCourseSelection } from './syncCourseSelection';
 import type { SyncDeletedWord } from './syncDeletedWord';
+import type { SyncInvestmentStudyDay } from './syncInvestmentStudyDay';
 import type { SyncMissionAward } from './syncMissionAward';
 import type { SyncMissionChest } from './syncMissionChest';
+import type { SyncMissionShopPurchase } from './syncMissionShopPurchase';
 import type { SyncReviewComboReward } from './syncReviewComboReward';
 import type { SyncReviewSession } from './syncReviewSession';
 import type { SyncReviewStat } from './syncReviewStat';
+import type { SyncStoneInvestment } from './syncStoneInvestment';
 import type { SyncWord } from './syncWord';
 
 export interface UserSyncSnapshot {
@@ -45,4 +48,10 @@ export interface UserSyncSnapshot {
   collectionCrafts?: SyncCollectionCraft[];
   /** @maxItems 10000 */
   collectionPieceSpends?: SyncCollectionPieceSpend[];
+  /** @maxItems 10000 */
+  missionShopPurchases?: SyncMissionShopPurchase[];
+  /** @maxItems 10000 */
+  stoneInvestments?: SyncStoneInvestment[];
+  /** @maxItems 10000 */
+  investmentStudyDays?: SyncInvestmentStudyDay[];
 }

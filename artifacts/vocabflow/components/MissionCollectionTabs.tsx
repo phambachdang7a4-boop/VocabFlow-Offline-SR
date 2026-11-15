@@ -4,15 +4,12 @@ import { router } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { F, MaterialSheen } from "@/components/ui";
 
-type MissionCollectionTab = "missions" | "collection";
+export type MissionCollectionTab = "missions" | "shop" | "collection";
 
-const TABS: {
-  id: MissionCollectionTab;
-  label: string;
-  route: "/(tabs)/blank" | "/collection";
-}[] = [
-  { id: "missions", label: "Nhiệm Vụ", route: "/(tabs)/blank" },
-  { id: "collection", label: "Bộ Sưu Tập", route: "/collection" },
+const TABS: { id: MissionCollectionTab; label: string }[] = [
+  { id: "missions", label: "Nhiệm Vụ" },
+  { id: "shop", label: "Cửa Hàng" },
+  { id: "collection", label: "Bộ Sưu Tập" },
 ];
 
 export function MissionCollectionTabs({
@@ -45,7 +42,17 @@ export function MissionCollectionTabs({
             accessibilityLabel={tab.label}
             accessibilityState={{ selected }}
             onPress={() => {
-              if (!selected) router.replace(tab.route);
+              if (selected) return;
+              if (tab.id === "collection") {
+                router.replace("/collection");
+              } else if (tab.id === "shop") {
+                router.replace({
+                  pathname: "/(tabs)/blank",
+                  params: { panel: "shop" },
+                });
+              } else {
+                router.replace("/(tabs)/blank");
+              }
             }}
             style={({ pressed }) => [
               styles.tab,
@@ -56,9 +63,7 @@ export function MissionCollectionTabs({
               },
             ]}
           >
-            {selected ? (
-              <MaterialSheen tone="navy" radius={c.radius} />
-            ) : null}
+            {selected ? <MaterialSheen tone="navy" radius={c.radius} /> : null}
             <Text
               style={[
                 styles.label,

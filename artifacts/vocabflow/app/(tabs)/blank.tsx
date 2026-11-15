@@ -9,12 +9,13 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomPad } from "@/components/ScreenHeader";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
+import { MissionShop } from "@/components/MissionShop";
 import {
   getDailyMissionOverview,
   type DailyMissionOverview,
@@ -32,6 +33,8 @@ import {
 
 export default function BlankScreen() {
   const c = useColors();
+  const { panel } = useLocalSearchParams<{ panel?: string }>();
+  const showingShop = panel === "shop";
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
   const top = Platform.OS === "web" ? 67 : insets.top;
@@ -55,8 +58,8 @@ export default function BlankScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void load();
-    }, [load]),
+      if (!showingShop) void load();
+    }, [load, showingShop]),
   );
 
   return (
@@ -71,243 +74,261 @@ export default function BlankScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <MissionCollectionTabs active="missions" />
-        {error ? (
-          <ErrorBanner message={error} onRetry={() => void load()} />
-        ) : null}
-        <View
-          style={[
-            styles.walletCard,
-            {
-              backgroundColor: c.card,
-              borderColor: c.border,
-              shadowColor: c.shade,
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.14,
-              shadowRadius: 7,
-              elevation: 3,
-            },
-          ]}
-        >
-          <MaterialSheen radius={20} />
-          <View style={[styles.walletIcon, { backgroundColor: c.accent }]}>
-            <Feather name="award" size={24} color={c.buttonForeground} />
-          </View>
-          <View style={styles.walletText}>
-            <Text style={[styles.walletLabel, { color: c.mutedForeground }]}>
-              SỐ DƯ
-            </Text>
-            {loading && !overview ? (
-              <ActivityIndicator color={c.primary} />
-            ) : (
-              <Text
-                testID="stone-balance"
-                style={[styles.walletValue, { color: c.foreground }]}
-              >
-                {(overview?.stoneBalance ?? 0).toLocaleString("vi-VN")} Stone
-              </Text>
-            )}
-          </View>
-          <Text style={[styles.walletDate, { color: c.mutedForeground }]}>
-            Hôm nay
-          </Text>
-        </View>
-
-        <View style={styles.sectionHeading}>
-          <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-            Ba nhiệm vụ hôm nay
-          </Text>
-          <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
-            Mỗi ngày có nhiệm vụ mới
-          </Text>
-        </View>
-
-        {loading && !overview ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={c.primary} />
-            <Text style={[styles.loadingText, { color: c.mutedForeground }]}>
-              Đang tải nhiệm vụ…
-            </Text>
-          </View>
+        <MissionCollectionTabs active={showingShop ? "shop" : "missions"} />
+        {showingShop ? (
+          <MissionShop />
         ) : (
-          overview?.missions.map((mission) => {
-            const finished = mission.rewarded;
-            const rewardRarity = DAILY_MISSION_CHEST_RARITY[mission.level];
-            const iconName =
-              mission.type === "review"
-                ? "layers"
-                : mission.type === "add-words"
-                  ? "plus-circle"
-                  : mission.type === "time"
-                    ? "clock"
-                    : mission.type === "combo"
-                      ? "zap"
-                      : "award";
-            const progressPercent = Math.min(
-              100,
-              (mission.progress / mission.target) * 100,
-            );
-            const displayProgressLabel =
-              mission.type === "time"
-                ? `${mission.progress}/${mission.target} phút`
-                : mission.type === "combo"
-                  ? `${mission.progress}/${mission.target} câu`
-                  : mission.type === "grade"
-                    ? mission.completed
-                      ? "Đạt"
-                      : "Chưa đạt"
-                    : `${mission.progress}/${mission.target} từ`;
-            return (
-              <View
-                key={mission.id}
-                testID={`daily-mission-${mission.id}`}
-                accessibilityLabel={`${mission.title}. Tiến độ: ${displayProgressLabel}. Rương ${
-                  CHEST_RARITY_LABELS[rewardRarity]
-                } khi hoàn thành. ${
-                  finished ? "Đã nhận phần thưởng." : "Phần thưởng sắp nhận."
-                }`}
-                style={[
-                  styles.missionCard,
-                  {
-                    backgroundColor: finished ? c.successSoft : c.card,
-                    borderColor: finished ? c.success : c.border,
-                    shadowColor: c.shade,
-                    shadowOffset: { width: 0, height: 3 },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 6,
-                    elevation: 2,
-                  },
-                ]}
-              >
-                <MaterialSheen radius={20} />
-                <View style={styles.missionTop}>
-                  <View
-                    style={[
-                      styles.missionIcon,
-                      {
-                        backgroundColor: finished
-                          ? c.success
-                          : c.vocabCardAccent,
-                      },
-                    ]}
-                  >
-                    <Feather
-                      name={finished ? "check" : iconName}
-                      size={21}
-                      color={finished ? "#FFFFFF" : c.buttonForeground}
-                    />
-                  </View>
-                  <View style={styles.missionCopy}>
-                    <Text
-                      style={[
-                        styles.level,
-                        { color: finished ? c.successText : c.primary },
-                      ]}
-                    >
-                      CẤP {mission.level}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.missionTitle,
-                        { color: finished ? c.successText : c.foreground },
-                      ]}
-                    >
-                      {mission.title}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.missionDescription,
-                        { color: c.mutedForeground },
-                      ]}
-                    >
-                      {mission.description}
-                    </Text>
-                    <Text
-                      testID={`daily-mission-chest-${mission.id}`}
-                      style={[
-                        styles.missionChestLabel,
-                        { color: CHEST_RARITY_TEXT_COLORS[rewardRarity] },
-                      ]}
-                    >
-                      Rương {CHEST_RARITY_LABELS[rewardRarity]} khi hoàn thành
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.rewardPill,
-                      {
-                        backgroundColor: finished
-                          ? c.success
-                          : CHEST_RARITY_COLORS[rewardRarity],
-                        borderColor: finished
-                          ? c.success
-                          : CHEST_RARITY_TEXT_COLORS[rewardRarity],
-                        shadowColor: finished
-                          ? c.success
-                          : CHEST_RARITY_COLORS[rewardRarity],
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.24,
-                        shadowRadius: 4,
-                        elevation: 3,
-                      },
-                    ]}
-                  >
-                    {!finished ? <MaterialSheen radius={15} /> : null}
-                    <Feather
-                      name={finished ? "check" : "gift"}
-                      size={finished ? 21 : 27}
-                      color={
-                        finished
-                          ? "#FFFFFF"
-                          : CHEST_RARITY_ICON_COLORS[rewardRarity]
-                      }
-                    />
-                  </View>
-                </View>
-                <View style={styles.progressRow}>
-                  <View style={[styles.track, { backgroundColor: c.muted }]}>
-                    <View
-                      style={[
-                        styles.fill,
-                        {
-                          width: `${progressPercent}%`,
-                          backgroundColor: finished ? c.success : c.accent,
-                        },
-                      ]}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.progressText,
-                      { color: finished ? c.successText : c.primary },
-                    ]}
-                  >
-                    {displayProgressLabel}
-                  </Text>
-                </View>
-              </View>
-            );
-          })
-        )}
-        {overview?.chests.length ? (
           <>
-            <View style={styles.sectionHeading}>
-              <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-                Rương chờ mở
-              </Text>
-              <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
-                Mỗi rương có tối đa 3 lượt nâng cấp
+            {error ? (
+              <ErrorBanner message={error} onRetry={() => void load()} />
+            ) : null}
+            <View
+              style={[
+                styles.walletCard,
+                {
+                  backgroundColor: c.card,
+                  borderColor: c.border,
+                  shadowColor: c.shade,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.14,
+                  shadowRadius: 7,
+                  elevation: 3,
+                },
+              ]}
+            >
+              <MaterialSheen radius={20} />
+              <View style={[styles.walletIcon, { backgroundColor: c.accent }]}>
+                <Feather name="award" size={24} color={c.buttonForeground} />
+              </View>
+              <View style={styles.walletText}>
+                <Text
+                  style={[styles.walletLabel, { color: c.mutedForeground }]}
+                >
+                  SỐ DƯ
+                </Text>
+                {loading && !overview ? (
+                  <ActivityIndicator color={c.primary} />
+                ) : (
+                  <Text
+                    testID="stone-balance"
+                    style={[styles.walletValue, { color: c.foreground }]}
+                  >
+                    {(overview?.stoneBalance ?? 0).toLocaleString("vi-VN")}{" "}
+                    Stone
+                  </Text>
+                )}
+              </View>
+              <Text style={[styles.walletDate, { color: c.mutedForeground }]}>
+                Hôm nay
               </Text>
             </View>
-            {overview.chests.map((chest) => (
-              <ChestCard key={chest.chestId} chest={chest} colors={c} />
-            ))}
+
+            <View style={styles.sectionHeading}>
+              <Text style={[styles.sectionTitle, { color: c.foreground }]}>
+                Ba nhiệm vụ hôm nay
+              </Text>
+              <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
+                Mỗi ngày có nhiệm vụ mới
+              </Text>
+            </View>
+
+            {loading && !overview ? (
+              <View style={styles.loading}>
+                <ActivityIndicator color={c.primary} />
+                <Text
+                  style={[styles.loadingText, { color: c.mutedForeground }]}
+                >
+                  Đang tải nhiệm vụ…
+                </Text>
+              </View>
+            ) : (
+              overview?.missions.map((mission) => {
+                const finished = mission.rewarded;
+                const rewardRarity = DAILY_MISSION_CHEST_RARITY[mission.level];
+                const iconName =
+                  mission.type === "review"
+                    ? "layers"
+                    : mission.type === "add-words"
+                      ? "plus-circle"
+                      : mission.type === "time"
+                        ? "clock"
+                        : mission.type === "combo"
+                          ? "zap"
+                          : "award";
+                const progressPercent = Math.min(
+                  100,
+                  (mission.progress / mission.target) * 100,
+                );
+                const displayProgressLabel =
+                  mission.type === "time"
+                    ? `${mission.progress}/${mission.target} phút`
+                    : mission.type === "combo"
+                      ? `${mission.progress}/${mission.target} câu`
+                      : mission.type === "grade"
+                        ? mission.completed
+                          ? "Đạt"
+                          : "Chưa đạt"
+                        : `${mission.progress}/${mission.target} từ`;
+                return (
+                  <View
+                    key={mission.id}
+                    testID={`daily-mission-${mission.id}`}
+                    accessibilityLabel={`${mission.title}. Tiến độ: ${displayProgressLabel}. Rương ${
+                      CHEST_RARITY_LABELS[rewardRarity]
+                    } khi hoàn thành. ${
+                      finished
+                        ? "Đã nhận phần thưởng."
+                        : "Phần thưởng sắp nhận."
+                    }`}
+                    style={[
+                      styles.missionCard,
+                      {
+                        backgroundColor: finished ? c.successSoft : c.card,
+                        borderColor: finished ? c.success : c.border,
+                        shadowColor: c.shade,
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowOpacity: 0.12,
+                        shadowRadius: 6,
+                        elevation: 2,
+                      },
+                    ]}
+                  >
+                    <MaterialSheen radius={20} />
+                    <View style={styles.missionTop}>
+                      <View
+                        style={[
+                          styles.missionIcon,
+                          {
+                            backgroundColor: finished
+                              ? c.success
+                              : c.vocabCardAccent,
+                          },
+                        ]}
+                      >
+                        <Feather
+                          name={finished ? "check" : iconName}
+                          size={21}
+                          color={finished ? "#FFFFFF" : c.buttonForeground}
+                        />
+                      </View>
+                      <View style={styles.missionCopy}>
+                        <Text
+                          style={[
+                            styles.level,
+                            { color: finished ? c.successText : c.primary },
+                          ]}
+                        >
+                          CẤP {mission.level}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.missionTitle,
+                            { color: finished ? c.successText : c.foreground },
+                          ]}
+                        >
+                          {mission.title}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.missionDescription,
+                            { color: c.mutedForeground },
+                          ]}
+                        >
+                          {mission.description}
+                        </Text>
+                        <Text
+                          testID={`daily-mission-chest-${mission.id}`}
+                          style={[
+                            styles.missionChestLabel,
+                            { color: CHEST_RARITY_TEXT_COLORS[rewardRarity] },
+                          ]}
+                        >
+                          Rương {CHEST_RARITY_LABELS[rewardRarity]} khi hoàn
+                          thành
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.rewardPill,
+                          {
+                            backgroundColor: finished
+                              ? c.success
+                              : CHEST_RARITY_COLORS[rewardRarity],
+                            borderColor: finished
+                              ? c.success
+                              : CHEST_RARITY_TEXT_COLORS[rewardRarity],
+                            shadowColor: finished
+                              ? c.success
+                              : CHEST_RARITY_COLORS[rewardRarity],
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.24,
+                            shadowRadius: 4,
+                            elevation: 3,
+                          },
+                        ]}
+                      >
+                        {!finished ? <MaterialSheen radius={15} /> : null}
+                        <Feather
+                          name={finished ? "check" : "gift"}
+                          size={finished ? 21 : 27}
+                          color={
+                            finished
+                              ? "#FFFFFF"
+                              : CHEST_RARITY_ICON_COLORS[rewardRarity]
+                          }
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.progressRow}>
+                      <View
+                        style={[styles.track, { backgroundColor: c.muted }]}
+                      >
+                        <View
+                          style={[
+                            styles.fill,
+                            {
+                              width: `${progressPercent}%`,
+                              backgroundColor: finished ? c.success : c.accent,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.progressText,
+                          { color: finished ? c.successText : c.primary },
+                        ]}
+                      >
+                        {displayProgressLabel}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })
+            )}
+            {overview?.chests.length ? (
+              <>
+                <View style={styles.sectionHeading}>
+                  <Text style={[styles.sectionTitle, { color: c.foreground }]}>
+                    Rương chờ mở
+                  </Text>
+                  <Text
+                    style={[styles.sectionHint, { color: c.mutedForeground }]}
+                  >
+                    Mỗi rương có tối đa 3 lượt nâng cấp
+                  </Text>
+                </View>
+                {overview.chests.map((chest) => (
+                  <ChestCard key={chest.chestId} chest={chest} colors={c} />
+                ))}
+              </>
+            ) : null}
+            <Text style={[styles.footerNote, { color: c.mutedForeground }]}>
+              Stone, rương và tiến độ nhiệm vụ được lưu offline, rồi đồng bộ
+              cùng dữ liệu tài khoản.
+            </Text>
           </>
-        ) : null}
-        <Text style={[styles.footerNote, { color: c.mutedForeground }]}>
-          Stone, rương và tiến độ nhiệm vụ được lưu offline, rồi đồng bộ cùng dữ
-          liệu tài khoản.
-        </Text>
+        )}
       </ScrollView>
     </View>
   );

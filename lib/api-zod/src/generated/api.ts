@@ -143,6 +143,31 @@ export const mergeUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax = 160;
 
 export const mergeUserSyncDataBodyCollectionPieceSpendsMax = 10000;
 
+export const mergeUserSyncDataBodyMissionShopPurchasesItemPurchaseIdMax = 80;
+
+export const mergeUserSyncDataBodyMissionShopPurchasesItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyMissionShopPurchasesItemSlotMin = 0;
+export const mergeUserSyncDataBodyMissionShopPurchasesItemSlotMax = 2;
+
+export const mergeUserSyncDataBodyMissionShopPurchasesItemStoneCostMin = 0;
+
+export const mergeUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMin = 0;
+export const mergeUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMax = 60;
+
+export const mergeUserSyncDataBodyMissionShopPurchasesMax = 10000;
+
+export const mergeUserSyncDataBodyStoneInvestmentsItemInvestmentIdMin = 12;
+export const mergeUserSyncDataBodyStoneInvestmentsItemInvestmentIdMax = 140;
+
+export const mergeUserSyncDataBodyStoneInvestmentsItemPrincipalMax = 900000000;
+
+export const mergeUserSyncDataBodyStoneInvestmentsItemStartDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyStoneInvestmentsItemEndDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyStoneInvestmentsMax = 10000;
+
+export const mergeUserSyncDataBodyInvestmentStudyDaysItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncDataBodyInvestmentStudyDaysMax = 10000;
+
 
 
 export const MergeUserSyncDataBody = zod.object({
@@ -245,7 +270,34 @@ export const MergeUserSyncDataBody = zod.object({
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
   "spentAt": zod.coerce.date()
-})).max(mergeUserSyncDataBodyCollectionPieceSpendsMax).optional()
+})).max(mergeUserSyncDataBodyCollectionPieceSpendsMax).optional(),
+  "missionShopPurchases": zod.array(zod.object({
+  "purchaseId": zod.string().min(1).max(mergeUserSyncDataBodyMissionShopPurchasesItemPurchaseIdMax),
+  "day": zod.string().regex(mergeUserSyncDataBodyMissionShopPurchasesItemDayRegExp),
+  "slot": zod.number().int().min(mergeUserSyncDataBodyMissionShopPurchasesItemSlotMin).max(mergeUserSyncDataBodyMissionShopPurchasesItemSlotMax),
+  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "stoneCost": zod.number().int().min(mergeUserSyncDataBodyMissionShopPurchasesItemStoneCostMin),
+  "discountPercent": zod.number().int().min(mergeUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMin).max(mergeUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMax),
+  "purchasedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyMissionShopPurchasesMax).optional(),
+  "stoneInvestments": zod.array(zod.object({
+  "investmentId": zod.string().min(mergeUserSyncDataBodyStoneInvestmentsItemInvestmentIdMin).max(mergeUserSyncDataBodyStoneInvestmentsItemInvestmentIdMax),
+  "plan": zod.enum(['safe', 'balanced', 'risky']),
+  "principal": zod.number().int().min(1).max(mergeUserSyncDataBodyStoneInvestmentsItemPrincipalMax),
+  "durationDays": zod.union([zod.literal(7),zod.literal(14)]),
+  "startDay": zod.string().regex(mergeUserSyncDataBodyStoneInvestmentsItemStartDayRegExp),
+  "endDay": zod.string().regex(mergeUserSyncDataBodyStoneInvestmentsItemEndDayRegExp),
+  "status": zod.enum(['active', 'succeeded', 'failed']),
+  "settlementAmount": zod.number().int().nullable(),
+  "createdAt": zod.coerce.date(),
+  "settledAt": zod.coerce.date().nullable()
+})).max(mergeUserSyncDataBodyStoneInvestmentsMax).optional(),
+  "investmentStudyDays": zod.array(zod.object({
+  "day": zod.string().regex(mergeUserSyncDataBodyInvestmentStudyDaysItemDayRegExp),
+  "reviewed": zod.boolean(),
+  "studiedCourse": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncDataBodyInvestmentStudyDaysMax).optional()
 })
 
 export const mergeUserSyncData200ResponseRevisionMin = 0;
@@ -360,6 +412,31 @@ export const mergeUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax = 1
 
 export const mergeUserSyncData200ResponseCollectionPieceSpendsMax = 10000;
 
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemPurchaseIdMax = 80;
+
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemSlotMin = 0;
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemSlotMax = 2;
+
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemStoneCostMin = 0;
+
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMin = 0;
+export const mergeUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMax = 60;
+
+export const mergeUserSyncData200ResponseMissionShopPurchasesMax = 10000;
+
+export const mergeUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMin = 12;
+export const mergeUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMax = 140;
+
+export const mergeUserSyncData200ResponseStoneInvestmentsItemPrincipalMax = 900000000;
+
+export const mergeUserSyncData200ResponseStoneInvestmentsItemStartDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseStoneInvestmentsItemEndDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseStoneInvestmentsMax = 10000;
+
+export const mergeUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const mergeUserSyncData200ResponseInvestmentStudyDaysMax = 10000;
+
 
 
 export const MergeUserSyncData200Response = zod.object({
@@ -462,7 +539,34 @@ export const MergeUserSyncData200Response = zod.object({
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
   "spentAt": zod.coerce.date()
-})).max(mergeUserSyncData200ResponseCollectionPieceSpendsMax).optional()
+})).max(mergeUserSyncData200ResponseCollectionPieceSpendsMax).optional(),
+  "missionShopPurchases": zod.array(zod.object({
+  "purchaseId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionShopPurchasesItemPurchaseIdMax),
+  "day": zod.string().regex(mergeUserSyncData200ResponseMissionShopPurchasesItemDayRegExp),
+  "slot": zod.number().int().min(mergeUserSyncData200ResponseMissionShopPurchasesItemSlotMin).max(mergeUserSyncData200ResponseMissionShopPurchasesItemSlotMax),
+  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "stoneCost": zod.number().int().min(mergeUserSyncData200ResponseMissionShopPurchasesItemStoneCostMin),
+  "discountPercent": zod.number().int().min(mergeUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMin).max(mergeUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMax),
+  "purchasedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseMissionShopPurchasesMax).optional(),
+  "stoneInvestments": zod.array(zod.object({
+  "investmentId": zod.string().min(mergeUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMin).max(mergeUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMax),
+  "plan": zod.enum(['safe', 'balanced', 'risky']),
+  "principal": zod.number().int().min(1).max(mergeUserSyncData200ResponseStoneInvestmentsItemPrincipalMax),
+  "durationDays": zod.union([zod.literal(7),zod.literal(14)]),
+  "startDay": zod.string().regex(mergeUserSyncData200ResponseStoneInvestmentsItemStartDayRegExp),
+  "endDay": zod.string().regex(mergeUserSyncData200ResponseStoneInvestmentsItemEndDayRegExp),
+  "status": zod.enum(['active', 'succeeded', 'failed']),
+  "settlementAmount": zod.number().int().nullable(),
+  "createdAt": zod.coerce.date(),
+  "settledAt": zod.coerce.date().nullable()
+})).max(mergeUserSyncData200ResponseStoneInvestmentsMax).optional(),
+  "investmentStudyDays": zod.array(zod.object({
+  "day": zod.string().regex(mergeUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp),
+  "reviewed": zod.boolean(),
+  "studiedCourse": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})).max(mergeUserSyncData200ResponseInvestmentStudyDaysMax).optional()
 })
 
 export const MergeUserSyncData400Response = zod.object({
@@ -593,6 +697,31 @@ export const replaceUserSyncDataBodyCollectionPieceSpendsItemSpendIdMax = 160;
 
 export const replaceUserSyncDataBodyCollectionPieceSpendsMax = 10000;
 
+export const replaceUserSyncDataBodyMissionShopPurchasesItemPurchaseIdMax = 80;
+
+export const replaceUserSyncDataBodyMissionShopPurchasesItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyMissionShopPurchasesItemSlotMin = 0;
+export const replaceUserSyncDataBodyMissionShopPurchasesItemSlotMax = 2;
+
+export const replaceUserSyncDataBodyMissionShopPurchasesItemStoneCostMin = 0;
+
+export const replaceUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMin = 0;
+export const replaceUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMax = 60;
+
+export const replaceUserSyncDataBodyMissionShopPurchasesMax = 10000;
+
+export const replaceUserSyncDataBodyStoneInvestmentsItemInvestmentIdMin = 12;
+export const replaceUserSyncDataBodyStoneInvestmentsItemInvestmentIdMax = 140;
+
+export const replaceUserSyncDataBodyStoneInvestmentsItemPrincipalMax = 900000000;
+
+export const replaceUserSyncDataBodyStoneInvestmentsItemStartDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyStoneInvestmentsItemEndDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyStoneInvestmentsMax = 10000;
+
+export const replaceUserSyncDataBodyInvestmentStudyDaysItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncDataBodyInvestmentStudyDaysMax = 10000;
+
 
 
 export const ReplaceUserSyncDataBody = zod.object({
@@ -695,7 +824,34 @@ export const ReplaceUserSyncDataBody = zod.object({
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
   "spentAt": zod.coerce.date()
-})).max(replaceUserSyncDataBodyCollectionPieceSpendsMax).optional()
+})).max(replaceUserSyncDataBodyCollectionPieceSpendsMax).optional(),
+  "missionShopPurchases": zod.array(zod.object({
+  "purchaseId": zod.string().min(1).max(replaceUserSyncDataBodyMissionShopPurchasesItemPurchaseIdMax),
+  "day": zod.string().regex(replaceUserSyncDataBodyMissionShopPurchasesItemDayRegExp),
+  "slot": zod.number().int().min(replaceUserSyncDataBodyMissionShopPurchasesItemSlotMin).max(replaceUserSyncDataBodyMissionShopPurchasesItemSlotMax),
+  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "stoneCost": zod.number().int().min(replaceUserSyncDataBodyMissionShopPurchasesItemStoneCostMin),
+  "discountPercent": zod.number().int().min(replaceUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMin).max(replaceUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMax),
+  "purchasedAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyMissionShopPurchasesMax).optional(),
+  "stoneInvestments": zod.array(zod.object({
+  "investmentId": zod.string().min(replaceUserSyncDataBodyStoneInvestmentsItemInvestmentIdMin).max(replaceUserSyncDataBodyStoneInvestmentsItemInvestmentIdMax),
+  "plan": zod.enum(['safe', 'balanced', 'risky']),
+  "principal": zod.number().int().min(1).max(replaceUserSyncDataBodyStoneInvestmentsItemPrincipalMax),
+  "durationDays": zod.union([zod.literal(7),zod.literal(14)]),
+  "startDay": zod.string().regex(replaceUserSyncDataBodyStoneInvestmentsItemStartDayRegExp),
+  "endDay": zod.string().regex(replaceUserSyncDataBodyStoneInvestmentsItemEndDayRegExp),
+  "status": zod.enum(['active', 'succeeded', 'failed']),
+  "settlementAmount": zod.number().int().nullable(),
+  "createdAt": zod.coerce.date(),
+  "settledAt": zod.coerce.date().nullable()
+})).max(replaceUserSyncDataBodyStoneInvestmentsMax).optional(),
+  "investmentStudyDays": zod.array(zod.object({
+  "day": zod.string().regex(replaceUserSyncDataBodyInvestmentStudyDaysItemDayRegExp),
+  "reviewed": zod.boolean(),
+  "studiedCourse": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})).max(replaceUserSyncDataBodyInvestmentStudyDaysMax).optional()
 })
 
 export const replaceUserSyncData200ResponseRevisionMin = 0;
@@ -810,6 +966,31 @@ export const replaceUserSyncData200ResponseCollectionPieceSpendsItemSpendIdMax =
 
 export const replaceUserSyncData200ResponseCollectionPieceSpendsMax = 10000;
 
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemPurchaseIdMax = 80;
+
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemSlotMin = 0;
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemSlotMax = 2;
+
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemStoneCostMin = 0;
+
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMin = 0;
+export const replaceUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMax = 60;
+
+export const replaceUserSyncData200ResponseMissionShopPurchasesMax = 10000;
+
+export const replaceUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMin = 12;
+export const replaceUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMax = 140;
+
+export const replaceUserSyncData200ResponseStoneInvestmentsItemPrincipalMax = 900000000;
+
+export const replaceUserSyncData200ResponseStoneInvestmentsItemStartDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseStoneInvestmentsItemEndDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseStoneInvestmentsMax = 10000;
+
+export const replaceUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const replaceUserSyncData200ResponseInvestmentStudyDaysMax = 10000;
+
 
 
 export const ReplaceUserSyncData200Response = zod.object({
@@ -912,7 +1093,34 @@ export const ReplaceUserSyncData200Response = zod.object({
   "rarity": zod.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']),
   "pieceCost": zod.union([zod.literal(20),zod.literal(100)]),
   "spentAt": zod.coerce.date()
-})).max(replaceUserSyncData200ResponseCollectionPieceSpendsMax).optional()
+})).max(replaceUserSyncData200ResponseCollectionPieceSpendsMax).optional(),
+  "missionShopPurchases": zod.array(zod.object({
+  "purchaseId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionShopPurchasesItemPurchaseIdMax),
+  "day": zod.string().regex(replaceUserSyncData200ResponseMissionShopPurchasesItemDayRegExp),
+  "slot": zod.number().int().min(replaceUserSyncData200ResponseMissionShopPurchasesItemSlotMin).max(replaceUserSyncData200ResponseMissionShopPurchasesItemSlotMax),
+  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "stoneCost": zod.number().int().min(replaceUserSyncData200ResponseMissionShopPurchasesItemStoneCostMin),
+  "discountPercent": zod.number().int().min(replaceUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMin).max(replaceUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMax),
+  "purchasedAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseMissionShopPurchasesMax).optional(),
+  "stoneInvestments": zod.array(zod.object({
+  "investmentId": zod.string().min(replaceUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMin).max(replaceUserSyncData200ResponseStoneInvestmentsItemInvestmentIdMax),
+  "plan": zod.enum(['safe', 'balanced', 'risky']),
+  "principal": zod.number().int().min(1).max(replaceUserSyncData200ResponseStoneInvestmentsItemPrincipalMax),
+  "durationDays": zod.union([zod.literal(7),zod.literal(14)]),
+  "startDay": zod.string().regex(replaceUserSyncData200ResponseStoneInvestmentsItemStartDayRegExp),
+  "endDay": zod.string().regex(replaceUserSyncData200ResponseStoneInvestmentsItemEndDayRegExp),
+  "status": zod.enum(['active', 'succeeded', 'failed']),
+  "settlementAmount": zod.number().int().nullable(),
+  "createdAt": zod.coerce.date(),
+  "settledAt": zod.coerce.date().nullable()
+})).max(replaceUserSyncData200ResponseStoneInvestmentsMax).optional(),
+  "investmentStudyDays": zod.array(zod.object({
+  "day": zod.string().regex(replaceUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp),
+  "reviewed": zod.boolean(),
+  "studiedCourse": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})).max(replaceUserSyncData200ResponseInvestmentStudyDaysMax).optional()
 })
 
 export const ReplaceUserSyncData400Response = zod.object({

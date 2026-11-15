@@ -6,6 +6,9 @@ import type {
   SyncDeletedWord,
   SyncMissionAward,
   SyncMissionChest,
+  SyncMissionShopPurchase,
+  SyncStoneInvestment,
+  SyncInvestmentStudyDay,
   SyncPayload,
   SyncReviewComboReward,
   SyncReviewSession,
@@ -21,6 +24,11 @@ import {
   isLegacyCollectionPaintingId,
   isValidCollectionCraftArtwork,
 } from "../domain/collection-artworks";
+import { isValidMissionShopPurchase } from "../domain/mission-shop";
+import {
+  isValidInvestmentStudyDay,
+  isValidStoneInvestment,
+} from "../domain/stone-investments";
 
 export const ACCOUNT_BACKUP_FORMAT = "vocabflow.account-backup";
 export const ACCOUNT_BACKUP_VERSION = 1;
@@ -130,6 +138,17 @@ function validatePayload(value: unknown): SyncPayload {
   const missionChests = optionalRecordArray(value, "missionChests").map(
     parseMissionChest,
   );
+  const missionShopPurchases = optionalRecordArray(
+    value,
+    "missionShopPurchases",
+  ).map(parseMissionShopPurchase);
+  const stoneInvestments = optionalRecordArray(value, "stoneInvestments").map(
+    parseStoneInvestment,
+  );
+  const investmentStudyDays = optionalRecordArray(
+    value,
+    "investmentStudyDays",
+  ).map(parseInvestmentStudyDay);
   const rawCollectionCrafts = optionalRecordArray(value, "collectionCrafts");
   const collectionCrafts = rawCollectionCrafts
     .filter(
@@ -163,6 +182,9 @@ function validatePayload(value: unknown): SyncPayload {
     reviewComboRewards.some((item) => item === null) ||
     missionAwards.some((item) => item === null) ||
     missionChests.some((item) => item === null) ||
+    missionShopPurchases.some((item) => item === null) ||
+    stoneInvestments.some((item) => item === null) ||
+    investmentStudyDays.some((item) => item === null) ||
     collectionCrafts.some((item) => item === null) ||
     explicitPieceSpends.some((item) => item === null) ||
     legacyPieceSpends.some((item) => item === null)
@@ -179,6 +201,11 @@ function validatePayload(value: unknown): SyncPayload {
   const validReviewComboRewards = reviewComboRewards as SyncReviewComboReward[];
   const validMissionAwards = missionAwards as SyncMissionAward[];
   const validMissionChests = missionChests as SyncMissionChest[];
+  const validMissionShopPurchases =
+    missionShopPurchases as SyncMissionShopPurchase[];
+  const validStoneInvestments = stoneInvestments as SyncStoneInvestment[];
+  const validInvestmentStudyDays =
+    investmentStudyDays as SyncInvestmentStudyDay[];
   const validCollectionCrafts = collectionCrafts as SyncCollectionCraft[];
   const validExplicitPieceSpends =
     explicitPieceSpends as SyncCollectionPieceSpend[];
@@ -219,6 +246,17 @@ function validatePayload(value: unknown): SyncPayload {
       validMissionChests,
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
+    hasDuplicates(validMissionShopPurchases, (item) => item.purchaseId) ||
+    hasDuplicates(
+      validMissionShopPurchases,
+      (item) => `${item.day}\u0000${item.slot}`,
+    ) ||
+    hasDuplicates(
+      validMissionShopPurchases,
+      (item) => `${item.day}\u0000${item.rarity}`,
+    ) ||
+    hasDuplicates(validStoneInvestments, (item) => item.investmentId) ||
+    hasDuplicates(validInvestmentStudyDays, (item) => item.day) ||
     hasDuplicates(validCollectionCrafts, (item) => item.craftId) ||
     hasDuplicates(
       validCollectionCrafts,
@@ -252,6 +290,9 @@ function validatePayload(value: unknown): SyncPayload {
     reviewComboRewards: validReviewComboRewards,
     missionAwards: validMissionAwards,
     missionChests: validMissionChests,
+    missionShopPurchases: validMissionShopPurchases,
+    stoneInvestments: validStoneInvestments,
+    investmentStudyDays: validInvestmentStudyDays,
     collectionCrafts: validCollectionCrafts,
     collectionPieceSpends: validCollectionPieceSpends,
   };
@@ -311,6 +352,22 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
   return isValidMissionChest(normalized) ? normalized : null;
 }
 
+function parseMissionShopPurchase(
+  value: unknown,
+): SyncMissionShopPurchase | null {
+  return isValidMissionShopPurchase(value) ? value : null;
+}
+
+function parseStoneInvestment(value: unknown): SyncStoneInvestment | null {
+  return isValidStoneInvestment(value) ? value : null;
+}
+
+function parseInvestmentStudyDay(
+  value: unknown,
+): SyncInvestmentStudyDay | null {
+  return isValidInvestmentStudyDay(value) ? value : null;
+}
+
 function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
   const currentCycleId =
     isRecord(value) &&
@@ -354,10 +411,10 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
       value.pieceCost === -20
         ? -20
         : value.pieceCost === 0
-        ? 0
-        : value.pieceCost === 100
-          ? 100
-          : 20,
+          ? 0
+          : value.pieceCost === 100
+            ? 100
+            : 20,
   };
 }
 

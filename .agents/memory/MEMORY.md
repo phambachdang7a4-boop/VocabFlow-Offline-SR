@@ -13,3 +13,4 @@
 - [Hình tượng sưu tập](statue-art-direction.md) — Ảnh tượng là bán thân cẩm thạch trắng, nền đen, 768px; hình AI phải ghi rõ không xác thực.
 - [Phẩm chất tượng](statue-rarity-tiers.md) — Tượng chỉ dùng Rare/Epic/Legendary; Common của rương vẫn giữ và dữ liệu Common cũ phải đọc được.
 - [Nguồn IPA Anh-Anh bổ sung](regional-ipa-provenance.md) — Dùng từ điển đã có làm danh sách mục từ; Claude hỗ trợ tra cứu UK vì bản ghi công trước đó chỉ có IPA Mỹ.
+- [Quy tắc Thương Vụ](stone-investments.md) — Mức lời 14 ngày gấp ba lần kỳ 7 ngày; lỡ ngày học là thất bại và gói rủi ro cho phép nợ Stone.

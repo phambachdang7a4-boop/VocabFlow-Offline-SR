@@ -17,6 +17,8 @@
     "check:account-backup": "node scripts/check-account-backup.cjs",
     "check:daily-missions": "node scripts/check-daily-missions.cjs",
     "check:daily-mission-storage": "node scripts/check-daily-mission-storage.cjs",
+    "check:mission-shop": "node scripts/check-mission-shop.cjs && node scripts/check-mission-shop-storage.cjs",
+    "check:stone-investments": "node scripts/check-stone-investment.cjs",
     "check:mission-chests": "node scripts/check-mission-chests.cjs",
     "check:review-session": "node scripts/check-review-session.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",

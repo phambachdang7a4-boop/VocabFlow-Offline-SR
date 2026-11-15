@@ -333,6 +333,98 @@ export interface SyncCollectionPieceSpend {
   spentAt: string;
 }
 
+export type SyncMissionShopPurchaseRarity = typeof SyncMissionShopPurchaseRarity[keyof typeof SyncMissionShopPurchaseRarity];
+
+
+export const SyncMissionShopPurchaseRarity = {
+  rare: 'rare',
+  epic: 'epic',
+  legendary: 'legendary',
+} as const;
+
+export interface SyncMissionShopPurchase {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  purchaseId: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /**
+     * @minimum 0
+     * @maximum 2
+     */
+  slot: number;
+  rarity: SyncMissionShopPurchaseRarity;
+  /** @minimum 0 */
+  stoneCost: number;
+  /**
+     * @minimum 0
+     * @maximum 60
+     */
+  discountPercent: number;
+  purchasedAt: string;
+}
+
+export type SyncStoneInvestmentPlan = typeof SyncStoneInvestmentPlan[keyof typeof SyncStoneInvestmentPlan];
+
+
+export const SyncStoneInvestmentPlan = {
+  safe: 'safe',
+  balanced: 'balanced',
+  risky: 'risky',
+} as const;
+
+export type SyncStoneInvestmentDurationDays = typeof SyncStoneInvestmentDurationDays[keyof typeof SyncStoneInvestmentDurationDays];
+
+
+export const SyncStoneInvestmentDurationDays = {
+  NUMBER_7: 7,
+  NUMBER_14: 14,
+} as const;
+
+export type SyncStoneInvestmentStatus = typeof SyncStoneInvestmentStatus[keyof typeof SyncStoneInvestmentStatus];
+
+
+export const SyncStoneInvestmentStatus = {
+  active: 'active',
+  succeeded: 'succeeded',
+  failed: 'failed',
+} as const;
+
+export interface SyncStoneInvestment {
+  /**
+     * @minLength 12
+     * @maxLength 140
+     */
+  investmentId: string;
+  plan: SyncStoneInvestmentPlan;
+  /**
+     * @minimum 1
+     * @maximum 900000000
+     */
+  principal: number;
+  durationDays: SyncStoneInvestmentDurationDays;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  startDay: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  endDay: string;
+  status: SyncStoneInvestmentStatus;
+  /** @nullable */
+  settlementAmount: number | null;
+  createdAt: string;
+  /** @nullable */
+  settledAt: string | null;
+}
+
+export interface SyncInvestmentStudyDay {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  reviewed: boolean;
+  studiedCourse: boolean;
+  updatedAt: string;
+}
+
 export interface UserSyncSnapshot {
   /**
      * Account data generation used to prevent stale devices from restoring older data.
@@ -361,6 +453,12 @@ export interface UserSyncSnapshot {
   collectionCrafts?: SyncCollectionCraft[];
   /** @maxItems 10000 */
   collectionPieceSpends?: SyncCollectionPieceSpend[];
+  /** @maxItems 10000 */
+  missionShopPurchases?: SyncMissionShopPurchase[];
+  /** @maxItems 10000 */
+  stoneInvestments?: SyncStoneInvestment[];
+  /** @maxItems 10000 */
+  investmentStudyDays?: SyncInvestmentStudyDay[];
 }
 
 export interface DictionaryAssetError {

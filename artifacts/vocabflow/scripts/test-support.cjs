@@ -53,6 +53,10 @@ const sqliteConnection = loadTs(
   join(__dirname, "../data/sqlite-connection.ts"),
 );
 const missionChests = loadTs(join(__dirname, "../domain/mission-chests.ts"));
+const missionShop = loadTs(join(__dirname, "../domain/mission-shop.ts"));
+const stoneInvestments = loadTs(
+  join(__dirname, "../domain/stone-investments.ts"),
+);
 const historicalCollectionArtworks = loadTs(
   join(__dirname, "../domain/collection-historical-artworks.ts"),
 );
@@ -91,6 +95,8 @@ function createRepository(root, today = "2026-01-01T12:00:00", options = {}) {
       "../domain/daily-missions": dailyMissions,
       "../domain/review-statistics": reviewStatistics,
       "../domain/mission-chests": missionChests,
+      "../domain/mission-shop": missionShop,
+      "../domain/stone-investments": stoneInvestments,
       "../domain/collection-artworks": collectionArtworks,
       "./sqlite-connection": sqliteConnection,
       "expo-sqlite": {
@@ -150,6 +156,8 @@ module.exports = {
   createRepository,
   loadTs,
   missionChests,
+  missionShop,
+  stoneInvestments,
   collectionArtworks,
   loadDictionaryDomain,
 };

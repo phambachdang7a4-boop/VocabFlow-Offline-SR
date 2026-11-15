@@ -47,6 +47,23 @@ import {
   type CollectionArtwork,
   type CollectionCraft,
 } from "../domain/collection-artworks";
+import {
+  isValidMissionShopPurchase,
+  missionShopOffersForDay,
+  missionShopPurchaseId,
+  type MissionShopOffer,
+  type MissionShopPurchase,
+} from "../domain/mission-shop";
+import {
+  evaluateStoneInvestment,
+  investmentEndDay,
+  isValidStoneInvestment,
+  type InvestmentStudyDay,
+  type StoneInvestment,
+  type StoneInvestmentDuration,
+  type StoneInvestmentPlan,
+  MAX_STONE_INVESTMENT_PRINCIPAL,
+} from "../domain/stone-investments";
 
 let connection: Promise<SQLiteDatabase> | undefined;
 let databaseScope: string | null = null;
@@ -63,6 +80,20 @@ export interface DailyMissionOverview {
 export interface MissionCollectionOverview {
   fragments: Record<ChestRarity, number>;
   crafts: CollectionCraft[];
+}
+
+export interface MissionShopOverview {
+  day: string;
+  stoneBalance: number;
+  fragments: Record<ChestRarity, number>;
+  offers: (MissionShopOffer & { purchased: boolean })[];
+}
+
+export interface StoneInvestmentOverview {
+  today: string;
+  stoneBalance: number;
+  investments: StoneInvestment[];
+  studyDays: InvestmentStudyDay[];
 }
 
 export interface MissionChestUpgradeResult {
@@ -322,7 +353,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 24) {
+    if ((version?.user_version ?? 0) > 26) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -963,6 +994,60 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 25) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS mission_shop_purchases (
+            purchase_id TEXT PRIMARY KEY NOT NULL,
+            shop_day TEXT NOT NULL,
+            slot INTEGER NOT NULL CHECK (slot BETWEEN 0 AND 2),
+            rarity TEXT NOT NULL CHECK (rarity IN ('rare', 'epic', 'legendary')),
+            stone_cost INTEGER NOT NULL CHECK (stone_cost >= 0),
+            discount_percent INTEGER NOT NULL
+              CHECK (discount_percent BETWEEN 0 AND 60),
+            purchased_at TEXT NOT NULL,
+            UNIQUE (shop_day, slot),
+            UNIQUE (shop_day, rarity)
+          );
+          CREATE INDEX IF NOT EXISTS idx_mission_shop_purchases_day
+            ON mission_shop_purchases(shop_day);
+          PRAGMA user_version = 25;
+        `);
+      });
+    }
+    if ((version?.user_version ?? 0) < 26) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS stone_investments (
+            investment_id TEXT PRIMARY KEY NOT NULL,
+            plan TEXT NOT NULL CHECK (plan IN ('safe', 'balanced', 'risky')),
+            principal INTEGER NOT NULL CHECK (principal BETWEEN 1 AND 900000000),
+            duration_days INTEGER NOT NULL CHECK (duration_days IN (7, 14)),
+            start_day TEXT NOT NULL,
+            end_day TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('active', 'succeeded', 'failed')),
+            settlement_amount INTEGER,
+            created_at TEXT NOT NULL,
+            settled_at TEXT,
+            CHECK (
+              (status = 'active' AND settlement_amount IS NULL AND settled_at IS NULL) OR
+              (status != 'active' AND settlement_amount IS NOT NULL AND settled_at IS NOT NULL)
+            )
+          );
+          CREATE INDEX IF NOT EXISTS idx_stone_investments_status
+            ON stone_investments(status, start_day, end_day);
+          CREATE TABLE IF NOT EXISTS investment_study_days (
+            day TEXT PRIMARY KEY NOT NULL,
+            reviewed INTEGER NOT NULL DEFAULT 0 CHECK (reviewed IN (0, 1)),
+            studied_course INTEGER NOT NULL DEFAULT 0 CHECK (studied_course IN (0, 1)),
+            updated_at TEXT NOT NULL,
+            CHECK (reviewed = 1 OR studied_course = 1)
+          );
+          PRAGMA user_version = 26;
+        `);
+        await markSyncDirty(db);
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -1115,15 +1200,7 @@ export function getDailyMissionOverview(
     await db.withTransactionAsync(async () => {
       chestsChanged = await grantDailyMissionChests(db, day);
       if (chestsChanged) await markSyncDirty(db);
-      const [
-        activity,
-        legacyAwards,
-        chestAwards,
-        legacyBalance,
-        chestBalance,
-        comboBalance,
-        chests,
-      ] = await Promise.all([
+      const [activity, legacyAwards, chestAwards, chests] = await Promise.all([
         readDailyMissionActivity(db, day),
         db.getAllAsync<DailyMissionAward>(
           "SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?",
@@ -1134,24 +1211,12 @@ export function getDailyMissionOverview(
             created_at AS completedAt FROM mission_chests WHERE mission_day = ?`,
           day,
         ),
-        db.getFirstAsync<{ total: number | null }>(
-          "SELECT SUM(stone) AS total FROM daily_mission_awards",
-        ),
-        db.getFirstAsync<{ total: number | null }>(
-          "SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1",
-        ),
-        db.getFirstAsync<{ total: number | null }>(
-          "SELECT SUM(combo_length) AS total FROM review_combo_rewards",
-        ),
         readUnopenedMissionChests(db),
       ]);
       const missionRewards = [...legacyAwards, ...chestAwards];
       overview = {
         day,
-        stoneBalance:
-          (legacyBalance?.total ?? 0) +
-          (chestBalance?.total ?? 0) +
-          (comboBalance?.total ?? 0),
+        stoneBalance: await readStoneBalance(db),
         missions: evaluateDailyMissions(day, activity, missionRewards),
         chests,
       };
@@ -1159,6 +1224,346 @@ export function getDailyMissionOverview(
     if (chestsChanged) notifySyncListeners();
     return overview!;
   });
+}
+
+export function getMissionShopOverview(
+  day = localDay(new Date()),
+): Promise<MissionShopOverview> {
+  return serialize(async () => {
+    const db = await database();
+    const [stoneBalance, collection, purchases] = await Promise.all([
+      readStoneBalance(db),
+      readMissionCollectionBalance(db),
+      db.getAllAsync<Pick<MissionShopPurchase, "purchaseId" | "slot">>(
+        `SELECT purchase_id AS purchaseId, slot
+         FROM mission_shop_purchases WHERE shop_day = ?`,
+        day,
+      ),
+    ]);
+    const purchasedSlots = new Set(purchases.map((purchase) => purchase.slot));
+    return {
+      day,
+      stoneBalance,
+      fragments: collection.fragments,
+      offers: missionShopOffersForDay(day).map((offer) => ({
+        ...offer,
+        purchased: purchasedSlots.has(offer.slot),
+      })),
+    };
+  });
+}
+
+export function purchaseMissionShopOffer(
+  slot: number,
+  day = localDay(new Date()),
+): Promise<MissionShopPurchase> {
+  return serialize(async () => {
+    const offer = missionShopOffersForDay(day).find(
+      (candidate) => candidate.slot === slot,
+    );
+    if (!offer) throw new Error("Không tìm thấy món này trong cửa hàng.");
+
+    const db = await database();
+    let purchase: MissionShopPurchase | undefined;
+    await db.withTransactionAsync(async () => {
+      const existing = await db.getFirstAsync<{ purchaseId: string }>(
+        `SELECT purchase_id AS purchaseId FROM mission_shop_purchases
+         WHERE shop_day = ? AND slot = ?`,
+        day,
+        slot,
+      );
+      if (existing) throw new Error("Bạn đã mua món này hôm nay.");
+
+      const stoneBalance = await readStoneBalance(db);
+      if (stoneBalance < offer.price) {
+        throw new Error("Không đủ Stone để mua mảnh này.");
+      }
+
+      const next: MissionShopPurchase = {
+        purchaseId: missionShopPurchaseId(day, offer.slot),
+        day,
+        slot: offer.slot,
+        rarity: offer.rarity,
+        stoneCost: offer.price,
+        discountPercent: offer.discountPercent,
+        purchasedAt: new Date().toISOString(),
+      };
+      if (!isValidMissionShopPurchase(next)) {
+        throw new Error("Ưu đãi cửa hàng không hợp lệ.");
+      }
+      const result = await db.runAsync(
+        `INSERT OR IGNORE INTO mission_shop_purchases
+          (purchase_id, shop_day, slot, rarity, stone_cost,
+            discount_percent, purchased_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        next.purchaseId,
+        next.day,
+        next.slot,
+        next.rarity,
+        next.stoneCost,
+        next.discountPercent,
+        next.purchasedAt,
+      );
+      if (result.changes !== 1) {
+        throw new Error("Bạn đã mua món này hôm nay.");
+      }
+      await markSyncDirty(db);
+      purchase = next;
+    });
+    notifySyncListeners();
+    return purchase!;
+  });
+}
+
+export function getStoneInvestmentOverview(): Promise<StoneInvestmentOverview> {
+  return serialize(async () => {
+    const db = await database();
+    const today = localDay(new Date());
+    let changed = false;
+    await db.withTransactionAsync(async () => {
+      changed = await settleActiveStoneInvestments(db, today);
+      if (changed) await markSyncDirty(db);
+    });
+    if (changed) notifySyncListeners();
+    const [stoneBalance, investments, rawStudyDays] = await Promise.all([
+      readStoneBalance(db),
+      db.getAllAsync<StoneInvestment>(
+        `SELECT investment_id AS investmentId, plan, principal,
+          duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
+          status, settlement_amount AS settlementAmount, created_at AS createdAt,
+          settled_at AS settledAt
+         FROM stone_investments ORDER BY created_at DESC`,
+      ),
+      db.getAllAsync<{
+        day: string;
+        reviewed: number;
+        studiedCourse: number;
+        updatedAt: string;
+      }>(
+        `SELECT day, reviewed, studied_course AS studiedCourse,
+          updated_at AS updatedAt
+         FROM investment_study_days`,
+      ),
+    ]);
+    const studyDays = rawStudyDays.map((day) => ({
+      ...day,
+      reviewed: Boolean(day.reviewed),
+      studiedCourse: Boolean(day.studiedCourse),
+    }));
+    return { today, stoneBalance, investments, studyDays };
+  });
+}
+
+export function createStoneInvestment(
+  plan: StoneInvestmentPlan,
+  principal: number,
+  durationDays: StoneInvestmentDuration,
+): Promise<StoneInvestment> {
+  return serialize(async () => {
+    if (
+      !["safe", "balanced", "risky"].includes(plan) ||
+      !Number.isSafeInteger(principal) ||
+      principal <= 0 ||
+      principal > MAX_STONE_INVESTMENT_PRINCIPAL ||
+      (durationDays !== 7 && durationDays !== 14)
+    ) {
+      throw new Error("Thông tin Thương Vụ không hợp lệ.");
+    }
+    const db = await database();
+    const now = new Date();
+    const today = localDay(now);
+    const investment: StoneInvestment = {
+      investmentId: `investment:${Crypto.randomUUID()}`,
+      plan,
+      principal,
+      durationDays,
+      startDay: today,
+      endDay: investmentEndDay(today, durationDays),
+      status: "active",
+      settlementAmount: null,
+      createdAt: now.toISOString(),
+      settledAt: null,
+    };
+    if (!isValidStoneInvestment(investment)) {
+      throw new Error("Thông tin Thương Vụ không hợp lệ.");
+    }
+
+    await db.withTransactionAsync(async () => {
+      await settleActiveStoneInvestments(db, today);
+      await seedCurrentInvestmentStudyDay(db, today);
+      const balance = await readStoneBalance(db);
+      if (balance < principal) {
+        throw new Error("Không đủ Stone để bắt đầu khoản đầu tư.");
+      }
+      await db.runAsync(
+        `INSERT INTO stone_investments
+          (investment_id, plan, principal, duration_days, start_day, end_day,
+            status, settlement_amount, created_at, settled_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'active', NULL, ?, NULL)`,
+        investment.investmentId,
+        investment.plan,
+        investment.principal,
+        investment.durationDays,
+        investment.startDay,
+        investment.endDay,
+        investment.createdAt,
+      );
+      await markSyncDirty(db);
+    });
+    notifySyncListeners();
+    return investment;
+  });
+}
+
+export function recordStoneInvestmentStudyDay(
+  source: "review" | "course",
+): Promise<void> {
+  return serialize(async () => {
+    const db = await database();
+    const today = localDay(new Date());
+    let changed = false;
+    await db.withTransactionAsync(async () => {
+      const settled = await settleActiveStoneInvestments(db, today);
+      const recorded = await markInvestmentStudyDay(db, today, source);
+      changed = settled || Boolean(recorded);
+      if (changed) await markSyncDirty(db);
+    });
+    if (changed) notifySyncListeners();
+  });
+}
+
+async function settleActiveStoneInvestments(
+  db: SQLiteDatabase,
+  today: string,
+): Promise<boolean> {
+  const active = await db.getAllAsync<StoneInvestment>(
+    `SELECT investment_id AS investmentId, plan, principal,
+      duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
+      status, settlement_amount AS settlementAmount, created_at AS createdAt,
+      settled_at AS settledAt
+     FROM stone_investments WHERE status = 'active'`,
+  );
+  if (!active.length) return false;
+  const studyRows = await db.getAllAsync<{ day: string }>(
+    "SELECT day FROM investment_study_days",
+  );
+  const studyDays = new Set(studyRows.map((row) => row.day));
+  let changed = false;
+  for (const investment of active) {
+    const outcome = evaluateStoneInvestment(investment, studyDays, today);
+    if (outcome.status === "active" || outcome.settlementAmount === null) {
+      continue;
+    }
+    const result = await db.runAsync(
+      `UPDATE stone_investments
+       SET status = ?, settlement_amount = ?, settled_at = ?
+       WHERE investment_id = ? AND status = 'active'`,
+      outcome.status,
+      outcome.settlementAmount,
+      new Date().toISOString(),
+      investment.investmentId,
+    );
+    changed ||= result.changes === 1;
+  }
+  return changed;
+}
+
+async function markInvestmentStudyDay(
+  db: SQLiteDatabase,
+  day: string,
+  source: "review" | "course",
+): Promise<boolean> {
+  const current = await db.getFirstAsync<{
+    reviewed: number;
+    studiedCourse: number;
+  }>(
+    `SELECT reviewed, studied_course AS studiedCourse
+     FROM investment_study_days WHERE day = ?`,
+    day,
+  );
+  if (
+    (source === "review" && current?.reviewed === 1) ||
+    (source === "course" && current?.studiedCourse === 1)
+  ) {
+    return false;
+  }
+  const now = new Date().toISOString();
+  await db.runAsync(
+    `INSERT INTO investment_study_days
+      (day, reviewed, studied_course, updated_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(day) DO UPDATE SET
+       reviewed = MAX(investment_study_days.reviewed, excluded.reviewed),
+       studied_course = MAX(investment_study_days.studied_course, excluded.studied_course),
+       updated_at = excluded.updated_at`,
+    day,
+    source === "review" ? 1 : 0,
+    source === "course" ? 1 : 0,
+    now,
+  );
+  return true;
+}
+
+async function seedCurrentInvestmentStudyDay(
+  db: SQLiteDatabase,
+  day: string,
+): Promise<void> {
+  const [review, course] = await Promise.all([
+    db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM review_session_results
+       WHERE review_day = ? AND reviewed_count > 0`,
+      day,
+    ),
+    db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) AS count FROM course_lesson_progress
+       WHERE stage = 'completed' AND completed_at >= ?
+         AND completed_at < ?`,
+      ...localDayBounds(day),
+    ),
+  ]);
+  if ((review?.count ?? 0) > 0) await markInvestmentStudyDay(db, day, "review");
+  if ((course?.count ?? 0) > 0)
+    await markInvestmentStudyDay(db, day, "course");
+}
+
+async function readStoneBalance(db: SQLiteDatabase): Promise<number> {
+  const [
+    legacyRewards,
+    chestRewards,
+    comboRewards,
+    shopPurchases,
+    investments,
+  ] =
+    await Promise.all([
+      db.getFirstAsync<{ total: number | null }>(
+        "SELECT SUM(stone) AS total FROM daily_mission_awards",
+      ),
+      db.getFirstAsync<{ total: number | null }>(
+        "SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1",
+      ),
+      db.getFirstAsync<{ total: number | null }>(
+        "SELECT SUM(combo_length) AS total FROM review_combo_rewards",
+      ),
+      db.getFirstAsync<{ total: number | null }>(
+        "SELECT SUM(stone_cost) AS total FROM mission_shop_purchases",
+      ),
+      db.getFirstAsync<{
+        principal: number | null;
+        settlements: number | null;
+      }>(
+        `SELECT SUM(principal) AS principal,
+          SUM(settlement_amount) AS settlements
+         FROM stone_investments`,
+      ),
+    ]);
+  return (
+    (legacyRewards?.total ?? 0) +
+    (chestRewards?.total ?? 0) +
+    (comboRewards?.total ?? 0) -
+    (shopPurchases?.total ?? 0) -
+    (investments?.principal ?? 0) +
+    (investments?.settlements ?? 0)
+  );
 }
 
 async function readUnopenedMissionChests(
@@ -1453,6 +1858,13 @@ async function readMissionCollectionBalance(
     `SELECT rarity, SUM(piece_cost) AS pieceCost
      FROM collection_piece_spends GROUP BY rarity`,
   );
+  const shopPurchases = await db.getAllAsync<{
+    rarity: ChestRarity;
+    count: number;
+  }>(
+    `SELECT rarity, COUNT(*) AS count
+     FROM mission_shop_purchases GROUP BY rarity`,
+  );
   const fragments: Record<ChestRarity, number> = {
     common: 0,
     uncommon: 0,
@@ -1476,6 +1888,10 @@ async function readMissionCollectionBalance(
     for (const rarity of Object.keys(fragments) as ChestRarity[]) {
       fragments[rarity] += reward[rarity];
     }
+  }
+
+  for (const purchase of shopPurchases) {
+    fragments[purchase.rarity] += purchase.count;
   }
 
   const spentPieces: Record<ChestRarity, number> = {
@@ -1721,6 +2137,7 @@ export function markCourseLessonCompleted(lessonId: string): Promise<void> {
     const db = await database();
     const now = new Date().toISOString();
     await db.withTransactionAsync(async () => {
+      await settleActiveStoneInvestments(db, localDay(new Date(now)));
       await db.runAsync(
         `INSERT INTO course_lesson_progress
           (lesson_id, current_index, stage, completed_at, updated_at)
@@ -1733,6 +2150,7 @@ export function markCourseLessonCompleted(lessonId: string): Promise<void> {
         now,
         now,
       );
+      await markInvestmentStudyDay(db, localDay(new Date(now)), "course");
       await markSyncDirty(db);
     });
     notifySyncListeners();
@@ -1857,8 +2275,20 @@ export function recordReviewSessionResult(
         input.activeDurationMs,
         input.maxCombo,
       );
+      const settledInvestments = await settleActiveStoneInvestments(
+        db,
+        localDay(new Date()),
+      );
+      const studyDayChanged =
+        input.reviewedCount > 0
+          ? await markInvestmentStudyDay(db, day, "review")
+          : false;
       const chestsChanged = await grantDailyMissionChests(db, day);
-      changed = result.changes === 1 || chestsChanged;
+      changed =
+        result.changes === 1 ||
+        chestsChanged ||
+        settledInvestments ||
+        studyDayChanged;
       if (changed) await markSyncDirty(db);
     });
     if (changed) notifySyncListeners();

@@ -68,7 +68,11 @@ import {
   PHRASAL_VERB_COURSE_TITLE,
   PHRASAL_VERB_COURSE_WORD_COUNT,
 } from "@/domain/phrasal-verb-course";
-import { getCourseLessonCompletions, markCourseLessonCompleted } from "@/data/vocabulary";
+import {
+  getCourseLessonCompletions,
+  markCourseLessonCompleted,
+  recordStoneInvestmentStudyDay,
+} from "@/data/vocabulary";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import {
   buildCourseWordCandidates,
@@ -627,6 +631,13 @@ export default function CoursesScreen() {
               onSelect={(answer) => {
                 if (selectedAnswer !== null) return;
                 setSelectedAnswer(answer);
+                void recordStoneInvestmentStudyDay("course").catch((failure) =>
+                  setError(
+                    failure instanceof Error
+                      ? failure.message
+                      : "Không thể ghi nhận hoạt động học hôm nay.",
+                  ),
+                );
                 if (answer === currentQuestion.term)
                   setCorrectCount((count) => count + 1);
               }}

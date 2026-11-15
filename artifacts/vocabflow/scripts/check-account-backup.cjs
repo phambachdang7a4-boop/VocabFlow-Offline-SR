@@ -3,6 +3,8 @@ const { join } = require("node:path");
 const {
   loadTs,
   missionChests,
+  missionShop,
+  stoneInvestments,
   collectionArtworks,
 } = require("./test-support.cjs");
 
@@ -15,9 +17,13 @@ const {
   summarizeAccountBackup,
 } = loadTs(join(__dirname, "../data/account-backup.ts"), {
   "../domain/mission-chests": missionChests,
+  "../domain/mission-shop": missionShop,
+  "../domain/stone-investments": stoneInvestments,
   "../domain/collection-artworks": collectionArtworks,
 });
 
+const backupShopDay = "2026-11-08";
+const backupShopOffer = missionShop.missionShopOffersForDay(backupShopDay)[2];
 const payload = {
   revision: 0,
   words: [
@@ -145,6 +151,42 @@ const payload = {
     },
   ],
   collectionPieceSpends: [],
+  missionShopPurchases: [
+    {
+      purchaseId: missionShop.missionShopPurchaseId(
+        backupShopDay,
+        backupShopOffer.slot,
+      ),
+      day: backupShopDay,
+      slot: backupShopOffer.slot,
+      rarity: backupShopOffer.rarity,
+      stoneCost: backupShopOffer.price,
+      discountPercent: backupShopOffer.discountPercent,
+      purchasedAt: "2026-11-08T10:00:00.000Z",
+    },
+  ],
+  stoneInvestments: [
+    {
+      investmentId: "investment:backup-contract",
+      plan: "safe",
+      principal: 100,
+      durationDays: 7,
+      startDay: "2026-11-08",
+      endDay: "2026-11-14",
+      status: "active",
+      settlementAmount: null,
+      createdAt: "2026-11-08T10:00:00.000Z",
+      settledAt: null,
+    },
+  ],
+  investmentStudyDays: [
+    {
+      day: "2026-11-08",
+      reviewed: true,
+      studiedCourse: false,
+      updatedAt: "2026-11-08T10:00:00.000Z",
+    },
+  ],
 };
 
 const serialized = serializeAccountBackup(payload);
@@ -218,6 +260,19 @@ assert.equal(
 delete olderBackup.payload.reviewSessions;
 delete olderBackup.payload.reviewComboRewards;
 delete olderBackup.payload.missionAwards;
+delete olderBackup.payload.missionShopPurchases;
+delete olderBackup.payload.stoneInvestments;
+delete olderBackup.payload.investmentStudyDays;
+assert.deepEqual(
+  parseAccountBackup(JSON.stringify(olderBackup)).payload.missionShopPurchases,
+  [],
+  "Older backups remain readable without store purchase history.",
+);
+assert.deepEqual(
+  parseAccountBackup(JSON.stringify(olderBackup)).payload.stoneInvestments,
+  [],
+  "Older backups without investment records remain importable.",
+);
 delete olderBackup.payload.missionChests[0].ruleSet;
 delete olderBackup.payload.missionChests[0].superUpgrade;
 const legacyChest = parseAccountBackup(JSON.stringify(olderBackup)).payload
@@ -237,13 +292,7 @@ for (let index = 0; index < 100_000; index += 1) {
   const candidate = `backup-premature-${index}`;
   if (
     !missionChests.hasSuperUpgradeChance(candidate) &&
-    !missionChests.resolveChestUpgrade(
-      candidate,
-      1,
-      "common",
-      4,
-      false,
-    ).success
+    !missionChests.resolveChestUpgrade(candidate, 1, "common", 4, false).success
   ) {
     prematureChestId = candidate;
     break;
@@ -262,9 +311,8 @@ prematureBackup.payload.missionChests.push({
   opened: true,
   finalStone: 25,
 });
-const migratedBackupChest = parseAccountBackup(
-  JSON.stringify(prematureBackup),
-).payload.missionChests[1];
+const migratedBackupChest = parseAccountBackup(JSON.stringify(prematureBackup))
+  .payload.missionChests[1];
 assert.equal(migratedBackupChest.opened, false);
 assert.equal(migratedBackupChest.finalStone, null);
 assert.equal(migratedBackupChest.upgradeAttempts, 1);

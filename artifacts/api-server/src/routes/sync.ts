@@ -9,6 +9,9 @@ import {
   userCollectionPieceSpends,
   userDailyMissionAwards,
   userMissionChests,
+  userMissionShopPurchases,
+  userStoneInvestments,
+  userInvestmentStudyDays,
   userReviewComboRewards,
   userReviewSessionResults,
   userReviewStatistics,
@@ -74,6 +77,9 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
   const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
+  const missionShopPurchases = parsed.data.missionShopPurchases ?? [];
+  const stoneInvestments = parsed.data.stoneInvestments ?? [];
+  const investmentStudyDays = parsed.data.investmentStudyDays ?? [];
   const rawCollectionCrafts = parsed.data.collectionCrafts ?? [];
   const collectionCrafts = rawCollectionCrafts.filter(isCurrentStatueCraft);
   const legacyPieceSpends = rawCollectionCrafts
@@ -90,8 +96,11 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       missionAwards,
       missionChests,
       rawCollectionCrafts,
-    )
-    || hasInvalidCollectionPieceSpends(collectionPieceSpends)
+    ) ||
+    hasInvalidCollectionPieceSpends(collectionPieceSpends) ||
+    hasInvalidMissionShopPurchases(missionShopPurchases) ||
+    hasInvalidStoneInvestments(stoneInvestments) ||
+    hasInvalidInvestmentStudyDays(investmentStudyDays)
   ) {
     res
       .status(400)
@@ -130,6 +139,17 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       (item) => `${item.rarity}\u0000${item.craftIndex}`,
     ) ||
     hasDuplicates(collectionPieceSpends, (item) => item.spendId) ||
+    hasDuplicates(missionShopPurchases, (item) => item.purchaseId) ||
+    hasDuplicates(stoneInvestments, (item) => item.investmentId) ||
+    hasDuplicates(investmentStudyDays, (item) => item.day) ||
+    hasDuplicates(
+      missionShopPurchases,
+      (item) => `${item.day}\u0000${item.slot}`,
+    ) ||
+    hasDuplicates(
+      missionShopPurchases,
+      (item) => `${item.day}\u0000${item.rarity}`,
+    ) ||
     parsed.data.deletedWords.some((deleted) =>
       parsed.data.words.some((word) => word.syncId === deleted.syncId),
     )
@@ -183,6 +203,21 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       collectionPieceSpends: collectionPieceSpends.map((spend) => ({
         ...spend,
         spentAt: toTimestamp(spend.spentAt),
+      })),
+      missionShopPurchases: missionShopPurchases.map((purchase) => ({
+        ...purchase,
+        purchasedAt: toTimestamp(purchase.purchasedAt),
+      })),
+      stoneInvestments: stoneInvestments.map((investment) => ({
+        ...investment,
+        createdAt: toTimestamp(investment.createdAt),
+        settledAt: investment.settledAt
+          ? toTimestamp(investment.settledAt)
+          : null,
+      })),
+      investmentStudyDays: investmentStudyDays.map((day) => ({
+        ...day,
+        updatedAt: toTimestamp(day.updatedAt),
       })),
     };
 
@@ -255,6 +290,15 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       await tx
         .delete(userCollectionPieceSpends)
         .where(eq(userCollectionPieceSpends.userId, userId));
+      await tx
+        .delete(userMissionShopPurchases)
+        .where(eq(userMissionShopPurchases.userId, userId));
+      await tx
+        .delete(userStoneInvestments)
+        .where(eq(userStoneInvestments.userId, userId));
+      await tx
+        .delete(userInvestmentStudyDays)
+        .where(eq(userInvestmentStudyDays.userId, userId));
 
       if (snapshot.words.length) {
         await tx.insert(userVocabulary).values(
@@ -387,6 +431,48 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
           })),
         );
       }
+      if (snapshot.missionShopPurchases.length) {
+        await tx.insert(userMissionShopPurchases).values(
+          snapshot.missionShopPurchases.map((purchase) => ({
+            userId,
+            purchaseId: purchase.purchaseId,
+            day: purchase.day,
+            slot: purchase.slot,
+            rarity: purchase.rarity,
+            stoneCost: purchase.stoneCost,
+            discountPercent: purchase.discountPercent,
+            purchasedAt: purchase.purchasedAt,
+          })),
+        );
+      }
+      if (snapshot.stoneInvestments.length) {
+        await tx.insert(userStoneInvestments).values(
+          snapshot.stoneInvestments.map((investment) => ({
+            userId,
+            investmentId: investment.investmentId,
+            plan: investment.plan,
+            principal: investment.principal,
+            durationDays: investment.durationDays,
+            startDay: investment.startDay,
+            endDay: investment.endDay,
+            status: investment.status,
+            settlementAmount: investment.settlementAmount,
+            createdAt: investment.createdAt,
+            settledAt: investment.settledAt,
+          })),
+        );
+      }
+      if (snapshot.investmentStudyDays.length) {
+        await tx.insert(userInvestmentStudyDays).values(
+          snapshot.investmentStudyDays.map((day) => ({
+            userId,
+            day: day.day,
+            reviewed: day.reviewed,
+            studiedCourse: day.studiedCourse,
+            updatedAt: day.updatedAt,
+          })),
+        );
+      }
       await tx
         .insert(userSyncRevisions)
         .values({ userId, revision })
@@ -427,6 +513,9 @@ router.post("/sync", requireAuth, async (req, res) => {
   const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
+  const missionShopPurchases = parsed.data.missionShopPurchases ?? [];
+  const stoneInvestments = parsed.data.stoneInvestments ?? [];
+  const investmentStudyDays = parsed.data.investmentStudyDays ?? [];
   const rawCollectionCrafts = parsed.data.collectionCrafts ?? [];
   const collectionCrafts = rawCollectionCrafts.filter(isCurrentStatueCraft);
   const legacyPieceSpends = rawCollectionCrafts
@@ -443,8 +532,11 @@ router.post("/sync", requireAuth, async (req, res) => {
       missionAwards,
       missionChests,
       rawCollectionCrafts,
-    )
-    || hasInvalidCollectionPieceSpends(collectionPieceSpends)
+    ) ||
+    hasInvalidCollectionPieceSpends(collectionPieceSpends) ||
+    hasInvalidMissionShopPurchases(missionShopPurchases) ||
+    hasInvalidStoneInvestments(stoneInvestments) ||
+    hasInvalidInvestmentStudyDays(investmentStudyDays)
   ) {
     res
       .status(400)
@@ -482,7 +574,18 @@ router.post("/sync", requireAuth, async (req, res) => {
       rawCollectionCrafts,
       (item) => `${item.rarity}\u0000${item.craftIndex}`,
     ) ||
-    hasDuplicates(collectionPieceSpends, (item) => item.spendId)
+    hasDuplicates(collectionPieceSpends, (item) => item.spendId) ||
+    hasDuplicates(missionShopPurchases, (item) => item.purchaseId) ||
+    hasDuplicates(
+      missionShopPurchases,
+      (item) => `${item.day}\u0000${item.slot}`,
+    ) ||
+    hasDuplicates(
+      missionShopPurchases,
+      (item) => `${item.day}\u0000${item.rarity}`,
+    ) ||
+    hasDuplicates(stoneInvestments, (item) => item.investmentId) ||
+    hasDuplicates(investmentStudyDays, (item) => item.day)
   ) {
     res.status(400).json({ error: "Danh sách đồng bộ có mục trùng lặp." });
     return;
@@ -606,6 +709,21 @@ router.post("/sync", requireAuth, async (req, res) => {
         collectionPieceSpends: collectionPieceSpends.map((spend) => ({
           ...spend,
           spentAt: toTimestamp(spend.spentAt),
+        })),
+        missionShopPurchases: missionShopPurchases.map((purchase) => ({
+          ...purchase,
+          purchasedAt: toTimestamp(purchase.purchasedAt),
+        })),
+        stoneInvestments: stoneInvestments.map((investment) => ({
+          ...investment,
+          createdAt: toTimestamp(investment.createdAt),
+          settledAt: investment.settledAt
+            ? toTimestamp(investment.settledAt)
+            : null,
+        })),
+        investmentStudyDays: investmentStudyDays.map((day) => ({
+          ...day,
+          updatedAt: toTimestamp(day.updatedAt),
         })),
       };
 
@@ -885,6 +1003,99 @@ router.post("/sync", requireAuth, async (req, res) => {
           )
           .onConflictDoNothing();
       }
+      if (snapshot.missionShopPurchases.length) {
+        await tx
+          .insert(userMissionShopPurchases)
+          .values(
+            snapshot.missionShopPurchases.map((purchase) => ({
+              userId,
+              purchaseId: purchase.purchaseId,
+              day: purchase.day,
+              slot: purchase.slot,
+              rarity: purchase.rarity,
+              stoneCost: purchase.stoneCost,
+              discountPercent: purchase.discountPercent,
+              purchasedAt: purchase.purchasedAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+      for (const incoming of snapshot.stoneInvestments) {
+        const [current] = await tx
+          .select()
+          .from(userStoneInvestments)
+          .where(
+            and(
+              eq(userStoneInvestments.userId, userId),
+              eq(userStoneInvestments.investmentId, incoming.investmentId),
+            ),
+          );
+        if (
+          current &&
+          (current.plan !== incoming.plan ||
+            current.principal !== incoming.principal ||
+            current.durationDays !== incoming.durationDays ||
+            current.startDay !== incoming.startDay ||
+            current.endDay !== incoming.endDay)
+        ) {
+          throw new Error("Thương Vụ đồng bộ có dữ liệu mâu thuẫn.");
+        }
+        if (!current) {
+          await tx.insert(userStoneInvestments).values({
+            userId,
+            investmentId: incoming.investmentId,
+            plan: incoming.plan,
+            principal: incoming.principal,
+            durationDays: incoming.durationDays,
+            startDay: incoming.startDay,
+            endDay: incoming.endDay,
+            status: incoming.status,
+            settlementAmount: incoming.settlementAmount,
+            createdAt: incoming.createdAt,
+            settledAt: incoming.settledAt,
+          });
+        } else if (
+          current.status === "active" ||
+          (incoming.status !== "active" &&
+            Date.parse(incoming.settledAt ?? "") >
+              Date.parse(current.settledAt ?? ""))
+        ) {
+          await tx
+            .update(userStoneInvestments)
+            .set({
+              status: incoming.status,
+              settlementAmount: incoming.settlementAmount,
+              settledAt: incoming.settledAt,
+            })
+            .where(
+              and(
+                eq(userStoneInvestments.userId, userId),
+                eq(userStoneInvestments.investmentId, incoming.investmentId),
+              ),
+            );
+        }
+      }
+      if (snapshot.investmentStudyDays.length) {
+        await tx
+          .insert(userInvestmentStudyDays)
+          .values(
+            snapshot.investmentStudyDays.map((day) => ({
+              userId,
+              day: day.day,
+              reviewed: day.reviewed,
+              studiedCourse: day.studiedCourse,
+              updatedAt: day.updatedAt,
+            })),
+          )
+          .onConflictDoUpdate({
+            target: [userInvestmentStudyDays.userId, userInvestmentStudyDays.day],
+            set: {
+              reviewed: sql`${userInvestmentStudyDays.reviewed} OR excluded.reviewed`,
+              studiedCourse: sql`${userInvestmentStudyDays.studiedCourse} OR excluded.studied_course`,
+              updatedAt: sql`GREATEST(${userInvestmentStudyDays.updatedAt}, excluded.updated_at)`,
+            },
+          });
+      }
       const [
         allWords,
         allTombstones,
@@ -895,6 +1106,9 @@ router.post("/sync", requireAuth, async (req, res) => {
         allChests,
         allCrafts,
         allPieceSpends,
+        allShopPurchases,
+        allInvestments,
+        allInvestmentStudyDays,
       ] = await Promise.all([
         tx
           .select()
@@ -932,6 +1146,18 @@ router.post("/sync", requireAuth, async (req, res) => {
           .select()
           .from(userCollectionPieceSpends)
           .where(eq(userCollectionPieceSpends.userId, userId)),
+        tx
+          .select()
+          .from(userMissionShopPurchases)
+          .where(eq(userMissionShopPurchases.userId, userId)),
+        tx
+          .select()
+          .from(userStoneInvestments)
+          .where(eq(userStoneInvestments.userId, userId)),
+        tx
+          .select()
+          .from(userInvestmentStudyDays)
+          .where(eq(userInvestmentStudyDays.userId, userId)),
       ]);
       const tombstonesById = new Map(
         allTombstones.map((item) => [item.syncId, item.deletedAt]),
@@ -1016,6 +1242,18 @@ router.post("/sync", requireAuth, async (req, res) => {
               .filter((craft) => !isCurrentStatueCraft(craft))
               .map(pieceSpendFromLegacyCraft),
           ),
+          missionShopPurchases: allShopPurchases.map(
+            ({ userId: _owner, ...purchase }) => ({
+              ...purchase,
+              day: purchase.day,
+            }),
+          ),
+          stoneInvestments: allInvestments.map(
+            ({ userId: _owner, ...investment }) => investment,
+          ),
+          investmentStudyDays: allInvestmentStudyDays.map(
+            ({ userId: _owner, ...day }) => day,
+          ),
         },
       };
     });
@@ -1059,6 +1297,9 @@ async function readUserSyncSnapshot(userId: string) {
     allChests,
     allCrafts,
     allPieceSpends,
+    allShopPurchases,
+    allInvestments,
+    allInvestmentStudyDays,
   ] = await Promise.all([
     db
       .select({ revision: userSyncRevisions.revision })
@@ -1097,6 +1338,18 @@ async function readUserSyncSnapshot(userId: string) {
       .select()
       .from(userCollectionPieceSpends)
       .where(eq(userCollectionPieceSpends.userId, userId)),
+    db
+      .select()
+      .from(userMissionShopPurchases)
+      .where(eq(userMissionShopPurchases.userId, userId)),
+    db
+      .select()
+      .from(userStoneInvestments)
+      .where(eq(userStoneInvestments.userId, userId)),
+    db
+      .select()
+      .from(userInvestmentStudyDays)
+      .where(eq(userInvestmentStudyDays.userId, userId)),
   ]);
   const tombstonesById = new Map(
     allTombstones.map((item) => [item.syncId, item.deletedAt]),
@@ -1156,11 +1409,184 @@ async function readUserSyncSnapshot(userId: string) {
         .filter((craft) => !isCurrentStatueCraft(craft))
         .map(pieceSpendFromLegacyCraft),
     ),
+    missionShopPurchases: allShopPurchases.map(
+      ({ userId: _owner, ...purchase }) => ({
+        ...purchase,
+        day: purchase.day,
+      }),
+    ),
+    stoneInvestments: allInvestments.map(
+      ({ userId: _owner, ...investment }) => investment,
+    ),
+    investmentStudyDays: allInvestmentStudyDays.map(
+      ({ userId: _owner, ...day }) => day,
+    ),
   };
 }
 
 function maxTimestamp(left: string, right: string): string {
   return Date.parse(left) >= Date.parse(right) ? left : right;
+}
+
+function hasInvalidMissionShopPurchases(
+  purchases: Array<{
+    purchaseId: string;
+    day: string;
+    slot: number;
+    rarity: string;
+    stoneCost: number;
+    discountPercent: number;
+    purchasedAt: string | Date;
+  }>,
+): boolean {
+  return purchases.some((purchase) => {
+    if (
+      !isValidDay(purchase.day) ||
+      !Number.isSafeInteger(purchase.slot) ||
+      purchase.slot < 0 ||
+      purchase.slot > 2 ||
+      !Number.isSafeInteger(purchase.stoneCost) ||
+      !Number.isSafeInteger(purchase.discountPercent) ||
+      !Number.isFinite(Date.parse(toTimestamp(purchase.purchasedAt)))
+    ) {
+      return true;
+    }
+    const offered = missionShopOffersForDay(purchase.day)[purchase.slot];
+    return (
+      purchase.purchaseId !== `shop:${purchase.day}:${purchase.slot}` ||
+      purchase.rarity !== offered.rarity ||
+      purchase.stoneCost !== offered.price ||
+      purchase.discountPercent !== offered.discountPercent
+    );
+  });
+}
+
+function hasInvalidStoneInvestments(
+  investments: Array<{
+    investmentId: string;
+    plan: string;
+    principal: number;
+    durationDays: number;
+    startDay: string;
+    endDay: string;
+    status: string;
+    settlementAmount: number | null;
+    createdAt: string | Date;
+    settledAt: string | Date | null;
+  }>,
+): boolean {
+  return investments.some((investment) => {
+    const {
+      investmentId,
+      plan,
+      principal,
+      durationDays,
+      startDay,
+      endDay,
+      status,
+      settlementAmount,
+      createdAt,
+      settledAt,
+    } = investment;
+    if (
+      !/^investment:[a-z0-9-]{1,120}$/i.test(investmentId) ||
+      !["safe", "balanced", "risky"].includes(plan) ||
+      !Number.isSafeInteger(principal) ||
+      principal <= 0 ||
+      principal > 900_000_000 ||
+      (durationDays !== 7 && durationDays !== 14) ||
+      !isValidDay(startDay) ||
+      !isValidDay(endDay) ||
+      endDay !== addUtcDays(startDay, durationDays - 1) ||
+      !["active", "succeeded", "failed"].includes(status) ||
+      !Number.isFinite(Date.parse(toTimestamp(createdAt)))
+    ) {
+      return true;
+    }
+
+    if (status === "active") {
+      return settlementAmount !== null || settledAt !== null;
+    }
+    if (
+      !Number.isSafeInteger(settlementAmount) ||
+      settledAt === null ||
+      !Number.isFinite(Date.parse(toTimestamp(settledAt)))
+    ) {
+      return true;
+    }
+    if (status === "succeeded") {
+      const rate = plan === "safe" ? 5 : plan === "balanced" ? 10 : 40;
+      const interest = Math.round(
+        (principal * rate * (durationDays === 14 ? 3 : 1)) / 100,
+      );
+      return settlementAmount !== principal + interest;
+    }
+    const failedPayoutPercent =
+      plan === "safe" ? 99 : plan === "balanced" ? 70 : -20;
+    return settlementAmount !== Math.round((principal * failedPayoutPercent) / 100);
+  });
+}
+
+function hasInvalidInvestmentStudyDays(
+  days: Array<{
+    day: string;
+    reviewed: boolean;
+    studiedCourse: boolean;
+    updatedAt: string | Date;
+  }>,
+): boolean {
+  return days.some(
+    (item) =>
+      !isValidDay(item.day) ||
+      typeof item.reviewed !== "boolean" ||
+      typeof item.studiedCourse !== "boolean" ||
+      (!item.reviewed && !item.studiedCourse) ||
+      !Number.isFinite(Date.parse(toTimestamp(item.updatedAt))),
+  );
+}
+
+function addUtcDays(day: string, amount: number): string {
+  const date = new Date(`${day}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+
+function missionShopOffersForDay(day: string) {
+  const rarities = ["rare", "epic", "legendary"];
+  for (let index = rarities.length - 1; index > 0; index -= 1) {
+    const other =
+      stableHash(`mission-shop-order:${day}:${index}`) % (index + 1);
+    [rarities[index], rarities[other]] = [rarities[other]!, rarities[index]!];
+  }
+  const discountPercent =
+    10 + (stableHash(`mission-shop-discount:${day}`) % 51);
+  return rarities.map((rarity, slot) => {
+    const basePrice = rarity === "rare" ? 200 : rarity === "epic" ? 400 : 1000;
+    const appliedDiscount = slot === 2 ? discountPercent : 0;
+    return {
+      rarity,
+      price: Math.round((basePrice * (100 - appliedDiscount)) / 100),
+      discountPercent: appliedDiscount,
+    };
+  });
+}
+
+function stableHash(value: string): number {
+  let hash = 2_166_136_261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16_777_619);
+  }
+  return hash >>> 0;
+}
+
+function isValidDay(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return (
+    Number.isFinite(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
 }
 
 function hasInvalidMissionData(
@@ -1368,7 +1794,8 @@ function isValidMissionChestRecord(chest: {
       : chest.baseStone + legacyBonuses[rarity];
   return (
     chest.finalStone ===
-    expectedStone + serverCommonFragmentStoneBonus(chest.chestId, rarity, ruleSet)
+    expectedStone +
+      serverCommonFragmentStoneBonus(chest.chestId, rarity, ruleSet)
   );
 }
 

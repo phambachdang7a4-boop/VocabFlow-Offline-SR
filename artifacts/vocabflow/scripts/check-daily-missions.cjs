@@ -8,24 +8,31 @@ const {
   evaluateDailyMissions,
   isDailyReviewGradeQualified,
 } = loadTs(join(__dirname, "../domain/daily-missions.ts"));
-const {
-  CHEST_RARITY_COLORS,
-  CHEST_RARITY_LABELS,
-  CHEST_RARITY_TEXT_COLORS,
-} = loadTs(join(__dirname, "../domain/mission-chests.ts"));
+const { CHEST_RARITY_COLORS, CHEST_RARITY_LABELS, CHEST_RARITY_TEXT_COLORS } =
+  loadTs(join(__dirname, "../domain/mission-chests.ts"));
 
 assert.deepEqual(
-  [1, 2, 3].map((level) => CHEST_RARITY_LABELS[DAILY_MISSION_CHEST_RARITY[level]]),
+  [1, 2, 3].map(
+    (level) => CHEST_RARITY_LABELS[DAILY_MISSION_CHEST_RARITY[level]],
+  ),
   ["Copper", "Silver", "Gold"],
   "Daily mission levels use their matching chest tiers.",
 );
 assert.equal(
-  new Set([1, 2, 3].map((level) => CHEST_RARITY_COLORS[DAILY_MISSION_CHEST_RARITY[level]])).size,
+  new Set(
+    [1, 2, 3].map(
+      (level) => CHEST_RARITY_COLORS[DAILY_MISSION_CHEST_RARITY[level]],
+    ),
+  ).size,
   3,
   "Each mission chest tier has a distinct face color.",
 );
 assert.equal(
-  new Set([1, 2, 3].map((level) => CHEST_RARITY_TEXT_COLORS[DAILY_MISSION_CHEST_RARITY[level]])).size,
+  new Set(
+    [1, 2, 3].map(
+      (level) => CHEST_RARITY_TEXT_COLORS[DAILY_MISSION_CHEST_RARITY[level]],
+    ),
+  ).size,
   3,
   "Each mission chest tier has a distinct metallic edge.",
 );
@@ -41,14 +48,21 @@ const missionCollectionTabs = readFileSync(
   join(__dirname, "../components/MissionCollectionTabs.tsx"),
   "utf8",
 );
-assert.match(missionScreen, /<MissionCollectionTabs active="missions" \/>/);
-assert.match(collectionScreen, /<MissionCollectionTabs active="collection" \/>/);
-assert.match(missionCollectionTabs, /label: "Nhiệm Vụ", route: "\/\(tabs\)\/blank"/);
-assert.match(missionCollectionTabs, /label: "Bộ Sưu Tập", route: "\/collection"/);
+assert.match(
+  missionScreen,
+  /<MissionCollectionTabs active=\{showingShop \? "shop" : "missions"\} \/>/,
+);
+assert.match(
+  collectionScreen,
+  /<MissionCollectionTabs active="collection" \/>/,
+);
+assert.match(missionCollectionTabs, /id: "missions", label: "Nhiệm Vụ"/);
+assert.match(missionCollectionTabs, /id: "shop", label: "Cửa Hàng"/);
+assert.match(missionCollectionTabs, /id: "collection", label: "Bộ Sưu Tập"/);
 assert.doesNotMatch(missionScreen, /testID="open-collection"/);
 assert.match(
   missionScreen,
-  /Rương \{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn thành/,
+  /Rương \{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn\s+thành/,
   "Each mission tells learners which chest tier it awards.",
 );
 assert.match(
@@ -105,7 +119,7 @@ assert.deepEqual(
 );
 const omittedTypes = plans.flatMap((missions) =>
   missionTypes.filter(
-      (type) => !missions.some((mission) => mission.type === type),
+    (type) => !missions.some((mission) => mission.type === type),
   ),
 );
 assert.equal(omittedTypes.length, 10, "Two categories are omitted each day.");
@@ -262,7 +276,12 @@ for (const [index, target] of [5, 10, 25].entries()) {
       reviewedCount: target,
       addedWordCount: 0,
       reviewSessions: [
-        { grade: "C", reviewedCount: target, activeDurationMs: 0, maxCombo: target },
+        {
+          grade: "C",
+          reviewedCount: target,
+          activeDurationMs: 0,
+          maxCombo: target,
+        },
       ],
       reviewDurationMs: 0,
     },

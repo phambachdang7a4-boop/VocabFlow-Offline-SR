@@ -214,6 +214,21 @@ components:
           maxItems: 10000
           items:
             $ref: "#/components/schemas/SyncCollectionPieceSpend"
+        missionShopPurchases:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncMissionShopPurchase"
+        stoneInvestments:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncStoneInvestment"
+        investmentStudyDays:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncInvestmentStudyDay"
     SyncWord:
       type: object
       required:
@@ -547,6 +562,98 @@ components:
           type: integer
           enum: [20, 100]
         spentAt:
+          type: string
+          format: date-time
+    SyncMissionShopPurchase:
+      type: object
+      required:
+        [purchaseId, day, slot, rarity, stoneCost, discountPercent, purchasedAt]
+      properties:
+        purchaseId:
+          type: string
+          minLength: 1
+          maxLength: 80
+        day:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        slot:
+          type: integer
+          minimum: 0
+          maximum: 2
+        rarity:
+          type: string
+          enum: [rare, epic, legendary]
+        stoneCost:
+          type: integer
+          minimum: 0
+        discountPercent:
+          type: integer
+          minimum: 0
+          maximum: 60
+        purchasedAt:
+          type: string
+          format: date-time
+    SyncStoneInvestment:
+      type: object
+      required:
+        [
+          investmentId,
+          plan,
+          principal,
+          durationDays,
+          startDay,
+          endDay,
+          status,
+          settlementAmount,
+          createdAt,
+          settledAt,
+        ]
+      properties:
+        investmentId:
+          type: string
+          minLength: 12
+          maxLength: 140
+        plan:
+          type: string
+          enum: [safe, balanced, risky]
+        principal:
+          type: integer
+          minimum: 1
+          maximum: 900000000
+        durationDays:
+          type: integer
+          enum: [7, 14]
+        startDay:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        endDay:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        status:
+          type: string
+          enum: [active, succeeded, failed]
+        settlementAmount:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        settledAt:
+          type: string
+          format: date-time
+          nullable: true
+    SyncInvestmentStudyDay:
+      type: object
+      required: [day, reviewed, studiedCourse, updatedAt]
+      properties:
+        day:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        reviewed:
+          type: boolean
+        studiedCourse:
+          type: boolean
+        updatedAt:
           type: string
           format: date-time
     DictionaryAssetError:

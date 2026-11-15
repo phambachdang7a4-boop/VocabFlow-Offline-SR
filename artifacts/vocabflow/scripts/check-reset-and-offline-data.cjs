@@ -7,6 +7,8 @@ const {
   createRepository,
   loadTs,
   missionChests,
+  missionShop,
+  stoneInvestments,
 } = require("./test-support.cjs");
 
 const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
@@ -94,7 +96,8 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
           failedGuestLocalCalls.push("local");
           throw new Error("local");
         },
-        clearOfflineResources: async () => failedGuestLocalCalls.push("offline"),
+        clearOfflineResources: async () =>
+          failedGuestLocalCalls.push("offline"),
       }),
     /local/,
   );
@@ -113,6 +116,8 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
       setItem: async (key, value) => values.set(key, value),
     },
     "../domain/mission-chests": missionChests,
+    "../domain/mission-shop": missionShop,
+    "../domain/stone-investments": stoneInvestments,
     "../domain/collection-artworks": collectionArtworks,
   });
 
@@ -188,6 +193,36 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
     grade: "S",
     completed: true,
   });
+  const resetShopDay = "2026-11-10";
+  const resetShopOffer = missionShop.missionShopOffersForDay(resetShopDay)[0];
+  harness.db
+    .prepare(
+      `INSERT INTO mission_shop_purchases
+        (purchase_id, shop_day, slot, rarity, stone_cost,
+          discount_percent, purchased_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      missionShop.missionShopPurchaseId(resetShopDay, resetShopOffer.slot),
+      resetShopDay,
+      resetShopOffer.slot,
+      resetShopOffer.rarity,
+      resetShopOffer.price,
+      resetShopOffer.discountPercent,
+      `${resetShopDay}T12:00:00.000Z`,
+    );
+  harness.db
+    .prepare(
+      `INSERT INTO stone_investments
+        (investment_id, plan, principal, duration_days, start_day, end_day,
+          status, settlement_amount, created_at, settled_at)
+       VALUES ('investment:reset-check', 'safe', 20, 7, ?, ?, 'active', NULL, ?, NULL)`,
+    )
+    .run(
+      resetShopDay,
+      "2026-11-16",
+      `${resetShopDay}T12:00:00.000Z`,
+    );
   await sync.clearLocalAccountAfterCloudReset(14);
   const cleared = await sync.exportSyncSnapshot();
   assert.equal(cleared.payload.revision, 14);
@@ -196,6 +231,27 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.equal(cleared.payload.reviewStats.length, 0);
   assert.equal(cleared.payload.reviewSessions.length, 0);
   assert.equal(cleared.payload.reviewComboRewards.length, 0);
+  assert.deepEqual(cleared.payload.missionShopPurchases, []);
+  assert.deepEqual(cleared.payload.stoneInvestments, []);
+  assert.deepEqual(cleared.payload.investmentStudyDays, []);
+  assert.equal(
+    harness.db
+      .prepare("SELECT COUNT(*) AS count FROM mission_shop_purchases")
+      .get().count,
+    0,
+    "Account resets clear both local and sync-visible store purchase history.",
+  );
+  assert.equal(
+    harness.db.prepare("SELECT COUNT(*) AS count FROM stone_investments").get()
+      .count,
+    0,
+  );
+  assert.equal(
+    harness.db
+      .prepare("SELECT COUNT(*) AS count FROM investment_study_days")
+      .get().count,
+    0,
+  );
   assert.equal(cleared.pending, false);
 
   const settings = readFileSync(join(__dirname, "../app/settings.tsx"), "utf8");

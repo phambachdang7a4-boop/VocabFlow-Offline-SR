@@ -7,6 +7,8 @@ const {
   createRepository,
   loadTs,
   missionChests,
+  missionShop,
+  stoneInvestments,
   collectionArtworks,
 } = require("./test-support.cjs");
 
@@ -23,6 +25,8 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   "./vocabulary": harness.repo,
   "@react-native-async-storage/async-storage": asyncStorage,
   "../domain/mission-chests": missionChests,
+  "../domain/mission-shop": missionShop,
+  "../domain/stone-investments": stoneInvestments,
   "../domain/collection-artworks": collectionArtworks,
 });
 
@@ -73,6 +77,11 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   assert.equal(reviewTotals.totalSessions, 1);
   assert.equal(reviewTotals.totalReviewed, 0);
   let snapshot = await sync.exportSyncSnapshot();
+  assert.deepEqual(
+    snapshot.payload.missionShopPurchases,
+    [],
+    "Store purchase history is included in sync snapshots.",
+  );
   assert.equal(snapshot.payload.words.length, 2);
   assert.equal(snapshot.payload.reviewStats[0].sessionCount, 1);
   assert.equal(
@@ -120,13 +129,8 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     const candidate = `sync-premature-${index}`;
     if (
       !missionChests.hasSuperUpgradeChance(candidate) &&
-      !missionChests.resolveChestUpgrade(
-        candidate,
-        1,
-        "uncommon",
-        4,
-        false,
-      ).success
+      !missionChests.resolveChestUpgrade(candidate, 1, "uncommon", 4, false)
+        .success
     ) {
       prematureChestId = candidate;
       break;
@@ -423,6 +427,28 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
         spentAt: "2026-11-08T09:00:00.000Z",
       },
     ],
+    stoneInvestments: [
+      {
+        investmentId: "investment:backup-sync",
+        plan: "balanced",
+        principal: 100,
+        durationDays: 7,
+        startDay: "2026-11-08",
+        endDay: "2026-11-14",
+        status: "active",
+        settlementAmount: null,
+        createdAt: "2026-11-08T10:00:00.000Z",
+        settledAt: null,
+      },
+    ],
+    investmentStudyDays: [
+      {
+        day: "2026-11-08",
+        reviewed: true,
+        studiedCourse: false,
+        updatedAt: "2026-11-08T10:00:00.000Z",
+      },
+    ],
   };
   await sync.replaceAccountSyncSnapshot(backupPayload);
   let restoredSnapshot = await sync.exportSyncSnapshot();
@@ -466,10 +492,21 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     "Account replacement preserves duplicate Corvi compensation.",
   );
   assert.deepEqual(
-    restoredSnapshot.payload.collectionPieceSpends.map((spend) => spend.spendId).sort(),
+    restoredSnapshot.payload.collectionPieceSpends
+      .map((spend) => spend.spendId)
+      .sort(),
     ["legacy:craft-epic-2", "legacy:craft-rare-2"],
     "Old statues stay locked while their historical fragment spending remains.",
   );
+  assert.equal(restoredSnapshot.payload.stoneInvestments.length, 1);
+  assert.deepEqual(restoredSnapshot.payload.investmentStudyDays, [
+    {
+      day: "2026-11-08",
+      reviewed: true,
+      studiedCourse: false,
+      updatedAt: "2026-11-08T10:00:00.000Z",
+    },
+  ]);
   assert.equal(
     await sync.hasPendingAccountReplacement(),
     true,
@@ -558,6 +595,16 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     serverSource,
     /delete\(userVocabulary\).*?delete\(userWordTombstones\)/s,
     "Confirmed restore replaces prior cloud rows inside one transaction.",
+  );
+  assert.match(
+    serverSource,
+    /hasInvalidStoneInvestments/,
+    "The server validates investment rules before accepting account sync.",
+  );
+  assert.match(
+    serverSource,
+    /userInvestmentStudyDays/,
+    "Study-day history is included in account sync.",
   );
   const rootLayout = readFileSync(
     join(__dirname, "../app/_layout.tsx"),

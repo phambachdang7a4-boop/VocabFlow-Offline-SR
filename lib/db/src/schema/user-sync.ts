@@ -201,6 +201,65 @@ export const userCollectionPieceSpends = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.spendId] })],
 );
 
+export const userMissionShopPurchases = pgTable(
+  "user_mission_shop_purchases",
+  {
+    userId: text("user_id").notNull(),
+    purchaseId: text("purchase_id").notNull(),
+    day: date("shop_day", { mode: "string" }).notNull(),
+    slot: integer("slot").notNull(),
+    rarity: text("rarity").notNull(),
+    stoneCost: integer("stone_cost").notNull(),
+    discountPercent: integer("discount_percent").notNull(),
+    purchasedAt: timestampColumn("purchased_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.purchaseId] }),
+    uniqueIndex("user_mission_shop_purchases_day_slot_idx").on(
+      table.userId,
+      table.day,
+      table.slot,
+    ),
+    uniqueIndex("user_mission_shop_purchases_day_rarity_idx").on(
+      table.userId,
+      table.day,
+      table.rarity,
+    ),
+  ],
+);
+
+export const userStoneInvestments = pgTable(
+  "user_stone_investments",
+  {
+    userId: text("user_id").notNull(),
+    investmentId: text("investment_id").notNull(),
+    plan: text("plan").notNull(),
+    principal: integer("principal").notNull(),
+    durationDays: integer("duration_days").notNull(),
+    startDay: date("start_day", { mode: "string" }).notNull(),
+    endDay: date("end_day", { mode: "string" }).notNull(),
+    status: text("status").notNull(),
+    settlementAmount: integer("settlement_amount"),
+    createdAt: timestampColumn("created_at").notNull(),
+    settledAt: timestampColumn("settled_at"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.investmentId] }),
+  ],
+);
+
+export const userInvestmentStudyDays = pgTable(
+  "user_investment_study_days",
+  {
+    userId: text("user_id").notNull(),
+    day: date("study_day", { mode: "string" }).notNull(),
+    reviewed: boolean("reviewed").notNull(),
+    studiedCourse: boolean("studied_course").notNull(),
+    updatedAt: timestampColumn("updated_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.day] })],
+);
+
 export const userSyncRevisions = pgTable("user_sync_revisions", {
   userId: text("user_id").primaryKey(),
   revision: integer("revision").notNull().default(0),

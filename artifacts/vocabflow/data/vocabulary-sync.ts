@@ -13,6 +13,16 @@ import type { DailyReviewGrade } from "../domain/daily-missions";
 import type { MissionChest } from "../domain/mission-chests";
 import { reopenPrematureMissionChest } from "../domain/mission-chests";
 import {
+  isValidMissionShopPurchase,
+  type MissionShopPurchase,
+} from "../domain/mission-shop";
+import {
+  isValidInvestmentStudyDay,
+  isValidStoneInvestment,
+  type InvestmentStudyDay,
+  type StoneInvestment,
+} from "../domain/stone-investments";
+import {
   COLLECTION_CYCLE_PREFIX,
   isCurrentCycleCollectionCraft,
   isCollectionArtwork,
@@ -102,6 +112,12 @@ export interface SyncMissionChest extends MissionChest {}
 
 export interface SyncCollectionCraft extends CollectionCraft {}
 
+export interface SyncMissionShopPurchase extends MissionShopPurchase {}
+
+export interface SyncStoneInvestment extends StoneInvestment {}
+
+export interface SyncInvestmentStudyDay extends InvestmentStudyDay {}
+
 export interface SyncCollectionPieceSpend {
   spendId: string;
   rarity: MissionChest["rarity"];
@@ -122,6 +138,9 @@ export interface SyncPayload {
   missionChests: SyncMissionChest[];
   collectionCrafts: SyncCollectionCraft[];
   collectionPieceSpends: SyncCollectionPieceSpend[];
+  missionShopPurchases?: SyncMissionShopPurchase[];
+  stoneInvestments?: SyncStoneInvestment[];
+  investmentStudyDays?: SyncInvestmentStudyDay[];
 }
 
 export interface LocalSyncSnapshot {
@@ -195,6 +214,9 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       missionAwards,
       missionChests,
       collectionCrafts,
+      missionShopPurchases,
+      stoneInvestments,
+      investmentStudyDays,
       state,
     ] = await Promise.all([
       db.getAllAsync<SyncWord>(`
@@ -253,6 +275,29 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
         FROM collection_crafts ORDER BY rarity, craft_index
       `),
+      db.getAllAsync<SyncMissionShopPurchase>(`
+        SELECT purchase_id AS purchaseId, shop_day AS day, slot, rarity,
+          stone_cost AS stoneCost, discount_percent AS discountPercent,
+          purchased_at AS purchasedAt
+        FROM mission_shop_purchases ORDER BY shop_day, slot
+      `),
+      db.getAllAsync<SyncStoneInvestment>(`
+        SELECT investment_id AS investmentId, plan, principal,
+          duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
+          status, settlement_amount AS settlementAmount, created_at AS createdAt,
+          settled_at AS settledAt
+        FROM stone_investments ORDER BY created_at, investment_id
+      `),
+      db.getAllAsync<{
+        day: string;
+        reviewed: number;
+        studiedCourse: number;
+        updatedAt: string;
+      }>(`
+        SELECT day, reviewed, studied_course AS studiedCourse,
+          updated_at AS updatedAt
+        FROM investment_study_days ORDER BY day
+      `),
       getSyncQueueStateFromDatabase(db),
     ]);
     return {
@@ -309,6 +354,13 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         ).map((spend) => ({
           ...spend,
           pieceCost: spend.pieceCost === 100 ? 100 : 20,
+        })),
+        missionShopPurchases,
+        stoneInvestments,
+        investmentStudyDays: investmentStudyDays.map((day) => ({
+          ...day,
+          reviewed: Boolean(day.reviewed),
+          studiedCourse: Boolean(day.studiedCourse),
         })),
       },
       generation: state.generation,
@@ -409,6 +461,9 @@ export async function clearLocalAccountAfterCloudReset(
         missionChests: [],
         collectionCrafts: [],
         collectionPieceSpends: [],
+        missionShopPurchases: [],
+        stoneInvestments: [],
+        investmentStudyDays: [],
       };
       await replacePayloadData(db, emptyPayload);
       for (const [key, value] of [
@@ -448,6 +503,9 @@ async function replacePayloadData(
     DELETE FROM mission_chests;
     DELETE FROM collection_crafts;
     DELETE FROM collection_piece_spends;
+    DELETE FROM mission_shop_purchases;
+    DELETE FROM stone_investments;
+    DELETE FROM investment_study_days;
   `);
 
   for (const word of payload.words) {
@@ -626,6 +684,59 @@ async function replacePayloadData(
       spend.rarity,
       spend.pieceCost,
       spend.spentAt,
+    );
+  }
+  for (const purchase of payload.missionShopPurchases ?? []) {
+    if (!isValidMissionShopPurchase(purchase)) {
+      throw new Error("Giao dịch cửa hàng trong bản sao lưu không hợp lệ.");
+    }
+    await db.runAsync(
+      `INSERT INTO mission_shop_purchases
+        (purchase_id, shop_day, slot, rarity, stone_cost,
+          discount_percent, purchased_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      purchase.purchaseId,
+      purchase.day,
+      purchase.slot,
+      purchase.rarity,
+      purchase.stoneCost,
+      purchase.discountPercent,
+      purchase.purchasedAt,
+    );
+  }
+  for (const investment of payload.stoneInvestments ?? []) {
+    if (!isValidStoneInvestment(investment)) {
+      throw new Error("Thương Vụ trong bản sao lưu không hợp lệ.");
+    }
+    await db.runAsync(
+      `INSERT INTO stone_investments
+        (investment_id, plan, principal, duration_days, start_day, end_day,
+          status, settlement_amount, created_at, settled_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      investment.investmentId,
+      investment.plan,
+      investment.principal,
+      investment.durationDays,
+      investment.startDay,
+      investment.endDay,
+      investment.status,
+      investment.settlementAmount,
+      investment.createdAt,
+      investment.settledAt,
+    );
+  }
+  for (const day of payload.investmentStudyDays ?? []) {
+    if (!isValidInvestmentStudyDay(day)) {
+      throw new Error("Ngày học Thương Vụ trong bản sao lưu không hợp lệ.");
+    }
+    await db.runAsync(
+      `INSERT INTO investment_study_days
+        (day, reviewed, studied_course, updated_at)
+       VALUES (?, ?, ?, ?)`,
+      day.day,
+      day.reviewed ? 1 : 0,
+      day.studiedCourse ? 1 : 0,
+      day.updatedAt,
     );
   }
   await db.runAsync(`
@@ -1052,6 +1163,104 @@ async function mergeSnapshotIntoDatabase(
         spend.rarity,
         spend.pieceCost,
         spend.spentAt,
+      );
+    }
+    for (const purchase of payload.missionShopPurchases ?? []) {
+      if (!isValidMissionShopPurchase(purchase)) {
+        throw new Error("Giao dịch cửa hàng đồng bộ không hợp lệ.");
+      }
+      await db.runAsync(
+        `INSERT OR IGNORE INTO mission_shop_purchases
+          (purchase_id, shop_day, slot, rarity, stone_cost,
+            discount_percent, purchased_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        purchase.purchaseId,
+        purchase.day,
+        purchase.slot,
+        purchase.rarity,
+        purchase.stoneCost,
+        purchase.discountPercent,
+        purchase.purchasedAt,
+      );
+    }
+    for (const day of payload.investmentStudyDays ?? []) {
+      if (!isValidInvestmentStudyDay(day)) {
+        throw new Error("Ngày học Thương Vụ đồng bộ không hợp lệ.");
+      }
+      const current = await db.getFirstAsync<{
+        reviewed: number;
+        studiedCourse: number;
+        updatedAt: string;
+      }>(
+        `SELECT reviewed, studied_course AS studiedCourse,
+          updated_at AS updatedAt
+         FROM investment_study_days WHERE day = ?`,
+        day.day,
+      );
+      await db.runAsync(
+        `INSERT INTO investment_study_days
+          (day, reviewed, studied_course, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(day) DO UPDATE SET
+          reviewed = MAX(investment_study_days.reviewed, excluded.reviewed),
+          studied_course = MAX(investment_study_days.studied_course, excluded.studied_course),
+          updated_at = MAX(investment_study_days.updated_at, excluded.updated_at)`,
+        day.day,
+        day.reviewed || Boolean(current?.reviewed) ? 1 : 0,
+        day.studiedCourse || Boolean(current?.studiedCourse) ? 1 : 0,
+        maxDate(current?.updatedAt ?? "", day.updatedAt),
+      );
+    }
+    for (const incoming of payload.stoneInvestments ?? []) {
+      if (!isValidStoneInvestment(incoming)) {
+        throw new Error("Thương Vụ đồng bộ không hợp lệ.");
+      }
+      const current = await db.getFirstAsync<StoneInvestment>(
+        `SELECT investment_id AS investmentId, plan, principal,
+          duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
+          status, settlement_amount AS settlementAmount, created_at AS createdAt,
+          settled_at AS settledAt
+         FROM stone_investments WHERE investment_id = ?`,
+        incoming.investmentId,
+      );
+      if (
+        current &&
+        (current.plan !== incoming.plan ||
+          current.principal !== incoming.principal ||
+          current.durationDays !== incoming.durationDays ||
+          current.startDay !== incoming.startDay ||
+          current.endDay !== incoming.endDay)
+      ) {
+        throw new Error("Thương Vụ đồng bộ có dữ liệu mâu thuẫn.");
+      }
+      const selected =
+        !current ||
+        (current.status === "active" && incoming.status !== "active") ||
+        (current.status !== "active" &&
+          incoming.status !== "active" &&
+          Date.parse(incoming.settledAt ?? "") >
+            Date.parse(current.settledAt ?? ""))
+          ? incoming
+          : current;
+      await db.runAsync(
+        `INSERT INTO stone_investments
+          (investment_id, plan, principal, duration_days, start_day, end_day,
+            status, settlement_amount, created_at, settled_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(investment_id) DO UPDATE SET
+          status = excluded.status,
+          settlement_amount = excluded.settlement_amount,
+          settled_at = excluded.settled_at`,
+        selected.investmentId,
+        selected.plan,
+        selected.principal,
+        selected.durationDays,
+        selected.startDay,
+        selected.endDay,
+        selected.status,
+        selected.settlementAmount,
+        selected.createdAt,
+        selected.settledAt,
       );
     }
 
