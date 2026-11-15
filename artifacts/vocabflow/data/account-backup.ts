@@ -386,6 +386,7 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
     (value.pieceCost !== undefined &&
       value.pieceCost !== -20 &&
       value.pieceCost !== 0 &&
+      value.pieceCost !== 10 &&
       value.pieceCost !== 20 &&
       value.pieceCost !== 100) ||
     (value.pieceCost === -20 &&
@@ -412,9 +413,11 @@ function parseCollectionCraft(value: unknown): SyncCollectionCraft | null {
         ? -20
         : value.pieceCost === 0
           ? 0
-          : value.pieceCost === 100
-            ? 100
-            : 20,
+          : value.pieceCost === 10
+            ? 10
+            : value.pieceCost === 100
+              ? 100
+              : 20,
   };
 }
 

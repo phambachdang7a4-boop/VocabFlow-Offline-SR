@@ -33,10 +33,10 @@ export interface CollectionCraft {
   artworkId: string;
   craftedAt: string;
   /**
-   * Older backups and clients omit this and retain their original 20-piece cost.
+   * New statue unlocks cost 10; older backups may omit this and retain 20.
    * A negative cost records a 20-piece duplicate compensation.
    */
-  pieceCost?: -20 | 0 | 20 | 100;
+  pieceCost?: -20 | 0 | 10 | 20 | 100;
 }
 
 export const FIRST_STATUE_ID = "legendary-ho-chi-minh-marble";

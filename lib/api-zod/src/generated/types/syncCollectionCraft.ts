@@ -23,6 +23,6 @@ export interface SyncCollectionCraft {
      */
   artworkId: string;
   craftedAt: Date;
-  /** Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost. */
+  /** Current statue unlocks cost 10 fragments; Corvi duplicate compensation is -20 and an unowned Corvi statue is 0; omitted legacy values preserve the original 20-fragment cost. */
   pieceCost?: SyncCollectionCraftPieceCost;
 }

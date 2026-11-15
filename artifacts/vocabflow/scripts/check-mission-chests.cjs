@@ -601,6 +601,20 @@ assert.match(
   /FRAGMENT_RARITY_ORDER: ChestRarity\[\] = \["rare", "epic", "legendary"\]/,
   "Fragment progress shows Rare and higher only.",
 );
+assert.match(
+  collectionScreen,
+  /STATUE_UNLOCK_COST = 10/,
+  "Statues unlock at the new 10-fragment threshold.",
+);
+assert.match(collectionScreen, /<StatuePuzzleModal/);
+assert.match(collectionScreen, /soundCueFor\("lessonCompleted"\)/);
+const statuePuzzleModal = readFileSync(
+  join(__dirname, "../components/StatuePuzzleModal.tsx"),
+  "utf8",
+);
+assert.match(statuePuzzleModal, /testID="statue-puzzle-board"/);
+assert.match(statuePuzzleModal, /testID="statue-puzzle-skip"/);
+assert.match(statuePuzzleModal, /Bỏ qua, nhận tượng/);
 assert.match(collectionScreen, /progressTrack/);
 assert.match(
   collectionScreen,

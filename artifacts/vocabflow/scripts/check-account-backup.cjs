@@ -137,7 +137,7 @@ const payload = {
         (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
       ).id,
       craftedAt: "2026-11-08T10:00:00.000Z",
-      pieceCost: 100,
+      pieceCost: 10,
     },
     {
       craftId: "cycle2-corvi-mission-2026-11-08-lesson-1",
@@ -202,6 +202,11 @@ assert.equal(Object.hasOwn(restored, "userId"), false);
 assert.equal(
   restored.payload.collectionCrafts[0].artworkId,
   payload.collectionCrafts[0].artworkId,
+);
+assert.equal(
+  restored.payload.collectionCrafts[0].pieceCost,
+  10,
+  "Backups retain the current 10-fragment statue unlock cost.",
 );
 const legacyPaintings = JSON.parse(serialized);
 legacyPaintings.payload.collectionCrafts = [

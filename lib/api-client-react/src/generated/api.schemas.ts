@@ -272,7 +272,7 @@ export const SyncCollectionCraftRarity = {
 } as const;
 
 /**
- * Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost.
+ * Current statue unlocks cost 10 fragments; Corvi duplicate compensation is -20 and an unowned Corvi statue is 0; omitted legacy values preserve the original 20-fragment cost.
  */
 export type SyncCollectionCraftPieceCost = typeof SyncCollectionCraftPieceCost[keyof typeof SyncCollectionCraftPieceCost];
 
@@ -280,6 +280,7 @@ export type SyncCollectionCraftPieceCost = typeof SyncCollectionCraftPieceCost[k
 export const SyncCollectionCraftPieceCost = {
   NUMBER_MINUS_20: -20,
   NUMBER_0: 0,
+  NUMBER_10: 10,
   NUMBER_20: 20,
   NUMBER_100: 100,
 } as const;
@@ -299,7 +300,7 @@ export interface SyncCollectionCraft {
      */
   artworkId: string;
   craftedAt: string;
-  /** Corvi duplicate compensation is -20; an unowned Corvi statue is 0; omitted legacy values preserve the original 20-piece cost. */
+  /** Current statue unlocks cost 10 fragments; Corvi duplicate compensation is -20 and an unowned Corvi statue is 0; omitted legacy values preserve the original 20-fragment cost. */
   pieceCost?: SyncCollectionCraftPieceCost;
 }
 

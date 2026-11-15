@@ -396,7 +396,7 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
         craftIndex: 1234567890,
         artworkId: artwork.id,
         craftedAt: "2026-11-08T10:00:00.000Z",
-        pieceCost: 100,
+        pieceCost: 10,
       },
       {
         craftId: "craft-rare-2",
@@ -481,8 +481,8 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
   );
   assert.equal(
     restoredSnapshot.payload.collectionCrafts[0].pieceCost,
-    100,
-    "Account replacement preserves the 100-fragment statue cost.",
+    10,
+    "Account replacement preserves the current 10-fragment statue cost.",
   );
   assert.equal(
     restoredSnapshot.payload.collectionCrafts.find(

@@ -353,7 +353,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 26) {
+    if ((version?.user_version ?? 0) > 27) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -1046,6 +1046,30 @@ async function initialize(): Promise<SQLiteDatabase> {
           PRAGMA user_version = 26;
         `);
         await markSyncDirty(db);
+      });
+    }
+    if ((version?.user_version ?? 0) < 27) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE collection_crafts_v27 (
+            craft_id TEXT PRIMARY KEY NOT NULL,
+            rarity TEXT NOT NULL
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            craft_index INTEGER NOT NULL CHECK (craft_index >= 1),
+            artwork_id TEXT NOT NULL,
+            crafted_at TEXT NOT NULL,
+            piece_cost INTEGER NOT NULL DEFAULT 20
+              CHECK (piece_cost IN (-20, 0, 10, 20, 100)),
+            UNIQUE (rarity, craft_index)
+          );
+          INSERT INTO collection_crafts_v27
+            (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+          SELECT craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost
+          FROM collection_crafts;
+          DROP TABLE collection_crafts;
+          ALTER TABLE collection_crafts_v27 RENAME TO collection_crafts;
+          PRAGMA user_version = 27;
+        `);
       });
     }
     await repairKnownExtractionExample(db);
@@ -1791,8 +1815,8 @@ export function craftCollectionArtwork(
         overview.crafts.map((item) => item.artworkId),
       );
       const artwork = artworkForCraft(rarity, craftIndex, unlockedArtworkIds);
-      if (overview.fragments[rarity] < 100) {
-        throw new Error("Cần đủ 100 mảnh cùng phẩm chất để mở khóa tượng.");
+      if (overview.fragments[rarity] < 10) {
+        throw new Error("Cần đủ 10 mảnh cùng phẩm chất để mở khóa tượng.");
       }
       const next: CollectionCraft = {
         craftId: `${COLLECTION_CYCLE_PREFIX}${rarity}-${craftIndex}`,
@@ -1800,7 +1824,7 @@ export function craftCollectionArtwork(
         craftIndex,
         artworkId: artwork.id,
         craftedAt: new Date().toISOString(),
-        pieceCost: 100,
+        pieceCost: 10,
       };
       await db.runAsync(
         `INSERT OR IGNORE INTO collection_crafts
@@ -1811,7 +1835,7 @@ export function craftCollectionArtwork(
         next.craftIndex,
         next.artworkId,
         next.craftedAt,
-        next.pieceCost ?? 100,
+        next.pieceCost ?? 10,
       );
       const savedCraft = await db.getFirstAsync<CollectionCraft>(
         `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,

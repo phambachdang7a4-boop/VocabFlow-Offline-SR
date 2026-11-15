@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -19,6 +19,9 @@ import { useColors } from "@/hooks/useColors";
 import { useBottomPad } from "@/components/ScreenHeader";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
+import { StatuePuzzleModal } from "@/components/StatuePuzzleModal";
+import { useSoundEffects } from "@/contexts/SoundEffectsContext";
+import { soundCueFor } from "@/domain/sound-cues";
 import {
   craftCollectionArtwork,
   getMissionCollectionOverview,
@@ -42,7 +45,7 @@ const GALLERY_RARITY_ORDER: ChestRarity[] = [
   "rare",
 ];
 const FRAGMENT_RARITY_ORDER: ChestRarity[] = ["rare", "epic", "legendary"];
-const STATUE_UNLOCK_COST = 100;
+const STATUE_UNLOCK_COST = 10;
 const STATUE_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Common",
   uncommon: "Uncommon",
@@ -185,15 +188,24 @@ export default function CollectionScreen() {
   const [loading, setLoading] = useState(true);
   const [crafting, setCrafting] = useState<ChestRarity | null>(null);
   const [newCraft, setNewCraft] = useState<CollectionCraft | null>(null);
+  const [pendingCraft, setPendingCraft] = useState<CollectionCraft | null>(null);
   const [selectedStatue, setSelectedStatue] =
     useState<CollectionArtwork | null>(null);
   const [showEnglishBiography, setShowEnglishBiography] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const completedCraftId = useRef<string | null>(null);
+  const sound = useSoundEffects();
   const newCraftArtwork = newCraft
     ? COLLECTION_ARTWORKS.find((item) => item.id === newCraft.artworkId)
     : undefined;
   const newCraftImage = newCraftArtwork?.imageAssetKey
     ? ARTWORK_IMAGE_SOURCES[newCraftArtwork.imageAssetKey]
+    : undefined;
+  const pendingArtwork = pendingCraft
+    ? COLLECTION_ARTWORKS.find((item) => item.id === pendingCraft.artworkId)
+    : undefined;
+  const pendingArtworkImage = pendingArtwork?.imageAssetKey
+    ? ARTWORK_IMAGE_SOURCES[pendingArtwork.imageAssetKey]
     : undefined;
   const unlockedStatueIds = new Set(
     overview?.crafts.map((craft) => craft.artworkId) ?? [],
@@ -260,9 +272,13 @@ export default function CollectionScreen() {
   );
 
   const craft = async (rarity: ChestRarity) => {
+    if (pendingCraft || crafting !== null) return;
+    sound.unlockFromGesture();
     setCrafting(rarity);
+    setNewCraft(null);
     try {
-      setNewCraft(await craftCollectionArtwork(rarity));
+      const result = await craftCollectionArtwork(rarity);
+      setPendingCraft(result);
       setError(null);
       setOverview(await getMissionCollectionOverview());
     } catch (cause) {
@@ -273,6 +289,16 @@ export default function CollectionScreen() {
       setCrafting(null);
     }
   };
+
+  const finishStatueUnlock = useCallback(() => {
+    if (!pendingCraft || completedCraftId.current === pendingCraft.craftId)
+      return;
+    completedCraftId.current = pendingCraft.craftId;
+    sound.unlockFromGesture();
+    sound.play(soundCueFor("lessonCompleted"));
+    setNewCraft(pendingCraft);
+    setPendingCraft(null);
+  }, [pendingCraft, sound.play, sound.unlockFromGesture]);
 
   const closeStatueDetails = () => {
     setSelectedStatue(null);
@@ -381,7 +407,8 @@ export default function CollectionScreen() {
             const canCraft =
               hasStatue &&
               fragments >= STATUE_UNLOCK_COST &&
-              crafting === null;
+              crafting === null &&
+              pendingCraft === null;
             const tileLabel = rarityDisplayLabel(rarity);
             const status = !hasStatue
               ? "Đã mở hết tượng bậc này."
@@ -628,6 +655,17 @@ export default function CollectionScreen() {
           );
         })}
     </ScrollView>
+    {pendingCraft && pendingArtwork && pendingArtworkImage ? (
+      <StatuePuzzleModal
+        key={pendingCraft.craftId}
+        craftId={pendingCraft.craftId}
+        title={pendingArtwork.title}
+        rarityLabel={rarityDisplayLabel(pendingCraft.rarity)}
+        image={pendingArtworkImage}
+        onComplete={finishStatueUnlock}
+        onSkip={finishStatueUnlock}
+      />
+    ) : null}
     <Modal
       visible={selectedStatue !== null}
       transparent

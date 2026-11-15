@@ -1686,6 +1686,7 @@ function hasInvalidMissionData(
         (craft.pieceCost !== undefined &&
           craft.pieceCost !== -20 &&
           craft.pieceCost !== 0 &&
+          craft.pieceCost !== 10 &&
           craft.pieceCost !== 20 &&
           craft.pieceCost !== 100) ||
         (craft.pieceCost === -20 &&

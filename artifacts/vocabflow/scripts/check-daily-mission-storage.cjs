@@ -556,7 +556,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     assert.equal(commonBeforeCraft.fragments.common, 0);
 
     let legendaryPieces = 0;
-    for (let offset = 0; legendaryPieces < 100 && offset < 10000; offset += 1) {
+    for (let offset = 0; legendaryPieces < 10 && offset < 10000; offset += 1) {
       const chestId = `legendary-progress-${offset}`;
       const reward = missionChests.chestFragmentReward(chestId, "legendary", 5);
       if (reward.legendary === 0) continue;
@@ -579,7 +579,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
         );
       legendaryPieces += reward.legendary;
     }
-    assert.ok(legendaryPieces >= 100);
+    assert.ok(legendaryPieces >= 10);
     const beforeLegendaryUnlock =
       await harness.repo.getMissionCollectionOverview();
     const firstLegendaryCraft =
@@ -594,8 +594,8 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       (await harness.repo.getMissionCollectionOverview()).fragments.legendary,
-      beforeLegendaryUnlock.fragments.legendary - 100,
-      "Unlocking a statue consumes exactly 100 matching fragments.",
+      beforeLegendaryUnlock.fragments.legendary - 10,
+      "Unlocking a statue consumes exactly 10 matching fragments.",
     );
 
     const unlockedArtworkIds = new Set(
@@ -873,6 +873,72 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       "1",
       "The reopened chest is queued for account sync.",
     );
+
+    const costMigrationRoot = mkdtempSync(
+      join(tmpdir(), "vocabflow-statue-cost-migration-"),
+    );
+    let costMigrationSetup;
+    let costMigrationAfterUpdate;
+    try {
+      costMigrationSetup = createRepository(
+        costMigrationRoot,
+        "2026-11-13T12:00:00",
+      );
+      await costMigrationSetup.repo.getMissionCollectionOverview();
+      const firstStatue = collectionArtworks.COLLECTION_ARTWORKS.find(
+        (item) => item.id === collectionArtworks.FIRST_STATUE_ID,
+      );
+      costMigrationSetup.db
+        .prepare(
+          `INSERT INTO collection_crafts
+            (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+           VALUES ('cycle2-legendary-10000001', 'legendary', 10000001, ?, ?, 100)`,
+        )
+        .run(firstStatue.id, "2026-11-13T12:00:00.000Z");
+      costMigrationSetup.db.exec("PRAGMA user_version = 26");
+      costMigrationSetup.db.close();
+      costMigrationSetup = undefined;
+
+      costMigrationAfterUpdate = createRepository(
+        costMigrationRoot,
+        "2026-11-14T12:00:00",
+      );
+      await costMigrationAfterUpdate.repo.getMissionCollectionOverview();
+      assert.equal(
+        costMigrationAfterUpdate.db
+          .prepare(
+            "SELECT piece_cost AS pieceCost FROM collection_crafts WHERE craft_id = 'cycle2-legendary-10000001'",
+          )
+          .get().pieceCost,
+        100,
+        "The cost migration preserves already saved statue unlock records.",
+      );
+      costMigrationAfterUpdate.db
+        .prepare(
+          `INSERT INTO collection_crafts
+            (craft_id, rarity, craft_index, artwork_id, crafted_at, piece_cost)
+           VALUES ('cycle2-rare-10000002', 'rare', 10000002, ?, ?, 10)`,
+        )
+        .run(
+          collectionArtworks.COLLECTION_ARTWORKS.find(
+            (item) => item.rarity === "rare",
+          ).id,
+          "2026-11-14T12:00:00.000Z",
+        );
+      assert.equal(
+        costMigrationAfterUpdate.db
+          .prepare(
+            "SELECT piece_cost AS pieceCost FROM collection_crafts WHERE craft_id = 'cycle2-rare-10000002'",
+          )
+          .get().pieceCost,
+        10,
+        "The migrated table accepts the new 10-fragment unlock cost.",
+      );
+    } finally {
+      costMigrationSetup?.db.close();
+      costMigrationAfterUpdate?.db.close();
+      rmSync(costMigrationRoot, { recursive: true, force: true });
+    }
   } finally {
     harness.db.close();
     rmSync(root, { recursive: true, force: true });
