@@ -16,6 +16,7 @@ import { useBottomPad } from "@/components/ScreenHeader";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
 import { MissionShop } from "@/components/MissionShop";
+import CollectionScreen from "../collection";
 import {
   getDailyMissionOverview,
   type DailyMissionOverview,
@@ -35,6 +36,7 @@ export default function BlankScreen() {
   const c = useColors();
   const { panel } = useLocalSearchParams<{ panel?: string }>();
   const showingShop = panel === "shop";
+  const showingCollection = panel === "collection";
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
   const top = Platform.OS === "web" ? 67 : insets.top;
@@ -58,8 +60,8 @@ export default function BlankScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!showingShop) void load();
-    }, [load, showingShop]),
+      if (!showingShop && !showingCollection) void load();
+    }, [load, showingCollection, showingShop]),
   );
 
   return (
@@ -67,18 +69,19 @@ export default function BlankScreen() {
       testID="missions-screen"
       style={[styles.flex, { backgroundColor: c.background }]}
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: top + 12, paddingBottom: bottom },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <MissionCollectionTabs active={showingShop ? "shop" : "missions"} />
-        {showingShop ? (
-          <MissionShop />
-        ) : (
-          <>
+      {showingCollection ? (
+        <CollectionScreen />
+      ) : (
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingTop: top + 12, paddingBottom: bottom },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <MissionCollectionTabs active={showingShop ? "shop" : "missions"} />
+          {showingShop ? <MissionShop /> : (
+            <>
             {error ? (
               <ErrorBanner message={error} onRetry={() => void load()} />
             ) : null}
@@ -327,9 +330,10 @@ export default function BlankScreen() {
               Stone, rương và tiến độ nhiệm vụ được lưu offline, rồi đồng bộ
               cùng dữ liệu tài khoản.
             </Text>
-          </>
-        )}
-      </ScrollView>
+            </>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }

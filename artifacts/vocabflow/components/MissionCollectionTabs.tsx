@@ -44,7 +44,10 @@ export function MissionCollectionTabs({
             onPress={() => {
               if (selected) return;
               if (tab.id === "collection") {
-                router.replace("/collection");
+                router.replace({
+                  pathname: "/(tabs)/blank",
+                  params: { panel: "collection" },
+                });
               } else if (tab.id === "shop") {
                 router.replace({
                   pathname: "/(tabs)/blank",

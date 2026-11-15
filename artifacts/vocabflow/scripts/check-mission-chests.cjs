@@ -558,6 +558,14 @@ const collectionScreen = readFileSync(
   join(__dirname, "../app/collection.tsx"),
   "utf8",
 );
+const missionsScreen = readFileSync(
+  join(__dirname, "../app/(tabs)/blank.tsx"),
+  "utf8",
+);
+const missionCollectionTabs = readFileSync(
+  join(__dirname, "../components/MissionCollectionTabs.tsx"),
+  "utf8",
+);
 const rootLayout = readFileSync(join(__dirname, "../app/_layout.tsx"), "utf8");
 const bottomTabsLayout = readFileSync(
   join(__dirname, "../app/(tabs)/_layout.tsx"),
@@ -621,13 +629,28 @@ assert.match(
 );
 assert.match(
   collectionScreen,
-  /group\.statues\.map\(\(\{ artwork: statue, unlocked \}\) =>/,
-  "Each rarity section includes locked and unlocked statues of its tier.",
+  /statue\.rarity === rarity &&\s*unlockedStatueIds\.has\(statue\.id\)/,
+  "Only unlocked statues are included in visible rarity groups.",
 );
 assert.match(
   collectionScreen,
-  /collectionGroup !== "bonus"/,
-  "The special Hồ Chí Minh statue is kept outside the 110 named-statue rank counts.",
+  /group\.statues\.map\(\(\{ artwork: statue, unlocked \}\) =>/,
+  "Visible statues retain their unlocked collection details.",
+);
+assert.doesNotMatch(
+  collectionScreen,
+  /Mở khóa tượng bằng cách tích đủ mảnh cùng phẩm chất/,
+  "The introductory collection notice is removed.",
+);
+assert.match(
+  missionCollectionTabs,
+  /params: \{ panel: "collection" \}/,
+  "Opening the collection keeps navigation inside the missions tab.",
+);
+assert.match(
+  missionsScreen,
+  /showingCollection \? \(\s*<CollectionScreen \/>/,
+  "The collection is rendered inside the five-tab missions route.",
 );
 assert.equal(COLLECTION_ARTWORKS.length, 111);
 assert.ok(
@@ -643,7 +666,7 @@ assert.ok(
 const namedHistoricalStatues = COLLECTION_ARTWORKS.filter(
   (item) => item.collectionGroup !== "bonus",
 );
-assert.equal(namedHistoricalStatues.length, 110);
+assert.equal(namedHistoricalStatues.length, 111);
 assert.ok(
   namedHistoricalStatues.every((item) => item.rarity !== "common"),
   "No named statue remains in the Common tier.",
@@ -662,7 +685,8 @@ assert.ok(
   ),
   "Former Common statues are promoted, Karl Marx is Epic, and old rarity records remain readable.",
 );
-assert.equal(statue.collectionGroup, "bonus");
+assert.equal(statue.rarity, "legendary");
+assert.equal(statue.collectionGroup, undefined);
 assert.deepEqual(
   Object.fromEntries(
     ["common", "uncommon", "rare", "epic", "legendary"].map((rarity) => [
@@ -670,8 +694,8 @@ assert.deepEqual(
       namedHistoricalStatues.filter((item) => item.rarity === rarity).length,
     ]),
   ),
-  { common: 0, uncommon: 0, rare: 73, epic: 25, legendary: 12 },
-  "The 110-person statue roster has the specified tier counts.",
+  { common: 0, uncommon: 0, rare: 73, epic: 25, legendary: 13 },
+  "All 111 statues, including Hồ Chí Minh, are grouped by their rarity.",
 );
 const expectedHistoricalNames = [
   "Alexander Đại đế",
@@ -784,13 +808,14 @@ const expectedHistoricalNames = [
   "Mary Wollstonecraft",
   "Alexander Fleming",
   "Emmeline Pankhurst",
+  "Chủ tịch Hồ Chí Minh",
 ].sort();
 assert.deepEqual(
   namedHistoricalStatues
     .map((item) => item.title.replace(/^Tượng /, ""))
     .sort(),
   expectedHistoricalNames,
-  "The catalog contains one hundred international figures and ten additional Vietnamese figures.",
+  "The catalog includes Hồ Chí Minh among all named historical figures.",
 );
 const aiRecreatedStatues = namedHistoricalStatues.filter((item) =>
   item.sourceLabel?.includes("Tượng nghệ thuật AI tái hiện"),

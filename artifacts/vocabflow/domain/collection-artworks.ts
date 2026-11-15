@@ -52,7 +52,6 @@ const collectionArtworkDefinitions: CollectionArtwork[] = [
     imageAssetKey: "ho-chi-minh-marble",
     material: "Cẩm thạch",
     unlockMode: "automatic",
-    collectionGroup: "bonus",
     description:
       "Nguyễn Ái Quốc, vị lãnh tụ của dân tộc Việt Nam và Chủ tịch nước Việt Nam Dân chủ Cộng hòa từ năm 1945 đến năm 1969.",
     quote: "Không có gì quý hơn độc lập, tự do.",

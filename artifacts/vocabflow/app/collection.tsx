@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
+import { useBottomPad } from "@/components/ScreenHeader";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
 import {
@@ -176,6 +177,7 @@ const PORTRAIT_SOURCE_TYPE_LABELS = {
 export default function CollectionScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const bottomPad = useBottomPad();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<MissionCollectionOverview | null>(
     null,
@@ -207,17 +209,21 @@ export default function CollectionScreen() {
     key: rarity,
     title: rarityDisplayLabel(rarity),
     statues: COLLECTION_ARTWORKS.filter(
-      (statue) => statue.collectionGroup !== "bonus" && statue.rarity === rarity,
+      (statue) =>
+        statue.collectionGroup !== "bonus" &&
+        statue.rarity === rarity &&
+        unlockedStatueIds.has(statue.id),
     ).map((artwork) => ({
       artwork,
-      unlocked: unlockedStatueIds.has(artwork.id),
+      unlocked: true,
     })),
   })).filter((group) => group.statues.length > 0);
   const bonusStatues = COLLECTION_ARTWORKS.filter(
-    (statue) => statue.collectionGroup === "bonus",
+    (statue) =>
+      statue.collectionGroup === "bonus" && unlockedStatueIds.has(statue.id),
   ).map((artwork) => ({
     artwork,
-    unlocked: unlockedStatueIds.has(artwork.id),
+    unlocked: true,
   }));
   if (bonusStatues.length > 0) {
     galleryGroups.push({
@@ -273,16 +279,12 @@ export default function CollectionScreen() {
         styles.content,
         {
           paddingTop: topInset + 12,
-          paddingBottom: Math.max(30, insets.bottom + 24),
+          paddingBottom: bottomPad,
         },
       ]}
       showsVerticalScrollIndicator={false}
     >
       <MissionCollectionTabs active="collection" />
-      <Text style={[styles.intro, { color: c.mutedForeground }]}>
-        Mở khóa tượng bằng cách tích đủ mảnh cùng phẩm chất. Tượng Legendary đầu
-        tiên luôn là Chủ tịch Hồ Chí Minh.
-      </Text>
       {error ? (
         <ErrorBanner message={error} onRetry={() => void load()} />
       ) : null}
@@ -859,7 +861,6 @@ export default function CollectionScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 18, gap: 12, paddingBottom: 30 },
-  intro: { fontFamily: F.r, fontSize: 13, lineHeight: 19, marginBottom: 2 },
   heading: { gap: 3, marginTop: 8, marginBottom: 2 },
   galleryHeading: { marginTop: 14 },
   raritySection: { gap: 8, marginTop: 6 },
