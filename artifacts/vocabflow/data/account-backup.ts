@@ -247,14 +247,6 @@ function validatePayload(value: unknown): SyncPayload {
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
     hasDuplicates(validMissionShopPurchases, (item) => item.purchaseId) ||
-    hasDuplicates(
-      validMissionShopPurchases,
-      (item) => `${item.day}\u0000${item.slot}`,
-    ) ||
-    hasDuplicates(
-      validMissionShopPurchases,
-      (item) => `${item.day}\u0000${item.rarity}`,
-    ) ||
     hasDuplicates(validStoneInvestments, (item) => item.investmentId) ||
     hasDuplicates(validInvestmentStudyDays, (item) => item.day) ||
     hasDuplicates(validCollectionCrafts, (item) => item.craftId) ||

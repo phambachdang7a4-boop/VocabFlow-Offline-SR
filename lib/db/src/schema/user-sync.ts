@@ -213,19 +213,7 @@ export const userMissionShopPurchases = pgTable(
     discountPercent: integer("discount_percent").notNull(),
     purchasedAt: timestampColumn("purchased_at").notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.purchaseId] }),
-    uniqueIndex("user_mission_shop_purchases_day_slot_idx").on(
-      table.userId,
-      table.day,
-      table.slot,
-    ),
-    uniqueIndex("user_mission_shop_purchases_day_rarity_idx").on(
-      table.userId,
-      table.day,
-      table.rarity,
-    ),
-  ],
+  (table) => [primaryKey({ columns: [table.userId, table.purchaseId] })],
 );
 
 export const userStoneInvestments = pgTable(
@@ -240,6 +228,9 @@ export const userStoneInvestments = pgTable(
     endDay: date("end_day", { mode: "string" }).notNull(),
     status: text("status").notNull(),
     settlementAmount: integer("settlement_amount"),
+    lowInsuranceUsed: boolean("low_insurance_used").notNull().default(false),
+    capitalInvite: text("capital_invite"),
+    collateralUsed: boolean("collateral_used").notNull().default(false),
     createdAt: timestampColumn("created_at").notNull(),
     settledAt: timestampColumn("settled_at"),
   },

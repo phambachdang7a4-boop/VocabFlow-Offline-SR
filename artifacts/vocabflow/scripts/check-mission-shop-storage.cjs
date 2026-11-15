@@ -14,55 +14,75 @@ const poorHarness = createRepository(poorRoot, `${day}T12:00:00`);
 (async () => {
   try {
     await harness.repo.getMissionShopOverview(day);
-    harness.db
-      .prepare(
-        `INSERT INTO mission_chests
-          (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
-            rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
-         VALUES ('shop-test-funds', ?, 'review-1', 20, 0, 'common', 5, 0, 1, 2000, ?, ?)`,
-      )
-      .run(day, `${day}T12:00:00.000Z`, `${day}T12:00:00.000Z`);
+    const addFunds = harness.db.prepare(
+      `INSERT INTO mission_chests
+        (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
+          rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+       VALUES (?, ?, ?, 20, 0, 'common', 5, 0, 1, 5000, ?, ?)`,
+    );
+    for (let index = 0; index < 10; index += 1) {
+      addFunds.run(
+        `shop-test-funds-${index}`,
+        day,
+        `review-${index}`,
+        `${day}T12:00:00.000Z`,
+        `${day}T12:00:00.000Z`,
+      );
+    }
 
     const initial = await harness.repo.getMissionShopOverview(day);
     const offers = initial.offers;
-    assert.equal(initial.stoneBalance, 2000);
-    assert.ok(offers.every((offer) => !offer.purchased));
+    assert.equal(initial.stoneBalance, 50000);
+    assert.ok(offers.every((offer) => offer.purchased === 0));
 
     let totalSpent = 0;
+    const boughtByProduct = {};
     for (const offer of offers) {
-      const purchase = await harness.repo.purchaseMissionShopOffer(
-        offer.slot,
-        day,
-      );
-      assert.equal(purchase.rarity, offer.rarity);
-      assert.equal(purchase.stoneCost, offer.price);
-      totalSpent += offer.price;
+      for (let index = 0; index < offer.stock; index += 1) {
+        const purchase = await harness.repo.purchaseMissionShopOffer(
+          offer.slot,
+          day,
+        );
+        assert.equal(purchase.rarity, offer.productId);
+        assert.equal(purchase.stoneCost, offer.price);
+        totalSpent += offer.price;
+        boughtByProduct[offer.productId] =
+          (boughtByProduct[offer.productId] ?? 0) + 1;
+      }
     }
 
     const purchased = await harness.repo.getMissionShopOverview(day);
-    assert.equal(purchased.stoneBalance, 2000 - totalSpent);
-    assert.ok(purchased.offers.every((offer) => offer.purchased));
+    assert.equal(purchased.stoneBalance, 50000 - totalSpent);
+    assert.ok(purchased.offers.every((offer) => offer.remainingStock === 0));
     assert.equal(
       (await harness.repo.getDailyMissionOverview(day)).stoneBalance,
-      2000 - totalSpent,
+      50000 - totalSpent,
       "Store spending is deducted from the mission Stone balance.",
     );
     const collection = await harness.repo.getMissionCollectionOverview();
-    assert.equal(collection.fragments.rare, 1);
-    assert.equal(collection.fragments.epic, 1);
-    assert.equal(collection.fragments.legendary, 1);
+    assert.equal(collection.fragments.rare, boughtByProduct.rare ?? 0);
+    assert.equal(collection.fragments.epic, boughtByProduct.epic ?? 0);
+    assert.equal(
+      collection.fragments.legendary,
+      boughtByProduct.legendary ?? 0,
+    );
+    for (const [productId, count] of Object.entries(boughtByProduct)) {
+      assert.equal(purchased.inventory[productId], count);
+    }
 
     await assert.rejects(
       harness.repo.purchaseMissionShopOffer(offers[0].slot, day),
-      /already|today|hôm nay/i,
-      "Each daily offer can only be bought once.",
+      /hết hàng/i,
+      "Purchases stop when the offer runs out.",
     );
     const refreshed = await harness.repo.getMissionShopOverview(nextDay);
     assert.ok(
-      refreshed.offers.every((offer) => !offer.purchased),
-      "The next day has fresh offers.",
+      refreshed.offers.every(
+        (offer) => offer.purchased === 0 && offer.remainingStock === offer.stock,
+      ),
+      "The next day has fresh stock.",
     );
-    assert.equal(refreshed.stoneBalance, 2000 - totalSpent);
+    assert.equal(refreshed.stoneBalance, 50000 - totalSpent);
     assert.equal(
       harness.db
         .prepare("SELECT value FROM sync_state WHERE key = 'pending'")
@@ -82,7 +102,7 @@ const poorHarness = createRepository(poorRoot, `${day}T12:00:00`);
     );
     const poorEnd = await poorHarness.repo.getMissionShopOverview(day);
     assert.equal(poorEnd.stoneBalance, 0);
-    assert.ok(poorEnd.offers.every((offer) => !offer.purchased));
+    assert.ok(poorEnd.offers.every((offer) => offer.purchased === 0));
     assert.equal(
       (await poorHarness.repo.getMissionCollectionOverview()).fragments.rare +
         (await poorHarness.repo.getMissionCollectionOverview()).fragments.epic +

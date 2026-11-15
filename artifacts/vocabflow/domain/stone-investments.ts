@@ -1,6 +1,7 @@
 export type StoneInvestmentPlan = "safe" | "balanced" | "risky";
 export type StoneInvestmentStatus = "active" | "succeeded" | "failed";
 export type StoneInvestmentDuration = 7 | 14;
+export type StoneInvestmentCapitalInvite = "low" | "high" | null;
 export const MAX_STONE_INVESTMENT_PRINCIPAL = 900_000_000;
 
 export interface StoneInvestment {
@@ -12,6 +13,9 @@ export interface StoneInvestment {
   endDay: string;
   status: StoneInvestmentStatus;
   settlementAmount: number | null;
+  lowInsuranceUsed: boolean;
+  capitalInvite: StoneInvestmentCapitalInvite;
+  collateralUsed: boolean;
   createdAt: string;
   settledAt: string | null;
 }
@@ -47,9 +51,14 @@ export const STONE_INVESTMENT_PLANS: Record<
 export function investmentRate(
   plan: StoneInvestmentPlan,
   durationDays: StoneInvestmentDuration,
+  capitalInvite: StoneInvestmentCapitalInvite = null,
 ): number {
+  const inviteMultiplier =
+    capitalInvite === "low" ? 1.15 : capitalInvite === "high" ? 1.3 : 1;
   return (
-    STONE_INVESTMENT_PLANS[plan].ratePercent * (durationDays === 14 ? 3 : 1)
+    STONE_INVESTMENT_PLANS[plan].ratePercent *
+    (durationDays === 14 ? 3 : 1) *
+    inviteMultiplier
   );
 }
 
@@ -66,10 +75,11 @@ export function investmentSuccessSettlement(
   plan: StoneInvestmentPlan,
   principal: number,
   durationDays: StoneInvestmentDuration,
+  capitalInvite: StoneInvestmentCapitalInvite = null,
 ): number {
   assertPrincipal(principal);
   const interest = Math.round(
-    (principal * investmentRate(plan, durationDays)) / 100,
+    (principal * investmentRate(plan, durationDays, capitalInvite)) / 100,
   );
   return principal + interest;
 }
@@ -77,10 +87,17 @@ export function investmentSuccessSettlement(
 export function investmentFailureSettlement(
   plan: StoneInvestmentPlan,
   principal: number,
+  capitalInvite: StoneInvestmentCapitalInvite = null,
+  lowInsuranceUsed = false,
 ): number {
   assertPrincipal(principal);
+  if (lowInsuranceUsed) return principal;
+  const lossMultiplier =
+    capitalInvite === "low" ? 1.3 : capitalInvite === "high" ? 1.4 : 1;
+  const baseNetLossPercent =
+    100 - STONE_INVESTMENT_PLANS[plan].failedSettlementPercent;
   return Math.round(
-    (principal * STONE_INVESTMENT_PLANS[plan].failedSettlementPercent) / 100,
+    (principal * (100 - baseNetLossPercent * lossMultiplier)) / 100,
   );
 }
 
@@ -109,7 +126,13 @@ export function evaluateStoneInvestment(
   investment: Pick<
     StoneInvestment,
     "plan" | "principal" | "durationDays" | "startDay" | "endDay" | "status"
-  >,
+  > &
+    Partial<
+      Pick<
+        StoneInvestment,
+        "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+      >
+    >,
   completedStudyDays: ReadonlySet<string>,
   today: string,
 ): { status: StoneInvestmentStatus; settlementAmount: number | null } {
@@ -135,6 +158,8 @@ export function evaluateStoneInvestment(
       settlementAmount: investmentFailureSettlement(
         investment.plan,
         investment.principal,
+        investment.capitalInvite ?? null,
+        investment.lowInsuranceUsed ?? false,
       ),
     };
   }
@@ -149,6 +174,7 @@ export function evaluateStoneInvestment(
         investment.plan,
         investment.principal,
         investment.durationDays,
+        investment.capitalInvite ?? null,
       ),
     };
   }
@@ -159,6 +185,8 @@ export function evaluateStoneInvestment(
       settlementAmount: investmentFailureSettlement(
         investment.plan,
         investment.principal,
+        investment.capitalInvite ?? null,
+        investment.lowInsuranceUsed ?? false,
       ),
     };
   }
@@ -195,11 +223,20 @@ export function isValidStoneInvestment(
     settlementAmount,
     createdAt,
     settledAt,
+    lowInsuranceUsed = false,
+    capitalInvite = null,
+    collateralUsed = false,
   } = value;
   if (
     typeof investmentId !== "string" ||
     !/^investment:[a-z0-9-]{1,120}$/i.test(investmentId) ||
     !(plan === "safe" || plan === "balanced" || plan === "risky") ||
+    typeof lowInsuranceUsed !== "boolean" ||
+    !(capitalInvite === null || capitalInvite === "low" || capitalInvite === "high") ||
+    typeof collateralUsed !== "boolean" ||
+    (lowInsuranceUsed && plan !== "risky") ||
+    (collateralUsed &&
+      (plan !== "risky" || lowInsuranceUsed || status !== "failed")) ||
     typeof principal !== "number" ||
     !Number.isSafeInteger(principal) ||
     principal <= 0 ||
@@ -217,7 +254,11 @@ export function isValidStoneInvestment(
     return false;
   }
   if (status === "active") {
-    return settlementAmount === null && settledAt === null;
+    return (
+      settlementAmount === null &&
+      settledAt === null &&
+      !collateralUsed
+    );
   }
   if (
     typeof settlementAmount !== "number" ||
@@ -227,9 +268,16 @@ export function isValidStoneInvestment(
     return false;
   }
   return status === "succeeded"
-    ? settlementAmount ===
-        investmentSuccessSettlement(plan, principal, durationDays)
-    : settlementAmount === investmentFailureSettlement(plan, principal);
+    ? !collateralUsed &&
+        settlementAmount ===
+          investmentSuccessSettlement(plan, principal, durationDays, capitalInvite)
+    : settlementAmount ===
+        investmentFailureSettlement(
+          plan,
+          principal,
+          capitalInvite,
+          lowInsuranceUsed || collateralUsed,
+        );
 }
 
 export function isInvestmentDay(value: unknown): value is string {

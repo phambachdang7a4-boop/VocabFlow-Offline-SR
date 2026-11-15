@@ -206,7 +206,7 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
       missionShop.missionShopPurchaseId(resetShopDay, resetShopOffer.slot),
       resetShopDay,
       resetShopOffer.slot,
-      resetShopOffer.rarity,
+      resetShopOffer.productId,
       resetShopOffer.price,
       resetShopOffer.discountPercent,
       `${resetShopDay}T12:00:00.000Z`,

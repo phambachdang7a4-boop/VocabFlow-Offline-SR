@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SyncStoneInvestmentCapitalInvite } from './syncStoneInvestmentCapitalInvite';
 import type { SyncStoneInvestmentDurationDays } from './syncStoneInvestmentDurationDays';
 import type { SyncStoneInvestmentPlan } from './syncStoneInvestmentPlan';
 import type { SyncStoneInvestmentStatus } from './syncStoneInvestmentStatus';
@@ -32,4 +33,13 @@ export interface SyncStoneInvestment {
   createdAt: Date;
   /** @nullable */
   settledAt: Date | null;
+  /** Optional for older clients; whether low insurance was selected at investment start. */
+  lowInsuranceUsed?: boolean;
+  /**
+     * Optional for older clients; the one-use capital invite applied at investment start.
+     * @nullable
+     */
+  capitalInvite?: SyncStoneInvestmentCapitalInvite;
+  /** Optional for older clients; whether collateral was consumed after a risky failure. */
+  collateralUsed?: boolean;
 }

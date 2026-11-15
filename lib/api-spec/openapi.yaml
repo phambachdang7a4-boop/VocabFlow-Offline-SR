@@ -582,7 +582,16 @@ components:
           maximum: 2
         rarity:
           type: string
-          enum: [rare, epic, legendary]
+          enum:
+            [
+              rare,
+              epic,
+              legendary,
+              low_insurance,
+              collateral_asset,
+              low_capital_invite,
+              high_capital_invite,
+            ]
         stoneCost:
           type: integer
           minimum: 0
@@ -642,6 +651,17 @@ components:
           type: string
           format: date-time
           nullable: true
+        lowInsuranceUsed:
+          type: boolean
+          description: Optional for older clients; whether low insurance was selected at investment start.
+        capitalInvite:
+          type: string
+          enum: [low, high]
+          nullable: true
+          description: Optional for older clients; the one-use capital invite applied at investment start.
+        collateralUsed:
+          type: boolean
+          description: Optional for older clients; whether collateral was consumed after a risky failure.
     SyncInvestmentStudyDay:
       type: object
       required: [day, reviewed, studiedCourse, updatedAt]

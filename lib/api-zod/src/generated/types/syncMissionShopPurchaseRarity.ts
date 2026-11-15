@@ -13,4 +13,8 @@ export const SyncMissionShopPurchaseRarity = {
   rare: 'rare',
   epic: 'epic',
   legendary: 'legendary',
+  low_insurance: 'low_insurance',
+  collateral_asset: 'collateral_asset',
+  low_capital_invite: 'low_capital_invite',
+  high_capital_invite: 'high_capital_invite',
 } as const;

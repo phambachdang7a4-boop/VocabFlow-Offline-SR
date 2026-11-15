@@ -31,6 +31,7 @@ export * from './syncReviewSession';
 export * from './syncReviewSessionGrade';
 export * from './syncReviewStat';
 export * from './syncStoneInvestment';
+export * from './syncStoneInvestmentCapitalInvite';
 export * from './syncStoneInvestmentDurationDays';
 export * from './syncStoneInvestmentPlan';
 export * from './syncStoneInvestmentStatus';

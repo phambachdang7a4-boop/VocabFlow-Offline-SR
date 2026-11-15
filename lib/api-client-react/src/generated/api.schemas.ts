@@ -341,6 +341,10 @@ export const SyncMissionShopPurchaseRarity = {
   rare: 'rare',
   epic: 'epic',
   legendary: 'legendary',
+  low_insurance: 'low_insurance',
+  collateral_asset: 'collateral_asset',
+  low_capital_invite: 'low_capital_invite',
+  high_capital_invite: 'high_capital_invite',
 } as const;
 
 export interface SyncMissionShopPurchase {
@@ -393,6 +397,18 @@ export const SyncStoneInvestmentStatus = {
   failed: 'failed',
 } as const;
 
+/**
+ * Optional for older clients; the one-use capital invite applied at investment start.
+ * @nullable
+ */
+export type SyncStoneInvestmentCapitalInvite = typeof SyncStoneInvestmentCapitalInvite[keyof typeof SyncStoneInvestmentCapitalInvite] | null;
+
+
+export const SyncStoneInvestmentCapitalInvite = {
+  low: 'low',
+  high: 'high',
+} as const;
+
 export interface SyncStoneInvestment {
   /**
      * @minLength 12
@@ -416,6 +432,15 @@ export interface SyncStoneInvestment {
   createdAt: string;
   /** @nullable */
   settledAt: string | null;
+  /** Optional for older clients; whether low insurance was selected at investment start. */
+  lowInsuranceUsed?: boolean;
+  /**
+     * Optional for older clients; the one-use capital invite applied at investment start.
+     * @nullable
+     */
+  capitalInvite?: SyncStoneInvestmentCapitalInvite;
+  /** Optional for older clients; whether collateral was consumed after a risky failure. */
+  collateralUsed?: boolean;
 }
 
 export interface SyncInvestmentStudyDay {

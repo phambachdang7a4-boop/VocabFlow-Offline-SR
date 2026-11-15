@@ -114,7 +114,16 @@ export interface SyncCollectionCraft extends CollectionCraft {}
 
 export interface SyncMissionShopPurchase extends MissionShopPurchase {}
 
-export interface SyncStoneInvestment extends StoneInvestment {}
+export type SyncStoneInvestment = Omit<
+  StoneInvestment,
+  "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+> &
+  Partial<
+    Pick<
+      StoneInvestment,
+      "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+    >
+  >;
 
 export interface SyncInvestmentStudyDay extends InvestmentStudyDay {}
 
@@ -284,7 +293,9 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       db.getAllAsync<SyncStoneInvestment>(`
         SELECT investment_id AS investmentId, plan, principal,
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
-          status, settlement_amount AS settlementAmount, created_at AS createdAt,
+          status, settlement_amount AS settlementAmount,
+          low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
+          collateral_used AS collateralUsed, created_at AS createdAt,
           settled_at AS settledAt
         FROM stone_investments ORDER BY created_at, investment_id
       `),
@@ -356,7 +367,12 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
           pieceCost: spend.pieceCost === 100 ? 100 : 20,
         })),
         missionShopPurchases,
-        stoneInvestments,
+        stoneInvestments: stoneInvestments.map((investment) => ({
+          ...investment,
+          lowInsuranceUsed: Boolean(investment.lowInsuranceUsed),
+          capitalInvite: investment.capitalInvite ?? null,
+          collateralUsed: Boolean(investment.collateralUsed),
+        })),
         investmentStudyDays: investmentStudyDays.map((day) => ({
           ...day,
           reviewed: Boolean(day.reviewed),
@@ -711,8 +727,9 @@ async function replacePayloadData(
     await db.runAsync(
       `INSERT INTO stone_investments
         (investment_id, plan, principal, duration_days, start_day, end_day,
-          status, settlement_amount, created_at, settled_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          status, settlement_amount, low_insurance_used, capital_invite,
+          collateral_used, created_at, settled_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       investment.investmentId,
       investment.plan,
       investment.principal,
@@ -721,6 +738,9 @@ async function replacePayloadData(
       investment.endDay,
       investment.status,
       investment.settlementAmount,
+      investment.lowInsuranceUsed ?? false ? 1 : 0,
+      investment.capitalInvite ?? null,
+      investment.collateralUsed ?? false ? 1 : 0,
       investment.createdAt,
       investment.settledAt,
     );
@@ -1218,7 +1238,9 @@ async function mergeSnapshotIntoDatabase(
       const current = await db.getFirstAsync<StoneInvestment>(
         `SELECT investment_id AS investmentId, plan, principal,
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
-          status, settlement_amount AS settlementAmount, created_at AS createdAt,
+          status, settlement_amount AS settlementAmount,
+          low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
+          collateral_used AS collateralUsed, created_at AS createdAt,
           settled_at AS settledAt
          FROM stone_investments WHERE investment_id = ?`,
         incoming.investmentId,
@@ -1229,7 +1251,13 @@ async function mergeSnapshotIntoDatabase(
           current.principal !== incoming.principal ||
           current.durationDays !== incoming.durationDays ||
           current.startDay !== incoming.startDay ||
-          current.endDay !== incoming.endDay)
+          current.endDay !== incoming.endDay ||
+          (incoming.lowInsuranceUsed !== undefined &&
+            Boolean(current.lowInsuranceUsed) !==
+              Boolean(incoming.lowInsuranceUsed)) ||
+          (incoming.capitalInvite !== undefined &&
+            (current.capitalInvite ?? null) !==
+              (incoming.capitalInvite ?? null)))
       ) {
         throw new Error("Thương Vụ đồng bộ có dữ liệu mâu thuẫn.");
       }
@@ -1245,11 +1273,13 @@ async function mergeSnapshotIntoDatabase(
       await db.runAsync(
         `INSERT INTO stone_investments
           (investment_id, plan, principal, duration_days, start_day, end_day,
-            status, settlement_amount, created_at, settled_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            status, settlement_amount, low_insurance_used, capital_invite,
+            collateral_used, created_at, settled_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(investment_id) DO UPDATE SET
           status = excluded.status,
           settlement_amount = excluded.settlement_amount,
+          collateral_used = excluded.collateral_used,
           settled_at = excluded.settled_at`,
         selected.investmentId,
         selected.plan,
@@ -1259,6 +1289,9 @@ async function mergeSnapshotIntoDatabase(
         selected.endDay,
         selected.status,
         selected.settlementAmount,
+        selected.lowInsuranceUsed ?? false ? 1 : 0,
+        selected.capitalInvite ?? null,
+        selected.collateralUsed ?? false ? 1 : 0,
         selected.createdAt,
         selected.settledAt,
       );

@@ -48,10 +48,12 @@ import {
   type CollectionCraft,
 } from "../domain/collection-artworks";
 import {
+  MISSION_SHOP_PRODUCTS,
   isValidMissionShopPurchase,
   missionShopOffersForDay,
   missionShopPurchaseId,
   type MissionShopOffer,
+  type MissionShopProductId,
   type MissionShopPurchase,
 } from "../domain/mission-shop";
 import {
@@ -62,6 +64,7 @@ import {
   type StoneInvestment,
   type StoneInvestmentDuration,
   type StoneInvestmentPlan,
+  type StoneInvestmentCapitalInvite,
   MAX_STONE_INVESTMENT_PRINCIPAL,
 } from "../domain/stone-investments";
 
@@ -86,12 +89,17 @@ export interface MissionShopOverview {
   day: string;
   stoneBalance: number;
   fragments: Record<ChestRarity, number>;
-  offers: (MissionShopOffer & { purchased: boolean })[];
+  inventory: Record<MissionShopProductId, number>;
+  offers: (MissionShopOffer & {
+    purchased: number;
+    remainingStock: number;
+  })[];
 }
 
 export interface StoneInvestmentOverview {
   today: string;
   stoneBalance: number;
+  inventory: Record<MissionShopProductId, number>;
   investments: StoneInvestment[];
   studyDays: InvestmentStudyDay[];
 }
@@ -353,7 +361,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 27) {
+    if ((version?.user_version ?? 0) > 28) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -1072,6 +1080,66 @@ async function initialize(): Promise<SQLiteDatabase> {
         `);
       });
     }
+    if ((version?.user_version ?? 0) < 28) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE mission_shop_purchases_v28 (
+            purchase_id TEXT PRIMARY KEY NOT NULL,
+            shop_day TEXT NOT NULL,
+            slot INTEGER NOT NULL CHECK (slot BETWEEN 0 AND 2),
+            rarity TEXT NOT NULL CHECK (rarity IN (
+              'rare', 'epic', 'legendary',
+              'low_insurance', 'collateral_asset',
+              'low_capital_invite', 'high_capital_invite'
+            )),
+            stone_cost INTEGER NOT NULL CHECK (stone_cost >= 0),
+            discount_percent INTEGER NOT NULL
+              CHECK (discount_percent BETWEEN 0 AND 60),
+            purchased_at TEXT NOT NULL
+          );
+          INSERT INTO mission_shop_purchases_v28
+            (purchase_id, shop_day, slot, rarity, stone_cost,
+              discount_percent, purchased_at)
+          SELECT purchase_id, shop_day, slot, rarity, stone_cost,
+            discount_percent, purchased_at
+          FROM mission_shop_purchases;
+          DROP TABLE mission_shop_purchases;
+          ALTER TABLE mission_shop_purchases_v28 RENAME TO mission_shop_purchases;
+          CREATE INDEX idx_mission_shop_purchases_day_slot
+            ON mission_shop_purchases(shop_day, slot);
+          PRAGMA user_version = 28;
+        `);
+        const investmentColumns = new Set(
+          (
+            await db.getAllAsync<{ name: string }>(
+              "PRAGMA table_info(stone_investments)",
+            )
+          ).map((column) => column.name),
+        );
+        if (!investmentColumns.has("low_insurance_used")) {
+          await db.execAsync(`
+            ALTER TABLE stone_investments
+              ADD COLUMN low_insurance_used INTEGER NOT NULL DEFAULT 0
+                CHECK (low_insurance_used IN (0, 1))
+          `);
+        }
+        if (!investmentColumns.has("capital_invite")) {
+          await db.execAsync(`
+            ALTER TABLE stone_investments
+              ADD COLUMN capital_invite TEXT
+                CHECK (capital_invite IS NULL OR capital_invite IN ('low', 'high'))
+          `);
+        }
+        if (!investmentColumns.has("collateral_used")) {
+          await db.execAsync(`
+            ALTER TABLE stone_investments
+              ADD COLUMN collateral_used INTEGER NOT NULL DEFAULT 0
+                CHECK (collateral_used IN (0, 1))
+          `);
+        }
+        await markSyncDirty(db);
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -1255,23 +1323,36 @@ export function getMissionShopOverview(
 ): Promise<MissionShopOverview> {
   return serialize(async () => {
     const db = await database();
-    const [stoneBalance, collection, purchases] = await Promise.all([
+    const [stoneBalance, collection, purchases, inventory] = await Promise.all([
       readStoneBalance(db),
       readMissionCollectionBalance(db),
-      db.getAllAsync<Pick<MissionShopPurchase, "purchaseId" | "slot">>(
-        `SELECT purchase_id AS purchaseId, slot
-         FROM mission_shop_purchases WHERE shop_day = ?`,
+      db.getAllAsync<Pick<MissionShopPurchase, "purchaseId" | "slot" | "rarity">>(
+        `SELECT purchase_id AS purchaseId, slot, rarity
+         FROM mission_shop_purchases WHERE shop_day = ?
+         ORDER BY slot, purchase_id`,
         day,
       ),
+      readMissionShopInventory(db),
     ]);
-    const purchasedSlots = new Set(purchases.map((purchase) => purchase.slot));
     return {
       day,
       stoneBalance,
       fragments: collection.fragments,
+      inventory,
       offers: missionShopOffersForDay(day).map((offer) => ({
         ...offer,
-        purchased: purchasedSlots.has(offer.slot),
+        purchased: purchases.filter(
+          (purchase) =>
+            purchase.slot === offer.slot &&
+            purchase.rarity === offer.productId,
+        ).length,
+        remainingStock:
+          offer.stock -
+          purchases.filter(
+            (purchase) =>
+              purchase.slot === offer.slot &&
+              purchase.rarity === offer.productId,
+          ).length,
       })),
     };
   });
@@ -1290,24 +1371,33 @@ export function purchaseMissionShopOffer(
     const db = await database();
     let purchase: MissionShopPurchase | undefined;
     await db.withTransactionAsync(async () => {
-      const existing = await db.getFirstAsync<{ purchaseId: string }>(
+      const existing = await db.getAllAsync<{ purchaseId: string }>(
         `SELECT purchase_id AS purchaseId FROM mission_shop_purchases
-         WHERE shop_day = ? AND slot = ?`,
+         WHERE shop_day = ? AND slot = ? AND rarity = ?`,
         day,
         slot,
+        offer.productId,
       );
-      if (existing) throw new Error("Bạn đã mua món này hôm nay.");
+      if (existing.length >= offer.stock) {
+        throw new Error("Món này đã hết hàng hôm nay.");
+      }
 
       const stoneBalance = await readStoneBalance(db);
       if (stoneBalance < offer.price) {
-        throw new Error("Không đủ Stone để mua mảnh này.");
+        throw new Error("Không đủ Stone để mua món này.");
       }
 
+      const purchaseIndex = existing.length + 1;
       const next: MissionShopPurchase = {
-        purchaseId: missionShopPurchaseId(day, offer.slot),
+        purchaseId: missionShopPurchaseId(
+          day,
+          offer.slot,
+          purchaseIndex,
+          Crypto.randomUUID(),
+        ),
         day,
         slot: offer.slot,
-        rarity: offer.rarity,
+        rarity: offer.productId,
         stoneCost: offer.price,
         discountPercent: offer.discountPercent,
         purchasedAt: new Date().toISOString(),
@@ -1316,7 +1406,7 @@ export function purchaseMissionShopOffer(
         throw new Error("Ưu đãi cửa hàng không hợp lệ.");
       }
       const result = await db.runAsync(
-        `INSERT OR IGNORE INTO mission_shop_purchases
+        `INSERT INTO mission_shop_purchases
           (purchase_id, shop_day, slot, rarity, stone_cost,
             discount_percent, purchased_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -1329,7 +1419,7 @@ export function purchaseMissionShopOffer(
         next.purchasedAt,
       );
       if (result.changes !== 1) {
-        throw new Error("Bạn đã mua món này hôm nay.");
+        throw new Error("Không thể ghi nhận giao dịch. Hãy thử lại.");
       }
       await markSyncDirty(db);
       purchase = next;
@@ -1337,6 +1427,46 @@ export function purchaseMissionShopOffer(
     notifySyncListeners();
     return purchase!;
   });
+}
+
+async function readMissionShopInventory(
+  db: SQLiteDatabase,
+): Promise<Record<MissionShopProductId, number>> {
+  const [purchases, investments] = await Promise.all([
+    db.getAllAsync<{ rarity: string; count: number }>(
+      `SELECT rarity, COUNT(*) AS count FROM mission_shop_purchases
+       GROUP BY rarity`,
+    ),
+    db.getAllAsync<Pick<StoneInvestment,
+      "lowInsuranceUsed" | "capitalInvite" | "collateralUsed"
+    >>(`
+      SELECT low_insurance_used AS lowInsuranceUsed,
+        capital_invite AS capitalInvite,
+        collateral_used AS collateralUsed
+      FROM stone_investments
+    `),
+  ]);
+  const inventory = Object.fromEntries(
+    Object.keys(MISSION_SHOP_PRODUCTS).map((productId) => [productId, 0]),
+  ) as Record<MissionShopProductId, number>;
+  for (const purchase of purchases) {
+    if (purchase.rarity in inventory) {
+      inventory[purchase.rarity as MissionShopProductId] += purchase.count;
+    }
+  }
+  for (const investment of investments) {
+    if (investment.lowInsuranceUsed) inventory.low_insurance -= 1;
+    if (investment.capitalInvite === "low") {
+      inventory.low_capital_invite -= 1;
+    } else if (investment.capitalInvite === "high") {
+      inventory.high_capital_invite -= 1;
+    }
+    if (investment.collateralUsed) inventory.collateral_asset -= 1;
+  }
+  for (const productId of Object.keys(inventory) as MissionShopProductId[]) {
+    inventory[productId] = Math.max(0, inventory[productId]);
+  }
+  return inventory;
 }
 
 export function getStoneInvestmentOverview(): Promise<StoneInvestmentOverview> {
@@ -1354,7 +1484,9 @@ export function getStoneInvestmentOverview(): Promise<StoneInvestmentOverview> {
       db.getAllAsync<StoneInvestment>(
         `SELECT investment_id AS investmentId, plan, principal,
           duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
-          status, settlement_amount AS settlementAmount, created_at AS createdAt,
+          status, settlement_amount AS settlementAmount,
+          low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
+          collateral_used AS collateralUsed, created_at AS createdAt,
           settled_at AS settledAt
          FROM stone_investments ORDER BY created_at DESC`,
       ),
@@ -1374,7 +1506,8 @@ export function getStoneInvestmentOverview(): Promise<StoneInvestmentOverview> {
       reviewed: Boolean(day.reviewed),
       studiedCourse: Boolean(day.studiedCourse),
     }));
-    return { today, stoneBalance, investments, studyDays };
+    const inventory = await readMissionShopInventory(db);
+    return { today, stoneBalance, inventory, investments, studyDays };
   });
 }
 
@@ -1382,6 +1515,10 @@ export function createStoneInvestment(
   plan: StoneInvestmentPlan,
   principal: number,
   durationDays: StoneInvestmentDuration,
+  options: {
+    lowInsuranceUsed?: boolean;
+    capitalInvite?: StoneInvestmentCapitalInvite;
+  } = {},
 ): Promise<StoneInvestment> {
   return serialize(async () => {
     if (
@@ -1396,6 +1533,18 @@ export function createStoneInvestment(
     const db = await database();
     const now = new Date();
     const today = localDay(now);
+    const lowInsuranceUsed = options.lowInsuranceUsed === true;
+    const capitalInvite = options.capitalInvite ?? null;
+    if (lowInsuranceUsed && plan !== "risky") {
+      throw new Error("Bảo Hiểm cấp thấp chỉ áp dụng cho gói rủi ro.");
+    }
+    if (
+      capitalInvite !== null &&
+      capitalInvite !== "low" &&
+      capitalInvite !== "high"
+    ) {
+      throw new Error("Thư góp vốn không hợp lệ.");
+    }
     const investment: StoneInvestment = {
       investmentId: `investment:${Crypto.randomUUID()}`,
       plan,
@@ -1405,6 +1554,9 @@ export function createStoneInvestment(
       endDay: investmentEndDay(today, durationDays),
       status: "active",
       settlementAmount: null,
+      lowInsuranceUsed,
+      capitalInvite,
+      collateralUsed: false,
       createdAt: now.toISOString(),
       settledAt: null,
     };
@@ -1419,23 +1571,91 @@ export function createStoneInvestment(
       if (balance < principal) {
         throw new Error("Không đủ Stone để bắt đầu khoản đầu tư.");
       }
+      const inventory = await readMissionShopInventory(db);
+      if (lowInsuranceUsed && inventory.low_insurance < 1) {
+        throw new Error("Bạn không còn Bảo Hiểm cấp thấp.");
+      }
+      if (capitalInvite === "low" && inventory.low_capital_invite < 1) {
+        throw new Error("Bạn không còn Thư mời Góp Vốn Thấp.");
+      }
+      if (capitalInvite === "high" && inventory.high_capital_invite < 1) {
+        throw new Error("Bạn không còn Thư mời Góp Vốn Cao.");
+      }
       await db.runAsync(
         `INSERT INTO stone_investments
           (investment_id, plan, principal, duration_days, start_day, end_day,
-            status, settlement_amount, created_at, settled_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'active', NULL, ?, NULL)`,
+            status, settlement_amount, low_insurance_used, capital_invite,
+            collateral_used, created_at, settled_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'active', NULL, ?, ?, 0, ?, NULL)`,
         investment.investmentId,
         investment.plan,
         investment.principal,
         investment.durationDays,
         investment.startDay,
         investment.endDay,
+        investment.lowInsuranceUsed ? 1 : 0,
+        investment.capitalInvite,
         investment.createdAt,
       );
       await markSyncDirty(db);
     });
     notifySyncListeners();
     return investment;
+  });
+}
+
+export function useStoneInvestmentCollateral(
+  investmentId: string,
+): Promise<StoneInvestment> {
+  return serialize(async () => {
+    const db = await database();
+    let updated: StoneInvestment | undefined;
+    await db.withTransactionAsync(async () => {
+      await settleActiveStoneInvestments(db, localDay(new Date()));
+      const investment = await db.getFirstAsync<StoneInvestment>(
+        `SELECT investment_id AS investmentId, plan, principal,
+          duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
+          status, settlement_amount AS settlementAmount,
+          low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
+          collateral_used AS collateralUsed, created_at AS createdAt,
+          settled_at AS settledAt
+         FROM stone_investments WHERE investment_id = ?`,
+        investmentId,
+      );
+      if (
+        !investment ||
+        investment.status !== "failed" ||
+        investment.plan !== "risky" ||
+        investment.lowInsuranceUsed ||
+        investment.collateralUsed
+      ) {
+        throw new Error("Khoản đầu tư này không thể dùng tài sản thế chấp.");
+      }
+      const inventory = await readMissionShopInventory(db);
+      if (inventory.collateral_asset < 1) {
+        throw new Error("Bạn không còn Tài Sản Thế Chấp.");
+      }
+      const result = await db.runAsync(
+        `UPDATE stone_investments
+         SET settlement_amount = principal, collateral_used = 1, settled_at = ?
+         WHERE investment_id = ? AND status = 'failed'
+           AND collateral_used = 0`,
+        new Date().toISOString(),
+        investmentId,
+      );
+      if (result.changes !== 1) {
+        throw new Error("Không thể dùng Tài Sản Thế Chấp cho khoản này.");
+      }
+      updated = {
+        ...investment,
+        settlementAmount: investment.principal,
+        collateralUsed: true,
+        settledAt: new Date().toISOString(),
+      };
+      await markSyncDirty(db);
+    });
+    notifySyncListeners();
+    return updated!;
   });
 }
 
@@ -1463,7 +1683,9 @@ async function settleActiveStoneInvestments(
   const active = await db.getAllAsync<StoneInvestment>(
     `SELECT investment_id AS investmentId, plan, principal,
       duration_days AS durationDays, start_day AS startDay, end_day AS endDay,
-      status, settlement_amount AS settlementAmount, created_at AS createdAt,
+      status, settlement_amount AS settlementAmount,
+      low_insurance_used AS lowInsuranceUsed, capital_invite AS capitalInvite,
+      collateral_used AS collateralUsed, created_at AS createdAt,
       settled_at AS settledAt
      FROM stone_investments WHERE status = 'active'`,
   );
@@ -1887,7 +2109,9 @@ async function readMissionCollectionBalance(
     count: number;
   }>(
     `SELECT rarity, COUNT(*) AS count
-     FROM mission_shop_purchases GROUP BY rarity`,
+     FROM mission_shop_purchases
+     WHERE rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')
+     GROUP BY rarity`,
   );
   const fragments: Record<ChestRarity, number> = {
     common: 0,

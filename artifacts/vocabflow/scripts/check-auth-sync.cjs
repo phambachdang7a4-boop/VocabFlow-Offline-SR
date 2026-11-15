@@ -430,13 +430,16 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     stoneInvestments: [
       {
         investmentId: "investment:backup-sync",
-        plan: "balanced",
+        plan: "risky",
         principal: 100,
         durationDays: 7,
         startDay: "2026-11-08",
         endDay: "2026-11-14",
         status: "active",
         settlementAmount: null,
+        lowInsuranceUsed: true,
+        capitalInvite: "high",
+        collateralUsed: false,
         createdAt: "2026-11-08T10:00:00.000Z",
         settledAt: null,
       },
@@ -499,6 +502,20 @@ const sync = loadTs(join(__dirname, "../data/vocabulary-sync.ts"), {
     "Old statues stay locked while their historical fragment spending remains.",
   );
   assert.equal(restoredSnapshot.payload.stoneInvestments.length, 1);
+  assert.deepEqual(
+    {
+      lowInsuranceUsed:
+        restoredSnapshot.payload.stoneInvestments[0].lowInsuranceUsed,
+      capitalInvite: restoredSnapshot.payload.stoneInvestments[0].capitalInvite,
+      collateralUsed: restoredSnapshot.payload.stoneInvestments[0].collateralUsed,
+    },
+    {
+      lowInsuranceUsed: true,
+      capitalInvite: "high",
+      collateralUsed: false,
+    },
+    "Insurance and invite choices survive account sync and offline restore.",
+  );
   assert.deepEqual(restoredSnapshot.payload.investmentStudyDays, [
     {
       day: "2026-11-08",

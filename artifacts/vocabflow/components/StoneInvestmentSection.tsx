@@ -15,6 +15,7 @@ import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import {
   createStoneInvestment,
   getStoneInvestmentOverview,
+  useStoneInvestmentCollateral,
   type StoneInvestmentOverview,
 } from "@/data/vocabulary";
 import {
@@ -26,22 +27,34 @@ import {
   studyDaysRequired,
   MAX_STONE_INVESTMENT_PRINCIPAL,
   type StoneInvestmentDuration,
+  type StoneInvestmentCapitalInvite,
   type StoneInvestmentPlan,
 } from "@/domain/stone-investments";
 
 const PLANS: StoneInvestmentPlan[] = ["safe", "balanced", "risky"];
 const DURATIONS: StoneInvestmentDuration[] = [7, 14];
 
-export function StoneInvestmentSection() {
+export function StoneInvestmentSection({
+  inventoryRevision = 0,
+  onInventoryChange,
+}: {
+  inventoryRevision?: number;
+  onInventoryChange?: () => void;
+}) {
   const c = useColors();
   const [overview, setOverview] = useState<StoneInvestmentOverview | null>(
     null,
   );
   const [plan, setPlan] = useState<StoneInvestmentPlan>("safe");
   const [duration, setDuration] = useState<StoneInvestmentDuration>(7);
+  const [capitalInvite, setCapitalInvite] =
+    useState<StoneInvestmentCapitalInvite>(null);
   const [principalText, setPrincipalText] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [claimingCollateral, setClaimingCollateral] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -63,17 +76,19 @@ export function StoneInvestmentSection() {
   useFocusEffect(
     useCallback(() => {
       void load();
-    }, [load]),
+    }, [inventoryRevision, load]),
   );
 
   const principal = Number(principalText.replace(/[^\d]/g, ""));
-  const rate = investmentRate(plan, duration);
+  const rate = investmentRate(plan, duration, capitalInvite);
   const successSettlement =
     principal > 0
-      ? investmentSuccessSettlement(plan, principal, duration)
+      ? investmentSuccessSettlement(plan, principal, duration, capitalInvite)
       : 0;
   const failedSettlement =
-    principal > 0 ? investmentFailureSettlement(plan, principal) : 0;
+    principal > 0
+      ? investmentFailureSettlement(plan, principal, capitalInvite)
+      : 0;
   const failureNet = investmentNetResult(failedSettlement, principal);
   const enoughStone =
     principal > 0 &&
@@ -84,7 +99,7 @@ export function StoneInvestmentSection() {
     [overview?.studyDays],
   );
 
-  const startInvestment = async () => {
+  const startInvestment = async (useLowInsurance: boolean) => {
     if (!enoughStone) {
       setError("Nhập số Stone hợp lệ và không vượt quá số dư hiện có.");
       return;
@@ -92,9 +107,14 @@ export function StoneInvestmentSection() {
     setCreating(true);
     setError(null);
     try {
-      await createStoneInvestment(plan, principal, duration);
+      await createStoneInvestment(plan, principal, duration, {
+        lowInsuranceUsed: useLowInsurance,
+        capitalInvite,
+      });
       setPrincipalText("");
+      setCapitalInvite(null);
       await load();
+      onInventoryChange?.();
     } catch (failure) {
       setError(
         failure instanceof Error
@@ -106,7 +126,7 @@ export function StoneInvestmentSection() {
     }
   };
 
-  const confirmInvestment = () => {
+  const showInvestmentConfirmation = (useLowInsurance: boolean) => {
     if (!enoughStone) {
       setError("Nhập số Stone hợp lệ và không vượt quá số dư hiện có.");
       return;
@@ -114,18 +134,81 @@ export function StoneInvestmentSection() {
     const config = STONE_INVESTMENT_PLANS[plan];
     const netFailure = Math.abs(failureNet);
     const lossDescription =
-      plan === "risky"
-        ? `Thất bại sẽ làm mất ${netFailure.toLocaleString("vi-VN")} Stone (${Math.abs(config.failedSettlementPercent - 100)}% vốn) và số dư có thể âm.`
-        : `Thất bại chỉ hoàn ${failedSettlement.toLocaleString("vi-VN")} Stone.`;
+      useLowInsurance
+        ? "Bảo hiểm sẽ hoàn lại vốn nếu lỡ đúng một ngày học/ôn; dự án vẫn ghi nhận thất bại."
+        : plan === "risky"
+          ? `Thất bại sẽ làm mất ${netFailure.toLocaleString("vi-VN")} Stone (${Math.abs(config.failedSettlementPercent - 100)}% vốn trước thư góp vốn) và số dư có thể âm.`
+          : `Thất bại chỉ hoàn ${failedSettlement.toLocaleString("vi-VN")} Stone.`;
+    const inviteDescription =
+      capitalInvite === "low"
+        ? " Thư góp vốn thấp sẽ tiêu hao ngay; lãi nhân 1,15 lần và mức lỗ nhân 1,3 lần."
+        : capitalInvite === "high"
+          ? " Thư góp vốn cao sẽ tiêu hao ngay; lãi nhân 1,3 lần và mức lỗ nhân 1,4 lần."
+          : "";
     Alert.alert(
       "Xác nhận đầu tư",
-      `${principal.toLocaleString("vi-VN")} Stone trong ${duration} ngày. Nếu hoàn thành đủ ngày, nhận ${successSettlement.toLocaleString("vi-VN")} Stone (lãi ${rate}%). ${lossDescription} Bỏ lỡ một ngày ôn hoặc học sẽ tính là thất bại.`,
+      `${principal.toLocaleString("vi-VN")} Stone trong ${duration} ngày. Nếu hoàn thành đủ ngày, nhận ${successSettlement.toLocaleString("vi-VN")} Stone (lãi ${rate}%). ${lossDescription}${inviteDescription} Bỏ lỡ một ngày ôn hoặc học sẽ tính là thất bại.`,
       [
         { text: "Hủy", style: "cancel" },
         {
           text: "Khóa Stone",
           style: plan === "risky" ? "destructive" : "default",
-          onPress: () => void startInvestment(),
+          onPress: () => void startInvestment(useLowInsurance),
+        },
+      ],
+    );
+  };
+
+  const confirmInvestment = () => {
+    if (!enoughStone) {
+      setError("Nhập số Stone hợp lệ và không vượt quá số dư hiện có.");
+      return;
+    }
+    if (plan === "risky" && (overview?.inventory.low_insurance ?? 0) > 0) {
+      Alert.alert(
+        "Dùng Bảo Hiểm cấp thấp?",
+        "Nếu chọn, bảo hiểm sẽ tiêu hao ngay. Khi lỡ đúng một ngày ôn/học trong gói rủi ro, bạn được hoàn vốn thay vì mất Stone.",
+        [
+          {
+            text: "Không dùng",
+            style: "cancel",
+            onPress: () => showInvestmentConfirmation(false),
+          },
+          {
+            text: "Dùng bảo hiểm",
+            onPress: () => showInvestmentConfirmation(true),
+          },
+        ],
+      );
+      return;
+    }
+    showInvestmentConfirmation(false);
+  };
+
+  const claimCollateral = (investmentId: string) => {
+    Alert.alert(
+      "Dùng Tài Sản Thế Chấp?",
+      "Vật phẩm sẽ bị tiêu hao và hoàn lại vốn cho khoản đầu tư rủi ro đã thất bại. Khoản này không sinh lãi.",
+      [
+        { text: "Để sau", style: "cancel" },
+        {
+          text: "Dùng thế chấp",
+          onPress: () => {
+            setClaimingCollateral(investmentId);
+            void useStoneInvestmentCollateral(investmentId)
+              .then(async () => {
+                await load();
+                onInventoryChange?.();
+              })
+              .catch((failure: unknown) =>
+                setError(
+                  failure instanceof Error
+                    ? failure.message
+                    : "Không thể dùng Tài Sản Thế Chấp.",
+                ),
+              )
+              .finally(() => setClaimingCollateral(null));
+          },
         },
       ],
     );
@@ -224,6 +307,76 @@ export function StoneInvestmentSection() {
       </View>
       <Text style={[styles.hint, { color: c.mutedForeground }]}>
         Kỳ 14 ngày nhận lãi gấp 3 kỳ 7 ngày.
+      </Text>
+
+      <Text style={[styles.label, { color: c.foreground }]}>
+        Thư mời góp vốn
+      </Text>
+      <View style={styles.inviteRow}>
+        {(
+          [
+            {
+              id: null,
+              title: "Không dùng",
+              inventory: 0,
+              detail: "Giữ nguyên tỷ lệ",
+            },
+            {
+              id: "low",
+              title: "Góp vốn thấp",
+              inventory: overview?.inventory.low_capital_invite ?? 0,
+              detail: "Lãi ×1,15 · Lỗ ×1,3",
+            },
+            {
+              id: "high",
+              title: "Góp vốn cao",
+              inventory: overview?.inventory.high_capital_invite ?? 0,
+              detail: "Lãi ×1,3 · Lỗ ×1,4",
+            },
+          ] as const
+        ).map((option) => {
+          const selected = option.id === capitalInvite;
+          const unavailable = option.id !== null && option.inventory < 1;
+          return (
+            <Pressable
+              key={option.id ?? "none"}
+              testID={`stone-investment-invite-${option.id ?? "none"}`}
+              accessibilityRole="button"
+              accessibilityState={{ selected, disabled: unavailable }}
+              disabled={unavailable}
+              onPress={() => setCapitalInvite(option.id)}
+              style={[
+                styles.inviteOption,
+                {
+                  backgroundColor: selected ? c.secondary : c.card,
+                  borderColor: selected ? c.primary : c.border,
+                  opacity: unavailable ? 0.5 : 1,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.inviteTitle,
+                  { color: selected ? c.primary : c.foreground },
+                ]}
+              >
+                {option.title}
+              </Text>
+              <Text style={[styles.inviteMeta, { color: c.mutedForeground }]}>
+                {option.detail}
+              </Text>
+              {option.id !== null ? (
+                <Text style={[styles.inviteMeta, { color: c.mutedForeground }]}>
+                  Có {option.inventory}
+                </Text>
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={[styles.hint, { color: c.mutedForeground }]}>
+        Thư góp vốn dùng một lần khi bắt đầu bất kỳ gói nào. Khi thất bại, mức
+        lỗ ròng cũng được nhân theo thư đã chọn.
       </Text>
 
       <Text style={[styles.label, { color: c.foreground }]}>
@@ -382,21 +535,67 @@ export function StoneInvestmentSection() {
                   </View>
                 </>
               ) : (
-                <Text
-                  style={[
-                    styles.hint,
-                    {
-                      color:
-                        result !== null && result >= 0
-                          ? c.successText
-                          : c.destructive,
-                    },
-                  ]}
-                >
-                  {result !== null && result >= 0
-                    ? `Lãi ${result.toLocaleString("vi-VN")} Stone`
-                    : `Lỗ ${Math.abs(result ?? 0).toLocaleString("vi-VN")} Stone`}
-                </Text>
+                <>
+                  <Text
+                    style={[
+                      styles.hint,
+                      {
+                        color:
+                          result !== null && result >= 0
+                            ? c.successText
+                            : c.destructive,
+                      },
+                    ]}
+                  >
+                    {result !== null && result >= 0
+                      ? result === 0
+                        ? "Đã hoàn vốn, không phát sinh lãi/lỗ"
+                        : `Lãi ${result.toLocaleString("vi-VN")} Stone`
+                      : `Lỗ ${Math.abs(result ?? 0).toLocaleString("vi-VN")} Stone`}
+                  </Text>
+                  {investment.status === "failed" &&
+                  investment.plan === "risky" &&
+                  !investment.lowInsuranceUsed &&
+                  !investment.collateralUsed &&
+                  (overview.inventory.collateral_asset ?? 0) > 0 ? (
+                    <Pressable
+                      testID={`stone-investment-collateral-${investment.investmentId}`}
+                      accessibilityRole="button"
+                      disabled={claimingCollateral === investment.investmentId}
+                      onPress={() => claimCollateral(investment.investmentId)}
+                      style={[
+                        styles.collateralButton,
+                        {
+                          backgroundColor: c.secondary,
+                          borderColor: c.primary,
+                        },
+                      ]}
+                    >
+                      {claimingCollateral === investment.investmentId ? (
+                        <ActivityIndicator color={c.primary} />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.inviteTitle,
+                            { color: c.primary, textAlign: "center" },
+                          ]}
+                        >
+                          Dùng Tài Sản Thế Chấp để hoàn vốn
+                        </Text>
+                      )}
+                    </Pressable>
+                  ) : null}
+                  {investment.lowInsuranceUsed ? (
+                    <Text style={[styles.hint, { color: c.mutedForeground }]}>
+                      Đã dùng Bảo Hiểm cấp thấp
+                    </Text>
+                  ) : null}
+                  {investment.collateralUsed ? (
+                    <Text style={[styles.hint, { color: c.mutedForeground }]}>
+                      Đã tiêu hao Tài Sản Thế Chấp
+                    </Text>
+                  ) : null}
+                </>
               )}
             </View>
           );
@@ -427,6 +626,27 @@ const styles = StyleSheet.create({
   planCopy: { flex: 1, gap: 3 },
   planTitle: { fontFamily: F.b, fontSize: 14 },
   durationRow: { flexDirection: "row", gap: 10 },
+  inviteRow: { flexDirection: "row", gap: 7 },
+  inviteOption: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 9,
+    gap: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inviteTitle: { fontFamily: F.b, fontSize: 11 },
+  inviteMeta: { fontFamily: F.r, fontSize: 9, lineHeight: 13, textAlign: "center" },
+  collateralButton: {
+    minHeight: 40,
+    borderWidth: 1,
+    borderRadius: 11,
+    padding: 9,
+    justifyContent: "center",
+  },
   durationButton: {
     flex: 1,
     minHeight: 42,

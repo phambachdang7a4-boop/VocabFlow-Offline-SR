@@ -23,12 +23,19 @@ import {
   CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_TEXT_COLORS,
 } from "@/domain/mission-chests";
-import type { MissionShopRarity } from "@/domain/mission-shop";
+import {
+  MISSION_SHOP_PRODUCTS,
+  type MissionShopProductId,
+} from "@/domain/mission-shop";
 
-const RARITY_LABELS: Record<MissionShopRarity, string> = {
-  rare: "Rare",
-  epic: "Epic",
-  legendary: "Legendary",
+const PRODUCT_ICONS: Record<MissionShopProductId, React.ComponentProps<typeof Feather>["name"]> = {
+  rare: "grid",
+  epic: "grid",
+  legendary: "grid",
+  low_insurance: "shield",
+  collateral_asset: "briefcase",
+  low_capital_invite: "trending-up",
+  high_capital_invite: "trending-up",
 };
 
 export function MissionShop() {
@@ -37,6 +44,7 @@ export function MissionShop() {
   const [loading, setLoading] = useState(true);
   const [buyingSlot, setBuyingSlot] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inventoryRevision, setInventoryRevision] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,6 +63,9 @@ export function MissionShop() {
       void load();
     }, [load]),
   );
+  const refreshShopOverview = useCallback(() => {
+    void load();
+  }, [load]);
 
   const buy = async (slot: number) => {
     setBuyingSlot(slot);
@@ -62,6 +73,7 @@ export function MissionShop() {
     try {
       await purchaseMissionShopOffer(slot);
       setOverview(await getMissionShopOverview());
+      setInventoryRevision((revision) => revision + 1);
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -78,7 +90,7 @@ export function MissionShop() {
       <View style={styles.intro}>
         <Text style={[styles.title, { color: c.foreground }]}>Cửa hàng của Corvi</Text>
         <Text style={[styles.hint, { color: c.mutedForeground }]}>
-          Ưu đãi mới mỗi ngày
+          Mỗi ngày chọn ngẫu nhiên 3 trong 7 món. Cả ba ô có thể được giảm giá.
         </Text>
       </View>
 
@@ -133,10 +145,10 @@ export function MissionShop() {
 
       <View style={styles.sectionHeading}>
         <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-          Đổi Stone lấy mảnh tượng
+          Ưu đãi hôm nay
         </Text>
         <Text style={[styles.hint, { color: c.mutedForeground }]}>
-          Mỗi món mua được một lần trong ngày.
+          Giảm ngẫu nhiên 10–60%. Mỗi mảnh có 3–5 lượt mua; vật phẩm khác có 1.
         </Text>
       </View>
 
@@ -154,14 +166,19 @@ export function MissionShop() {
       ) : (
         <View testID="mission-shop-offers" style={styles.offerGrid}>
           {overview?.offers.map((offer) => {
-            const rarityLabel = RARITY_LABELS[offer.rarity];
+            const product = MISSION_SHOP_PRODUCTS[offer.productId];
+            const productId = offer.productId;
+            const ownedCount = overview.inventory[productId];
             const canAfford = overview.stoneBalance >= offer.price;
             const disabled =
-              offer.purchased || !canAfford || buyingSlot !== null;
+              offer.remainingStock <= 0 || !canAfford || buyingSlot !== null;
+            const fragmentColor = product.fragmentRarity
+              ? CHEST_RARITY_COLORS[product.fragmentRarity]
+              : c.secondary;
             return (
               <View
                 key={offer.slot}
-                testID={`mission-shop-offer-${offer.rarity}`}
+                testID={`mission-shop-offer-${productId}`}
                 style={[
                   styles.offerCard,
                   {
@@ -179,46 +196,58 @@ export function MissionShop() {
                 <View
                   style={[
                     styles.fragmentIcon,
-                    { backgroundColor: CHEST_RARITY_COLORS[offer.rarity] },
+                    { backgroundColor: fragmentColor },
                   ]}
                 >
                   <Feather
-                    name="grid"
+                    name={PRODUCT_ICONS[productId]}
                     size={20}
-                    color={CHEST_RARITY_ICON_COLORS[offer.rarity]}
+                    color={
+                      product.fragmentRarity
+                        ? CHEST_RARITY_ICON_COLORS[product.fragmentRarity]
+                        : c.primary
+                    }
                   />
                 </View>
                 <Text
                   style={[
                     styles.offerTitle,
-                    { color: CHEST_RARITY_TEXT_COLORS[offer.rarity] },
+                    {
+                      color: product.fragmentRarity
+                        ? CHEST_RARITY_TEXT_COLORS[product.fragmentRarity]
+                        : c.foreground,
+                    },
                   ]}
                   numberOfLines={2}
                   adjustsFontSizeToFit
                 >
-                  Mảnh {rarityLabel}
+                  {product.title}
+                </Text>
+                <Text
+                  style={[styles.offerMeta, { color: c.mutedForeground }]}
+                  numberOfLines={2}
+                  adjustsFontSizeToFit
+                >
+                  {product.description}
                 </Text>
                 <Text
                   style={[styles.offerMeta, { color: c.mutedForeground }]}
                   numberOfLines={1}
-                  adjustsFontSizeToFit
                 >
-                  Có {overview.fragments[offer.rarity]} mảnh
+                  Có {ownedCount}
+                  {product.fragmentRarity ? " mảnh" : " món"} · Còn{" "}
+                  {Math.max(0, offer.remainingStock)}/{offer.stock}
                 </Text>
-                {offer.discountPercent > 0 ? (
-                  <View
-                    style={[
-                      styles.discountBadge,
-                      { backgroundColor: c.successSoft },
-                    ]}
-                  >
-                    <Text style={[styles.discount, { color: c.successText }]}>
-                      −{offer.discountPercent}%
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.discountPlaceholder} />
-                )}
+                <View
+                  style={[
+                    styles.discountBadge,
+                    { backgroundColor: c.successSoft },
+                  ]}
+                >
+                  <Text style={[styles.discount, { color: c.successText }]}>
+                    −{offer.discountPercent}%
+                  </Text>
+                </View>
                 <View style={styles.priceColumn}>
                   {offer.discountPercent > 0 ? (
                     <Text
@@ -239,12 +268,12 @@ export function MissionShop() {
                   </Text>
                 </View>
                 <Pressable
-                  testID={`mission-shop-buy-${offer.rarity}`}
+                  testID={`mission-shop-buy-${productId}`}
                   accessibilityRole="button"
                   accessibilityLabel={
-                    offer.purchased
-                      ? `Đã mua mảnh ${rarityLabel} hôm nay`
-                      : `Mua một mảnh ${rarityLabel} với giá ${offer.price} Stone`
+                    offer.remainingStock <= 0
+                      ? `${product.title} đã hết hàng hôm nay`
+                      : `Mua ${product.title} với giá ${offer.price} Stone`
                   }
                   accessibilityState={{ disabled }}
                   disabled={disabled}
@@ -265,7 +294,7 @@ export function MissionShop() {
                       style={[
                         styles.buyLabel,
                         {
-                          color: offer.purchased
+                          color: offer.remainingStock <= 0
                             ? c.mutedForeground
                             : c.buttonForeground,
                         },
@@ -273,8 +302,8 @@ export function MissionShop() {
                       numberOfLines={1}
                       adjustsFontSizeToFit
                     >
-                      {offer.purchased
-                        ? "Đã mua"
+                      {offer.remainingStock <= 0
+                        ? "Hết hàng"
                         : canAfford
                           ? "Mua"
                           : "Thiếu Stone"}
@@ -288,10 +317,14 @@ export function MissionShop() {
       )}
 
       <Text style={[styles.footer, { color: c.mutedForeground }]}>
-        Mảnh đã mua không thể đổi ngược lại thành Stone. Ưu đãi được lưu offline
-        và đồng bộ khi có mạng.
+        Mảnh không đổi ngược thành Stone. Bảo hiểm và thư góp vốn được dùng khi
+        bắt đầu đầu tư; Tài Sản Thế Chấp chỉ tiêu hao khi dùng để cứu khoản rủi ro
+        đã thất bại. Giao dịch được lưu offline và đồng bộ khi có mạng.
       </Text>
-      <StoneInvestmentSection />
+      <StoneInvestmentSection
+        inventoryRevision={inventoryRevision}
+        onInventoryChange={refreshShopOverview}
+      />
     </View>
   );
 }
@@ -355,7 +388,7 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     textAlign: "center",
   },
-  offerMeta: { fontFamily: F.r, fontSize: 10, textAlign: "center" },
+  offerMeta: { fontFamily: F.r, fontSize: 9, lineHeight: 13, textAlign: "center" },
   discountBadge: {
     minHeight: 18,
     paddingHorizontal: 7,

@@ -142,14 +142,6 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
     hasDuplicates(missionShopPurchases, (item) => item.purchaseId) ||
     hasDuplicates(stoneInvestments, (item) => item.investmentId) ||
     hasDuplicates(investmentStudyDays, (item) => item.day) ||
-    hasDuplicates(
-      missionShopPurchases,
-      (item) => `${item.day}\u0000${item.slot}`,
-    ) ||
-    hasDuplicates(
-      missionShopPurchases,
-      (item) => `${item.day}\u0000${item.rarity}`,
-    ) ||
     parsed.data.deletedWords.some((deleted) =>
       parsed.data.words.some((word) => word.syncId === deleted.syncId),
     )
@@ -210,6 +202,9 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       })),
       stoneInvestments: stoneInvestments.map((investment) => ({
         ...investment,
+        lowInsuranceUsed: investment.lowInsuranceUsed ?? false,
+        capitalInvite: investment.capitalInvite ?? null,
+        collateralUsed: investment.collateralUsed ?? false,
         createdAt: toTimestamp(investment.createdAt),
         settledAt: investment.settledAt
           ? toTimestamp(investment.settledAt)
@@ -457,6 +452,9 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
             endDay: investment.endDay,
             status: investment.status,
             settlementAmount: investment.settlementAmount,
+            lowInsuranceUsed: investment.lowInsuranceUsed,
+            capitalInvite: investment.capitalInvite,
+            collateralUsed: investment.collateralUsed,
             createdAt: investment.createdAt,
             settledAt: investment.settledAt,
           })),
@@ -576,14 +574,6 @@ router.post("/sync", requireAuth, async (req, res) => {
     ) ||
     hasDuplicates(collectionPieceSpends, (item) => item.spendId) ||
     hasDuplicates(missionShopPurchases, (item) => item.purchaseId) ||
-    hasDuplicates(
-      missionShopPurchases,
-      (item) => `${item.day}\u0000${item.slot}`,
-    ) ||
-    hasDuplicates(
-      missionShopPurchases,
-      (item) => `${item.day}\u0000${item.rarity}`,
-    ) ||
     hasDuplicates(stoneInvestments, (item) => item.investmentId) ||
     hasDuplicates(investmentStudyDays, (item) => item.day)
   ) {
@@ -716,6 +706,9 @@ router.post("/sync", requireAuth, async (req, res) => {
         })),
         stoneInvestments: stoneInvestments.map((investment) => ({
           ...investment,
+          lowInsuranceUsed: investment.lowInsuranceUsed ?? false,
+          capitalInvite: investment.capitalInvite ?? null,
+          collateralUsed: investment.collateralUsed ?? false,
           createdAt: toTimestamp(investment.createdAt),
           settledAt: investment.settledAt
             ? toTimestamp(investment.settledAt)
@@ -1036,7 +1029,14 @@ router.post("/sync", requireAuth, async (req, res) => {
             current.principal !== incoming.principal ||
             current.durationDays !== incoming.durationDays ||
             current.startDay !== incoming.startDay ||
-            current.endDay !== incoming.endDay)
+            current.endDay !== incoming.endDay ||
+            (incoming.lowInsuranceUsed !== undefined &&
+              Boolean(current.lowInsuranceUsed) !==
+                Boolean(incoming.lowInsuranceUsed)) ||
+            (incoming.capitalInvite !== undefined &&
+              (current.capitalInvite ?? null) !==
+                (incoming.capitalInvite ?? null))
+          )
         ) {
           throw new Error("Thương Vụ đồng bộ có dữ liệu mâu thuẫn.");
         }
@@ -1051,6 +1051,9 @@ router.post("/sync", requireAuth, async (req, res) => {
             endDay: incoming.endDay,
             status: incoming.status,
             settlementAmount: incoming.settlementAmount,
+            lowInsuranceUsed: incoming.lowInsuranceUsed ?? false,
+            capitalInvite: incoming.capitalInvite ?? null,
+            collateralUsed: incoming.collateralUsed ?? false,
             createdAt: incoming.createdAt,
             settledAt: incoming.settledAt,
           });
@@ -1065,6 +1068,7 @@ router.post("/sync", requireAuth, async (req, res) => {
             .set({
               status: incoming.status,
               settlementAmount: incoming.settlementAmount,
+              collateralUsed: incoming.collateralUsed ?? false,
               settledAt: incoming.settledAt,
             })
             .where(
@@ -1439,7 +1443,8 @@ function hasInvalidMissionShopPurchases(
     purchasedAt: string | Date;
   }>,
 ): boolean {
-  return purchases.some((purchase) => {
+  const counts = new Map<string, number>();
+  for (const purchase of purchases) {
     if (
       !isValidDay(purchase.day) ||
       !Number.isSafeInteger(purchase.slot) ||
@@ -1447,18 +1452,40 @@ function hasInvalidMissionShopPurchases(
       purchase.slot > 2 ||
       !Number.isSafeInteger(purchase.stoneCost) ||
       !Number.isSafeInteger(purchase.discountPercent) ||
+      purchase.discountPercent < 0 ||
+      purchase.discountPercent > 60 ||
       !Number.isFinite(Date.parse(toTimestamp(purchase.purchasedAt)))
     ) {
       return true;
     }
     const offered = missionShopOffersForDay(purchase.day)[purchase.slot];
-    return (
-      purchase.purchaseId !== `shop:${purchase.day}:${purchase.slot}` ||
-      purchase.rarity !== offered.rarity ||
+    if (
+      purchase.purchaseId === `shop:${purchase.day}:${purchase.slot}` &&
+      ["rare", "epic", "legendary"].includes(purchase.rarity) &&
+      purchase.stoneCost >= 0 &&
+      purchase.stoneCost <= 1000
+    ) {
+      continue;
+    }
+    const match = new RegExp(
+      `^shop:${purchase.day}:${purchase.slot}:([1-9]\\d*)(?::[a-z0-9-]{1,40})?$`,
+    ).exec(purchase.purchaseId);
+    const purchaseIndex = match ? Number(match[1]) : 0;
+    if (
+      !match ||
+      purchaseIndex > offered.stock ||
+      purchase.rarity !== offered.productId ||
       purchase.stoneCost !== offered.price ||
       purchase.discountPercent !== offered.discountPercent
-    );
-  });
+    ) {
+      return true;
+    }
+    const key = `${purchase.day}\u0000${purchase.slot}`;
+    const count = (counts.get(key) ?? 0) + 1;
+    if (count > offered.stock) return true;
+    counts.set(key, count);
+  }
+  return false;
 }
 
 function hasInvalidStoneInvestments(
@@ -1471,6 +1498,9 @@ function hasInvalidStoneInvestments(
     endDay: string;
     status: string;
     settlementAmount: number | null;
+    lowInsuranceUsed?: boolean;
+    capitalInvite?: "low" | "high" | null;
+    collateralUsed?: boolean;
     createdAt: string | Date;
     settledAt: string | Date | null;
   }>,
@@ -1485,12 +1515,21 @@ function hasInvalidStoneInvestments(
       endDay,
       status,
       settlementAmount,
+      lowInsuranceUsed = false,
+      capitalInvite = null,
+      collateralUsed = false,
       createdAt,
       settledAt,
     } = investment;
     if (
       !/^investment:[a-z0-9-]{1,120}$/i.test(investmentId) ||
       !["safe", "balanced", "risky"].includes(plan) ||
+      typeof lowInsuranceUsed !== "boolean" ||
+      !(capitalInvite === null || capitalInvite === "low" || capitalInvite === "high") ||
+      typeof collateralUsed !== "boolean" ||
+      (lowInsuranceUsed && plan !== "risky") ||
+      (collateralUsed &&
+        (plan !== "risky" || lowInsuranceUsed || status !== "failed")) ||
       !Number.isSafeInteger(principal) ||
       principal <= 0 ||
       principal > 900_000_000 ||
@@ -1505,7 +1544,11 @@ function hasInvalidStoneInvestments(
     }
 
     if (status === "active") {
-      return settlementAmount !== null || settledAt !== null;
+      return (
+        settlementAmount !== null ||
+        settledAt !== null ||
+        collateralUsed
+      );
     }
     if (
       !Number.isSafeInteger(settlementAmount) ||
@@ -1516,14 +1559,28 @@ function hasInvalidStoneInvestments(
     }
     if (status === "succeeded") {
       const rate = plan === "safe" ? 5 : plan === "balanced" ? 10 : 40;
+      const inviteMultiplier =
+        capitalInvite === "low" ? 1.15 : capitalInvite === "high" ? 1.3 : 1;
       const interest = Math.round(
-        (principal * rate * (durationDays === 14 ? 3 : 1)) / 100,
+        (principal *
+          rate *
+          (durationDays === 14 ? 3 : 1) *
+          inviteMultiplier) /
+          100,
       );
-      return settlementAmount !== principal + interest;
+      return collateralUsed || settlementAmount !== principal + interest;
     }
-    const failedPayoutPercent =
-      plan === "safe" ? 99 : plan === "balanced" ? 70 : -20;
-    return settlementAmount !== Math.round((principal * failedPayoutPercent) / 100);
+    if (lowInsuranceUsed || collateralUsed) {
+      return settlementAmount !== principal;
+    }
+    const baseNetLossPercent =
+      plan === "safe" ? 1 : plan === "balanced" ? 30 : 120;
+    const lossMultiplier =
+      capitalInvite === "low" ? 1.3 : capitalInvite === "high" ? 1.4 : 1;
+    const expectedSettlement = Math.round(
+      (principal * (100 - baseNetLossPercent * lossMultiplier)) / 100,
+    );
+    return settlementAmount !== expectedSettlement;
   });
 }
 
@@ -1552,21 +1609,47 @@ function addUtcDays(day: string, amount: number): string {
 }
 
 function missionShopOffersForDay(day: string) {
-  const rarities = ["rare", "epic", "legendary"];
-  for (let index = rarities.length - 1; index > 0; index -= 1) {
+  const products = [
+    "rare",
+    "epic",
+    "legendary",
+    "low_insurance",
+    "collateral_asset",
+    "low_capital_invite",
+    "high_capital_invite",
+  ];
+  for (let index = products.length - 1; index > 0; index -= 1) {
     const other =
-      stableHash(`mission-shop-order:${day}:${index}`) % (index + 1);
-    [rarities[index], rarities[other]] = [rarities[other]!, rarities[index]!];
+      stableHash(`mission-shop-order-v2:${day}:${index}`) % (index + 1);
+    [products[index], products[other]] = [products[other]!, products[index]!];
   }
-  const discountPercent =
-    10 + (stableHash(`mission-shop-discount:${day}`) % 51);
-  return rarities.map((rarity, slot) => {
-    const basePrice = rarity === "rare" ? 200 : rarity === "epic" ? 400 : 1000;
-    const appliedDiscount = slot === 2 ? discountPercent : 0;
+  return products.slice(0, 3).map((productId, slot) => {
+    const basePrice =
+      productId === "rare"
+        ? 200
+        : productId === "epic"
+          ? 400
+          : productId === "legendary"
+            ? 1000
+            : productId === "low_insurance"
+              ? 200
+              : productId === "collateral_asset"
+                ? 2000
+                : productId === "low_capital_invite"
+                  ? 300
+                  : 750;
+    const discountPercent =
+      10 + (stableHash(`mission-shop-discount-v2:${day}:${slot}`) % 51);
+    const stock =
+      ["rare", "epic", "legendary"].includes(productId)
+        ? 3 +
+          (stableHash(`mission-shop-stock-v2:${day}:${slot}`) % 3)
+        : 1;
     return {
-      rarity,
-      price: Math.round((basePrice * (100 - appliedDiscount)) / 100),
-      discountPercent: appliedDiscount,
+      productId,
+      price: Math.round((basePrice * (100 - discountPercent)) / 100),
+      discountPercent,
+      stock,
     };
   });
 }

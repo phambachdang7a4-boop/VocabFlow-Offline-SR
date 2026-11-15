@@ -6,6 +6,7 @@ const { join } = require("node:path");
 const {
   createRepository,
   loadTs,
+  missionShop,
   stoneInvestments,
 } = require("./test-support.cjs");
 
@@ -38,6 +39,27 @@ assert.equal(
   stoneInvestments.investmentSuccessSettlement("risky", 100, 14),
   220,
 );
+assert.equal(stoneInvestments.investmentRate("safe", 7, "low"), 5.75);
+assert.equal(stoneInvestments.investmentRate("risky", 7, "high"), 52);
+assert.equal(
+  stoneInvestments.investmentSuccessSettlement("balanced", 100, 7, "low"),
+  112,
+  "A low capital invite multiplies the profit rate by 1.15.",
+);
+assert.equal(
+  stoneInvestments.investmentFailureSettlement("balanced", 100, "low"),
+  61,
+  "A low capital invite multiplies the failed net loss by 1.3.",
+);
+assert.equal(
+  stoneInvestments.investmentFailureSettlement("risky", 100, "high"),
+  -68,
+);
+assert.equal(
+  stoneInvestments.investmentFailureSettlement("risky", 100, null, true),
+  100,
+  "Low insurance returns the principal after a missed day.",
+);
 
 const contract = {
   investmentId: "investment:test-contract",
@@ -48,6 +70,9 @@ const contract = {
   endDay: "2026-11-21",
   status: "active",
   settlementAmount: null,
+  lowInsuranceUsed: false,
+  capitalInvite: null,
+  collateralUsed: false,
   createdAt: `${dayOne}T12:00:00.000Z`,
   settledAt: null,
 };
@@ -108,20 +133,27 @@ function createFundedHarness(name, funds) {
     harness,
     async fund() {
       await harness.repo.getMissionShopOverview(dayOne);
-      harness.db
-        .prepare(
-          `INSERT INTO mission_chests
-            (chest_id, mission_day, mission_id, base_stone, rarity, rule_set,
-              super_upgrade, opened, final_stone, created_at, updated_at)
-           VALUES (?, ?, 'review-1', 1, 'rare', 5, 0, 1, ?, ?, ?)`,
-        )
-        .run(
-          `seed-${name}`,
+      const insert = harness.db.prepare(
+        `INSERT INTO mission_chests
+          (chest_id, mission_day, mission_id, base_stone, rarity, rule_set,
+            super_upgrade, opened, final_stone, created_at, updated_at)
+         VALUES (?, ?, ?, 1, 'rare', 5, 0, 1, ?, ?, ?)`,
+      );
+      let remaining = funds;
+      let index = 0;
+      while (remaining > 0) {
+        const value = Math.min(remaining, 5000);
+        insert.run(
+          `seed-${name}-${index}`,
           dayOne,
-          funds,
+          `review-${index}`,
+          value,
           `${dayOne}T12:00:00.000Z`,
           `${dayOne}T12:00:00.000Z`,
         );
+        remaining -= value;
+        index += 1;
+      }
     },
     cleanup() {
       if (harness.db) harness.db.close();
@@ -134,6 +166,9 @@ async function checkStorage() {
   const success = createFundedHarness("investment-success", 500);
   const missed = createFundedHarness("investment-missed", 500);
   const risky = createFundedHarness("investment-risky", 100);
+    const insured = createFundedHarness("investment-insured", 5000);
+    const invited = createFundedHarness("investment-invite", 5000);
+    const collateral = createFundedHarness("investment-collateral", 6000);
   try {
     await success.fund();
     await success.harness.repo.createStoneInvestment("safe", 100, 7);
@@ -188,6 +223,71 @@ async function checkStorage() {
       "The risky plan loses 120% net, allowing Stone debt.",
     );
 
+      await insured.fund();
+      const insuranceCost = await purchaseShopItem(
+        insured.harness,
+        "low_insurance",
+      );
+      await insured.harness.repo.createStoneInvestment("risky", 100, 7, {
+        lowInsuranceUsed: true,
+      });
+      assert.equal(
+        (await insured.harness.repo.getStoneInvestmentOverview()).inventory
+          .low_insurance,
+        0,
+        "Low insurance is consumed at investment start.",
+      );
+      insured.harness.setDay("2026-11-16");
+      const insuredResult =
+        await insured.harness.repo.getStoneInvestmentOverview();
+      assert.equal(insuredResult.investments[0].status, "failed");
+      assert.equal(insuredResult.investments[0].settlementAmount, 100);
+      assert.equal(insuredResult.stoneBalance, 5000 - insuranceCost);
+
+      await invited.fund();
+      const inviteCost = await purchaseShopItem(
+        invited.harness,
+        "low_capital_invite",
+      );
+      await invited.harness.repo.createStoneInvestment("balanced", 100, 7, {
+        capitalInvite: "low",
+      });
+      for (const day of stoneInvestments.studyDaysRequired(dayOne, 7)) {
+        invited.harness.setDay(day);
+        await invited.harness.repo.recordStoneInvestmentStudyDay("review");
+      }
+      const invitedResult =
+        await invited.harness.repo.getStoneInvestmentOverview();
+      assert.equal(invitedResult.investments[0].status, "succeeded");
+      assert.equal(invitedResult.investments[0].settlementAmount, 112);
+      assert.equal(invitedResult.stoneBalance, 5000 - inviteCost - 100 + 112);
+      assert.equal(
+        invitedResult.inventory.low_capital_invite,
+        0,
+        "A capital invite is consumed at investment start.",
+      );
+
+      await collateral.fund();
+      const collateralCost = await purchaseShopItem(
+        collateral.harness,
+        "collateral_asset",
+      );
+      await collateral.harness.repo.createStoneInvestment("risky", 100, 7);
+      collateral.harness.setDay("2026-11-16");
+      const failedCollateral =
+        await collateral.harness.repo.getStoneInvestmentOverview();
+      assert.equal(failedCollateral.investments[0].settlementAmount, -20);
+      assert.equal(failedCollateral.inventory.collateral_asset, 1);
+      const rescued = await collateral.harness.repo.useStoneInvestmentCollateral(
+        failedCollateral.investments[0].investmentId,
+      );
+      assert.equal(rescued.settlementAmount, 100);
+      assert.equal(rescued.collateralUsed, true);
+      const rescuedOverview =
+        await collateral.harness.repo.getStoneInvestmentOverview();
+      assert.equal(rescuedOverview.stoneBalance, 6000 - collateralCost);
+      assert.equal(rescuedOverview.inventory.collateral_asset, 0);
+
     const review = createFundedHarness("investment-review-event", 200);
     try {
       await review.fund();
@@ -211,7 +311,26 @@ async function checkStorage() {
     success.cleanup();
     missed.cleanup();
     risky.cleanup();
+      insured.cleanup();
+      invited.cleanup();
+      collateral.cleanup();
   }
+}
+
+async function purchaseShopItem(harness, productId) {
+  const first = new Date(`${dayOne}T00:00:00.000Z`);
+  for (let offset = 0; offset < 90; offset += 1) {
+    const date = new Date(first);
+    date.setUTCDate(date.getUTCDate() + offset);
+    const day = date.toISOString().slice(0, 10);
+    const offer = missionShop
+      .missionShopOffersForDay(day)
+      .find((item) => item.productId === productId);
+    if (!offer) continue;
+    await harness.repo.purchaseMissionShopOffer(offer.slot, day);
+    return offer.price;
+  }
+  throw new Error(`Could not find a shop day offering ${productId}.`);
 }
 
 function harnessPending(db) {
@@ -232,7 +351,9 @@ const investmentScreen = readFileSync(
   "utf8",
 );
 assert.match(courseScreen, /recordStoneInvestmentStudyDay\("course"\)/);
-assert.match(shopScreen, /<StoneInvestmentSection \/>/);
+assert.match(shopScreen, /<StoneInvestmentSection[\s\S]*inventoryRevision=/);
+assert.match(shopScreen, /setInventoryRevision/);
+assert.match(investmentScreen, /onInventoryChange\?\./);
 assert.match(investmentScreen, /Bỏ lỡ một ngày ôn hoặc học sẽ tính là thất bại/);
 assert.match(investmentScreen, /Kỳ 14 ngày nhận lãi gấp 3 kỳ 7 ngày/);
 

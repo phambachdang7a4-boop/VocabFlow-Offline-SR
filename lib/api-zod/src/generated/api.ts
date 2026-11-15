@@ -275,7 +275,7 @@ export const MergeUserSyncDataBody = zod.object({
   "purchaseId": zod.string().min(1).max(mergeUserSyncDataBodyMissionShopPurchasesItemPurchaseIdMax),
   "day": zod.string().regex(mergeUserSyncDataBodyMissionShopPurchasesItemDayRegExp),
   "slot": zod.number().int().min(mergeUserSyncDataBodyMissionShopPurchasesItemSlotMin).max(mergeUserSyncDataBodyMissionShopPurchasesItemSlotMax),
-  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "rarity": zod.enum(['rare', 'epic', 'legendary', 'low_insurance', 'collateral_asset', 'low_capital_invite', 'high_capital_invite']),
   "stoneCost": zod.number().int().min(mergeUserSyncDataBodyMissionShopPurchasesItemStoneCostMin),
   "discountPercent": zod.number().int().min(mergeUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMin).max(mergeUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMax),
   "purchasedAt": zod.coerce.date()
@@ -290,7 +290,10 @@ export const MergeUserSyncDataBody = zod.object({
   "status": zod.enum(['active', 'succeeded', 'failed']),
   "settlementAmount": zod.number().int().nullable(),
   "createdAt": zod.coerce.date(),
-  "settledAt": zod.coerce.date().nullable()
+  "settledAt": zod.coerce.date().nullable(),
+  "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
+  "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
 })).max(mergeUserSyncDataBodyStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(mergeUserSyncDataBodyInvestmentStudyDaysItemDayRegExp),
@@ -544,7 +547,7 @@ export const MergeUserSyncData200Response = zod.object({
   "purchaseId": zod.string().min(1).max(mergeUserSyncData200ResponseMissionShopPurchasesItemPurchaseIdMax),
   "day": zod.string().regex(mergeUserSyncData200ResponseMissionShopPurchasesItemDayRegExp),
   "slot": zod.number().int().min(mergeUserSyncData200ResponseMissionShopPurchasesItemSlotMin).max(mergeUserSyncData200ResponseMissionShopPurchasesItemSlotMax),
-  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "rarity": zod.enum(['rare', 'epic', 'legendary', 'low_insurance', 'collateral_asset', 'low_capital_invite', 'high_capital_invite']),
   "stoneCost": zod.number().int().min(mergeUserSyncData200ResponseMissionShopPurchasesItemStoneCostMin),
   "discountPercent": zod.number().int().min(mergeUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMin).max(mergeUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMax),
   "purchasedAt": zod.coerce.date()
@@ -559,7 +562,10 @@ export const MergeUserSyncData200Response = zod.object({
   "status": zod.enum(['active', 'succeeded', 'failed']),
   "settlementAmount": zod.number().int().nullable(),
   "createdAt": zod.coerce.date(),
-  "settledAt": zod.coerce.date().nullable()
+  "settledAt": zod.coerce.date().nullable(),
+  "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
+  "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
 })).max(mergeUserSyncData200ResponseStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(mergeUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp),
@@ -829,7 +835,7 @@ export const ReplaceUserSyncDataBody = zod.object({
   "purchaseId": zod.string().min(1).max(replaceUserSyncDataBodyMissionShopPurchasesItemPurchaseIdMax),
   "day": zod.string().regex(replaceUserSyncDataBodyMissionShopPurchasesItemDayRegExp),
   "slot": zod.number().int().min(replaceUserSyncDataBodyMissionShopPurchasesItemSlotMin).max(replaceUserSyncDataBodyMissionShopPurchasesItemSlotMax),
-  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "rarity": zod.enum(['rare', 'epic', 'legendary', 'low_insurance', 'collateral_asset', 'low_capital_invite', 'high_capital_invite']),
   "stoneCost": zod.number().int().min(replaceUserSyncDataBodyMissionShopPurchasesItemStoneCostMin),
   "discountPercent": zod.number().int().min(replaceUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMin).max(replaceUserSyncDataBodyMissionShopPurchasesItemDiscountPercentMax),
   "purchasedAt": zod.coerce.date()
@@ -844,7 +850,10 @@ export const ReplaceUserSyncDataBody = zod.object({
   "status": zod.enum(['active', 'succeeded', 'failed']),
   "settlementAmount": zod.number().int().nullable(),
   "createdAt": zod.coerce.date(),
-  "settledAt": zod.coerce.date().nullable()
+  "settledAt": zod.coerce.date().nullable(),
+  "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
+  "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
 })).max(replaceUserSyncDataBodyStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(replaceUserSyncDataBodyInvestmentStudyDaysItemDayRegExp),
@@ -1098,7 +1107,7 @@ export const ReplaceUserSyncData200Response = zod.object({
   "purchaseId": zod.string().min(1).max(replaceUserSyncData200ResponseMissionShopPurchasesItemPurchaseIdMax),
   "day": zod.string().regex(replaceUserSyncData200ResponseMissionShopPurchasesItemDayRegExp),
   "slot": zod.number().int().min(replaceUserSyncData200ResponseMissionShopPurchasesItemSlotMin).max(replaceUserSyncData200ResponseMissionShopPurchasesItemSlotMax),
-  "rarity": zod.enum(['rare', 'epic', 'legendary']),
+  "rarity": zod.enum(['rare', 'epic', 'legendary', 'low_insurance', 'collateral_asset', 'low_capital_invite', 'high_capital_invite']),
   "stoneCost": zod.number().int().min(replaceUserSyncData200ResponseMissionShopPurchasesItemStoneCostMin),
   "discountPercent": zod.number().int().min(replaceUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMin).max(replaceUserSyncData200ResponseMissionShopPurchasesItemDiscountPercentMax),
   "purchasedAt": zod.coerce.date()
@@ -1113,7 +1122,10 @@ export const ReplaceUserSyncData200Response = zod.object({
   "status": zod.enum(['active', 'succeeded', 'failed']),
   "settlementAmount": zod.number().int().nullable(),
   "createdAt": zod.coerce.date(),
-  "settledAt": zod.coerce.date().nullable()
+  "settledAt": zod.coerce.date().nullable(),
+  "lowInsuranceUsed": zod.boolean().optional().describe('Optional for older clients; whether low insurance was selected at investment start.'),
+  "capitalInvite": zod.union([zod.literal('low'),zod.literal('high'),zod.literal(null)]).nullish().describe('Optional for older clients; the one-use capital invite applied at investment start.'),
+  "collateralUsed": zod.boolean().optional().describe('Optional for older clients; whether collateral was consumed after a risky failure.')
 })).max(replaceUserSyncData200ResponseStoneInvestmentsMax).optional(),
   "investmentStudyDays": zod.array(zod.object({
   "day": zod.string().regex(replaceUserSyncData200ResponseInvestmentStudyDaysItemDayRegExp),
