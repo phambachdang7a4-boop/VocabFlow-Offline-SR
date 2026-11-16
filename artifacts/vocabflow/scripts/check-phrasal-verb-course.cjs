@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const { createHash } = require("node:crypto");
-const { readFileSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 const { headwordPattern } = require("./build-phrasal-verb-course-data.cjs");
@@ -148,13 +148,25 @@ for (const [term, review] of Object.entries(exampleReviews.reviews)) {
     review.exampleSha256,
     `${term}'s source example changed; review its flags before updating the snapshot.`,
   );
+  const sourceDefinition = entry.sourceDefinition ?? entry.definition;
   assert.equal(
-    createHash("sha256").update(entry.definition).digest("hex"),
+    createHash("sha256").update(sourceDefinition).digest("hex"),
     review.definitionSha256,
     `${term}'s selected meaning changed; review its example before updating the snapshot.`,
   );
   assert.equal(entry.example, review.approvedExample);
   assert.equal(entry.exampleTranslation, review.approvedTranslation);
+  assert.equal(
+    entry.definition,
+    review.approvedDefinition?.trim() ?? sourceDefinition,
+    `${term} uses its reviewed meaning without changing the dictionary source.`,
+  );
+  if (review.sourceScreenshot) {
+    assert.ok(
+      existsSync(join(__dirname, "../domain", review.sourceScreenshot)),
+      `${term} retains its source meaning/example screenshot.`,
+    );
+  }
 }
 for (const [term, entry] of Object.entries(data.entries)) {
   for (const flag of automaticExampleFlags(entry)) {

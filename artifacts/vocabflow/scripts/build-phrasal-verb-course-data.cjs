@@ -455,6 +455,8 @@ function main() {
         !review.reviewNote?.trim() ||
         !review.approvedExample?.trim() ||
         !review.approvedTranslation?.trim() ||
+        (review.approvedDefinition !== undefined &&
+          !review.approvedDefinition.trim()) ||
         !/[à-ỹÀ-ỸđĐ]/u.test(review.approvedTranslation)
       )
         throw new Error(`Thiếu quyết định hoặc nội dung đã duyệt cho: ${term}`);
@@ -463,6 +465,10 @@ function main() {
       const review = exampleReviews.reviews?.[term];
       if (review) {
         entry.sourceExample = entry.example;
+        if (review.approvedDefinition) {
+          entry.sourceDefinition = entry.definition;
+          entry.definition = review.approvedDefinition.trim();
+        }
         entry.example = review.approvedExample.trim();
         entry.exampleTranslation = review.approvedTranslation.trim();
       } else {

@@ -269,6 +269,166 @@
       "approvedTranslation": "Anh ấy coi thường những lời chỉ trích đó.",
       "exampleSha256": "fe3f620c212ec09f584311bd258724b2a7a860ea2b12e02be75a853748313702",
       "definitionSha256": "d8a5b63c86d7155aadf56923abbc9e7c02d886cbf758b4eb1920187062c5e799"
+    },
+    "bag out": {
+      "flags": ["source-fragment", "repeated-word"],
+      "note": "The source repeats “bag out” in the same sentence.",
+      "decision": "corrected",
+      "reviewNote": "Removed the duplicated phrase; the remaining sentence naturally means criticizing Australian English.",
+      "approvedExample": "Don't bag out Australian English.",
+      "approvedTranslation": "Đừng chỉ trích tiếng Anh Úc.",
+      "exampleSha256": "2e001d9a122538fe2ecd624c79af1a65b54759fa077fcdc90a0a7ab848ac5a02",
+      "definitionSha256": "94cbfb1dcf74dee2ea98a6f48a454b4bc44750575cff2a312d69c3e00d725b7f",
+      "sourceScreenshot": "phrasal-verb-review-evidence/bag-out.png"
+    },
+    "chalk up": {
+      "flags": ["source-fragment"],
+      "note": "The source sentence starts with the unrelated fragment “Out.”",
+      "decision": "corrected",
+      "reviewNote": "Removed the fragment; the remaining sentence clearly shows achieving record profits.",
+      "approvedExample": "The company has chalked up its highest ever profits.",
+      "approvedTranslation": "Công ty đã đạt mức lợi nhuận cao nhất từ trước đến nay.",
+      "exampleSha256": "7e5181d828f3339ac33c050af42fc1cafa39e7419c5afb4cda7d53d7b3202226",
+      "definitionSha256": "ceec859db46514dd95858f8d7a6720efff086102d2154c8b97d69f1eee7b3209",
+      "sourceScreenshot": "phrasal-verb-review-evidence/chalk-up.png"
+    },
+    "talk down to": {
+      "flags": ["source-fragment"],
+      "note": "The source sentence starts with the unrelated fragment “Down.”",
+      "decision": "corrected",
+      "reviewNote": "Removed the fragment; the remaining sentence naturally illustrates speaking to students in a condescending way.",
+      "approvedExample": "She's a dreadful teacher and talks down to her students instead of teaching them.",
+      "approvedTranslation": "Cô ấy là một giáo viên tồi và luôn nói chuyện kiểu bề trên với học sinh thay vì giảng dạy cho họ.",
+      "exampleSha256": "a0b91b927460119bac38f9956f86d6dfa34ef2869c4537eebc710103450b14a2",
+      "definitionSha256": "99a7ead3aa42b8d37ac643afe354d28c744f836351b76d9f46431e6980d7bf4c",
+      "sourceScreenshot": "phrasal-verb-review-evidence/talk-down-to.png"
+    },
+    "fool with": {
+      "flags": ["source-fragment"],
+      "note": "The source sentence starts with unrelated text from another example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated lead-in and replaced the hyphen break with standard punctuation; the remaining sentence warns against handling something dangerous.",
+      "approvedExample": "Don't fool with that—it could explode.",
+      "approvedTranslation": "Đừng nghịch với thứ đó—nó có thể phát nổ.",
+      "exampleSha256": "05d320c3ad04301d9b44bac0688e1ed0712975ac6b59bc20cf71513fdd5b8d13",
+      "definitionSha256": "5a4c65e619f8cbd3edda87cb5a82093fb4852d066178db18a9669d98bae185cd",
+      "sourceScreenshot": "phrasal-verb-review-evidence/fool-with.png"
+    },
+    "go ahead with": {
+      "flags": ["source-fragment"],
+      "note": "The source begins with a sentence fragment from another example.",
+      "decision": "corrected",
+      "reviewNote": "Moved the unrelated protest clause into the complete sentence; the example now clearly demonstrates proceeding with a project.",
+      "approvedExample": "We now intend to go ahead with the final stage of the project despite the protests from environmentalists.",
+      "approvedTranslation": "Bất chấp sự phản đối của các nhà môi trường, chúng tôi dự định tiếp tục tiến hành giai đoạn cuối của dự án.",
+      "exampleSha256": "b145a92c54906b414179a048ca9cbfcfe100eeaea4991c4b35bdc1824bf4a12c",
+      "definitionSha256": "3fc55d558c6168caabef20b99b67efc3a791494148da320b70a7abb91624cade",
+      "sourceScreenshot": "phrasal-verb-review-evidence/go-ahead-with.png"
+    },
+    "shut in": {
+      "flags": ["source-fragment"],
+      "note": "An unrelated computer-shutdown sentence precedes the selected example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated sentence; the remaining example correctly describes keeping the cat indoors.",
+      "approvedExample": "I shut the cat in until it was time to go to the vet.",
+      "approvedTranslation": "Tôi nhốt con mèo trong nhà cho đến lúc đưa nó đến bác sĩ thú y.",
+      "exampleSha256": "cee33b9cfc9d607333b8f7efdb81bd296f4c4de5d0df8aea967bfbc03d54a664",
+      "definitionSha256": "d5b6d3d750c018735edc247797dbbbeecd38a0f012e0e016f536fe42425a0d7a",
+      "sourceScreenshot": "phrasal-verb-review-evidence/shut-in.png"
+    },
+    "stand down": {
+      "flags": ["source-fragment"],
+      "note": "An unrelated fragment about waiting for a plane is attached to the example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated fragment; the remaining sentence naturally shows a minister announcing her resignation.",
+      "approvedExample": "The minister announced her intention to stand down at the next election.",
+      "approvedTranslation": "Bộ trưởng thông báo ý định từ chức tại cuộc bầu cử tiếp theo.",
+      "exampleSha256": "9cd67b64318d3f04d2b64be95eb6723f6907bc8462129e46e4ddd0ff6cebeedb",
+      "definitionSha256": "3b6870849aa559d09c12e13f2a5cae140ffe02cb4915e1f7f9580ec34b00f676",
+      "sourceScreenshot": "phrasal-verb-review-evidence/stand-down.png"
+    },
+    "nerd out": {
+      "flags": ["sense-review"],
+      "note": "The selected meaning “play safe and avoid risks” does not match the sentence about a river trip.",
+      "decision": "corrected",
+      "reviewNote": "Selected the dictionary's alternate detailed-discussion sense and its matching source sentence; both are included in the source screenshot. The pinned dictionary itself remains unchanged.",
+      "approvedDefinition": "Thảo luận chi tiết về một chủ đề mình am hiểu.",
+      "approvedExample": "I had to nerd out when they asked about conditionals and deontic modality.",
+      "approvedTranslation": "Tôi phải trao đổi thật chuyên sâu khi họ hỏi về câu điều kiện và tình thái nghĩa vụ.",
+      "exampleSha256": "7c17cc0a6616362e445f696cf2d6911eea836555d5bc149509a627b29e9cf832",
+      "definitionSha256": "d43dcf3ffc245dd637bf2efa8a81dcb2dfb52ef80e531b7dba058bc2eb010c06",
+      "sourceScreenshot": "phrasal-verb-review-evidence/nerd-out.png"
+    },
+    "tear away": {
+      "flags": ["translation-review"],
+      "note": "The Vietnamese translation says to keep him at the office, but the English says to pull him away from it.",
+      "decision": "corrected",
+      "reviewNote": "Corrected the translation and clarified the Vietnamese meaning: he is reluctantly pulled away from what he is doing so he can go to dinner.",
+      "approvedDefinition": "Miễn cưỡng kéo ai đó rời khỏi nơi họ đang tập trung.",
+      "approvedExample": "I had to tear him away from the office for dinner.",
+      "approvedTranslation": "Tôi phải kéo anh ấy rời khỏi văn phòng để đi ăn tối.",
+      "exampleSha256": "45c638b654c1e5c50db2acbaa99b0f55be1b3ecdb48297d179cc7c648b6aaf08",
+      "definitionSha256": "22cb65f14712e5abea390702446cc5ad0dd119c85ea7058cf0c64cff9f6f2f39",
+      "sourceScreenshot": "phrasal-verb-review-evidence/tear-away.png"
+    },
+    "zero out": {
+      "flags": ["sense-review"],
+      "note": "The source meaning is about cutting project funding, while the example says a debt was erased.",
+      "decision": "corrected",
+      "reviewNote": "Changed only the course's Vietnamese meaning to match the sentence's zero-balance sense; the source database definition is preserved in the review hash and source screenshot.",
+      "approvedDefinition": "Xóa bỏ hoặc đưa một khoản mục về mức 0.",
+      "approvedExample": "The debt was zeroed out by the department.",
+      "approvedTranslation": "Khoản nợ đã bị bộ phận đó xóa bỏ.",
+      "exampleSha256": "a2ba0bd2b5049d2a2661de51ee93f5d28362053d166e92054400db97a9b6f8c8",
+      "definitionSha256": "599f4ca299b01d2f5ee96982c0da2611459dc8ad363547d56cc7a6d0d2208de8",
+      "sourceScreenshot": "phrasal-verb-review-evidence/zero-out.png"
+    },
+    "take away": {
+      "flags": ["sense-review"],
+      "note": "“Gỡ xuống” does not describe police taking protesters away from a place.",
+      "decision": "corrected",
+      "reviewNote": "Updated the course meaning to “take or escort someone away”; the selected English sentence and its Vietnamese translation agree with that sense.",
+      "approvedDefinition": "Đưa ai đó đi khỏi nơi đó.",
+      "approvedExample": "The police took the protestors away.",
+      "approvedTranslation": "Cảnh sát đã giải người biểu tình đi.",
+      "exampleSha256": "f613876d84085921b60e9f50d1544da8adc7632da2b356516ae0536c5fd03199",
+      "definitionSha256": "a98740442ba614bf243dd4968f981e697de558680ccbeb7e1c8e1591270dabb3",
+      "sourceScreenshot": "phrasal-verb-review-evidence/take-away.png"
+    },
+    "block in": {
+      "flags": ["sense-review"],
+      "note": "The selected meaning describes shading or sketching, but the example describes entering events in a calendar.",
+      "decision": "corrected",
+      "reviewNote": "Changed the course meaning to the calendar-planning sense shown by the source sentence; the source dictionary remains unchanged.",
+      "approvedDefinition": "Đánh dấu trước các sự kiện trong lịch.",
+      "approvedExample": "He blocked in the events in his calendar.",
+      "approvedTranslation": "Anh ấy đã đánh dấu các sự kiện vào lịch của mình.",
+      "exampleSha256": "57a4ae7cde26a9e2697e2a4e6c4f2b61cc12275c92913a4ee3b2c2727c91f6b0",
+      "definitionSha256": "b7cb2a8ee5188f15a6e18badeab18128ceb64104d034ea21198a64d716981279",
+      "sourceScreenshot": "phrasal-verb-review-evidence/block-in.png"
+    },
+    "chalk out": {
+      "flags": ["sense-review"],
+      "note": "The selected meaning about cocaine does not match the sentence about outlining a plan.",
+      "decision": "corrected",
+      "reviewNote": "Changed only the course meaning to the outline-a-plan sense demonstrated by the source example; the pinned dictionary was not edited.",
+      "approvedDefinition": "Phác thảo, vạch ra.",
+      "approvedExample": "He tried to chalk out a plan on paper.",
+      "approvedTranslation": "Anh ấy đã cố gắng phác thảo một kế hoạch trên giấy.",
+      "exampleSha256": "2ba7abf5448e05d9315cc20a02c0bef712642a0ca52be4572c25c71da20d0560",
+      "definitionSha256": "7b928956eedeba15538d2079a524d883fb06a74a42fd3d3fad82d371b6f38f23",
+      "sourceScreenshot": "phrasal-verb-review-evidence/chalk-out.png"
+    },
+    "make up to": {
+      "flags": ["usage-review"],
+      "note": "The selected sentence is awkward and does not clearly explain what amount is being made up.",
+      "decision": "retained",
+      "reviewNote": "Flagged the source wording for further lexical review; no independent correction could be verified, so the source example and meaning are retained without changing the pinned dictionary.",
+      "approvedExample": "He offered to make up to the total amount.",
+      "approvedTranslation": "Anh ta đã đề nghị tăng số tiền nhận được lên tổng số tiền.",
+      "exampleSha256": "a91ec05f15c0430b056bf39247b7dc662913cf6057306f340aa002bcc8d91298",
+      "definitionSha256": "a36e29feaa4fdeee35df8acaee50b6c274f7964be4582dfc6fde3747c32cef54",
+      "sourceScreenshot": "phrasal-verb-review-evidence/make-up-to.png"
     }
   }
 }
