@@ -233,8 +233,39 @@ function response(start, end, status = 206) {
   await downloadModule.deleteOfflineAudio();
   assert.equal(fs.existsSync(sqlitePath), false);
   assert.equal(fs.existsSync(partialPath), false);
+
+  const webDeletedDatabases = [];
+  class UnsupportedWebFileSystemType {
+    constructor() {
+      throw new Error("expo-file-system is unavailable on web");
+    }
+  }
+  const webAudioModule = loadTs(
+    join(__dirname, "../data/offline-audio.ts"),
+    {
+      "expo-audio": { createAudioPlayer: () => { throw new Error("unused"); } },
+      "expo-sqlite": {
+        deleteDatabaseAsync: async (filename) =>
+          webDeletedDatabases.push(filename),
+      },
+      "expo-file-system": {
+        Directory: UnsupportedWebFileSystemType,
+        File: UnsupportedWebFileSystemType,
+        FileMode: {},
+        Paths: {},
+      },
+      "react-native": { Platform: { OS: "web" } },
+      "../domain/offline-audio": domainForTest,
+    },
+  );
+  await webAudioModule.deleteOfflineAudio();
+  assert.deepEqual(
+    webDeletedDatabases,
+    [metadata.filename],
+    "Web reset removes the audio database without constructing unsupported FileSystem objects.",
+  );
   console.log(
-    "PASS: small ranged chunks retry independently, resume from saved progress, verify, install, and clean up.",
+    "PASS: ranged audio downloads resume, verify, clean up, and reset safely on web.",
   );
 })()
   .catch((error) => {

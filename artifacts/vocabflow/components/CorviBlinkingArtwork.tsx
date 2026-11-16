@@ -29,6 +29,7 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
   const floatProgress = useSharedValue(0);
   const gazeProgress = useSharedValue(0);
   const pageTurnProgress = useSharedValue(0);
+  const wingProgress = useSharedValue(0);
   const eyelidMotion = useAnimatedStyle(() => ({
     opacity: blinkProgress.value,
     transform: [{ scaleY: Math.max(0.04, blinkProgress.value) }],
@@ -49,17 +50,27 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
       { rotateZ: `${pageTurnProgress.value * -8}deg` },
     ],
   }));
+  const wingMotion = useAnimatedStyle(() => ({
+    opacity: Math.min(1, wingProgress.value * 1.5),
+    transform: [
+      { translateX: wingProgress.value * artSize * 0.045 },
+      { translateY: wingProgress.value * -artSize * 0.025 },
+      { rotateZ: `${wingProgress.value * -18}deg` },
+    ],
+  }));
 
   useEffect(() => {
     cancelAnimation(blinkProgress);
     cancelAnimation(floatProgress);
     cancelAnimation(gazeProgress);
     cancelAnimation(pageTurnProgress);
+    cancelAnimation(wingProgress);
     if (reduceMotion) {
       blinkProgress.value = 0;
       floatProgress.value = 0;
       gazeProgress.value = gazeToUser ? 1 : 0;
       pageTurnProgress.value = 0;
+      wingProgress.value = 0;
     } else {
       blinkProgress.value = withRepeat(
         withSequence(
@@ -93,6 +104,16 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
         withSequence(
           withDelay(5200, withTiming(1, { duration: 360 })),
           withTiming(0, { duration: 420 }),
+          withDelay(2800, withTiming(0, { duration: 1 })),
+        ),
+        -1,
+        false,
+      );
+      wingProgress.value = withRepeat(
+        withSequence(
+          withDelay(5000, withTiming(1, { duration: 320 })),
+          withTiming(0, { duration: 300 }),
+          withDelay(2800, withTiming(0, { duration: 1 })),
         ),
         -1,
         false,
@@ -103,8 +124,9 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
       cancelAnimation(floatProgress);
       cancelAnimation(gazeProgress);
       cancelAnimation(pageTurnProgress);
+      cancelAnimation(wingProgress);
     };
-  }, [blinkProgress, floatProgress, gazeProgress, gazeToUser, pageTurnProgress, reduceMotion]);
+  }, [blinkProgress, floatProgress, gazeProgress, gazeToUser, pageTurnProgress, reduceMotion, wingProgress]);
 
   return (
     <Animated.View
@@ -178,6 +200,25 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
       >
         <View style={[styles.pageEdge, { backgroundColor: c.dictLine }]} />
       </Animated.View>
+      <Animated.View
+        testID={`${testID}-wing-sweep`}
+        pointerEvents="none"
+        style={[
+          styles.wingSweep,
+          {
+            left: artSize * 0.57,
+            top: artSize * 0.475,
+            width: artSize * 0.17,
+            height: artSize * 0.085,
+          },
+          wingMotion,
+        ]}
+      >
+        <View style={[styles.wingCore, { backgroundColor: c.corviEyelid, borderColor: c.corviEyelidLine }]} />
+        <View style={[styles.wingFeatherOne, { backgroundColor: c.corviEyelid }]} />
+        <View style={[styles.wingFeatherTwo, { backgroundColor: c.corviEyelid }]} />
+        <View style={[styles.wingTip, { backgroundColor: c.corviEyelidLine }]} />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -203,4 +244,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   pageEdge: { position: 'absolute', right: 2, top: 2, bottom: 2, width: 1 },
+  wingSweep: { position: 'absolute', zIndex: 2 },
+  wingCore: {
+    position: 'absolute',
+    left: '12%',
+    top: '18%',
+    width: '72%',
+    height: '52%',
+    borderWidth: 1,
+    borderRadius: 2,
+  },
+  wingFeatherOne: { position: 'absolute', left: '4%', top: '54%', width: '44%', height: '24%' },
+  wingFeatherTwo: { position: 'absolute', left: '14%', top: '76%', width: '40%', height: '18%' },
+  wingTip: { position: 'absolute', right: '4%', top: '7%', width: '18%', height: '30%' },
 });

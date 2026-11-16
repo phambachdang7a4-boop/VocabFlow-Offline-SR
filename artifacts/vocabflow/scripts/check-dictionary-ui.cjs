@@ -216,6 +216,9 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(animatedArt.byId('corvi-blink-test-page-turn'), 'A restrained page overlay is rendered over the open book.');
   assert.equal(animatedArt.byId('corvi-blink-test-page-turn').props.style.at(-1).opacity, 0,
     'The turning-page layer stays invisible between page turns.');
+  assert.ok(animatedArt.byId('corvi-blink-test-wing-sweep'), 'A separate pixel-art wing layer sweeps toward the page.');
+  assert.equal(animatedArt.byId('corvi-blink-test-wing-sweep').props.style.at(-1).opacity, 0,
+    'Corvi’s wing stays still between page turns.');
   const gazeCycle = animationCalls.find(call => call.type === 'repeat'
     && call.animation.type === 'sequence'
     && call.animation.animations.some(part => part.type === 'delay' && part.delay === 2500)
@@ -226,6 +229,11 @@ function mount(file, services, personalWords = [], properties = {}) {
     && call.animation.animations.some(part => part.type === 'delay' && part.delay === 5200)
     && call.animation.animations.some(part => part.type === 'timing' && part.options?.duration === 420));
   assert.ok(pageCycle, 'The book page turns occasionally and settles back in a short, restrained motion.');
+  const wingCycle = animationCalls.find(call => call.type === 'repeat'
+    && call.animation.type === 'sequence'
+    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 5000)
+    && call.animation.animations.some(part => part.type === 'timing' && part.options?.duration === 300));
+  assert.ok(wingCycle, 'Corvi’s wing sweeps in sync with the periodic book-page animation.');
   animationCalls.length = 0;
   const eyeContactArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
     source: 1, testID: 'corvi-eye-contact-test', artSize: 210, gazeToUser: true,
@@ -234,8 +242,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(!animationCalls.some(call => call.animation?.type === 'sequence'
     && call.animation.animations.some(part => part.type === 'delay' && part.delay === 2500)),
   'Locked eye contact replaces idle gaze cycling with a direct gaze.');
-  assert.equal(sharedValues.at(-2).value?.type, 'timing');
-  assert.equal(sharedValues.at(-2).value?.value, 1, 'Conversation gaze animates toward the learner and remains there.');
+  assert.equal(sharedValues.at(-3).value?.type, 'timing');
+  assert.equal(sharedValues.at(-3).value?.value, 1, 'Conversation gaze animates toward the learner and remains there.');
   reducedMotionEnabled = true;
   animationCalls.length = 0;
   const reducedArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
@@ -243,8 +251,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   });
   assert.ok(reducedArt.byId('corvi-reduced-motion-test-page-turn'));
   assert.equal(animationCalls.length, 0, 'Reduced motion disables all repeating character animations.');
-  assert.deepEqual(sharedValues.slice(-4).map(value => value.value), [0, 0, 1, 0],
-    'Reduced motion keeps blink, float, and page static while preserving choice-state eye contact.');
+  assert.deepEqual(sharedValues.slice(-5).map(value => value.value), [0, 0, 1, 0, 0],
+    'Reduced motion keeps blink, float, page, and wing static while preserving choice-state eye contact.');
   reducedMotionEnabled = false;
   assert.ok(screen.byId('dictionary-search-idle'), 'Dictionary shows a welcoming idle state before a search');
   assert.ok(screen.byId('dictionary-search-idle-scroll'), 'The empty state can scroll when it exceeds the viewport');
@@ -266,6 +274,11 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.equal(narrowArt.props.artSize, 160, 'The narrow-phone layout keeps the enlarged Corvi illustration readable.');
   assert.deepEqual(narrowArt.props.style.at(-1), { width: 160, height: 160 },
     'The illustration retains explicit dimensions on a narrow phone.');
+  narrowScreen.byId('dictionary-corvi-talk').props.onPress();
+  assert.ok(narrowScreen.byId('dictionary-corvi-choice-groups-compact'),
+    'Very narrow phones keep every choice available below Corvi.');
+  assert.equal(narrowScreen.byId('dictionary-corvi-assistant-composition'), undefined,
+    'Very narrow phones avoid squeezing the side-by-side composition.');
   screenWidth = 390;
   assert.equal(screen.byId('dictionary-corvi-name').props.children[0], 'Mr. Corvi — Quản gia',
     'The steward uses the approved full display name.');
@@ -291,10 +304,16 @@ function mount(file, services, personalWords = [], properties = {}) {
     'The assistant screen replaces the dictionary search header while open.');
   assert.equal(screen.byId('dictionary-corvi-assistant-name').props.children[0], 'Mr. Corvi — Quản gia');
   assert.ok(screen.byId('dictionary-corvi-options'), 'All Corvi choices appear on the dedicated screen.');
-  assert.equal(screen.byId('dictionary-corvi-assistant-art').props.artSize, 236,
-    'Corvi is displayed larger on the assistant screen.');
+  assert.equal(screen.byId('dictionary-corvi-assistant-art').props.artSize, 156,
+    'Corvi is sized to leave room for the side choice buttons on a phone.');
   assert.equal(screen.byId('dictionary-corvi-assistant-art').props.gazeToUser, true,
     'Corvi keeps eye contact on the assistant screen.');
+  assert.ok(screen.byId('dictionary-corvi-assistant-composition'),
+    'The assistant screen places Corvi between the two groups of choices.');
+  assert.equal(screen.byId('dictionary-corvi-choice-group-left').props.children.flat(Infinity).length, 2,
+    'The left side keeps the first two Corvi choices.');
+  assert.equal(screen.byId('dictionary-corvi-choice-group-right').props.children.flat(Infinity).length, 3,
+    'The right side keeps the remaining three Corvi choices.');
   for (const choice of ['lookup', 'extract', 'guide', 'review', 'recommend']) {
     assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`), `Corvi offers the ${choice} reply choice.`);
     assert.ok(screen.byId(`dictionary-corvi-choice-${choice}`).props.accessibilityLabel,

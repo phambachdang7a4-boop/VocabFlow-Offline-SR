@@ -111,7 +111,6 @@ export default function SettingsScreen() {
     | "audio-delete"
     | "regional-ipa-us-download"
     | "regional-ipa-uk-download"
-    | "regional-ipa-ukSupplement-download"
     | "regional-ipa-delete"
     | null
   >(null);
@@ -234,29 +233,56 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleDownloadRegionalIpaPart = async (
-    sourceId: RegionalIpaSourceId,
+  const handleDownloadRegionalIpaParts = async (
+    rowId: "us" | "uk",
+    sourceIds: readonly RegionalIpaSourceId[],
   ) => {
     if (offlineAction || syncBusy) return;
     setOfflineError(null);
-    setOfflineAction(`regional-ipa-${sourceId}-download`);
+    setOfflineAction(`regional-ipa-${rowId}-download`);
     setOfflineStage("Đang chuẩn bị dữ liệu IPA");
     setOfflineProgress({
       bytesWritten: 0,
-      totalBytes: REGIONAL_IPA_DICTIONARY[sourceId].bytes,
+      totalBytes: sourceIds.reduce(
+        (total, sourceId) => total + REGIONAL_IPA_DICTIONARY[sourceId].bytes,
+        0,
+      ),
     });
     try {
-      const result = await downloadOfflineRegionalPronunciationPart(
-        sourceId,
-        (stage, bytesWritten, totalBytes) => {
-          setOfflineStage(stage);
-          setOfflineProgress({ bytesWritten, totalBytes });
-        },
+      const selectedTotalBytes = sourceIds.reduce(
+        (total, sourceId) => total + REGIONAL_IPA_DICTIONARY[sourceId].bytes,
+        0,
       );
+      let bytesBefore = 0;
+      let installedEntryCount: number | undefined;
+      for (const sourceId of sourceIds) {
+        const result = await downloadOfflineRegionalPronunciationPart(
+          sourceId,
+          (stage, bytesWritten) => {
+            setOfflineStage(stage);
+            if (stage.includes("ghép IPA")) {
+              setOfflineProgress({
+                bytesWritten: REGIONAL_IPA_DICTIONARY.sourceBytes,
+                totalBytes: REGIONAL_IPA_DICTIONARY.sourceBytes,
+              });
+            } else {
+              setOfflineProgress({
+                bytesWritten: bytesBefore + bytesWritten,
+                totalBytes: selectedTotalBytes,
+              });
+            }
+          },
+        );
+        if (result.complete) {
+          installedEntryCount = result.entryCount ?? 0;
+          break;
+        }
+        bytesBefore += REGIONAL_IPA_DICTIONARY[sourceId].bytes;
+      }
       setOfflineStage(
-        result.complete
-          ? `Đã cài ${result.entryCount?.toLocaleString("vi-VN") ?? 0} mục IPA`
-          : "Đã lưu phần IPA đã kiểm tra",
+        installedEntryCount !== undefined
+          ? `Đã cài ${installedEntryCount.toLocaleString("vi-VN")} mục IPA`
+          : "Đã lưu các phần IPA đã kiểm tra",
       );
     } catch (cause) {
       setOfflineError(
@@ -1299,32 +1325,58 @@ Nội dung tệp:
             </View>
           </View>
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            Cần cài từ điển trước. Kho IPA chỉ dùng để tra cứu sau khi cả ba
-            phần được xác minh và ghép thành công.
+            Cần cài từ điển trước. Anh-Anh bao gồm dữ liệu chính và phần bổ sung;
+            kho IPA dùng được sau khi toàn bộ dữ liệu được xác minh và ghép.
           </Text>
           {([
-            ["us", REGIONAL_IPA_DICTIONARY.us.label],
-            ["uk", REGIONAL_IPA_DICTIONARY.uk.label],
-            ["ukSupplement", REGIONAL_IPA_DICTIONARY.ukSupplement.label],
-          ] as const).map(([sourceId, label]) => {
-            const partState = regionalIpaParts[sourceId];
-            const action = `regional-ipa-${sourceId}-download`;
+            {
+              id: "us",
+              label: REGIONAL_IPA_DICTIONARY.us.label,
+              sourceIds: ["us"],
+            },
+            {
+              id: "uk",
+              label: "Anh-Anh",
+              sourceIds: ["uk", "ukSupplement"],
+            },
+          ] as const).map(({ id, label, sourceIds }) => {
+            const rowStates = sourceIds.map((sourceId) => regionalIpaParts[sourceId]);
+            const verifiedCount = rowStates.filter(
+              (state) => state === "verified" || state === "installed",
+            ).length;
+            const rowChecking = rowStates.some((state) => state === "checking");
+            const rowHasMissing = rowStates.some((state) => state === "missing");
+            const action = `regional-ipa-${id}-download`;
             const canRetryAssembly =
               regionalIpaStatus !== "installed" &&
               regionalIpaParts.us !== "missing" &&
               regionalIpaParts.uk !== "missing" &&
               regionalIpaParts.ukSupplement !== "missing";
+            const rowTotalBytes = sourceIds.reduce(
+              (total, sourceId) =>
+                total + REGIONAL_IPA_DICTIONARY[sourceId].bytes,
+              0,
+            );
             const partStatus =
-              partState === "installed"
+              regionalIpaStatus === "installed"
                 ? "Đã cài"
-                : partState === "verified"
-                  ? "Đã tải và xác minh · chờ đủ phần"
-                  : partState === "checking"
-                    ? "Đang kiểm tra…"
-                    : `Chưa tải · ${sizeLabel(REGIONAL_IPA_DICTIONARY[sourceId].bytes)}`;
+                : rowChecking
+                  ? "Đang kiểm tra…"
+                  : verifiedCount > 0
+                    ? id === "uk"
+                      ? verifiedCount === sourceIds.length
+                        ? canRetryAssembly
+                          ? "Đã xác minh đủ 2 phần · chờ ghép"
+                          : "Đã xác minh đủ 2 phần · chờ Anh-Mỹ để ghép"
+                        : `Đã xác minh ${verifiedCount}/2 phần · còn 1 phần`
+                      : canRetryAssembly
+                        ? "Đã xác minh · chờ ghép"
+                        : "Đã tải và xác minh · chờ đủ phần"
+                    : `Chưa tải · ${sizeLabel(rowTotalBytes)}`;
+            const canDownloadRow = rowHasMissing || canRetryAssembly;
             return (
               <View
-                key={sourceId}
+                key={id}
                 style={[
                   styles.ipaPartRow,
                   { borderTopColor: c.border },
@@ -1335,7 +1387,7 @@ Nội dung tệp:
                     {label}
                   </Text>
                   <Text
-                    testID={`offline-regional-ipa-${sourceId}-status`}
+                    testID={`offline-regional-ipa-${id}-status`}
                     style={[styles.appearanceDetail, { color: c.mutedForeground }]}
                   >
                     {partStatus}
@@ -1343,37 +1395,41 @@ Nội dung tệp:
                 </View>
                 <Button
                   testID={
-                    sourceId === "us"
+                    id === "us"
                       ? "offline-regional-ipa-download"
-                      : `offline-regional-ipa-download-${sourceId}`
+                      : `offline-regional-ipa-download-${id}`
                   }
                   label={
-                    partState === "installed"
+                    regionalIpaStatus === "installed"
                       ? "Đã cài"
-                      : partState === "verified" && canRetryAssembly
+                      : canRetryAssembly && !rowHasMissing
                         ? "Thử ghép"
-                        : partState === "verified"
-                          ? "Đã xác minh"
-                          : "Tải phần"
+                        : rowHasMissing
+                          ? verifiedCount > 0
+                            ? "Tải phần còn lại"
+                            : id === "uk"
+                              ? "Tải Anh-Anh"
+                              : "Tải phần"
+                          : "Đã xác minh"
                   }
                   icon={
-                    partState === "missing"
+                    rowHasMissing
                       ? "download"
-                      : partState === "verified" && canRetryAssembly
+                      : canRetryAssembly
                         ? "refresh-cw"
                         : "check"
                   }
                   onPress={() => {
-                    void handleDownloadRegionalIpaPart(sourceId);
+                    void handleDownloadRegionalIpaParts(id, sourceIds);
                   }}
                   loading={offlineAction === action}
                   disabled={
                     Boolean(offlineAction) ||
                     syncBusy ||
                     dictionaryStatus !== "installed" ||
-                    (partState === "verified" && !canRetryAssembly) ||
-                    partState === "installed" ||
-                    partState === "checking"
+                    !canDownloadRow ||
+                    regionalIpaStatus === "installed" ||
+                    rowChecking
                   }
                 />
               </View>

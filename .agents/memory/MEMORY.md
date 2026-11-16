@@ -15,3 +15,4 @@
 - [Nguồn IPA Anh-Anh bổ sung](regional-ipa-provenance.md) — Dùng từ điển đã có làm danh sách mục từ; Claude hỗ trợ tra cứu UK vì bản ghi công trước đó chỉ có IPA Mỹ.
 - [Quy tắc Thương Vụ](stone-investments.md) — Mức lời 14 ngày gấp ba lần kỳ 7 ngày; lỡ ngày học là thất bại và gói rủi ro cho phép nợ Stone.
 - [Phần thưởng rương](chest-reward-rules.md) — Mảnh Common/Uncommon không đổi thành Stone; lượt nâng cấp vẫn dùng xác suất hiện hành.
+- [Expo FileSystem trên web](expo-web-filesystem.md) — Trên web, tránh khởi tạo File/Directory của Expo FileSystem; dùng xóa SQLite hoặc xử lý tệp theo nền tảng.

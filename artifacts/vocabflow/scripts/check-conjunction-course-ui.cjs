@@ -244,6 +244,15 @@ function mount(initialSavedWords = [], options = {}) {
   assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
   assert.ok(screen.byId("linking-adverb-course-card"));
+  assert.deepEqual(
+    screen.byId("conjunction-course-progress").props.accessibilityValue,
+    {
+      min: 0,
+      max: courseDomain.CONJUNCTION_COURSE_LESSONS.length,
+      now: 0,
+    },
+    "Course progress starts at zero when no lessons are complete.",
+  );
   screen.byId("conjunction-course-card").props.onPress();
   assert.ok(screen.byId("conjunction-lesson-1"));
   const lesson = courseDomain.CONJUNCTION_COURSE_LESSONS[0];
@@ -325,6 +334,15 @@ function mount(initialSavedWords = [], options = {}) {
   assert.ok(screen.byId("conjunction-words-added-message"));
   screen.byId("conjunction-return").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
+  assert.deepEqual(
+    screen.byId("conjunction-course-progress").props.accessibilityValue,
+    {
+      min: 0,
+      max: courseDomain.CONJUNCTION_COURSE_LESSONS.length,
+      now: 1,
+    },
+    "Finishing a lesson updates its course progress immediately.",
+  );
   screen.byId("idioms-course-card").props.onPress();
   const idiomLesson = idiomCourseDomain.IDIOM_COURSE_LESSONS[0];
   assert.ok(screen.byId("idioms-lesson-1"));

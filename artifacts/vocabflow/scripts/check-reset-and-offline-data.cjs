@@ -274,7 +274,7 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(settings, /testID="offline-dictionary-download"/);
   assert.match(settings, /testID="offline-audio-download"/);
   assert.match(settings, /"offline-regional-ipa-download"/);
-  assert.match(settings, /offline-regional-ipa-download-\$\{sourceId\}/);
+  assert.match(settings, /offline-regional-ipa-download-\$\{id\}/);
   assert.match(settings, /deleteOfflineRegionalIpa/);
   assert.match(settings, /testID="reset-app-data"/);
   assert.match(settings, /testID="reset-cloud-data"/);

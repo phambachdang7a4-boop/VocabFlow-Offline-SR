@@ -162,7 +162,18 @@ assert.match(settings, /offline-regional-ipa-download/);
 assert.match(settings, /offline-regional-ipa-delete/);
 assert.match(settings, /getOfflineRegionalIpaPartsStatus/);
 assert.match(settings, /Đã tải và xác minh · chờ đủ phần/);
-assert.match(settings, /offline-regional-ipa-\$\{sourceId\}-status/);
+assert.match(settings, /offline-regional-ipa-\$\{id\}-status/);
+assert.match(
+  settings,
+  /label: "Anh-Anh",\s*sourceIds: \["uk", "ukSupplement"\]/,
+  "The single Anh-Anh row downloads both the main and supplemental sources.",
+);
+assert.doesNotMatch(
+  settings,
+  /REGIONAL_IPA_DICTIONARY\.ukSupplement\.label/,
+  "The supplemental source is not shown as a separate settings row.",
+);
+assert.match(settings, /handleDownloadRegionalIpaParts\(id, sourceIds\)/);
 assert.match(settings, /deleteOfflineRegionalIpa/);
 assert.match(dictionary, /getRegionalIpaForTerm/);
 assert.match(sources, /sources-regional-ipa/);

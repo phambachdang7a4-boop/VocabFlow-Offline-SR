@@ -866,6 +866,9 @@ export default function CoursesScreen() {
               const completedCount = completedLessons.filter((lessonId) =>
                 course.lessons.some((lesson) => lesson.id === lessonId),
               ).length;
+              const progressPercent = course.lessons.length
+                ? Math.round((completedCount / course.lessons.length) * 100)
+                : 0;
               const questionCount = course.lessons.reduce(
                 (count, lesson) => count + lesson.questions.length,
                 0,
@@ -875,7 +878,7 @@ export default function CoursesScreen() {
                   key={course.id}
                   testID={`${course.testIdPrefix}-course-card`}
                   accessibilityRole="button"
-                  accessibilityLabel={`${course.title}, ${course.lessons.length} bài học, ${questionCount} câu`}
+                  accessibilityLabel={`${course.title}, ${completedCount} trên ${course.lessons.length} bài hoàn thành, ${progressPercent} phần trăm, ${questionCount} câu`}
                   onPress={() => setActiveCourseId(course.id)}
                   style={({ pressed }) => [
                     styles.catalogCard,
@@ -905,9 +908,55 @@ export default function CoursesScreen() {
                       {course.description}
                     </Text>
                     <Text style={[styles.lessonCount, { color: c.primary }]}>
-                      {course.lessons.length} bài · {questionCount} câu ·{" "}
-                      {completedCount}/{course.lessons.length} hoàn thành
+                      {course.lessons.length} bài · {questionCount} câu
                     </Text>
+                    <View style={styles.courseProgress}>
+                      <View style={styles.courseProgressLabels}>
+                        <Text
+                          style={[
+                            styles.courseProgressText,
+                            { color: c.mutedForeground },
+                          ]}
+                        >
+                          {completedCount}/{course.lessons.length} bài hoàn thành
+                        </Text>
+                        <Text
+                          style={[
+                            styles.courseProgressPercent,
+                            { color: progressPercent === 100 ? c.success : c.primary },
+                          ]}
+                        >
+                          {progressPercent}%
+                        </Text>
+                      </View>
+                      <View
+                        testID={`${course.testIdPrefix}-course-progress`}
+                        accessible
+                        accessibilityRole="progressbar"
+                        accessibilityLabel={`Tiến độ ${course.title}`}
+                        accessibilityValue={{
+                          min: 0,
+                          max: course.lessons.length,
+                          now: completedCount,
+                        }}
+                        style={[
+                          styles.courseProgressTrack,
+                          { backgroundColor: c.muted },
+                        ]}
+                      >
+                        <View
+                          testID={`${course.testIdPrefix}-course-progress-fill`}
+                          style={[
+                            styles.courseProgressFill,
+                            {
+                              width: `${progressPercent}%`,
+                              backgroundColor:
+                                progressPercent === 100 ? c.success : c.primary,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </View>
                   </View>
                   <Feather name="chevron-right" size={22} color={c.primary} />
                 </Pressable>
@@ -1740,7 +1789,7 @@ const styles = StyleSheet.create({
   catalogCard: {
     position: "relative",
     overflow: "hidden",
-    minHeight: 126,
+    minHeight: 145,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -1814,6 +1863,16 @@ const styles = StyleSheet.create({
   lessonTitle: { fontFamily: F.b, fontSize: 15, lineHeight: 20 },
   lessonFocus: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   lessonCount: { fontFamily: F.s, fontSize: 11 },
+  courseProgress: { gap: 5, marginTop: 3 },
+  courseProgressLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  courseProgressText: { fontFamily: F.s, fontSize: 10 },
+  courseProgressPercent: { fontFamily: F.b, fontSize: 10 },
+  courseProgressTrack: { height: 6, borderRadius: 6, overflow: "hidden" },
+  courseProgressFill: { height: "100%", borderRadius: 6 },
   quiz: { gap: 16 },
   quizProgressRow: {
     flexDirection: "row",

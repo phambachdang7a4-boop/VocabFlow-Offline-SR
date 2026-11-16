@@ -147,7 +147,7 @@ export default function DictionaryScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const compactCorvi = windowWidth < 370;
   const corviArtSize = windowWidth < 420 ? (compactCorvi ? 160 : 180) : 220;
-  const corviAssistantArtSize = Math.min(280, Math.max(corviArtSize, 236));
+  const corviAssistantArtSize = windowWidth < 370 ? 140 : windowWidth < 420 ? 156 : 188;
   const reduceMotion = useReducedMotion();
   const corviBackgroundArt = c.dictPage === '#FBF7EE'
     ? require('../../assets/images/corvi-dictionary-background-light.png')
@@ -267,6 +267,28 @@ export default function DictionaryScreen() {
       }
     }
   };
+
+  const renderCorviChoice = (choice: CorviChoice) => (
+    <Pressable
+      key={choice.testID}
+      testID={choice.testID}
+      accessibilityRole="button"
+      accessibilityLabel={choice.label}
+      onPress={() => chooseCorviReply(choice.action)}
+      style={({ pressed }) => [
+        styles.corviChoice,
+        {
+          backgroundColor: pressed ? c.dictChip : c.dictPage,
+          borderColor: c.dictLine,
+          opacity: pressed ? 0.78 : 1,
+        },
+      ]}
+    >
+      <Feather name={choice.icon} size={16} color={c.dictHead} />
+      <Text style={[styles.corviAssistantChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
+      <Feather name="chevron-right" size={15} color={c.dictMuted} />
+    </Pressable>
+  );
 
   // Badge counts saved meanings per headword; it never blocks opening an entry.
   const saved = useMemo(() => {
@@ -417,49 +439,68 @@ export default function DictionaryScreen() {
               {typedCorviDialogue}
             </Text>
           </View>
-          <Pressable
-            testID="dictionary-corvi-talk"
-            accessibilityRole="button"
-            accessibilityLabel="Nghe Corvi nói thêm"
-            onPress={talkToCorvi}
-            style={({ pressed }) => [
-              styles.corviAssistantArtTouch,
-              { width: corviAssistantArtSize, height: corviAssistantArtSize, opacity: pressed ? 0.82 : 1 },
-            ]}
-          >
-            <CorviBlinkingArtwork
-              testID="dictionary-corvi-assistant-art"
-              source={corviArt}
-              backgroundSource={corviBackgroundArt}
-              artSize={corviAssistantArtSize}
-              style={{ width: corviAssistantArtSize, height: corviAssistantArtSize }}
-              gazeToUser
-            />
-          </Pressable>
         </View>
         <View testID="dictionary-corvi-options" style={styles.corviAssistantOptions}>
           <Text style={[styles.choicePrompt, { color: c.dictMuted }]}>Ngài muốn làm gì tiếp theo?</Text>
-          {CORVI_CHOICES.map((choice) => (
-            <Pressable
-              key={choice.testID}
-              testID={choice.testID}
-              accessibilityRole="button"
-              accessibilityLabel={choice.label}
-              onPress={() => chooseCorviReply(choice.action)}
-              style={({ pressed }) => [
-                styles.corviChoice,
-                {
-                  backgroundColor: pressed ? c.dictChip : c.dictPage,
-                  borderColor: c.dictLine,
-                  opacity: pressed ? 0.78 : 1,
-                },
-              ]}
-            >
-              <Feather name={choice.icon} size={18} color={c.dictHead} />
-              <Text style={[styles.corviAssistantChoiceText, { color: c.dictHead }]}>{choice.label}</Text>
-              <Feather name="chevron-right" size={17} color={c.dictMuted} />
-            </Pressable>
-          ))}
+          {compactCorvi ? (
+            <>
+              <Pressable
+                testID="dictionary-corvi-talk"
+                accessibilityRole="button"
+                accessibilityLabel="Nghe Corvi nói thêm"
+                onPress={talkToCorvi}
+                style={({ pressed }) => [
+                  styles.corviAssistantArtTouch,
+                  { width: corviAssistantArtSize, height: corviAssistantArtSize, opacity: pressed ? 0.82 : 1 },
+                ]}
+              >
+                <CorviBlinkingArtwork
+                  testID="dictionary-corvi-assistant-art"
+                  source={corviArt}
+                  backgroundSource={corviBackgroundArt}
+                  artSize={corviAssistantArtSize}
+                  style={{ width: corviAssistantArtSize, height: corviAssistantArtSize }}
+                  gazeToUser
+                />
+              </Pressable>
+              <View testID="dictionary-corvi-choice-groups-compact" style={styles.corviAssistantCompactGroups}>
+                <View testID="dictionary-corvi-choice-group-left" style={styles.corviAssistantChoiceGroup}>
+                  {CORVI_CHOICES.slice(0, 2).map(renderCorviChoice)}
+                </View>
+                <View testID="dictionary-corvi-choice-group-right" style={styles.corviAssistantChoiceGroup}>
+                  {CORVI_CHOICES.slice(2).map(renderCorviChoice)}
+                </View>
+              </View>
+            </>
+          ) : (
+            <View testID="dictionary-corvi-assistant-composition" style={styles.corviAssistantComposition}>
+              <View testID="dictionary-corvi-choice-group-left" style={styles.corviAssistantChoiceGroup}>
+                {CORVI_CHOICES.slice(0, 2).map(renderCorviChoice)}
+              </View>
+              <Pressable
+                testID="dictionary-corvi-talk"
+                accessibilityRole="button"
+                accessibilityLabel="Nghe Corvi nói thêm"
+                onPress={talkToCorvi}
+                style={({ pressed }) => [
+                  styles.corviAssistantArtTouch,
+                  { width: corviAssistantArtSize, height: corviAssistantArtSize, opacity: pressed ? 0.82 : 1 },
+                ]}
+              >
+                <CorviBlinkingArtwork
+                  testID="dictionary-corvi-assistant-art"
+                  source={corviArt}
+                  backgroundSource={corviBackgroundArt}
+                  artSize={corviAssistantArtSize}
+                  style={{ width: corviAssistantArtSize, height: corviAssistantArtSize }}
+                  gazeToUser
+                />
+              </Pressable>
+              <View testID="dictionary-corvi-choice-group-right" style={styles.corviAssistantChoiceGroup}>
+                {CORVI_CHOICES.slice(2).map(renderCorviChoice)}
+              </View>
+            </View>
+          )}
           {corviRecommendationError ? (
             <Text testID="dictionary-corvi-recommend-error" style={[styles.talkHint, { color: c.destructive }]}>
               {corviRecommendationError}
@@ -791,8 +832,11 @@ const styles = StyleSheet.create({
   corviAssistantHero: { alignItems: 'center', gap: 10 },
   corviAssistantBubble: { width: '100%', maxWidth: 520, borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },
   corviAssistantArtTouch: { alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
-  corviAssistantOptions: { width: '100%', maxWidth: 480, alignSelf: 'center', gap: 9 },
-  corviAssistantChoiceText: { flex: 1, fontFamily: F.s, fontSize: 14, lineHeight: 19 },
+  corviAssistantOptions: { width: '100%', maxWidth: 620, alignSelf: 'center', gap: 10 },
+  corviAssistantComposition: { width: '100%', minHeight: 190, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  corviAssistantChoiceGroup: { flex: 1, minWidth: 0, maxWidth: 150, gap: 8 },
+  corviAssistantCompactGroups: { width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 10 },
+  corviAssistantChoiceText: { flex: 1, minWidth: 0, fontFamily: F.s, fontSize: 12, lineHeight: 16, textAlign: 'center' },
   idleState: { flexGrow: 1, minHeight: 300, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 8 },
   corviComposition: { width: '100%', maxWidth: 620, minHeight: 202, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, flexShrink: 0 },
   corviCompositionCompact: { minHeight: 140 },
@@ -800,7 +844,7 @@ const styles = StyleSheet.create({
   idleArt: { maxWidth: '100%' },
   recommendLoading: { alignItems: 'center', gap: 8, paddingVertical: 8 },
   choicePrompt: { fontFamily: F.m, fontSize: 12, textAlign: 'center' },
-  corviChoice: { width: '100%', minHeight: 54, borderWidth: 1, borderRadius: 14, paddingHorizontal: 15, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 12 },
+  corviChoice: { width: '100%', minHeight: 50, borderWidth: 1, borderRadius: 13, paddingHorizontal: 6, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
   corviActionButton: { width: '100%', maxWidth: 320, minHeight: 48, marginTop: 2 },
   dialogueWrap: { width: '100%', maxWidth: 520, alignItems: 'center', zIndex: 1 },
   dialogueBubble: { width: '100%', borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },

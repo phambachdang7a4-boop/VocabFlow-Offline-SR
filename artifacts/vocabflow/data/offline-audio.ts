@@ -311,6 +311,10 @@ export async function deleteOfflineAudio(): Promise<void> {
       // A failed or interrupted download may leave no open SQLite connection.
     }
   }
+  if (Platform.OS === "web") {
+    await deleteDatabaseAsync(OFFLINE_AUDIO_DICTIONARY.filename);
+    return;
+  }
   const database = databaseFile();
   if (database.exists)
     await deleteDatabaseAsync(OFFLINE_AUDIO_DICTIONARY.filename);
