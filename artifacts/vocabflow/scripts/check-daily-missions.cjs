@@ -50,7 +50,13 @@ const missionCollectionTabs = readFileSync(
 );
 assert.match(
   missionScreen,
-  /<MissionCollectionTabs active=\{showingShop \? "shop" : "missions"\} \/>/,
+  /<MissionCollectionTabs active="shop" \/>/,
+  "The shop tab remains selected in the shop panel.",
+);
+assert.match(
+  missionScreen,
+  /<MissionCollectionTabs active="missions" \/>/,
+  "The missions tab remains selected in the daily-missions panel.",
 );
 assert.match(
   collectionScreen,

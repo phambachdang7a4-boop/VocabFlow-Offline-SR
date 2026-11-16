@@ -5,6 +5,7 @@
 - [Nhập SQLite WAL](sqlite-wal-import.md) — Tệp đọc được trên đĩa vẫn có thể lỗi 14 khi deserialize; kiểm bằng WASM thật, xác minh hash gốc trước chuẩn hóa.
 - [Tab Expo Router](expo-router-tabs.md) — SDK hiện tại dùng anchor và backBehavior, không nhận initialRouteName trực tiếp trên Tabs như ví dụ cũ.
 - [Lịch sử thống kê ôn tập](review-statistics-history.md) — Không thể khôi phục chính xác lượt ôn cũ; không giả lập dữ liệu lịch sử.
+- [Chế độ ôn tập](review-modes.md) — Timebound mặc định 10 phút thời gian hoạt động; Speed Mode bỏ phản hồi nhưng vẫn lưu SRS.
 - [Tần suất cụm từ](collocation-frequency.md) — Chỉ xếp theo số đếm cụm chính xác; không suy ra tần suất từ thành tố.
 - [Gói audio offline](offline-audio-packaging.md) — Từ điển âm thanh lớn được tải riêng từ App Storage, không nhúng vào APK.
 - [Đối chiếu đại từ trong mệnh đề IELTS](ielts-pronoun-clause-checks.md) — Chỉ so sánh các chủ ngữ tường minh khi hai câu có số mệnh đề nhận diện tương ứng.

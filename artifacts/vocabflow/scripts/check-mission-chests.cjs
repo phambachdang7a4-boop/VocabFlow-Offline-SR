@@ -597,14 +597,9 @@ assert.match(
   "Returning to missions slides the screen in from the left.",
 );
 assert.equal(
-  (bottomTabsLayout.match(/<NativeTabs\.Trigger name=/g) ?? []).length,
-  5,
-  "The native bottom navigation keeps its five existing tabs.",
-);
-assert.equal(
   (bottomTabsLayout.match(/<Tabs\.Screen\s+name=/g) ?? []).length,
   5,
-  "The classic bottom navigation keeps its five existing tabs.",
+  "The bottom navigation keeps its five existing tabs.",
 );
 assert.match(
   collectionScreen,

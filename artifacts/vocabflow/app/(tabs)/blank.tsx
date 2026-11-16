@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -99,9 +100,37 @@ export default function BlankScreen() {
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <MissionCollectionTabs active={showingShop ? "shop" : "missions"} />
-            {showingShop ? <MissionShop /> : (
+            {showingShop ? (
+              <>
+                <MissionCollectionTabs active="shop" />
+                <MissionShop />
+              </>
+            ) : (
             <>
+            <View style={styles.missionHeading}>
+              <View style={styles.missionHeadingCopy}>
+                <Text style={[styles.missionEyebrow, { color: c.headerMuted }]}>
+                  VOCABFLOW · HÀNH TRÌNH HÔM NAY
+                </Text>
+                <Text style={[styles.sectionTitle, { color: c.foreground }]}>
+                  Ba nhiệm vụ hôm nay
+                </Text>
+                <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
+                  Mỗi ngày có nhiệm vụ mới
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.missionHeadingBadge,
+                  { backgroundColor: c.headerButton, borderColor: c.border },
+                ]}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                <Feather name="star" size={20} color={c.accent} />
+              </View>
+            </View>
+            <MissionCollectionTabs active="missions" />
             {error ? (
               <ErrorBanner message={error} onRetry={() => void load()} />
             ) : null}
@@ -119,6 +148,16 @@ export default function BlankScreen() {
                 },
               ]}
             >
+              <LinearGradient
+                colors={
+                  c.background === "#1E2130"
+                    ? [c.headerButton, c.vocabCard, c.vocabCardPressed]
+                    : [c.card, c.card, c.card]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
               <MaterialSheen radius={20} />
               <View style={[styles.walletIcon, { backgroundColor: c.accent }]}>
                 <Feather name="award" size={24} color={c.buttonForeground} />
@@ -143,15 +182,6 @@ export default function BlankScreen() {
               </View>
               <Text style={[styles.walletDate, { color: c.mutedForeground }]}>
                 Hôm nay
-              </Text>
-            </View>
-
-            <View style={styles.sectionHeading}>
-              <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-                Ba nhiệm vụ hôm nay
-              </Text>
-              <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
-                Mỗi ngày có nhiệm vụ mới
               </Text>
             </View>
 
@@ -213,9 +243,22 @@ export default function BlankScreen() {
                         shadowOpacity: 0.12,
                         shadowRadius: 6,
                         elevation: 2,
+                        overflow: "hidden",
                       },
                     ]}
                   >
+                    {!finished ? (
+                      <LinearGradient
+                        colors={
+                          c.background === "#1E2130"
+                            ? [c.headerButton, c.vocabCard, c.vocabCardPressed]
+                            : [c.card, c.card, c.card]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                    ) : null}
                     <MaterialSheen radius={20} />
                     <View style={styles.missionTop}>
                       <View
@@ -459,25 +502,49 @@ function ChestCard({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 18, gap: 12 },
+  missionHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 2,
+    marginBottom: 1,
+  },
+  missionHeadingCopy: { flex: 1, minWidth: 0, gap: 3 },
+  missionEyebrow: {
+    fontFamily: F.s,
+    fontSize: 9,
+    letterSpacing: 1.35,
+  },
+  missionHeadingBadge: {
+    width: 42,
+    height: 42,
+    flexShrink: 0,
+    borderWidth: 1,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   walletCard: {
     position: "relative",
     borderWidth: 1,
     borderRadius: 20,
-    padding: 16,
+    padding: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
+    overflow: "hidden",
   },
   walletIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
-  walletText: { flex: 1, gap: 3 },
+  walletText: { flex: 1, minWidth: 0, gap: 3 },
   walletLabel: { fontFamily: F.s, fontSize: 10, letterSpacing: 1.2 },
-  walletValue: { fontFamily: F.b, fontSize: 20 },
+  walletValue: { fontFamily: F.b, fontSize: 18 },
   walletDate: { fontFamily: F.m, fontSize: 12 },
   sectionHeading: { gap: 2, marginTop: 6, marginBottom: 2 },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
@@ -487,19 +554,20 @@ const styles = StyleSheet.create({
   missionCard: {
     position: "relative",
     borderWidth: 1,
-    borderRadius: 20,
-    padding: 15,
-    gap: 13,
+    borderRadius: 22,
+    padding: 14,
+    gap: 12,
   },
-  missionTop: { flexDirection: "row", alignItems: "center", gap: 11 },
+  missionTop: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   missionIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  missionCopy: { flex: 1, gap: 3 },
+  missionCopy: { flex: 1, minWidth: 0, gap: 3 },
   level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },
   missionTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   missionDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
@@ -507,8 +575,8 @@ const styles = StyleSheet.create({
   rewardPill: {
     position: "relative",
     overflow: "hidden",
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderWidth: 1.5,
     borderRadius: 15,
     alignItems: "center",
