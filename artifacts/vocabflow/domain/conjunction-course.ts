@@ -14,7 +14,7 @@ export interface ConjunctionCourseLesson {
 }
 
 export const CONJUNCTION_COURSE_ID = "subordinating-conjunctions-v1";
-export const CONJUNCTION_COURSE_TITLE = "Liên từ trong câu";
+export const CONJUNCTION_COURSE_TITLE = "Cấu trúc câu & từ nối";
 
 export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
   {

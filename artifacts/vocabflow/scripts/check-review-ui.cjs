@@ -261,6 +261,11 @@ async function startReview(screen) {
   mixedDue.unmount();
 
   const screen = mount('../app/(tabs)/review.tsx');
+  assert.equal(
+    screen.tabOptions.length,
+    0,
+    'Idle review keeps the parent tab bar style so all tab labels remain visible.',
+  );
   const settingsButton = () => screen.byId('review-open-settings');
   assert.equal(settingsButton().props.accessibilityLabel, 'Mở cài đặt');
   settingsButton().props.onPress();

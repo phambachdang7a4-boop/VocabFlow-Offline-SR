@@ -52,7 +52,7 @@ export const STONE_INVESTMENT_PLANS: Record<
 export const FORCE_MAJEURE_RATES: Record<StoneInvestmentPlan, number> = {
   safe: 1,
   balanced: 2,
-  risky: 5,
+  risky: 3,
 };
 
 export function investmentRate(

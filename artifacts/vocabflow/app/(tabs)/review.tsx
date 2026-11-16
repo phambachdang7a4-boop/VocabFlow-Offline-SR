@@ -158,9 +158,8 @@ export default function ReviewScreen() {
   );
 
   useEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: inSession ? { display: "none" } : undefined,
-    });
+    if (!inSession) return;
+    navigation.setOptions({ tabBarStyle: { display: "none" } });
     return () => navigation.setOptions({ tabBarStyle: undefined });
   }, [navigation, inSession]);
 

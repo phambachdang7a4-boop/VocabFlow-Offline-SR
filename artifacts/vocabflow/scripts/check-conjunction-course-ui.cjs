@@ -41,6 +41,9 @@ const phrasalVerbCourseDomain = loadTs(
     ),
   },
 );
+const combinedLessonCount =
+  courseDomain.CONJUNCTION_COURSE_LESSONS.length +
+  linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS.length;
 const courseWordSelectionDomain = loadTs(
   join(__dirname, "../domain/course-word-selection.ts"),
 );
@@ -93,7 +96,7 @@ function mount(initialSavedWords = [], options = {}) {
   let cursor = 0;
   let dirty = true;
   let tree;
-  const completed = [];
+  const completed = [...(options.completedLessons ?? [])];
   const savedWords = [...initialSavedWords];
   const savedWordInputs = [];
   const savedWordBatches = [];
@@ -224,6 +227,19 @@ function mount(initialSavedWords = [], options = {}) {
 }
 
 (async () => {
+  const retainedLinkingProgress = mount([], {
+    completedLessons: [
+      linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS[0].id,
+    ],
+  });
+  await retainedLinkingProgress.focus();
+  assert.deepEqual(
+    retainedLinkingProgress.byId("conjunction-course-progress").props
+      .accessibilityValue,
+    { min: 0, max: combinedLessonCount, now: 1 },
+    "Previously completed linking-adverb lessons remain in merged course progress.",
+  );
+
   const screen = mount();
   const forcedShuffle = screen.shuffleLessonChoices(
     [
@@ -254,18 +270,27 @@ function mount(initialSavedWords = [], options = {}) {
   await screen.focus();
   assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
-  assert.ok(screen.byId("linking-adverb-course-card"));
+  assert.equal(
+    screen.byId("linking-adverb-course-card"),
+    undefined,
+    "Linking adverbs no longer appear as a separate course.",
+  );
+  assert.match(
+    screen.byId("conjunction-course-card").props.accessibilityLabel,
+    /^Cấu trúc câu & từ nối,/,
+  );
   assert.deepEqual(
     screen.byId("conjunction-course-progress").props.accessibilityValue,
     {
       min: 0,
-      max: courseDomain.CONJUNCTION_COURSE_LESSONS.length,
+      max: combinedLessonCount,
       now: 0,
     },
-    "Course progress starts at zero when no lessons are complete.",
+    "The merged course progress includes lessons from both former courses.",
   );
   screen.byId("conjunction-course-card").props.onPress();
   assert.ok(screen.byId("conjunction-lesson-1"));
+  assert.ok(screen.byId(`conjunction-lesson-${combinedLessonCount}`));
   const lesson = courseDomain.CONJUNCTION_COURSE_LESSONS[0];
   const simileQuestion = courseDomain.CONJUNCTION_COURSE_LESSONS
     .flatMap((item) => item.questions)
@@ -349,7 +374,7 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId("conjunction-course-progress").props.accessibilityValue,
     {
       min: 0,
-      max: courseDomain.CONJUNCTION_COURSE_LESSONS.length,
+      max: combinedLessonCount,
       now: 1,
     },
     "Finishing a lesson updates its course progress immediately.",
@@ -398,30 +423,39 @@ function mount(initialSavedWords = [], options = {}) {
   );
   screen.byId("idioms-leave-lesson").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
-  screen.byId("linking-adverb-course-card").props.onPress();
+  screen.byId("conjunction-course-card").props.onPress();
   const linkingLesson = linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS[0];
-  screen.byId("linking-adverb-lesson-1").props.onPress();
+  const firstLinkingLessonIndex =
+    courseDomain.CONJUNCTION_COURSE_LESSONS.length + 1;
+  screen
+    .byId(`conjunction-lesson-${firstLinkingLessonIndex}`)
+    .props.onPress();
   for (let index = 0; index < linkingLesson.questions.length; index++) {
     const question = linkingLesson.questions[index];
     assert.deepEqual(
-      screen.byId("linking-adverb-question-prompt").props.children,
+      screen.byId("conjunction-question-prompt").props.children,
       [question.prompt],
     );
     screen
-      .byId(`linking-adverb-choice-${question.term}`)
+      .byId(`conjunction-choice-${question.term}`)
       .props.onPress();
-    assert.ok(screen.byId("linking-adverb-answer-feedback"));
+    assert.ok(screen.byId("conjunction-answer-feedback"));
     assert.equal(
-      screen.byId("linking-adverb-correct-popup").props.visible,
+      screen.byId("conjunction-correct-popup").props.visible,
       true,
       "Correct linking-adverb answers open the success popup.",
     );
-    screen.byId("linking-adverb-next").props.onPress();
+    screen.byId("conjunction-next").props.onPress();
     await screen.settle();
   }
-  assert.ok(screen.byId("linking-adverb-lesson-complete"));
-  screen.byId("linking-adverb-return").props.onPress();
+  assert.ok(screen.byId("conjunction-lesson-complete"));
+  screen.byId("conjunction-return").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
+  assert.deepEqual(
+    screen.byId("conjunction-course-progress").props.accessibilityValue,
+    { min: 0, max: combinedLessonCount, now: 2 },
+    "Progress from both former courses contributes to the merged course.",
+  );
   assert.ok(screen.byId("ielts-course-card"));
   screen.byId("ielts-course-card").props.onPress();
   const ieltsLesson = ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS[0];

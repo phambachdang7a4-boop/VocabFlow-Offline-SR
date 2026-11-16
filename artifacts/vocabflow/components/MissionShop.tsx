@@ -205,7 +205,7 @@ export function MissionShop() {
                   </Text>
                   <Text
                     style={[styles.offerDescription, { color: c.mutedForeground }]}
-                    numberOfLines={2}
+                    numberOfLines={3}
                     adjustsFontSizeToFit
                   >
                     {product.description}
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: "2%",
     right: "2%",
-    top: "71%",
+    top: "60%",
     bottom: "2%",
     alignItems: "center",
     justifyContent: "center",
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: "2%",
     right: "2%",
-    top: "71%",
+    top: "60%",
     bottom: "2%",
     flexDirection: "row",
     gap: 4,
@@ -373,10 +373,12 @@ const styles = StyleSheet.create({
     minWidth: 0,
     borderWidth: 1,
     borderRadius: 10,
+    overflow: "hidden",
     paddingHorizontal: 5,
-    paddingVertical: 6,
+    paddingVertical: 8,
     alignItems: "center",
-    gap: 4,
+    justifyContent: "space-between",
+    gap: 3,
   },
   fragmentIcon: {
     width: 30,
@@ -386,23 +388,46 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   offerTitle: {
-    minHeight: 24,
+    height: 28,
+    width: "100%",
     fontFamily: F.b,
     fontSize: 10,
     lineHeight: 12,
     textAlign: "center",
+    textAlignVertical: "center",
   },
-  offerDescription: { fontFamily: F.r, fontSize: 8, lineHeight: 10, textAlign: "center" },
-  offerMeta: { fontFamily: F.r, fontSize: 8, lineHeight: 10, textAlign: "center" },
+  offerDescription: {
+    height: 38,
+    width: "100%",
+    fontFamily: F.r,
+    fontSize: 8,
+    lineHeight: 10,
+    textAlign: "center",
+    textAlignVertical: "center",
+  },
+  offerMeta: {
+    height: 22,
+    width: "100%",
+    fontFamily: F.r,
+    fontSize: 8,
+    lineHeight: 10,
+    textAlign: "center",
+    textAlignVertical: "center",
+  },
   discountBadge: {
-    minHeight: 18,
+    height: 18,
+    minWidth: 43,
     paddingHorizontal: 7,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  discountPlaceholder: { minHeight: 18 },
-  priceColumn: { minHeight: 28, alignItems: "center", justifyContent: "center" },
+  discountPlaceholder: { height: 18 },
+  priceColumn: {
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   discount: { fontFamily: F.b, fontSize: 9 },
   oldPrice: {
     fontFamily: F.r,
@@ -412,7 +437,7 @@ const styles = StyleSheet.create({
   price: { fontFamily: F.b, fontSize: 9, textAlign: "center" },
   buyButton: {
     width: "100%",
-    minHeight: 28,
+    height: 32,
     paddingHorizontal: 4,
     borderWidth: 1,
     borderRadius: 8,

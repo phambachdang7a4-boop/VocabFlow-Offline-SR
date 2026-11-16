@@ -135,8 +135,15 @@ assert.equal(
   "Each daily product is rendered once as an image overlay.",
 );
 assert.equal(
-  [...rootTabs.matchAll(/<NativeTabs\.Trigger name=/g)].length,
+  [...rootTabs.matchAll(/<Tabs\.Screen\s+name=/g)].length,
   5,
   "Adding the shop does not add a sixth bottom tab.",
 );
+assert.match(
+  storeScreen,
+  /offerGrid:\s*\{[\s\S]*?top:\s*"60%"[\s\S]*?bottom:\s*"2%"/,
+  "Daily offer cards cover the static sample items in the artwork.",
+);
+assert.match(storeScreen, /overflow:\s*"hidden"/);
+assert.match(storeScreen, /numberOfLines=\{3\}/);
 console.log("Daily mission shop offers, validation, and navigation passed.");

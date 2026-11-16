@@ -26,7 +26,6 @@ import {
   LINKING_ADVERB_COURSE_ENTRIES,
   LINKING_ADVERB_COURSE_ID,
   LINKING_ADVERB_COURSE_LESSONS,
-  LINKING_ADVERB_COURSE_TITLE,
 } from "@/domain/linking-adverb-course";
 import {
   IELTS_TOPIC_COURSE_ENTRIES,
@@ -152,6 +151,7 @@ type CourseCatalogItem = {
   wordCount?: number;
   unitLabel?: string;
   topicCount?: number;
+  progressPrefixes?: readonly string[];
 };
 
 const COURSE_CATALOG: readonly CourseCatalogItem[] = [
@@ -182,21 +182,18 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: CONJUNCTION_COURSE_ID,
     title: CONJUNCTION_COURSE_TITLE,
     description:
-      "Học 18 cụm liên từ phụ thuộc qua câu ví dụ có ngữ cảnh rõ ràng. Mỗi bài giúp bạn phân biệt thời gian, điều kiện và mục đích.",
-    lessons: CONJUNCTION_COURSE_LESSONS,
-    entriesByTerm: CONJUNCTION_COURSE_ENTRY_BY_TERM,
+      `Tổng hợp ${CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(LINKING_ADVERB_COURSE_ENTRIES).length} cụm liên từ phụ thuộc và trạng từ liên kết, qua ví dụ về thời gian, điều kiện, nguyên nhân, kết quả, bổ sung và đối lập.`,
+    lessons: [
+      ...CONJUNCTION_COURSE_LESSONS,
+      ...LINKING_ADVERB_COURSE_LESSONS,
+    ],
+    entriesByTerm: new Map<string, CourseAnswer>([
+      ...CONJUNCTION_COURSE_ENTRY_BY_TERM.entries(),
+      ...Object.entries(LINKING_ADVERB_COURSE_ENTRIES),
+    ]),
+    progressPrefixes: [CONJUNCTION_COURSE_ID, LINKING_ADVERB_COURSE_ID],
     icon: "git-merge",
     testIdPrefix: "conjunction",
-  },
-  {
-    id: LINKING_ADVERB_COURSE_ID,
-    title: LINKING_ADVERB_COURSE_TITLE,
-    description:
-      "Luyện 17 trạng từ liên kết qua ví dụ ngắn, dễ nhận ra cách bổ sung ý, thể hiện đối lập, thời gian và kết quả.",
-    lessons: LINKING_ADVERB_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(LINKING_ADVERB_COURSE_ENTRIES)),
-    icon: "align-left",
-    testIdPrefix: "linking-adverb",
   },
   {
     id: IELTS_TOPIC_COURSE_ID,
@@ -301,10 +298,11 @@ export default function CoursesScreen() {
   const loadProgress = useCallback(async () => {
     setLoading(true);
     try {
+      const progressPrefixes = COURSE_CATALOG.flatMap(
+        (course) => course.progressPrefixes ?? [course.id],
+      );
       const progress = await Promise.all(
-        COURSE_CATALOG.map((course) =>
-          getCourseLessonCompletions(course.id),
-        ),
+        progressPrefixes.map((prefix) => getCourseLessonCompletions(prefix)),
       );
       setCompletedLessons(progress.flat());
       setError(null);

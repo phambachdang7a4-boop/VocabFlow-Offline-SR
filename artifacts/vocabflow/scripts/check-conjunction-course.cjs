@@ -192,7 +192,7 @@ async function checkCourseContentAndProgress() {
   }
   assert.equal(courseTerms.length, entries.size, "Every new entry appears in one exercise.");
   assert.equal(new Set(courseTerms).size, entries.size);
-  assert.equal(course.CONJUNCTION_COURSE_TITLE, "Liên từ trong câu");
+  assert.equal(course.CONJUNCTION_COURSE_TITLE, "Cấu trúc câu & từ nối");
   assert.equal(course.CONJUNCTION_COURSE_ENTRY_BY_TERM.size, entries.size);
   for (const entry of course.CONJUNCTION_COURSE_ENTRY_BY_TERM.values()) {
     assert.match(entry.definition, /Ghi chú:/, `${entry.term} explains related terms.`);

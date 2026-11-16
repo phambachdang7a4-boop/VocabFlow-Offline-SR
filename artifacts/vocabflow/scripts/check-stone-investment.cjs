@@ -58,7 +58,7 @@ assert.equal(
 assert.deepEqual(stoneInvestments.FORCE_MAJEURE_RATES, {
   safe: 1,
   balanced: 2,
-  risky: 5,
+  risky: 3,
 });
 for (const plan of ["safe", "balanced", "risky"]) {
   let hitId = null;
