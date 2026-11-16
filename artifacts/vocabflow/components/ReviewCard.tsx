@@ -388,7 +388,9 @@ export function ReviewCard({
     Array.from(word.term)
       .map((char) => (/[\p{L}\p{N}]/u.test(char) ? "_" : char))
       .join("");
-  const dialogueAnswer = exercise.kind === "idiom-dialogue";
+  const dialogueAnswer =
+    exercise.kind === "idiom-dialogue" ||
+    exercise.kind === "idiom-listening";
   const sentenceAnswer = exercise.kind === "cloze" || dialogueAnswer;
   const choiceAnswer = exercise.kind === "multiple-choice";
   const characters = Array.from(displayReviewAnswer(word.term));

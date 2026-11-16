@@ -239,6 +239,19 @@ async function startReview(screen) {
     'Idiom answers use the same normal review result and SRS path.');
   idiomMode.unmount();
 
+  const listeningIdiom = { ...savedIdiom, id: 84, reviewCount: 1 };
+  const idiomListeningMode = mount('../app/(tabs)/review.tsx', {}, {
+    words: [listeningIdiom],
+  });
+  idiomListeningMode.byId('review-idiom-start').props.onPress();
+  await idiomListeningMode.settle();
+  assert.equal(
+    idiomListeningMode.byType('ReviewCard').props.exercise.kind,
+    'idiom-listening',
+    'The next idiom review alternates from dialogue recall to listening.',
+  );
+  idiomListeningMode.unmount();
+
   const idiomOnly = mount('../app/(tabs)/review.tsx', {}, {
     words: [savedIdiom],
   });
@@ -907,6 +920,23 @@ async function startReview(screen) {
   assert.ok(find(idiomCard.byId('review-result-details'), node =>
     node.type === 'Text' && (Array.isArray(node.props.children) ? node.props.children.join('') : node.props.children) === savedIdiom.meaning),
   'The idiom meaning is shown after answering.');
+  const idiomListeningCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(savedIdiom),
+    exercise: exercises.createIdiomListeningExercise(savedIdiom),
+  });
+  assert.ok(idiomListeningCard.byId('review-dialogue-question'));
+  assert.ok(idiomListeningCard.byId('review-speak-word'),
+    'The listening exercise exposes the existing pronunciation control.');
+  assert.ok(find(idiomListeningCard.byId('review-dialogue-question'), node =>
+    node.type === 'Text' &&
+    String(node.props?.children ?? '').includes('Nhấn nút loa để nghe idiom')),
+  'The listening prompt tells the learner to listen before typing.');
+  assert.ok(
+    find(idiomListeningCard.byId('review-dialogue-reply'), (node) =>
+      node.props?.testID === 'review-answer-input',
+    ),
+    'The reply bubble provides an answer field for the heard idiom.',
+  );
   const freezeCalls = [];
   const freezeCard = mount('../components/ReviewCard.tsx', makeProps(), {
     setWordFrozen: async (...args) => { freezeCalls.push(args); },

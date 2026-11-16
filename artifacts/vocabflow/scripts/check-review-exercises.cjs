@@ -91,6 +91,15 @@ const idiomWord = {
   example: 'She told a joke to break the ice.',
 };
 assert.equal(exercises.isIdiomVocabularyWord(idiomWord), true);
+assert.equal(
+  exercises.isIdiomVocabularyWord({
+    ...word,
+    meaning: 'phá tan bầu không khí ngượng ngùng',
+    note: 'Từ loại: idiom',
+  }),
+  true,
+  'Course-saved idioms are recognized through their POS note.',
+);
 assert.equal(exercises.isIdiomVocabularyWord({ ...word, meaning: '(verb) break the ice' }), false);
 const idiomDialogue = exercises.createIdiomDialogueExercise(idiomWord);
 assert.equal(idiomDialogue.kind, 'idiom-dialogue');
@@ -106,10 +115,28 @@ assert.equal(idiomFallback.kind, 'idiom-dialogue');
 assert.equal(idiomFallback.prompt, 'Mình đoán là ________.');
 assert.match(idiomFallback.dialoguePrompt, /idiom/u);
 assert.equal(idiomFallback.fallback, true);
+const idiomListening = exercises.createIdiomListeningExercise(idiomWord);
+assert.equal(idiomListening.kind, 'idiom-listening');
+assert.match(idiomListening.dialoguePrompt, /nghe idiom/i);
+assert.equal(idiomListening.prompt, 'Mình nghe được: ________');
+assert.equal(idiomListening.hint, null, 'Listening does not reveal answer letters.');
+assert.equal(
+  exercises.createIdiomReviewExercise({ ...idiomWord, reviewCount: 0 }).kind,
+  'idiom-dialogue',
+);
+assert.equal(
+  exercises.createIdiomReviewExercise({ ...idiomWord, reviewCount: 1 }).kind,
+  'idiom-listening',
+);
 assert.throws(
   () => exercises.createIdiomDialogueExercise(word),
   /đánh dấu là idiom/,
   'Do not turn ordinary saved words into idiom dialogue questions.',
+);
+assert.throws(
+  () => exercises.createIdiomListeningExercise(word),
+  /đánh dấu là idiom/,
+  'Do not create listening exercises for ordinary saved words.',
 );
 const cloze = exercises.createReviewExercise(word, 1, 0, notebookWords);
 assert.equal(cloze.kind, 'multiple-choice');

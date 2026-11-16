@@ -383,6 +383,7 @@ function mount(initialSavedWords = [], options = {}) {
   const idiomLesson = idiomCourseDomain.IDIOM_COURSE_LESSONS[0];
   assert.ok(screen.byId("idioms-lesson-1"));
   screen.byId("idioms-lesson-1").props.onPress();
+  const wordsSavedBeforeIdioms = screen.savedWordInputs.length;
   const idiomQuestion = idiomLesson.questions[0];
   assert.deepEqual(
     screen.byId("idioms-question-prompt").props.children,
@@ -421,7 +422,42 @@ function mount(initialSavedWords = [], options = {}) {
     [idiomLesson.questions[1].prompt],
     "The learner advances through the offline idiom lesson.",
   );
-  screen.byId("idioms-leave-lesson").props.onPress();
+  for (let index = 1; index < idiomLesson.questions.length; index++) {
+    const question = idiomLesson.questions[index];
+    assert.deepEqual(
+      screen.byId("idioms-question-prompt").props.children,
+      [question.prompt],
+    );
+    const selectedChoice =
+      index === 1
+        ? question.choices.find((choice) => choice !== question.term)
+        : question.term;
+    screen.byId(`idioms-choice-${selectedChoice}`).props.onPress();
+    screen.byId("idioms-next").props.onPress();
+    await screen.settle();
+  }
+  assert.ok(screen.byId("idioms-lesson-complete"));
+  assert.equal(
+    screen.savedWordInputs.length - wordsSavedBeforeIdioms,
+    idiomLesson.questions.length,
+    "Completing an idiom lesson automatically adds every term, even when an answer was wrong.",
+  );
+  assert.ok(
+    screen.savedWordInputs
+      .slice(wordsSavedBeforeIdioms)
+      .every((input) => input.note === "Từ loại: idiom"),
+    "Automatically saved course idioms carry a marker so review can identify them.",
+  );
+  assert.equal(
+    screen.byId("idioms-word-selection"),
+    undefined,
+    "Successful automatic saving replaces the manual word picker.",
+  );
+  assert.match(
+    textContent(screen.byId("idioms-words-added-message")),
+    /tự thêm .* idiom/i,
+  );
+  screen.byId("idioms-return").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
   screen.byId("conjunction-course-card").props.onPress();
   const linkingLesson = linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS[0];
@@ -456,6 +492,35 @@ function mount(initialSavedWords = [], options = {}) {
     { min: 0, max: combinedLessonCount, now: 2 },
     "Progress from both former courses contributes to the merged course.",
   );
+
+  let idiomSaveAttempts = 0;
+  const idiomSaveRetryScreen = mount([], {
+    saveWordsBehavior: async (_inputs, _onProgress, commit) => {
+      idiomSaveAttempts += 1;
+      if (idiomSaveAttempts === 1) throw new Error("temporary save failure");
+      await commit();
+    },
+  });
+  await idiomSaveRetryScreen.focus();
+  idiomSaveRetryScreen.byId("idioms-course-card").props.onPress();
+  idiomSaveRetryScreen.byId("idioms-lesson-1").props.onPress();
+  for (const question of idiomLesson.questions) {
+    idiomSaveRetryScreen
+      .byId(`idioms-choice-${question.term}`)
+      .props.onPress();
+    idiomSaveRetryScreen.byId("idioms-next").props.onPress();
+    await idiomSaveRetryScreen.settle();
+  }
+  assert.ok(idiomSaveRetryScreen.byId("course-error"));
+  assert.ok(idiomSaveRetryScreen.byId("idioms-word-selection"),
+    "A failed automatic save leaves a manual retry path.");
+  idiomSaveRetryScreen
+    .byId("idioms-add-selected-words")
+    .props.onPress();
+  await idiomSaveRetryScreen.settle();
+  assert.equal(idiomSaveAttempts, 2);
+  assert.equal(idiomSaveRetryScreen.savedWordInputs.length, idiomLesson.questions.length);
+  assert.equal(idiomSaveRetryScreen.byId("idioms-word-selection"), undefined);
   assert.ok(screen.byId("ielts-course-card"));
   screen.byId("ielts-course-card").props.onPress();
   const ieltsLesson = ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS[0];

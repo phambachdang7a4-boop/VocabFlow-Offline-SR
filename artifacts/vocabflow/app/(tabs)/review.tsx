@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import {
   createReviewExercise,
-  createIdiomDialogueExercise,
+  createIdiomReviewExercise,
   isIdiomVocabularyWord,
   type ReviewExercise,
 } from "@/domain/review-exercises";
@@ -279,7 +279,7 @@ export default function ReviewScreen() {
         word: first,
         exercise:
           mode === "idiom"
-            ? createIdiomDialogueExercise(first)
+            ? createIdiomReviewExercise(first)
             : createReviewExercise(first, 0, first.reviewCount, words),
       });
     } catch {
@@ -489,7 +489,7 @@ export default function ReviewScreen() {
       word: w,
       exercise:
         s.mode === "idiom"
-          ? createIdiomDialogueExercise(w)
+            ? createIdiomReviewExercise(w)
           : createReviewExercise(w, s.index + 1, s.formatOffset, words),
     });
   };
@@ -519,7 +519,7 @@ export default function ReviewScreen() {
         {dueIdioms.length ? (
           <Button
             testID="review-idiom-start"
-            label={`Ôn idiom qua hội thoại · ${dueIdioms.length} từ`}
+            label={`Ôn idiom · hội thoại và nghe · ${dueIdioms.length} từ`}
             icon="message-circle"
             variant="ghost"
             onPress={() => {

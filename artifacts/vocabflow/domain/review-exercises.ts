@@ -2,7 +2,12 @@ import type { VocabularyWord } from '../data/types';
 import { exampleSegments } from './dictionary';
 
 export interface ReviewExercise {
-  kind: 'meaning' | 'cloze' | 'multiple-choice' | 'idiom-dialogue';
+  kind:
+    | 'meaning'
+    | 'cloze'
+    | 'multiple-choice'
+    | 'idiom-dialogue'
+    | 'idiom-listening';
   prompt: string;
   fallback: boolean;
   fallbackNote?: string;
@@ -49,9 +54,15 @@ export function checkReviewChoiceAnswer(answer: string, term: string): boolean {
   return !!actual && actual === normalizeReviewChoice(term);
 }
 
-/** Dictionary idioms are saved with their POS marker at the start of meaning. */
-export function isIdiomVocabularyWord(word: Pick<VocabularyWord, 'meaning'>): boolean {
-  return /^\s*\(idioms?\b[^)]*\)\s*/iu.test(word.meaning);
+/** Idioms may be tagged in their meaning or in course-generated POS notes. */
+export function isIdiomVocabularyWord(
+  word: Pick<VocabularyWord, 'meaning'> &
+    Partial<Pick<VocabularyWord, 'note'>>,
+): boolean {
+  return (
+    /^\s*\(idioms?\b[^)]*\)\s*/iu.test(word.meaning) ||
+    /\btừ loại\s*:\s*idioms?\b/iu.test(word.note ?? '')
+  );
 }
 
 function hash(value: string): number {
@@ -193,4 +204,32 @@ export function createIdiomDialogueExercise(
       : 'Chưa có câu ví dụ phù hợp; dùng câu hội thoại ngắn để luyện idiom.',
     hint: letterHint(word),
   };
+}
+
+export function createIdiomListeningExercise(
+  word: VocabularyWord,
+): ReviewExercise {
+  if (!isIdiomVocabularyWord(word)) {
+    throw new Error('Chỉ có thể tạo bài nghe cho từ được đánh dấu là idiom.');
+  }
+  return {
+    kind: 'idiom-listening',
+    dialoguePrompt:
+      'Nhấn nút loa để nghe idiom, rồi gõ lại cụm từ bạn nghe được.',
+    prompt: 'Mình nghe được: ________',
+    fallback: false,
+    hint: null,
+  };
+}
+
+/** Keep both dialogue recall and listening in rotation for each saved idiom. */
+export function createIdiomReviewExercise(
+  word: VocabularyWord,
+): ReviewExercise {
+  if (!isIdiomVocabularyWord(word)) {
+    throw new Error('Chỉ có thể ôn theo hội thoại hoặc nghe với idiom.');
+  }
+  return word.reviewCount % 2 === 0
+    ? createIdiomDialogueExercise(word)
+    : createIdiomListeningExercise(word);
 }

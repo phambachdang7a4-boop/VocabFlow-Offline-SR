@@ -140,6 +140,18 @@ type CourseAnswer = {
   partOfSpeech?: string;
 };
 
+function toCourseWordSaveInput(candidate: CourseWordCandidate) {
+  return {
+    term: candidate.term,
+    meaning: candidate.meaning,
+    ipa: candidate.ipa,
+    example: candidate.example,
+    note: candidate.partOfSpeech
+      ? `Từ loại: ${candidate.partOfSpeech}`
+      : "",
+  };
+}
+
 type CourseCatalogItem = {
   id: string;
   title: string;
@@ -161,7 +173,12 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     description:
       `Học ${IDIOM_COURSE_WORD_COUNT.toLocaleString("vi-VN")} thành ngữ có nghĩa tiếng Việt từ từ điển offline, qua câu ví dụ và bài chọn cụm phù hợp.`,
     lessons: IDIOM_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(IDIOM_COURSE_ENTRIES)),
+    entriesByTerm: new Map<string, CourseAnswer>(
+      Object.entries(IDIOM_COURSE_ENTRIES).map(([term, entry]) => [
+        term,
+        { ...entry, partOfSpeech: "idiom" },
+      ]),
+    ),
     icon: "book-open",
     testIdPrefix: "idioms",
     wordCount: IDIOM_COURSE_WORD_COUNT,
@@ -256,6 +273,8 @@ export default function CoursesScreen() {
   const [courseWordsSavedMessage, setCourseWordsSavedMessage] = useState<
     string | null
   >(null);
+  const [idiomsSavedAutomatically, setIdiomsSavedAutomatically] =
+    useState(false);
   const [bulkAddConfirmationOpen, setBulkAddConfirmationOpen] = useState(false);
   const [bulkAddProgress, setBulkAddProgress] = useState<{
     completed: number;
@@ -332,6 +351,7 @@ export default function CoursesScreen() {
     setFinishedLessonId(null);
     setSelectedCourseWordKeys([]);
     setCourseWordsSavedMessage(null);
+    setIdiomsSavedAutomatically(false);
     setError(null);
   };
 
@@ -342,6 +362,7 @@ export default function CoursesScreen() {
     setSelectedAnswer(null);
     setSelectedCourseWordKeys([]);
     setCourseWordsSavedMessage(null);
+    setIdiomsSavedAutomatically(false);
     setError(null);
   };
 
@@ -354,31 +375,53 @@ export default function CoursesScreen() {
     setBulkAddConfirmationOpen(false);
     setBulkAddProgress(null);
     setBulkCourseWordsSavedMessage(null);
+    setIdiomsSavedAutomatically(false);
     setError(null);
   };
 
   const finishLesson = async () => {
     if (!activeLesson || saving) return;
+    const lesson = activeLesson;
+    const course = activeCourse;
     setSaving(true);
     try {
-      await markCourseLessonCompleted(activeLesson.id);
+      await markCourseLessonCompleted(lesson.id);
       setCompletedLessons((previous) =>
-        previous.includes(activeLesson.id)
+        previous.includes(lesson.id)
           ? previous
-          : [...previous, activeLesson.id],
+          : [...previous, lesson.id],
       );
-      setFinishedLessonId(activeLesson.id);
-      setSelectedCourseWordKeys(
-        buildCourseWordCandidates(
-          activeLesson.questions.map((question) => question.term),
-          activeCourse?.entriesByTerm ?? new Map(),
-          savedWords,
-        )
-          .filter((candidate) => !candidate.alreadySaved)
-          .map((candidate) => candidate.key),
-      );
+      setFinishedLessonId(lesson.id);
+      const addableWords = buildCourseWordCandidates(
+        lesson.questions.map((question) => question.term),
+        course?.entriesByTerm ?? new Map(),
+        savedWords,
+      ).filter((candidate) => !candidate.alreadySaved);
+      setSelectedCourseWordKeys(addableWords.map((candidate) => candidate.key));
+      setIdiomsSavedAutomatically(false);
       setCourseWordsSavedMessage(null);
       setError(null);
+
+      if (course?.id === IDIOM_COURSE_ID) {
+        try {
+          if (addableWords.length > 0) {
+            await saveWords(addableWords.map(toCourseWordSaveInput));
+          }
+          setSelectedCourseWordKeys([]);
+          setCourseWordsSavedMessage(
+            addableWords.length > 0
+              ? `Đã tự thêm ${addableWords.length} idiom mới vào Sổ từ.`
+              : "Các idiom trong bài đã có sẵn trong Sổ từ.",
+          );
+          setIdiomsSavedAutomatically(true);
+        } catch (failure) {
+          const reason =
+            failure instanceof Error ? ` ${failure.message}` : "";
+          setError(
+            `Bài học đã hoàn thành nhưng chưa tự thêm idiom vào Sổ từ.${reason} Bạn có thể chọn các mục bên dưới để thử lại.`,
+          );
+        }
+      }
     } catch (failure) {
       setError(
         failure instanceof Error
@@ -450,20 +493,19 @@ export default function CoursesScreen() {
     setCourseWordsSavedMessage(null);
     try {
       await saveWords(
-        selected.map((candidate) => ({
-          term: candidate.term,
-          meaning: candidate.meaning,
-          ipa: candidate.ipa,
-          example: candidate.example,
-          note: candidate.partOfSpeech
-            ? `Từ loại: ${candidate.partOfSpeech}`
-            : "",
-        })),
+        selected.map(toCourseWordSaveInput),
       );
       setSelectedCourseWordKeys([]);
-      setCourseWordsSavedMessage(
-        `Đã thêm ${selected.length} từ vào Sổ từ. Các từ mới bắt đầu ở Cấp 1.`,
-      );
+      if (activeCourse.id === IDIOM_COURSE_ID) {
+        setIdiomsSavedAutomatically(true);
+        setCourseWordsSavedMessage(
+          `Đã thêm ${selected.length} idiom vào Sổ từ. Các mục mới bắt đầu ở Cấp 1.`,
+        );
+      } else {
+        setCourseWordsSavedMessage(
+          `Đã thêm ${selected.length} từ vào Sổ từ. Các từ mới bắt đầu ở Cấp 1.`,
+        );
+      }
     } catch (failure) {
       setError(
         failure instanceof Error
@@ -647,6 +689,8 @@ export default function CoursesScreen() {
               words={lessonWordCandidates}
               selectedWordKeys={selectedCourseWordKeys}
               savedMessage={courseWordsSavedMessage}
+              autoSaveOnCompletion={activeCourse?.id === IDIOM_COURSE_ID}
+              autoSaved={idiomsSavedAutomatically}
               saving={saving}
               onToggleWord={toggleCourseWord}
               onSelectAll={() => setAllCourseWordsSelected(true)}
@@ -1562,6 +1606,8 @@ function LessonComplete({
   words,
   selectedWordKeys,
   savedMessage,
+  autoSaveOnCompletion,
+  autoSaved,
   saving,
   onToggleWord,
   onSelectAll,
@@ -1576,6 +1622,8 @@ function LessonComplete({
   words: readonly CourseWordCandidate[];
   selectedWordKeys: readonly string[];
   savedMessage: string | null;
+  autoSaveOnCompletion: boolean;
+  autoSaved: boolean;
   saving: boolean;
   onToggleWord: (candidate: CourseWordCandidate) => void;
   onSelectAll: () => void;
@@ -1609,6 +1657,14 @@ function LessonComplete({
       <Text style={[styles.completeScore, { color: c.mutedForeground }]}>
         Đúng {correctCount}/{lesson.questions.length} câu
       </Text>
+      {autoSaved ? (
+        <Text
+          testID={`${testIdPrefix}-words-added-message`}
+          style={[styles.courseWordSavedMessage, { color: c.successText }]}
+        >
+          {savedMessage ?? "Các idiom trong bài đã được lưu vào Sổ từ."}
+        </Text>
+      ) : (
       <View
         testID={`${testIdPrefix}-word-selection`}
         style={[
@@ -1625,7 +1681,9 @@ function LessonComplete({
             { color: c.mutedForeground },
           ]}
         >
-          Bài học không tự thêm từ. Từ đã có trong Sổ sẽ được đánh dấu.
+          {autoSaveOnCompletion
+            ? "Nếu tự lưu chưa thành công, chọn idiom rồi thử thêm lại."
+            : "Bài học không tự thêm từ. Từ đã có trong Sổ sẽ được đánh dấu."}
         </Text>
         <View style={styles.courseWordSelectionActions}>
           <Pressable
@@ -1727,6 +1785,7 @@ function LessonComplete({
           }
         />
       </View>
+      )}
       <Button
         testID={`${testIdPrefix}-return`}
         onPress={onReturn}
