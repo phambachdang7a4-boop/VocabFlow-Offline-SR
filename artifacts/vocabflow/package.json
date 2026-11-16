@@ -16,6 +16,7 @@
     "check:notebook-filter": "node scripts/check-notebook-filter.cjs",
     "check:account-backup": "node scripts/check-account-backup.cjs",
     "check:daily-missions": "node scripts/check-daily-missions.cjs",
+    "check:tab-navigation": "node scripts/check-tab-navigation.cjs",
     "check:daily-mission-storage": "node scripts/check-daily-mission-storage.cjs",
     "check:mission-shop": "node scripts/check-mission-shop.cjs && node scripts/check-mission-shop-storage.cjs",
     "check:stone-investments": "node scripts/check-stone-investment.cjs",

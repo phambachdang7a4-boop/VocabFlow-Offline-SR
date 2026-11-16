@@ -1,0 +1,121 @@
+.vocabflow-tabs-preview {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: #1e2130;
+  color: #f7f3ea;
+  font-family: Inter, sans-serif;
+}
+
+.vocabflow-tabs-context {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding: 0 18px;
+  color: #c3c8d6;
+  font-size: 12px;
+}
+
+.vocabflow-tabs-bar {
+  display: flex;
+  flex: none;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 26px 26px 0 0;
+  background: #2f4f86;
+  box-shadow: 0 -6px 24px rgba(7, 10, 20, 0.22);
+}
+
+.vocabflow-tab-item {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #c8d3e8;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.vocabflow-tab-icon {
+  position: relative;
+  display: flex;
+  width: 54px;
+  height: 48px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 15px;
+}
+
+.vocabflow-tab-icon img {
+  display: block;
+  max-width: 48px;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+.vocabflow-tab-divider {
+  position: absolute;
+  top: 5px;
+  left: -14px;
+  width: 1px;
+  height: 38px;
+  border-radius: 2px;
+  background: #c8d3e8;
+  opacity: 0.48;
+}
+
+.vocabflow-tabs-current {
+  height: 84px;
+}
+
+.vocabflow-tabs-current .vocabflow-tab-icon-active {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #e9b949;
+  box-shadow: 0 2px 5px rgba(30, 33, 48, 0.28);
+}
+
+.vocabflow-tabs-current .vocabflow-tab-label-active {
+  color: #e9b949;
+}
+
+.vocabflow-tabs-roomy {
+  height: 104px;
+  flex-direction: column;
+}
+
+.vocabflow-tabs-roomy .vocabflow-tabs-row {
+  display: flex;
+  height: 70px;
+  flex: none;
+}
+
+.vocabflow-tabs-roomy .vocabflow-tab-item {
+  margin: 1px;
+  border-radius: 16px;
+}
+
+.vocabflow-tabs-roomy .vocabflow-tab-item-active {
+  background: #e9b949;
+  color: #23232d;
+}
+
+.vocabflow-tabs-roomy .vocabflow-tab-icon-active {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.vocabflow-tabs-safe-area {
+  height: 34px;
+  flex: none;
+}

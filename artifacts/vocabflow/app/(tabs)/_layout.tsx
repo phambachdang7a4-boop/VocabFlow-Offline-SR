@@ -9,6 +9,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { Tabs } from "expo-router";
 import { MaterialSheen } from "@/components/ui";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Start guests in the Thư Viện; they can reach the notebook from its tab.
 export const unstable_settings = { anchor: "dictionary" };
@@ -23,6 +24,7 @@ const ICONS = {
 
 function ClassicTabLayout() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
 
   const icon =
@@ -32,18 +34,16 @@ function ClassicTabLayout() {
         style={[
           styles.tabIcon,
           {
-            backgroundColor: focused ? colors.button : "transparent",
-            borderColor: focused ? colors.goldSheen : "transparent",
-            borderWidth: focused ? 1 : 0,
-            shadowColor: colors.shade,
-            shadowOffset: { width: 0, height: focused ? 2 : 0 },
-            shadowOpacity: focused ? 0.28 : 0,
-            shadowRadius: focused ? 5 : 0,
-            elevation: focused ? 4 : 0,
+              backgroundColor: "transparent",
+              borderColor: "transparent",
+              borderWidth: 0,
+              shadowOpacity: 0,
+              shadowRadius: 0,
+              elevation: 0,
           },
         ]}
       >
-        {hasDivider ? (
+          {hasDivider && !focused ? (
           <View
             pointerEvents="none"
             style={[
@@ -76,15 +76,24 @@ function ClassicTabLayout() {
     <Tabs
       backBehavior="initialRoute"
       screenOptions={{
-        tabBarActiveTintColor: colors.navigationActive,
+        tabBarActiveTintColor: colors.buttonForeground,
         tabBarInactiveTintColor: colors.navigationInactive,
+        tabBarActiveBackgroundColor: colors.button,
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
           fontSize: 11,
+          lineHeight: 14,
           marginTop: 1,
-          marginBottom: 5,
+          marginBottom: 2,
+          includeFontPadding: false,
         },
-        tabBarItemStyle: { paddingHorizontal: 0, paddingTop: 4 },
+        tabBarItemStyle: {
+          paddingHorizontal: 0,
+          paddingTop: 2,
+          paddingBottom: 2,
+          marginBottom: isWeb ? 34 : 0,
+          borderRadius: 16,
+        },
         headerShown: false,
         sceneStyle: { backgroundColor: colors.background },
         tabBarStyle: {
@@ -98,7 +107,7 @@ function ClassicTabLayout() {
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           overflow: "hidden",
-          ...(isWeb ? { height: 84 } : {}),
+          height: isWeb ? 104 : 72 + insets.bottom,
         },
         tabBarBackground: () => (
           <View
