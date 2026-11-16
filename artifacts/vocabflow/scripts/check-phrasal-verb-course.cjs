@@ -133,11 +133,18 @@ for (const [term, review] of Object.entries(exampleReviews.reviews)) {
     Array.isArray(review.flags) &&
       review.flags.length > 0 &&
       typeof review.note === "string" &&
-      review.note.trim(),
+      review.note.trim() &&
+      ["corrected", "retained"].includes(review.decision) &&
+      typeof review.reviewNote === "string" &&
+      review.reviewNote.trim() &&
+      typeof review.approvedExample === "string" &&
+      review.approvedExample.trim() &&
+      typeof review.approvedTranslation === "string" &&
+      review.approvedTranslation.trim(),
     `${term} has a review category and reason.`,
   );
   assert.equal(
-    createHash("sha256").update(entry.example).digest("hex"),
+    createHash("sha256").update(entry.sourceExample).digest("hex"),
     review.exampleSha256,
     `${term}'s source example changed; review its flags before updating the snapshot.`,
   );
@@ -146,6 +153,8 @@ for (const [term, review] of Object.entries(exampleReviews.reviews)) {
     review.definitionSha256,
     `${term}'s selected meaning changed; review its example before updating the snapshot.`,
   );
+  assert.equal(entry.example, review.approvedExample);
+  assert.equal(entry.exampleTranslation, review.approvedTranslation);
 }
 for (const [term, entry] of Object.entries(data.entries)) {
   for (const flag of automaticExampleFlags(entry)) {
@@ -174,7 +183,8 @@ for (const term of dictionaryTerms) {
   assert.equal(sourceEntry.partOfSpeech, "V");
   assert.equal(
     sourceEntry.exampleTranslation,
-    exampleTranslations.translations[term],
+    exampleReviews.reviews[term]?.approvedTranslation ??
+      exampleTranslations.translations[term],
     `${term} uses its checked Vietnamese example translation.`,
   );
   assert.ok(
@@ -283,7 +293,14 @@ const reviewFlags = Object.values(exampleReviews.reviews)
     return counts;
   }, {});
 console.log(
-  `EXAMPLE REVIEW REQUIRED: ${Object.keys(exampleReviews.reviews).length} unchanged offline examples are flagged for human review (${Object.entries(reviewFlags)
+  `SOURCE EXAMPLES REVIEWED: ${Object.keys(exampleReviews.reviews).length} entries (${Object.entries(
+    Object.values(exampleReviews.reviews).reduce((counts, review) => {
+      counts[review.decision] = (counts[review.decision] ?? 0) + 1;
+      return counts;
+    }, {}),
+  )
+    .map(([decision, count]) => `${count} ${decision}`)
+    .join(", ")}); original flags: ${Object.entries(reviewFlags)
     .map(([flag, count]) => `${flag}: ${count}`)
-    .join(", ")}).`,
+    .join(", ")}.`,
 );

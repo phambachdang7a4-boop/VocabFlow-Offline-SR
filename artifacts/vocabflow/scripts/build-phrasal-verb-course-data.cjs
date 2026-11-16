@@ -14,6 +14,10 @@ const EXAMPLE_TRANSLATIONS_PATH = join(
   __dirname,
   "../domain/phrasal-verb-example-translations.json",
 );
+const EXAMPLE_REVIEWS_PATH = join(
+  __dirname,
+  "../domain/phrasal-verb-example-review.json",
+);
 const OUTPUT_PATH = join(
   __dirname,
   "../domain/phrasal-verb-course-data.json",
@@ -339,6 +343,7 @@ function main() {
   const exampleTranslations = JSON.parse(
     readFileSync(EXAMPLE_TRANSLATIONS_PATH, "utf8"),
   );
+  const exampleReviews = JSON.parse(readFileSync(EXAMPLE_REVIEWS_PATH, "utf8"));
   if (exampleTranslations.sourceSha256 !== actualHash)
     throw new Error(
       "Bản dịch ví dụ không khớp phiên bản từ điển đã ghim.",
@@ -432,6 +437,39 @@ function main() {
       throw new Error(
         "Số bản dịch ví dụ không khớp số cụm động từ được tạo.",
       );
+    for (const [term, review] of Object.entries(exampleReviews.reviews ?? {})) {
+      const entry = entries[term];
+      if (!entry)
+        throw new Error(`Không tìm thấy cụm từ đã duyệt trong dữ liệu nguồn: ${term}`);
+      if (
+        createHash("sha256").update(entry.example).digest("hex") !==
+          review.exampleSha256 ||
+        createHash("sha256").update(entry.definition).digest("hex") !==
+          review.definitionSha256
+      )
+        throw new Error(
+          `Ví dụ hoặc nghĩa nguồn của “${term}” đã đổi; cần duyệt lại trước khi dựng khóa.`,
+        );
+      if (
+        !["corrected", "retained"].includes(review.decision) ||
+        !review.reviewNote?.trim() ||
+        !review.approvedExample?.trim() ||
+        !review.approvedTranslation?.trim() ||
+        !/[à-ỹÀ-ỸđĐ]/u.test(review.approvedTranslation)
+      )
+        throw new Error(`Thiếu quyết định hoặc nội dung đã duyệt cho: ${term}`);
+    }
+    for (const [term, entry] of Object.entries(entries)) {
+      const review = exampleReviews.reviews?.[term];
+      if (review) {
+        entry.sourceExample = entry.example;
+        entry.example = review.approvedExample.trim();
+        entry.exampleTranslation = review.approvedTranslation.trim();
+      } else {
+        entry.exampleTranslation =
+          exampleTranslations.translations[term].trim();
+      }
+    }
     const topics = TOPICS.map((topic) => ({
       id: topic.id,
       title: topic.title,

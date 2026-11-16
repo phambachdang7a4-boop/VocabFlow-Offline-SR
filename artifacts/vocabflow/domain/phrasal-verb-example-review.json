@@ -3,162 +3,270 @@
     "butt in": {
       "flags": ["punctuation"],
       "note": "The source example has repeated terminal punctuation.",
+      "decision": "retained",
+      "reviewNote": "The ellipsis is an intentional conversational trailing-off, not a repeated full stop; the sentence naturally demonstrates interrupting a conversation.",
+      "approvedExample": "I hope you don't mind me butting in on your conversation, but I couldn't help hearing what you said...",
+      "approvedTranslation": "Tôi hy vọng bạn không phiền khi tôi xen vào cuộc trò chuyện của các bạn, nhưng tôi không thể không nghe thấy những gì bạn đã nói...",
       "exampleSha256": "3d7ae15de5764e2302c65b41e0956c689efe8111b4856e7e4c0d35a69a573e04",
       "definitionSha256": "7abda2769d0748a8aa89bd794182bf9f86ee58f4bc041eb5f8b858be61422d8d"
     },
     "lay into": {
       "flags": ["punctuation"],
       "note": "The source example has repeated terminal punctuation.",
+      "decision": "corrected",
+      "reviewNote": "The double full stop is a typo; the sentence is otherwise grammatical and matches the angry-criticism sense.",
+      "approvedExample": "His partner laid into him when he arrived two hours late.",
+      "approvedTranslation": "Đối tác của anh ấy đã chỉ trích anh ấy một cách giận dữ khi anh ấy đến trễ hai tiếng.",
       "exampleSha256": "29d9af0f3e11c5569d7925564e2e250bf9a59ade98a50d23d0f88a0af00c749c",
       "definitionSha256": "90b229cbef9324cf609b2852faca5df70591eecaa1f2e6537f81a01ce696f2be"
     },
     "walk back from": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated fragment; the remaining sentence clearly shows refusing to retract comments.",
+      "approvedExample": "They declined to walk back from their comments despite the controversy.",
+      "approvedTranslation": "Họ đã từ chối rút lại những bình luận của mình bất chấp tranh cãi.",
       "exampleSha256": "d191519a36ea1227e69a8132ee4b4d0bdf8443e69fd62b98b02274bff56c3f16",
       "definitionSha256": "6571f661a8935035be8852c39401b048ee69cfc1fbec596def6c7ab4cc40a72e"
     },
     "clown about": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated weather fragment; the remaining sentence is grammatical and illustrates behaving foolishly.",
+      "approvedExample": "The students were clowning about all lesson.",
+      "approvedTranslation": "Các học sinh đã cư xử ngốc nghếch suốt cả tiết học.",
       "exampleSha256": "99b2261a6988d35cf58871a90d2743876ed7c4a24fdb85a10a4450dec9498e35",
       "definitionSha256": "696b839bf1bd79bdb18f3b8cda54cc4be394e288dd8fe0188840ac20d4e5efa5"
     },
     "load down": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated relationship fragment; the remaining sentence correctly uses the passive form to mean burdened with things to carry.",
+      "approvedExample": "I was loaded down with all the stuff I had to take there.",
+      "approvedTranslation": "Tôi phải mang vác nặng nề tất cả những thứ cần đem đến đó.",
       "exampleSha256": "0da75f6caed365e130d17d451350ada6315b44a8c0b0686f76e18d859a26be6f",
       "definitionSha256": "c7755ad7fa5c6ff69411831ec900dc16276759f3c22571c997282a7082570997"
     },
     "mooch around": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated word left before the example; the remaining sentence naturally shows spending time idly.",
+      "approvedExample": "I mooched around the house all day.",
+      "approvedTranslation": "Tôi đã quanh quẩn ở nhà cả ngày mà không làm gì.",
       "exampleSha256": "c092e7d0845e4d053d0dbf21e520749f450010d4c5b190d979593f622d4593c5",
       "definitionSha256": "c275afe7248d1231e713bcc26cbecc6e33d15ba97c198ae5a9b1339328de2f88"
     },
     "ebb away": {
       "flags": ["source-fragment", "usage-review"],
       "note": "The selected example starts with a leftover fragment; “His life was ebbed away” is also an unusual construction to review.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated fragment and corrected the unidiomatic passive: life ebbs away, rather than being ebbed away.",
+      "approvedExample": "His life slowly ebbed away as the illness progressed.",
+      "approvedTranslation": "Sự sống của ông ấy dần cạn kiệt khi bệnh tình tiến triển.",
       "exampleSha256": "92c1bc76da2cc2211e6fd0c573fe7a0576aab3258977703293a55ef61ded2fd6",
       "definitionSha256": "8b7449bd06457b9938afef39f95742b6a6f304a24ef902eba1d04573d06ca793"
     },
     "key down": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated technology fragment; the remaining sentence fits the dictionary's informal sense of relaxing.",
+      "approvedExample": "I need to key down before I go to bed.",
+      "approvedTranslation": "Tôi cần thư giãn trước khi đi ngủ.",
       "exampleSha256": "ae4e46db2133936d25a70a5be84493d73ef5650d9c927de51fe532707051fafd",
       "definitionSha256": "b3952a94ec0bc6e70206b77e26cdc9beb8ba815e98adad7c9ed65074800e3b7d"
     },
     "kick up": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated household fragment; the remaining sentence is a natural informal description of recurring back pain.",
+      "approvedExample": "My back kicks up when it gets cold.",
+      "approvedTranslation": "Lưng tôi lại đau khi trời trở lạnh.",
       "exampleSha256": "af592edcdf0a89a1b405e7e973da4d7d0aac2ea42b7b8a90cc9b42bed54897e8",
       "definitionSha256": "c2ece00441bc0aac231e89d2f6564559ea335dd62d40aaf45acb9e2f790151b3"
     },
     "bargain on": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated lead-in; the sentence naturally means the speaker did not anticipate his arrival.",
+      "approvedExample": "I hadn't bargained on him coming.",
+      "approvedTranslation": "Tôi đã không lường trước việc anh ấy sẽ đến.",
       "exampleSha256": "9e92b3ee10dd4f5f1022f8d33cce7a58f1487a94c04f6b2a7aa5f33f176b244a",
       "definitionSha256": "3b9f873d40b2ec8a35e9d26669c6220fda9bef53d044c41165d4d8cb27a8d925"
     },
     "drum up": {
       "flags": ["source-fragment"],
       "note": "The selected example includes an unrelated dictionary example before the target sentence.",
+      "decision": "corrected",
+      "reviewNote": "Removed the preceding unrelated sentence; the remaining example clearly shows soliciting support.",
+      "approvedExample": "They are trying to drum up support for the referendum.",
+      "approvedTranslation": "Họ đang cố gắng kêu gọi sự ủng hộ cho cuộc trưng cầu dân ý.",
       "exampleSha256": "c63613792128073ab37fe47896e578b21b846136ad88975458c045383aca0d96",
       "definitionSha256": "fd92a43a057ef176a000139321a5832df85affe4729e6f056495a01b8d79baba"
     },
     "hose down": {
       "flags": ["repeated-word", "sense-review"],
       "note": "The example repeats a word at a join; its investment meaning and “hosed ... down ... with capital” construction need a human sense/usage check.",
+      "decision": "corrected",
+      "reviewNote": "Removed the duplicated particle and placed it after the object; this preserves the dictionary's figurative sense of pouring substantial capital into a start-up.",
+      "approvedExample": "They have hosed an obscure start-up down with capital.",
+      "approvedTranslation": "Họ đã rót vốn mạnh tay vào một công ty khởi nghiệp ít người biết đến.",
       "exampleSha256": "5b0a35a5dae9cdd38d95932cf03c16a730786148ef404388f2fe1ae195b8fe70",
       "definitionSha256": "1c6701dfc8fa42a6ed6f5417cbacc89715d047e79bb89517a8c9c451b6015245"
     },
     "cast round for": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated fragment; the remaining sentence clearly demonstrates searching for a sign.",
+      "approvedExample": "He cast round for any sign of his things.",
+      "approvedTranslation": "Anh ấy cố tìm bất kỳ dấu hiệu nào về đồ đạc của mình.",
       "exampleSha256": "117b83257032c8730fdb3323afcd6b74c357d9ac2685ab4e75c874c1563f18f0",
       "definitionSha256": "a9cdc9d6ff6d9d61482eb5ae011f7c944bf2cdbc2cdad90c5fbbfee452de1d9e"
     },
     "fight it out": {
       "flags": ["source-fragment", "grammar"],
       "note": "The selected example starts with an unrelated fragment; the following “Their fighting IT out” is also malformed.",
+      "decision": "corrected",
+      "reviewNote": "Discarded the malformed fragment and corrected the remaining clause to a complete sentence with the intended contest-to-decide-a-winner sense.",
+      "approvedExample": "They are fighting it out to see who will become the next CEO.",
+      "approvedTranslation": "Họ đang tranh đấu để xem ai sẽ trở thành CEO tiếp theo.",
       "exampleSha256": "72b1eb1b58bc14eee05456e3ce5db6ceb096c47d8b0fa3aa107984c203584798",
       "definitionSha256": "d38a68ca0a9c3061c8946bbe28b19f9b41e4d1d4659945ef243206a4ef47e454"
     },
     "queer up": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "retained",
+      "reviewNote": "Removed only the unrelated preceding fragment. The target sentence is grammatical and matches the dictionary meaning, though this sense is informal and uncommon.",
+      "approvedExample": "I queered the exam up.",
+      "approvedTranslation": "Tôi đã làm hỏng kỳ thi.",
       "exampleSha256": "747cc7a54dd316f9395a4d50e827a9c90990b399736b44233a4d1231d3c9a19e",
       "definitionSha256": "a5e1242ffd0cb46874810c9da5fd71566718c3e5630f7b60f700b58c6e36afca"
     },
     "hack into": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated study fragment; the remaining sentence is grammatical and directly illustrates unauthorized computer access.",
+      "approvedExample": "He hacked into the government database and stole a lot of data.",
+      "approvedTranslation": "Anh ta đã xâm nhập vào cơ sở dữ liệu của chính phủ và đánh cắp rất nhiều dữ liệu.",
       "exampleSha256": "5ef6baca3f097fcc56eaa2948a8da790db3af8c2d137dec5bcfca3df3c9f9679",
       "definitionSha256": "26670a6eeeb844f86134f33cb524044e2522a4bb53281f849ecfd442b5008a24"
     },
     "come from": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated fragment; the remaining sentence clearly indicates a person's country of origin.",
+      "approvedExample": "She comes from Somalia.",
+      "approvedTranslation": "Cô ấy đến từ Somalia.",
       "exampleSha256": "15189178350cf81fd06914e9b1256566fd681bcc14e18e329920d16dc1c2a36d",
       "definitionSha256": "ce1bb651d966282c4f841a6936f4fe3603c6c91dcc1f803b776a579ee0c3eeff"
     },
     "pull away": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated lead-in and clarified that the car leaves the traffic lights at speed.",
+      "approvedExample": "The car pulled away from the traffic lights at high speed.",
+      "approvedTranslation": "Chiếc xe tăng tốc rời khỏi đèn giao thông.",
       "exampleSha256": "d96cb09860c6e0ea9c2cd5780824a06f4cb221b0f8556e43ecb08e2284649d80",
       "definitionSha256": "1a886b6a2bc78bffe7d0b9ed796f64af0a9bdeae89119f130ecc1ee61bb77223"
     },
     "saddle up": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated refrigerator fragment; the remaining sentence correctly shows preparing a horse before riding away.",
+      "approvedExample": "She saddled up the horse and rode off.",
+      "approvedTranslation": "Cô ấy đóng yên cho ngựa rồi cưỡi đi.",
       "exampleSha256": "013d8af43836135731e6272e9eb09796ad89528596b7b2b90aa157268dec80ee",
       "definitionSha256": "c73249a7e5b0a8da56ed1b91d2a816c164ec0dfeb31fd94dd25fe91f3174d3c8"
     },
     "keep up at": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "retained",
+      "reviewNote": "Removed the unrelated opening fragment. Kept the source's “keep up at it” construction because it matches this dictionary headword and the stated perseverance sense; this usage is less common than “keep at it.”",
+      "approvedExample": "Learning a language is difficult, but if you keep up at it, you'll succeed in the end.",
+      "approvedTranslation": "Học một ngôn ngữ thật khó, nhưng nếu bạn tiếp tục kiên trì thì cuối cùng sẽ thành công.",
       "exampleSha256": "50cbdef00654dfc58e15c140e310cdac9d3bbb5d4f8cb11ac76762ee2e5b9e13",
       "definitionSha256": "95f2341f1a466898b0e229b7393dcd7dadd46c92113cb966833d7b68c32b8db6"
     },
     "pencil in": {
       "flags": ["punctuation"],
       "note": "The source example has repeated terminal punctuation.",
+      "decision": "corrected",
+      "reviewNote": "Replaced the accidental double full stop with one; the sentence naturally shows making a tentative appointment.",
+      "approvedExample": "I'll pencil Thursday night in, but if anything comes up, give me a ring.",
+      "approvedTranslation": "Tôi sẽ tạm ghi lịch tối thứ Năm, nhưng nếu có chuyện gì phát sinh, hãy gọi cho tôi.",
       "exampleSha256": "fe8096b94aa7c96fa8312e6f1c452f0d0c8659b810dfe0b289139a2dc25d3fb1",
       "definitionSha256": "e01c1ae913d1cc62bea8b1e3f8d8047c3eb9f02e2db99da1b048b8ce53f2bc7c"
     },
     "sit in on": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated lead-in; the remaining sentence accurately describes attending as an observer.",
+      "approvedExample": "She sat in on the meeting and took notes but said nothing.",
+      "approvedTranslation": "Cô ấy dự thính cuộc họp, ghi chép nhưng không nói gì.",
       "exampleSha256": "b313cdbd83a2f82f1208560f177818775c8937b46a98587285aa37dc8b2e7ca6",
       "definitionSha256": "f62951f2701c9071392eabd9c3cba7d57744573c9aecc852ed4c85d1ad865d91"
     },
     "zone in on": {
       "flags": ["source-fragment"],
       "note": "The selected example begins with leftover text from another dictionary example.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unrelated opening fragment; the remaining sentence naturally shows focusing attention on what people are saying.",
+      "approvedExample": "I zoned in on what they were saying when they started gossiping.",
+      "approvedTranslation": "Tôi tập trung chú ý vào điều họ nói khi họ bắt đầu bàn tán.",
       "exampleSha256": "68028ee647ec17fb5da27b8ada5046bc6828665fa87eddb3780d216ca853a496",
       "definitionSha256": "84c2101ab24d57ed99c6e202e0854f3c1635e14abd091f812e763e1467211158"
     },
     "cheer on": {
       "flags": ["grammar"],
       "note": "The example starts “Their cheered”; the subject and verb do not agree.",
+      "decision": "corrected",
+      "reviewNote": "Corrected the subject-pronoun typo; the sentence now has standard subject-verb agreement.",
+      "approvedExample": "They cheered their team on throughout the match.",
+      "approvedTranslation": "Họ đã cổ vũ cho đội của mình trong suốt trận đấu.",
       "exampleSha256": "def55403c1918293afead56a8a5e5e9a13c17cb54d62c2c4c5b2d74070339c28",
       "definitionSha256": "c3b28ed3a738e9729dce136add02494fd2a56e49280c7141a44e2e19dd22ce0d"
     },
     "look up to": {
       "flags": ["grammar"],
-      "note": "The example starts “She’s looks”; the auxiliary and verb form conflict.",
+      "note": "The example starts “She's looks”; the auxiliary and verb form conflict.",
+      "decision": "corrected",
+      "reviewNote": "Removed the unnecessary auxiliary contraction so the present-tense sentence is grammatical.",
+      "approvedExample": "She looks up to her mother.",
+      "approvedTranslation": "Cô ấy rất ngưỡng mộ mẹ mình.",
       "exampleSha256": "213fed629b15f5389f5471012a7f953d21cc4b6f2eb011b7e1aa1ea04efee571",
       "definitionSha256": "dbec3b1f3304509a61119f47462813bf4884bdf0e22bf25c456671618935c0a7"
     },
     "face off": {
       "flags": ["usage-review"],
       "note": "“Faced off the competition” is an unusual construction; confirm it demonstrates the intended sense.",
+      "decision": "corrected",
+      "reviewNote": "Added “against,” the standard construction for confronting an opponent; the example still demonstrates direct competition.",
+      "approvedExample": "The company faced off against its competitors.",
+      "approvedTranslation": "Công ty đã đối đầu với đối thủ cạnh tranh.",
       "exampleSha256": "e06c583527550448634a7c130e243c5115b70b0c093f063013b99bd957a92a94",
       "definitionSha256": "565100434b0533bd9e7cb4cccd1802566bcb9a758fe68fb767cb92ab72adc62b"
     },
     "kiss off": {
       "flags": ["usage-review"],
       "note": "“Kissed the criticism off” is an unusual construction; confirm it demonstrates the intended sense.",
+      "decision": "corrected",
+      "reviewNote": "Moved the particle after the verb and before its object, a natural phrasal-verb order that retains the sense of dismissing the criticism.",
+      "approvedExample": "He kissed off the criticism.",
+      "approvedTranslation": "Anh ấy coi thường những lời chỉ trích đó.",
       "exampleSha256": "fe3f620c212ec09f584311bd258724b2a7a860ea2b12e02be75a853748313702",
       "definitionSha256": "d8a5b63c86d7155aadf56923abbc9e7c02d886cbf758b4eb1920187062c5e799"
     }
