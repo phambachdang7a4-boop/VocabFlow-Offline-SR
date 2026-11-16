@@ -1,0 +1,1097 @@
+{
+  "provenance": "Headwords selected from the bundled offline dictionary; definitions, examples, and Vietnamese translations were AI-assisted and editorially reviewed. No official IELTS passage corpus was used.",
+  "entries": [
+    {
+      "term": "cognition",
+      "definition": "Quá trình nhận thức, bao gồm việc tiếp nhận, xử lý và sử dụng thông tin.",
+      "example": "Researchers examined how cognition changes when people solve problems under prolonged stress.",
+      "exampleTranslation": "Các nhà nghiên cứu khảo sát sự thay đổi của quá trình nhận thức khi con người giải quyết vấn đề trong tình trạng căng thẳng kéo dài.",
+      "pos": "N"
+    },
+    {
+      "term": "cognitive",
+      "definition": "Thuộc về hoặc liên quan đến quá trình nhận thức và tư duy.",
+      "example": "Cognitive flexibility helps students adapt their strategies when unfamiliar evidence challenges their initial assumptions.",
+      "exampleTranslation": "Tính linh hoạt trong nhận thức giúp học sinh điều chỉnh chiến lược khi bằng chứng xa lạ thách thức những giả định ban đầu của họ.",
+      "pos": "A"
+    },
+    {
+      "term": "conscious",
+      "definition": "Đang tỉnh táo và nhận biết được bản thân hoặc những gì đang diễn ra xung quanh.",
+      "example": "Participants remained conscious of the observer's presence, which may have influenced their reported decisions.",
+      "exampleTranslation": "Những người tham gia vẫn nhận biết sự hiện diện của người quan sát, điều này có thể đã ảnh hưởng đến các quyết định họ báo cáo.",
+      "pos": "A"
+    },
+    {
+      "term": "consciously",
+      "definition": "Một cách có ý thức hoặc có chủ ý.",
+      "example": "The volunteers consciously avoided checking their phones during the attention experiment.",
+      "exampleTranslation": "Các tình nguyện viên có ý thức tránh kiểm tra điện thoại trong suốt thí nghiệm về sự chú ý.",
+      "pos": "D"
+    },
+    {
+      "term": "consciousness",
+      "definition": "Trạng thái có ý thức, nhận biết được bản thân và môi trường xung quanh.",
+      "example": "Sleep deprivation can reduce consciousness of surrounding sounds and impair rapid responses.",
+      "exampleTranslation": "Thiếu ngủ có thể làm giảm nhận thức về những âm thanh xung quanh và cản trở các phản ứng nhanh.",
+      "pos": "N"
+    },
+    {
+      "term": "emotion",
+      "definition": "Cảm giác hoặc trạng thái tâm lý mạnh mẽ như vui mừng, sợ hãi hay tức giận.",
+      "example": "Researchers measured each participant's emotion after viewing images associated with fear or happiness.",
+      "exampleTranslation": "Các nhà nghiên cứu đo lường cảm xúc của từng người tham gia sau khi họ xem những hình ảnh gắn với nỗi sợ hãi hoặc hạnh phúc.",
+      "pos": "N"
+    },
+    {
+      "term": "emotional",
+      "definition": "Liên quan đến cảm xúc hoặc bị cảm xúc chi phối.",
+      "example": "Emotional responses may shape memory, especially when events are surprising or personally significant.",
+      "exampleTranslation": "Các phản ứng cảm xúc có thể định hình trí nhớ, đặc biệt khi các sự kiện gây bất ngờ hoặc có ý nghĩa cá nhân.",
+      "pos": "A"
+    },
+    {
+      "term": "instinct",
+      "definition": "Bản năng hoặc xu hướng tự nhiên khiến con người hay động vật hành động theo một cách nhất định.",
+      "example": "Some animals rely on instinct to locate food when learned signals are unavailable.",
+      "exampleTranslation": "Một số loài động vật dựa vào bản năng để tìm thức ăn khi không có các tín hiệu đã học.",
+      "pos": "N"
+    },
+    {
+      "term": "instinctive",
+      "definition": "Thuộc về bản năng hoặc xảy ra tự nhiên mà không cần suy nghĩ hay học hỏi có ý thức.",
+      "example": "Some infant behaviors appear instinctive, emerging before children receive extensive social instruction.",
+      "exampleTranslation": "Một số hành vi của trẻ sơ sinh có vẻ mang tính bản năng, xuất hiện trước khi trẻ nhận được sự hướng dẫn xã hội đáng kể.",
+      "pos": "A"
+    },
+    {
+      "term": "motivation",
+      "definition": "Động lực hoặc lý do thúc đẩy một người hành động và duy trì nỗ lực.",
+      "example": "Researchers found that intrinsic motivation improved students’ persistence when difficult tasks offered no immediate reward.",
+      "exampleTranslation": "Các nhà nghiên cứu nhận thấy động lực nội tại cải thiện sự kiên trì của học sinh khi những nhiệm vụ khó không đem lại phần thưởng ngay lập tức.",
+      "pos": "N"
+    },
+    {
+      "term": "perception",
+      "definition": "Cách một người nhận thức, diễn giải hoặc cảm nhận một sự vật, sự việc hay thông tin.",
+      "example": "Cultural background can influence perception, causing identical facial expressions to be interpreted differently.",
+      "exampleTranslation": "Nền tảng văn hóa có thể ảnh hưởng đến nhận thức, khiến những biểu cảm khuôn mặt giống hệt nhau được diễn giải khác nhau.",
+      "pos": "N"
+    },
+    {
+      "term": "perceptible",
+      "definition": "Có thể được nhận thấy hoặc cảm nhận bằng giác quan hay qua quan sát.",
+      "example": "After several weeks of training, a perceptible improvement appeared in participants’ ability to identify emotional cues.",
+      "exampleTranslation": "Sau vài tuần luyện tập, sự cải thiện rõ rệt đã xuất hiện trong khả năng nhận diện các dấu hiệu cảm xúc của người tham gia.",
+      "pos": "A"
+    },
+    {
+      "term": "perceptive",
+      "definition": "Tinh ý và có khả năng nhận ra hoặc hiểu những điều khó nhận thấy.",
+      "example": "Perceptive observers often detect subtle changes in tone that reveal unspoken emotional responses.",
+      "exampleTranslation": "Những người quan sát tinh ý thường phát hiện những thay đổi nhỏ trong giọng điệu, qua đó bộc lộ các phản ứng cảm xúc không được nói ra.",
+      "pos": "A"
+    },
+    {
+      "term": "personality",
+      "definition": "Tập hợp những đặc điểm tâm lý và cách ứng xử tạo nên tính cách riêng của một người.",
+      "example": "The study linked openness, a personality trait, with greater willingness to consider unfamiliar perspectives.",
+      "exampleTranslation": "Nghiên cứu liên hệ sự cởi mở, một đặc điểm tính cách, với sự sẵn lòng cao hơn trong việc cân nhắc những quan điểm xa lạ.",
+      "pos": "N"
+    },
+    {
+      "term": "stress",
+      "definition": "Trạng thái căng thẳng về tinh thần hoặc thể chất do áp lực hay yêu cầu quá lớn.",
+      "example": "Chronic stress can impair memory and reduce the quality of decisions made under pressure.",
+      "exampleTranslation": "Căng thẳng kéo dài có thể làm suy giảm trí nhớ và giảm chất lượng của những quyết định được đưa ra dưới áp lực.",
+      "pos": "N"
+    },
+    {
+      "term": "stressful",
+      "definition": "Gây ra hoặc chứa đựng nhiều căng thẳng về tinh thần hay thể chất.",
+      "example": "Researchers observed that stressful working conditions increased fatigue and reduced employees’ concentration over time.",
+      "exampleTranslation": "Các nhà nghiên cứu quan sát thấy rằng điều kiện làm việc căng thẳng làm gia tăng sự mệt mỏi và dần làm giảm khả năng tập trung của nhân viên.",
+      "pos": "A"
+    },
+    {
+      "term": "trauma",
+      "definition": "Chấn thương tâm lý do một trải nghiệm gây đau khổ hoặc tổn hại nghiêm trọng về cảm xúc.",
+      "example": "Early trauma can alter emotional regulation and influence behaviour throughout adulthood.",
+      "exampleTranslation": "Chấn thương tâm lý thời thơ ấu có thể làm thay đổi khả năng điều chỉnh cảm xúc và ảnh hưởng đến hành vi trong suốt tuổi trưởng thành.",
+      "pos": "N"
+    },
+    {
+      "term": "aggression",
+      "definition": "Hành vi hoặc xu hướng công kích, gây hấn hay sử dụng bạo lực đối với người khác.",
+      "example": "Researchers linked sleep deprivation with increased aggression in adolescents.",
+      "exampleTranslation": "Các nhà nghiên cứu liên hệ tình trạng thiếu ngủ với sự gia tăng hành vi gây hấn ở thanh thiếu niên.",
+      "pos": "N"
+    },
+    {
+      "term": "attitude",
+      "definition": "Cách một người suy nghĩ, cảm nhận hoặc phản ứng đối với một người, sự việc hay vấn đề.",
+      "example": "A positive attitude towards learning often improves persistence after initial failure.",
+      "exampleTranslation": "Thái độ tích cực đối với việc học thường cải thiện sự kiên trì sau thất bại ban đầu.",
+      "pos": "N"
+    },
+    {
+      "term": "addict",
+      "definition": "Người bị lệ thuộc vào một chất hoặc hoạt động đến mức khó kiểm soát việc sử dụng hoặc thực hiện nó.",
+      "example": "The study found that each addict faced different social pressures during recovery.",
+      "exampleTranslation": "Nghiên cứu phát hiện rằng mỗi người nghiện phải đối mặt với những áp lực xã hội khác nhau trong quá trình hồi phục.",
+      "pos": "N"
+    },
+    {
+      "term": "addiction",
+      "definition": "Tình trạng lệ thuộc về thể chất hoặc tâm lý vào một chất hay hoạt động, khó kiểm soát dù gây hậu quả tiêu cực.",
+      "example": "Digital addiction may disrupt sleep, concentration, and face-to-face social interaction.",
+      "exampleTranslation": "Nghiện kỹ thuật số có thể làm gián đoạn giấc ngủ, sự tập trung và tương tác xã hội trực tiếp.",
+      "pos": "N"
+    },
+    {
+      "term": "adapt",
+      "definition": "Thay đổi để phù hợp và tồn tại trong những điều kiện môi trường mới.",
+      "example": "Some bacteria adapt rapidly when environmental conditions change.",
+      "exampleTranslation": "Một số vi khuẩn nhanh chóng thích nghi khi điều kiện môi trường thay đổi.",
+      "pos": "V"
+    },
+    {
+      "term": "adaptation",
+      "definition": "Sự thay đổi về đặc điểm hoặc chức năng giúp sinh vật thích nghi và tồn tại trong môi trường cụ thể.",
+      "example": "In evolutionary biology, adaptation increases a population's survival under specific environmental pressures.",
+      "exampleTranslation": "Trong sinh học tiến hóa, sự thích nghi làm tăng khả năng sống sót của một quần thể trước những áp lực môi trường cụ thể.",
+      "pos": "N"
+    },
+    {
+      "term": "adaptable",
+      "definition": "Có khả năng thay đổi để thích nghi hiệu quả với những điều kiện hoặc môi trường khác nhau.",
+      "example": "Adaptable organisms are more likely to survive sudden changes in habitat conditions.",
+      "exampleTranslation": "Các sinh vật có khả năng thích nghi cao có nhiều khả năng sống sót hơn trước những thay đổi đột ngột trong điều kiện môi trường sống.",
+      "pos": "A"
+    },
+    {
+      "term": "adaptive",
+      "definition": "Có khả năng thích nghi hoặc điều chỉnh để phù hợp với điều kiện mới.",
+      "example": "The adaptive immune response becomes more effective after repeated exposure to a pathogen.",
+      "exampleTranslation": "Đáp ứng miễn dịch thích ứng trở nên hiệu quả hơn sau khi tiếp xúc nhiều lần với mầm bệnh.",
+      "pos": "A"
+    },
+    {
+      "term": "anatomical",
+      "definition": "Thuộc về cấu trúc cơ thể hoặc giải phẫu học.",
+      "example": "Researchers compared anatomical features to identify relationships among closely related species.",
+      "exampleTranslation": "Các nhà nghiên cứu so sánh những đặc điểm giải phẫu để xác định mối quan hệ giữa các loài có họ hàng gần.",
+      "pos": "A"
+    },
+    {
+      "term": "biologist",
+      "definition": "Nhà khoa học nghiên cứu các sinh vật và những quá trình sống.",
+      "example": "The biologist examined how temperature affected bacterial growth in controlled laboratory conditions.",
+      "exampleTranslation": "Nhà sinh vật học đã kiểm tra nhiệt độ ảnh hưởng như thế nào đến sự phát triển của vi khuẩn trong các điều kiện phòng thí nghiệm được kiểm soát.",
+      "pos": "N"
+    },
+    {
+      "term": "cell",
+      "definition": "Đơn vị cấu trúc và chức năng cơ bản của cơ thể sống.",
+      "example": "A cell typically contains genetic material that helps regulate its activities and is passed to daughter cells.",
+      "exampleTranslation": "Một tế bào thường chứa vật chất di truyền giúp điều hòa hoạt động của nó và được truyền cho các tế bào con.",
+      "pos": "N"
+    },
+    {
+      "term": "enzyme",
+      "definition": "Protein xúc tác các phản ứng hóa học trong cơ thể sống.",
+      "example": "The enzyme accelerates chemical reactions without being consumed in the process.",
+      "exampleTranslation": "Enzyme này làm tăng tốc các phản ứng hóa học mà không bị tiêu hao trong quá trình đó.",
+      "pos": "N"
+    },
+    {
+      "term": "evolution",
+      "definition": "Quá trình các sinh vật thay đổi dần dần qua nhiều thế hệ.",
+      "example": "The evolution of complex immune systems occurred over millions of years.",
+      "exampleTranslation": "Sự tiến hóa của các hệ miễn dịch phức tạp diễn ra trong hàng triệu năm.",
+      "pos": "N"
+    },
+    {
+      "term": "evolutionary",
+      "definition": "Thuộc về sự tiến hóa hoặc những thay đổi của sinh vật qua các thế hệ.",
+      "example": "Evolutionary changes can spread through a population when they improve survival or reproduction.",
+      "exampleTranslation": "Những thay đổi tiến hóa có thể lan rộng trong một quần thể khi chúng cải thiện khả năng sống sót hoặc sinh sản.",
+      "pos": "A"
+    },
+    {
+      "term": "genetic",
+      "definition": "Thuộc về gen, di truyền hoặc sự truyền đặc điểm từ thế hệ này sang thế hệ khác.",
+      "example": "Genetic variation enables populations to respond differently to changing environmental conditions.",
+      "exampleTranslation": "Biến dị di truyền giúp các quần thể phản ứng khác nhau trước những điều kiện môi trường thay đổi.",
+      "pos": "A"
+    },
+    {
+      "term": "immune",
+      "definition": "Có khả năng miễn dịch hoặc kháng lại một bệnh hay tác nhân gây bệnh.",
+      "example": "After vaccination, immune cells rapidly identify and destroy pathogens entering the body.",
+      "exampleTranslation": "Sau khi tiêm vắc-xin, các tế bào miễn dịch nhanh chóng nhận diện và tiêu diệt những tác nhân gây bệnh xâm nhập cơ thể.",
+      "pos": "A"
+    },
+    {
+      "term": "metabolism",
+      "definition": "Toàn bộ các quá trình hóa học giúp cơ thể chuyển hóa và sử dụng năng lượng.",
+      "example": "A faster metabolism generally increases the rate at which the body consumes energy.",
+      "exampleTranslation": "Sự trao đổi chất nhanh hơn thường làm tăng tốc độ cơ thể tiêu thụ năng lượng.",
+      "pos": "N"
+    },
+    {
+      "term": "microscope",
+      "definition": "Thiết bị dùng để phóng đại những vật thể hoặc cấu trúc quá nhỏ để nhìn bằng mắt thường.",
+      "example": "Researchers used a microscope to examine structural changes in the plant cells.",
+      "exampleTranslation": "Các nhà nghiên cứu sử dụng kính hiển vi để kiểm tra những thay đổi cấu trúc trong các tế bào thực vật.",
+      "pos": "N"
+    },
+    {
+      "term": "mutation",
+      "definition": "Sự thay đổi trong vật chất di truyền, có thể tạo ra đặc điểm mới.",
+      "example": "A mutation in this gene can alter the protein produced by affected cells.",
+      "exampleTranslation": "Một đột biến trong gen này có thể làm thay đổi protein do các tế bào bị ảnh hưởng tạo ra.",
+      "pos": "N"
+    },
+    {
+      "term": "nutrient",
+      "definition": "Chất cần thiết mà cơ thể hấp thụ để sinh trưởng, duy trì hoạt động và sửa chữa mô.",
+      "example": "Each nutrient supports particular functions, including growth, repair, and energy production.",
+      "exampleTranslation": "Mỗi chất dinh dưỡng hỗ trợ những chức năng nhất định, bao gồm tăng trưởng, sửa chữa và sản xuất năng lượng.",
+      "pos": "N"
+    },
+    {
+      "term": "physiological",
+      "definition": "Thuộc về các chức năng và quá trình tự nhiên của cơ thể.",
+      "example": "The experiment measured physiological responses to prolonged exposure to cold temperatures.",
+      "exampleTranslation": "Thí nghiệm đo lường các phản ứng sinh lý trước việc tiếp xúc kéo dài với nhiệt độ lạnh.",
+      "pos": "A"
+    },
+    {
+      "term": "physiologist",
+      "definition": "Nhà khoa học nghiên cứu các chức năng và quá trình hoạt động của cơ thể.",
+      "example": "The physiologist investigated how exercise affects blood flow through human muscles.",
+      "exampleTranslation": "Nhà sinh lý học nghiên cứu cách tập thể dục ảnh hưởng đến lưu lượng máu qua các cơ của con người.",
+      "pos": "N"
+    },
+    {
+      "term": "physiology",
+      "definition": "Ngành khoa học nghiên cứu các chức năng và quá trình hoạt động của cơ thể sống.",
+      "example": "Understanding plant physiology helps scientists improve crop growth under drought conditions.",
+      "exampleTranslation": "Hiểu về sinh lý học thực vật giúp các nhà khoa học cải thiện sự phát triển của cây trồng trong điều kiện hạn hán.",
+      "pos": "N"
+    },
+    {
+      "term": "reproduction",
+      "definition": "Quá trình sinh sản, qua đó sinh vật tạo ra thế hệ con hoặc tạo bản sao vật chất di truyền.",
+      "example": "Sexual reproduction increases genetic variation by combining genetic material from two parents.",
+      "exampleTranslation": "Sinh sản hữu tính làm tăng biến dị di truyền bằng cách kết hợp vật chất di truyền từ hai bố mẹ.",
+      "pos": "N"
+    },
+    {
+      "term": "virus",
+      "definition": "Tác nhân siêu nhỏ chỉ có thể nhân lên bên trong tế bào sống; một số loại có thể gây bệnh.",
+      "example": "A virus can enter host cells and redirect their machinery to produce new particles.",
+      "exampleTranslation": "Một virus có thể xâm nhập vào tế bào chủ và điều khiển bộ máy của chúng để tạo ra các hạt mới.",
+      "pos": "N"
+    },
+    {
+      "term": "atmospheric",
+      "definition": "Thuộc về khí quyển hoặc các điều kiện của không khí bao quanh Trái Đất.",
+      "example": "Atmospheric pressure decreases as altitude increases, affecting boiling points and weather patterns.",
+      "exampleTranslation": "Áp suất khí quyển giảm khi độ cao tăng, ảnh hưởng đến nhiệt độ sôi và các kiểu thời tiết.",
+      "pos": "A"
+    },
+    {
+      "term": "continent",
+      "definition": "Lục địa hoặc châu lục, tức một vùng đất rộng lớn liên tục trên bề mặt Trái Đất.",
+      "example": "Africa is the second-largest continent and contains diverse climatic and geological regions.",
+      "exampleTranslation": "Châu Phi là châu lục lớn thứ hai và có các khu vực khí hậu, địa chất đa dạng.",
+      "pos": "N"
+    },
+    {
+      "term": "continental",
+      "definition": "Thuộc về lục địa hoặc đặc trưng cho phần đất liền rộng lớn, trái với đại dương.",
+      "example": "Continental crust is generally thicker and less dense than oceanic crust.",
+      "exampleTranslation": "Vỏ lục địa nhìn chung dày hơn và ít đặc hơn vỏ đại dương.",
+      "pos": "A"
+    },
+    {
+      "term": "earthquake",
+      "definition": "Sự rung chuyển đột ngột của mặt đất do năng lượng được giải phóng trong vỏ Trái Đất.",
+      "example": "An earthquake occurs when accumulated stress is suddenly released along a geological fault.",
+      "exampleTranslation": "Một trận động đất xảy ra khi ứng suất tích tụ đột ngột được giải phóng dọc theo một đứt gãy địa chất.",
+      "pos": "N"
+    },
+    {
+      "term": "geological",
+      "definition": "Thuộc về địa chất hoặc các đặc điểm, quá trình và cấu trúc của Trái Đất.",
+      "example": "Geological mapping can reveal buried faults that influence regional earthquake risk.",
+      "exampleTranslation": "Việc lập bản đồ địa chất có thể phát hiện các đứt gãy bị chôn vùi, vốn ảnh hưởng đến nguy cơ động đất trong khu vực.",
+      "pos": "A"
+    },
+    {
+      "term": "geologist",
+      "definition": "Nhà địa chất học, người nghiên cứu thành phần, cấu trúc và lịch sử của Trái Đất.",
+      "example": "The geologist analysed sediment layers to reconstruct ancient changes in the river valley.",
+      "exampleTranslation": "Nhà địa chất học đã phân tích các lớp trầm tích để tái dựng những thay đổi cổ xưa trong thung lũng sông.",
+      "pos": "N"
+    },
+    {
+      "term": "geology",
+      "definition": "Ngành khoa học nghiên cứu thành phần, cấu trúc, lịch sử và các quá trình biến đổi của Trái Đất.",
+      "example": "Geology helps researchers explain how volcanic activity has shaped the island.",
+      "exampleTranslation": "Địa chất học giúp các nhà nghiên cứu giải thích hoạt động núi lửa đã định hình hòn đảo như thế nào.",
+      "pos": "N"
+    },
+    {
+      "term": "glacier",
+      "definition": "Khối băng lớn hình thành trên đất liền và di chuyển chậm do trọng lực.",
+      "example": "The glacier is retreating rapidly as regional temperatures continue to rise.",
+      "exampleTranslation": "Sông băng đang rút lui nhanh chóng khi nhiệt độ khu vực tiếp tục tăng.",
+      "pos": "N"
+    },
+    {
+      "term": "lithosphere",
+      "definition": "Thạch quyển; lớp vỏ cứng bên ngoài của Trái Đất, gồm vỏ Trái Đất và phần trên của lớp phủ.",
+      "example": "The lithosphere consists of Earth's rigid outer layer and the uppermost mantle.",
+      "exampleTranslation": "Thạch quyển gồm lớp ngoài cứng của Trái Đất và phần trên cùng của lớp phủ.",
+      "pos": "N"
+    },
+    {
+      "term": "meteorological",
+      "definition": "Thuộc về thời tiết hoặc khoa học nghiên cứu các hiện tượng khí quyển.",
+      "example": "Meteorological records reveal significant changes in rainfall patterns over recent decades.",
+      "exampleTranslation": "Các ghi chép khí tượng cho thấy những thay đổi đáng kể trong mô hình lượng mưa trong những thập kỷ gần đây.",
+      "pos": "A"
+    },
+    {
+      "term": "meteorologist",
+      "definition": "Nhà khí tượng học, người nghiên cứu và dự báo thời tiết cùng các hiện tượng khí quyển.",
+      "example": "The meteorologist predicted severe storms by analysing pressure and wind patterns.",
+      "exampleTranslation": "Nhà khí tượng học đã dự báo những cơn bão nghiêm trọng bằng cách phân tích các mô hình áp suất và gió.",
+      "pos": "N"
+    },
+    {
+      "term": "meteorology",
+      "definition": "Ngành khoa học nghiên cứu khí quyển, thời tiết và các quá trình liên quan.",
+      "example": "Meteorology combines atmospheric observations with mathematical models to improve weather forecasts.",
+      "exampleTranslation": "Khí tượng học kết hợp các quan sát khí quyển với các mô hình toán học để cải thiện dự báo thời tiết.",
+      "pos": "N"
+    },
+    {
+      "term": "oceanography",
+      "definition": "Ngành khoa học nghiên cứu đại dương, bao gồm nước biển, sinh vật, địa chất và các dòng chảy.",
+      "example": "Oceanography provides evidence about how currents transport heat around the planet.",
+      "exampleTranslation": "Hải dương học cung cấp bằng chứng về cách các dòng hải lưu vận chuyển nhiệt quanh hành tinh.",
+      "pos": "N"
+    },
+    {
+      "term": "sediment",
+      "definition": "Vật chất như đất, cát hoặc mảnh vụn đá lắng đọng thành lớp bởi nước, gió hoặc băng.",
+      "example": "Heavy rainfall carried sediment from the hills into the coastal estuary.",
+      "exampleTranslation": "Mưa lớn đã cuốn trầm tích từ các ngọn đồi vào cửa sông ven biển.",
+      "pos": "N"
+    },
+    {
+      "term": "sedimentary",
+      "definition": "Thuộc về trầm tích hoặc được hình thành từ các lớp vật chất lắng đọng.",
+      "example": "Sedimentary layers preserve evidence of ancient rivers, lakes, and changing climates.",
+      "exampleTranslation": "Các lớp trầm tích lưu giữ bằng chứng về những con sông, hồ cổ và khí hậu biến đổi.",
+      "pos": "A"
+    },
+    {
+      "term": "sedimentation",
+      "definition": "Quá trình các vật chất lắng đọng và tích tụ thành lớp trầm tích.",
+      "example": "Rapid sedimentation can bury organic material before oxygen fully decomposes it.",
+      "exampleTranslation": "Sự trầm tích nhanh có thể vùi lấp vật chất hữu cơ trước khi oxy phân hủy hoàn toàn vật chất đó.",
+      "pos": "N"
+    },
+    {
+      "term": "seismology",
+      "definition": "Địa chấn học; ngành khoa học nghiên cứu động đất và các sóng địa chấn.",
+      "example": "Seismology helps researchers identify fault structures by analysing waves generated during earthquakes.",
+      "exampleTranslation": "Địa chấn học giúp các nhà nghiên cứu xác định cấu trúc đứt gãy bằng cách phân tích những con sóng do động đất tạo ra.",
+      "pos": "N"
+    },
+    {
+      "term": "tectonic",
+      "definition": "Thuộc về sự chuyển động và biến dạng của các mảng kiến tạo trong vỏ Trái Đất.",
+      "example": "Tectonic movements gradually raise mountain ranges and reshape drainage patterns across continents.",
+      "exampleTranslation": "Các chuyển động kiến tạo dần nâng cao các dãy núi và định hình lại các kiểu thoát nước trên các lục địa.",
+      "pos": "A"
+    },
+    {
+      "term": "tidal",
+      "definition": "Liên quan đến, do hoặc chịu ảnh hưởng của thủy triều.",
+      "example": "Tidal currents transport fine sediments into coastal marshes and shallow estuaries.",
+      "exampleTranslation": "Các dòng chảy thủy triều vận chuyển trầm tích mịn vào những vùng đầm lầy ven biển và cửa sông nông.",
+      "pos": "A"
+    },
+    {
+      "term": "volcanic",
+      "definition": "Thuộc về núi lửa hoặc được tạo ra bởi hoạt động của núi lửa.",
+      "example": "Volcanic ash can travel thousands of kilometres and temporarily reduce air quality.",
+      "exampleTranslation": "Tro núi lửa có thể bay xa hàng nghìn kilômét và tạm thời làm giảm chất lượng không khí.",
+      "pos": "A"
+    },
+    {
+      "term": "astronomer",
+      "definition": "Nhà khoa học nghiên cứu các thiên thể, không gian và những hiện tượng trong vũ trụ.",
+      "example": "The astronomer measured stellar movements to estimate the galaxy's rotation.",
+      "exampleTranslation": "Nhà thiên văn học đo chuyển động của các ngôi sao để ước tính sự quay của thiên hà.",
+      "pos": "N"
+    },
+    {
+      "term": "astronomical",
+      "definition": "Thuộc về thiên văn học hoặc các thiên thể trong vũ trụ.",
+      "example": "Astronomical observations revealed that the planet's atmosphere changes with seasonal sunlight.",
+      "exampleTranslation": "Các quan sát thiên văn cho thấy bầu khí quyển của hành tinh thay đổi theo ánh sáng mặt trời theo mùa.",
+      "pos": "A"
+    },
+    {
+      "term": "astronomy",
+      "definition": "Ngành khoa học nghiên cứu các thiên thể, không gian và những hiện tượng trong vũ trụ.",
+      "example": "Astronomy combines precise observation with mathematical models to explain celestial motion.",
+      "exampleTranslation": "Thiên văn học kết hợp quan sát chính xác với các mô hình toán học để giải thích chuyển động của các thiên thể.",
+      "pos": "N"
+    },
+    {
+      "term": "celestial",
+      "definition": "Thuộc về các thiên thể hoặc vũ trụ.",
+      "example": "The telescope detected a faint celestial object beyond Neptune during the survey.",
+      "exampleTranslation": "Kính thiên văn phát hiện một thiên thể mờ ở ngoài Sao Hải Vương trong quá trình khảo sát.",
+      "pos": "A"
+    },
+    {
+      "term": "cosmic",
+      "definition": "Thuộc về vũ trụ hoặc không gian ngoài Trái Đất.",
+      "example": "Scientists detected cosmic radiation while examining signals from the early universe.",
+      "exampleTranslation": "Các nhà khoa học phát hiện bức xạ vũ trụ khi nghiên cứu những tín hiệu từ vũ trụ sơ khai.",
+      "pos": "A"
+    },
+    {
+      "term": "galaxy",
+      "definition": "Thiên hà, một hệ thống gồm các ngôi sao, khí và bụi liên kết bởi lực hấp dẫn.",
+      "example": "This galaxy contains billions of stars arranged around a dense central region.",
+      "exampleTranslation": "Thiên hà này chứa hàng tỷ ngôi sao được sắp xếp quanh một vùng trung tâm dày đặc.",
+      "pos": "N"
+    },
+    {
+      "term": "gravity",
+      "definition": "Lực hút khiến các vật thể bị kéo về phía nhau.",
+      "example": "Gravity keeps artificial satellites in stable orbits around Earth.",
+      "exampleTranslation": "Trọng lực giữ các vệ tinh nhân tạo trong những quỹ đạo ổn định quanh Trái Đất.",
+      "pos": "N"
+    },
+    {
+      "term": "lunar",
+      "definition": "Thuộc về Mặt Trăng.",
+      "example": "Lunar samples revealed chemical changes caused by prolonged exposure to space.",
+      "exampleTranslation": "Các mẫu vật Mặt Trăng cho thấy những biến đổi hóa học do tiếp xúc lâu dài với không gian.",
+      "pos": "A"
+    },
+    {
+      "term": "orbit",
+      "definition": "Quỹ đạo của một vật thể quanh một thiên thể khác.",
+      "example": "The spacecraft entered orbit around Mars after a carefully planned journey.",
+      "exampleTranslation": "Tàu vũ trụ đi vào quỹ đạo quanh Sao Hỏa sau một hành trình được lập kế hoạch cẩn thận.",
+      "pos": "N"
+    },
+    {
+      "term": "orbital",
+      "definition": "Thuộc về quỹ đạo hoặc chuyển động theo quỹ đạo.",
+      "example": "Orbital measurements helped scientists estimate the planet's mass accurately.",
+      "exampleTranslation": "Các phép đo quỹ đạo giúp các nhà khoa học ước tính chính xác khối lượng của hành tinh.",
+      "pos": "A"
+    },
+    {
+      "term": "planet",
+      "definition": "Hành tinh, thiên thể quay quanh một ngôi sao và không tự phát sáng.",
+      "example": "Each planet follows a predictable path around its star.",
+      "exampleTranslation": "Mỗi hành tinh đi theo một quỹ đạo có thể dự đoán quanh ngôi sao của nó.",
+      "pos": "N"
+    },
+    {
+      "term": "planetary",
+      "definition": "Thuộc về hành tinh hoặc các hành tinh.",
+      "example": "Researchers use planetary data to compare the geological histories of worlds beyond Earth.",
+      "exampleTranslation": "Các nhà nghiên cứu sử dụng dữ liệu về các hành tinh để so sánh lịch sử địa chất của những thế giới ngoài Trái Đất.",
+      "pos": "A"
+    },
+    {
+      "term": "satellite",
+      "definition": "Vệ tinh tự nhiên hoặc nhân tạo quay quanh một hành tinh hay thiên thể khác.",
+      "example": "A satellite can measure atmospheric changes across remote regions more consistently than ground stations.",
+      "exampleTranslation": "Một vệ tinh có thể đo những thay đổi khí quyển ở các vùng xa xôi một cách ổn định hơn các trạm mặt đất.",
+      "pos": "N"
+    },
+    {
+      "term": "spacecraft",
+      "definition": "Tàu hoặc thiết bị được thiết kế để di chuyển và hoạt động trong không gian.",
+      "example": "The spacecraft transmitted detailed images during its approach to Mars.",
+      "exampleTranslation": "Tàu vũ trụ đã truyền về những hình ảnh chi tiết trong quá trình tiếp cận Sao Hỏa.",
+      "pos": "N"
+    },
+    {
+      "term": "telescope",
+      "definition": "Thiết bị quang học dùng để quan sát các vật thể ở rất xa, đặc biệt là trong không gian.",
+      "example": "The telescope revealed faint galaxies that were invisible to earlier astronomical instruments.",
+      "exampleTranslation": "Kính thiên văn đã phát hiện những thiên hà mờ mà các thiết bị thiên văn trước đây không thể nhìn thấy.",
+      "pos": "N"
+    },
+    {
+      "term": "universe",
+      "definition": "Toàn bộ không gian, thời gian, vật chất và năng lượng tồn tại.",
+      "example": "Astronomers study the universe to understand how matter and energy evolved over time.",
+      "exampleTranslation": "Các nhà thiên văn học nghiên cứu vũ trụ để hiểu vật chất và năng lượng đã tiến hóa như thế nào theo thời gian.",
+      "pos": "N"
+    },
+    {
+      "term": "anthropological",
+      "definition": "Thuộc về nhân học, ngành nghiên cứu con người và các xã hội của họ.",
+      "example": "Anthropological analysis of burial goods can reveal differences in status within ancient communities.",
+      "exampleTranslation": "Phân tích nhân học về đồ tùy táng có thể cho thấy sự khác biệt về địa vị trong các cộng đồng cổ đại.",
+      "pos": "A"
+    },
+    {
+      "term": "anthropologist",
+      "definition": "Nhà nhân học, người nghiên cứu con người, văn hóa và xã hội.",
+      "example": "The anthropologist compared tools from several sites to identify patterns of regional exchange.",
+      "exampleTranslation": "Nhà nhân học đã so sánh các công cụ từ nhiều địa điểm để xác định những mô hình trao đổi trong khu vực.",
+      "pos": "N"
+    },
+    {
+      "term": "anthropology",
+      "definition": "Ngành khoa học nghiên cứu con người, sự phát triển, văn hóa và xã hội của họ.",
+      "example": "Anthropology examines how human societies organize relationships, beliefs, and resources across different environments.",
+      "exampleTranslation": "Nhân học nghiên cứu cách các xã hội loài người tổ chức các mối quan hệ, niềm tin và nguồn lực trong những môi trường khác nhau.",
+      "pos": "N"
+    },
+    {
+      "term": "burial",
+      "definition": "Việc chôn cất hoặc mai táng người chết, thường theo một nghi thức nhất định.",
+      "example": "Archaeologists found the burial site containing bronze ornaments arranged according to a carefully planned ritual.",
+      "exampleTranslation": "Các nhà khảo cổ phát hiện địa điểm mai táng chứa những đồ trang sức bằng đồng được sắp xếp theo một nghi lễ được tổ chức cẩn thận.",
+      "pos": "N"
+    },
+    {
+      "term": "dynastic",
+      "definition": "Thuộc về một triều đại hoặc giai đoạn do một dòng vua cai trị.",
+      "example": "Dynastic changes often influenced burial customs, artistic styles, and the distribution of political power.",
+      "exampleTranslation": "Những thay đổi triều đại thường ảnh hưởng đến phong tục mai táng, phong cách nghệ thuật và sự phân bổ quyền lực chính trị.",
+      "pos": "A"
+    },
+    {
+      "term": "dynasty",
+      "definition": "Triều đại hoặc dòng vua cai trị một quốc gia hay khu vực trong một thời kỳ.",
+      "example": "The dynasty controlled regional trade routes for nearly three centuries, according to archaeological evidence.",
+      "exampleTranslation": "Theo bằng chứng khảo cổ, triều đại này kiểm soát các tuyến thương mại trong khu vực trong gần ba thế kỷ.",
+      "pos": "N"
+    },
+    {
+      "term": "excavation",
+      "definition": "Hoạt động khai quật có hệ thống để phát hiện và nghiên cứu các di tích, di vật.",
+      "example": "The excavation revealed layered settlements, allowing researchers to reconstruct changes in daily life.",
+      "exampleTranslation": "Cuộc khai quật phát hiện các khu định cư xếp thành nhiều tầng, giúp các nhà nghiên cứu tái dựng những thay đổi trong đời sống hằng ngày.",
+      "pos": "N"
+    },
+    {
+      "term": "pottery",
+      "definition": "Đồ vật làm từ đất sét được nung, thường gồm các bình, bát hoặc mảnh gốm.",
+      "example": "Fragments of pottery helped archaeologists identify trade connections between the settlement and distant coastal communities.",
+      "exampleTranslation": "Những mảnh gốm giúp các nhà khảo cổ xác định mối liên hệ thương mại giữa khu định cư và các cộng đồng ven biển xa xôi.",
+      "pos": "N"
+    },
+    {
+      "term": "acquisition",
+      "definition": "Quá trình tiếp thu kiến thức hoặc kỹ năng, đặc biệt là việc học và sử dụng ngôn ngữ.",
+      "example": "Early vocabulary acquisition is strongly influenced by interaction, repetition, and the richness of linguistic input.",
+      "exampleTranslation": "Việc tiếp thu từ vựng ban đầu chịu ảnh hưởng mạnh mẽ của sự tương tác, việc lặp lại và mức độ phong phú của đầu vào ngôn ngữ.",
+      "pos": "N"
+    },
+    {
+      "term": "discourse",
+      "definition": "Cách sử dụng ngôn ngữ trong giao tiếp nói hoặc viết, thường xét trong một bối cảnh xã hội cụ thể.",
+      "example": "Academic discourse relies on organized argumentation, precise terminology, and evidence-based interpretation.",
+      "exampleTranslation": "Diễn ngôn học thuật dựa vào lập luận có tổ chức, thuật ngữ chính xác và cách diễn giải dựa trên bằng chứng.",
+      "pos": "N"
+    },
+    {
+      "term": "morphology",
+      "definition": "Ngành nghiên cứu cấu tạo từ và cách các đơn vị nhỏ hơn tạo nên ý nghĩa ngữ pháp hoặc từ vựng.",
+      "example": "In linguistics, morphology examines how words are formed from smaller units that carry grammatical or lexical meaning.",
+      "exampleTranslation": "Trong ngôn ngữ học, hình thái học nghiên cứu cách từ được hình thành từ những đơn vị nhỏ hơn mang ý nghĩa ngữ pháp hoặc từ vựng.",
+      "pos": "N"
+    },
+    {
+      "term": "phonetic",
+      "definition": "Thuộc ngữ âm, liên quan đến cách các âm được phát ra và thể hiện.",
+      "example": "The phonetic analysis revealed subtle differences in vowel production across the two regional dialects.",
+      "exampleTranslation": "Phân tích ngữ âm cho thấy những khác biệt nhỏ trong cách phát âm nguyên âm giữa hai phương ngữ vùng miền.",
+      "pos": "A"
+    },
+    {
+      "term": "phonetics",
+      "definition": "Ngành nghiên cứu về các âm thanh lời nói, cách chúng được tạo ra và nhận biết.",
+      "example": "Students used phonetics to compare how airflow shapes consonant sounds in different languages.",
+      "exampleTranslation": "Sinh viên sử dụng ngữ âm học để so sánh cách luồng khí tạo nên các âm phụ trong những ngôn ngữ khác nhau.",
+      "pos": "N"
+    },
+    {
+      "term": "pragmatic",
+      "definition": "Thuộc ngữ dụng học; liên quan đến cách ngữ cảnh, người nói và người nghe ảnh hưởng đến ý nghĩa trong giao tiếp.",
+      "example": "Pragmatic analysis explains how speakers use context to communicate meanings beyond the literal content of their words.",
+      "exampleTranslation": "Phân tích ngữ dụng giải thích cách người nói sử dụng ngữ cảnh để truyền đạt những ý nghĩa vượt ra ngoài nội dung nghĩa đen của từ ngữ.",
+      "pos": "A"
+    },
+    {
+      "term": "semantic",
+      "definition": "Thuộc ngữ nghĩa, liên quan đến ý nghĩa của từ hoặc câu trong ngôn ngữ.",
+      "example": "The semantic distinction between these terms becomes clearer when examined in context.",
+      "exampleTranslation": "Sự khác biệt về ngữ nghĩa giữa các thuật ngữ này trở nên rõ ràng hơn khi được xem xét trong ngữ cảnh.",
+      "pos": "A"
+    },
+    {
+      "term": "semantics",
+      "definition": "Ngữ nghĩa học; ngành nghiên cứu ý nghĩa của từ, cụm từ và câu.",
+      "example": "Semantics helps researchers explain how identical words acquire different meanings across social groups.",
+      "exampleTranslation": "Ngữ nghĩa học giúp các nhà nghiên cứu giải thích cách những từ giống nhau có được các nghĩa khác nhau giữa các nhóm xã hội.",
+      "pos": "N"
+    },
+    {
+      "term": "syntax",
+      "definition": "Cú pháp; hệ thống quy tắc về cách sắp xếp từ thành cụm từ và câu.",
+      "example": "The study found that unusual syntax made complex instructions harder for children to interpret.",
+      "exampleTranslation": "Nghiên cứu cho thấy cú pháp bất thường khiến trẻ em khó diễn giải các hướng dẫn phức tạp hơn.",
+      "pos": "N"
+    },
+    {
+      "term": "correlation",
+      "definition": "Mối tương quan hoặc mối liên hệ giữa sự thay đổi của hai biến số.",
+      "example": "The researchers observed a strong correlation between sleep duration and examination performance.",
+      "exampleTranslation": "Các nhà nghiên cứu quan sát thấy mối tương quan chặt chẽ giữa thời lượng ngủ và kết quả thi.",
+      "pos": "N"
+    },
+    {
+      "term": "empirical",
+      "definition": "Dựa trên quan sát, đo lường hoặc bằng chứng thu thập được từ thực tế.",
+      "example": "The authors supported their conclusions with empirical evidence from three controlled experiments.",
+      "exampleTranslation": "Các tác giả củng cố kết luận của mình bằng bằng chứng thực nghiệm từ ba thí nghiệm có kiểm soát.",
+      "pos": "A"
+    },
+    {
+      "term": "empirically",
+      "definition": "Dựa trên bằng chứng thu được từ quan sát hoặc thí nghiệm thực tế.",
+      "example": "Researchers empirically tested whether soil moisture altered seed germination across three controlled field sites.",
+      "exampleTranslation": "Các nhà nghiên cứu đã kiểm nghiệm bằng thực nghiệm liệu độ ẩm đất có làm thay đổi sự nảy mầm của hạt giống tại ba địa điểm thực địa được kiểm soát hay không.",
+      "pos": "D"
+    },
+    {
+      "term": "methodological",
+      "definition": "Thuộc về phương pháp luận hoặc cách thức tiến hành nghiên cứu.",
+      "example": "The report discusses methodological limitations arising from nonrandom sampling and inconsistent measurement procedures.",
+      "exampleTranslation": "Báo cáo thảo luận những hạn chế về phương pháp luận phát sinh từ việc lấy mẫu không ngẫu nhiên và các quy trình đo lường không nhất quán.",
+      "pos": "A"
+    },
+    {
+      "term": "methodology",
+      "definition": "Hệ thống các nguyên tắc và phương pháp được sử dụng để tiến hành nghiên cứu.",
+      "example": "A transparent methodology enables readers to evaluate how data were collected, analysed, and interpreted.",
+      "exampleTranslation": "Một phương pháp luận minh bạch cho phép người đọc đánh giá dữ liệu đã được thu thập, phân tích và diễn giải như thế nào.",
+      "pos": "N"
+    },
+    {
+      "term": "qualitative",
+      "definition": "Liên quan đến đặc điểm, ý nghĩa và trải nghiệm thay vì số liệu đo lường.",
+      "example": "Qualitative interviews revealed how residents understood risks that numerical surveys had overlooked.",
+      "exampleTranslation": "Các cuộc phỏng vấn định tính cho thấy cư dân hiểu những rủi ro mà các khảo sát bằng số liệu đã bỏ sót như thế nào.",
+      "pos": "A"
+    },
+    {
+      "term": "quantitative",
+      "definition": "Liên quan đến việc đo lường hoặc phân tích bằng số lượng và số liệu.",
+      "example": "Quantitative analysis showed that income predicted access to reliable public transport.",
+      "exampleTranslation": "Phân tích định lượng cho thấy thu nhập dự đoán khả năng tiếp cận phương tiện giao thông công cộng đáng tin cậy.",
+      "pos": "A"
+    },
+    {
+      "term": "sample",
+      "definition": "Một nhóm nhỏ được chọn để đại diện cho một tổng thể trong nghiên cứu.",
+      "example": "The researchers selected a representative sample of households from five coastal communities.",
+      "exampleTranslation": "Các nhà nghiên cứu đã chọn một mẫu đại diện gồm các hộ gia đình từ năm cộng đồng ven biển.",
+      "pos": "N"
+    },
+    {
+      "term": "statistic",
+      "definition": "Một con số biểu thị đặc điểm của dữ liệu hoặc kết quả thống kê.",
+      "example": "One statistic, the median response time, exposed substantial differences between the two hospitals.",
+      "exampleTranslation": "Một chỉ số thống kê, thời gian phản hồi trung vị, đã cho thấy những khác biệt đáng kể giữa hai bệnh viện.",
+      "pos": "N"
+    },
+    {
+      "term": "statistical",
+      "definition": "Liên quan đến việc thu thập, phân tích hoặc diễn giải số liệu.",
+      "example": "Statistical models controlled for age, income, and education when estimating treatment effects.",
+      "exampleTranslation": "Các mô hình thống kê đã kiểm soát độ tuổi, thu nhập và trình độ học vấn khi ước tính tác động của phương pháp điều trị.",
+      "pos": "A"
+    },
+    {
+      "term": "statistics",
+      "definition": "Các số liệu được thu thập và phân tích để mô tả hoặc so sánh hiện tượng.",
+      "example": "Researchers used statistics to compare health outcomes across the two treatment groups.",
+      "exampleTranslation": "Các nhà nghiên cứu sử dụng số liệu thống kê để so sánh kết quả sức khỏe giữa hai nhóm điều trị.",
+      "pos": "N"
+    },
+    {
+      "term": "survey",
+      "definition": "Cuộc khảo sát có hệ thống nhằm thu thập thông tin từ một nhóm người hoặc mẫu đại diện.",
+      "example": "The survey collected responses from 1,200 households about access to clean water.",
+      "exampleTranslation": "Cuộc khảo sát thu thập câu trả lời từ 1.200 hộ gia đình về khả năng tiếp cận nước sạch.",
+      "pos": "N"
+    },
+    {
+      "term": "variable",
+      "definition": "Biến số; một yếu tố có thể thay đổi và được đo lường trong nghiên cứu.",
+      "example": "Researchers treated household income as a variable influencing participation in higher education.",
+      "exampleTranslation": "Các nhà nghiên cứu xem thu nhập hộ gia đình là một biến số ảnh hưởng đến việc tham gia giáo dục đại học.",
+      "pos": "N"
+    },
+    {
+      "term": "logic",
+      "definition": "Các nguyên tắc và cách thức suy luận hợp lệ, chặt chẽ.",
+      "example": "The argument's logic depends on distinguishing correlation from causation.",
+      "exampleTranslation": "Logic của lập luận này phụ thuộc vào việc phân biệt mối tương quan với quan hệ nhân quả.",
+      "pos": "N"
+    },
+    {
+      "term": "logical",
+      "definition": "Hợp lý và phù hợp với các nguyên tắc suy luận chặt chẽ.",
+      "example": "A logical interpretation of the evidence requires consideration of alternative explanations.",
+      "exampleTranslation": "Một cách diễn giải hợp lý về bằng chứng đòi hỏi phải xem xét các cách giải thích thay thế.",
+      "pos": "A"
+    },
+    {
+      "term": "metaphysical",
+      "definition": "Thuộc siêu hình học, liên quan đến những vấn đề vượt ngoài khả năng kiểm chứng trực tiếp bằng quan sát.",
+      "example": "The study avoids metaphysical claims that cannot be tested through observation or experiment.",
+      "exampleTranslation": "Nghiên cứu này tránh những khẳng định siêu hình không thể được kiểm chứng bằng quan sát hoặc thí nghiệm.",
+      "pos": "A"
+    },
+    {
+      "term": "moral",
+      "definition": "Liên quan đến việc phân biệt đúng và sai hoặc đến các nguyên tắc đạo đức.",
+      "example": "The policy raises moral questions about fairness, responsibility, and access to essential services.",
+      "exampleTranslation": "Chính sách này đặt ra những câu hỏi đạo đức về sự công bằng, trách nhiệm và khả năng tiếp cận các dịch vụ thiết yếu.",
+      "pos": "A"
+    },
+    {
+      "term": "morally",
+      "definition": "Về phương diện đạo đức; theo cách phù hợp hoặc không phù hợp với các nguyên tắc đạo đức.",
+      "example": "The committee judged the proposed experiment morally acceptable after reviewing its potential risks.",
+      "exampleTranslation": "Ủy ban đánh giá thí nghiệm được đề xuất là chấp nhận được về mặt đạo đức sau khi xem xét những rủi ro tiềm ẩn của nó.",
+      "pos": "D"
+    },
+    {
+      "term": "philosopher",
+      "definition": "Nhà triết học; người nghiên cứu và suy luận về những vấn đề cơ bản của tri thức, đạo đức và tồn tại.",
+      "example": "The philosopher argued that justice requires institutions to protect the vulnerable.",
+      "exampleTranslation": "Nhà triết học lập luận rằng công lý đòi hỏi các thể chế phải bảo vệ những người dễ bị tổn thương.",
+      "pos": "N"
+    },
+    {
+      "term": "philosophical",
+      "definition": "Thuộc về triết học hoặc thể hiện cách suy nghĩ sâu sắc, có hệ thống về các vấn đề tư tưởng và đạo đức.",
+      "example": "Her philosophical discussion distinguishes moral responsibility from legal accountability.",
+      "exampleTranslation": "Phần thảo luận triết học của cô phân biệt trách nhiệm đạo đức với trách nhiệm pháp lý.",
+      "pos": "A"
+    },
+    {
+      "term": "philosophy",
+      "definition": "Triết học; hệ thống tư tưởng về bản chất của tri thức, thực tại, đạo đức và con người.",
+      "example": "His philosophy connects personal freedom with responsibility toward the wider community.",
+      "exampleTranslation": "Triết lý của ông gắn kết tự do cá nhân với trách nhiệm đối với cộng đồng rộng lớn hơn.",
+      "pos": "N"
+    },
+    {
+      "term": "rational",
+      "definition": "Dựa trên lý trí, lập luận và bằng chứng thay vì cảm xúc hoặc niềm tin thiếu căn cứ.",
+      "example": "A rational explanation must account for evidence that challenges the initial hypothesis.",
+      "exampleTranslation": "Một lời giải thích hợp lý phải tính đến những bằng chứng thách thức giả thuyết ban đầu.",
+      "pos": "A"
+    },
+    {
+      "term": "rationalism",
+      "definition": "Chủ nghĩa duy lý; quan điểm cho rằng lý trí là nguồn chủ yếu của tri thức.",
+      "example": "Rationalism treats reason as a primary source of knowledge, independent of sensory experience.",
+      "exampleTranslation": "Chủ nghĩa duy lý coi lý trí là nguồn tri thức chủ yếu, độc lập với kinh nghiệm giác quan.",
+      "pos": "N"
+    },
+    {
+      "term": "rationalist",
+      "definition": "Người theo chủ nghĩa duy lý, đề cao lý trí và lập luận logic trong việc hình thành tri thức.",
+      "example": "The rationalist rejected tradition when it conflicted with clear logical principles.",
+      "exampleTranslation": "Người theo chủ nghĩa duy lý bác bỏ truyền thống khi truyền thống đó mâu thuẫn với các nguyên tắc logic rõ ràng.",
+      "pos": "N"
+    },
+    {
+      "term": "virtue",
+      "definition": "Đức tính tốt hoặc phẩm chất đạo đức được coi là đáng quý và cần được rèn luyện.",
+      "example": "The study argues that patience is a virtue essential to effective scientific collaboration.",
+      "exampleTranslation": "Nghiên cứu cho rằng kiên nhẫn là một đức tính thiết yếu đối với sự hợp tác khoa học hiệu quả.",
+      "pos": "N"
+    },
+    {
+      "term": "climate",
+      "definition": "Khí hậu; những điều kiện thời tiết đặc trưng của một khu vực trong thời gian dài.",
+      "example": "Climate records reveal that prolonged droughts are becoming more frequent across several agricultural regions.",
+      "exampleTranslation": "Các hồ sơ khí hậu cho thấy những đợt hạn hán kéo dài đang trở nên thường xuyên hơn ở một số vùng nông nghiệp.",
+      "pos": "N"
+    },
+    {
+      "term": "dioxide",
+      "definition": "Hợp chất có một nguyên tố liên kết với hai nguyên tử oxy, chẳng hạn carbon dioxide (CO₂).",
+      "example": "Industrial emissions release carbon dioxide, which traps heat and contributes to global warming.",
+      "exampleTranslation": "Khí thải công nghiệp thải ra khí cacbon đioxit, chất giữ nhiệt và góp phần gây nóng lên toàn cầu.",
+      "pos": "N"
+    },
+    {
+      "term": "ozone",
+      "definition": "Một dạng khí của oxy, có khả năng hấp thụ phần lớn bức xạ cực tím trong khí quyển.",
+      "example": "Stratospheric ozone absorbs ultraviolet radiation and protects living organisms from harmful solar exposure.",
+      "exampleTranslation": "Ôzôn trong tầng bình lưu hấp thụ bức xạ cực tím và bảo vệ các sinh vật khỏi sự phơi nhiễm có hại từ ánh nắng mặt trời.",
+      "pos": "N"
+    },
+    {
+      "term": "altitude",
+      "definition": "Độ cao của một địa điểm, thường được đo so với mực nước biển.",
+      "example": "At high altitude, lower air pressure can reduce the efficiency of combustion engines.",
+      "exampleTranslation": "Ở độ cao lớn, áp suất không khí thấp hơn có thể làm giảm hiệu suất của động cơ đốt trong.",
+      "pos": "N"
+    },
+    {
+      "term": "cartographer",
+      "definition": "Người chuyên nghiên cứu và vẽ bản đồ.",
+      "example": "The cartographer combined historical maps with satellite imagery to reconstruct the river's changing course.",
+      "exampleTranslation": "Nhà bản đồ học kết hợp các bản đồ lịch sử với ảnh vệ tinh để tái dựng dòng chảy thay đổi của con sông.",
+      "pos": "N"
+    },
+    {
+      "term": "cartographic",
+      "definition": "Thuộc về bản đồ học hoặc việc thiết kế và lập bản đồ.",
+      "example": "Modern cartographic techniques allow researchers to compare land-use changes across decades with remarkable precision.",
+      "exampleTranslation": "Các kỹ thuật bản đồ học hiện đại cho phép các nhà nghiên cứu so sánh những thay đổi trong việc sử dụng đất qua nhiều thập kỷ với độ chính xác đáng kể.",
+      "pos": "A"
+    },
+    {
+      "term": "coast",
+      "definition": "Vùng đất tiếp giáp với biển hoặc đại dương; bờ biển.",
+      "example": "The island's eastern coast supports diverse wetlands that provide important habitats for migratory birds.",
+      "exampleTranslation": "Bờ biển phía đông của hòn đảo có các vùng đất ngập nước đa dạng, tạo môi trường sống quan trọng cho các loài chim di cư.",
+      "pos": "N"
+    },
+    {
+      "term": "coastal",
+      "definition": "Thuộc về bờ biển hoặc khu vực gần biển.",
+      "example": "Many coastal communities face increasing risks from storm surges and gradual sea-level rise.",
+      "exampleTranslation": "Nhiều cộng đồng ven biển phải đối mặt với những rủi ro ngày càng tăng từ nước dâng do bão và mực nước biển dâng dần.",
+      "pos": "A"
+    },
+    {
+      "term": "geographer",
+      "definition": "Nhà địa lý học, người nghiên cứu các đặc điểm và mối quan hệ không gian trên Trái Đất.",
+      "example": "The geographer mapped population density to identify regions underserved by public transportation.",
+      "exampleTranslation": "Nhà địa lý học lập bản đồ mật độ dân số để xác định những khu vực chưa được giao thông công cộng phục vụ đầy đủ.",
+      "pos": "N"
+    },
+    {
+      "term": "geographical",
+      "definition": "Thuộc địa lý; liên quan đến các vùng đất, địa hình hoặc vị trí trên bản đồ.",
+      "example": "Geographical maps reveal how rivers influence the distribution of agricultural communities.",
+      "exampleTranslation": "Các bản đồ địa lý cho thấy sông ngòi ảnh hưởng như thế nào đến sự phân bố của các cộng đồng nông nghiệp.",
+      "pos": "A"
+    },
+    {
+      "term": "geography",
+      "definition": "Ngành khoa học nghiên cứu các địa hình, vùng miền, khí hậu và sự phân bố của con người trên Trái Đất.",
+      "example": "Physical geography examines how rivers, mountains, and climate shape human settlement patterns.",
+      "exampleTranslation": "Địa lý tự nhiên nghiên cứu cách sông ngòi, núi non và khí hậu định hình các mô hình định cư của con người.",
+      "pos": "N"
+    },
+    {
+      "term": "island",
+      "definition": "Một vùng đất được bao quanh hoàn toàn bởi nước.",
+      "example": "The island supports several endemic species adapted to salty coastal winds.",
+      "exampleTranslation": "Hòn đảo này là nơi sinh sống của một số loài đặc hữu thích nghi với những cơn gió biển mặn.",
+      "pos": "N"
+    },
+    {
+      "term": "mountain",
+      "definition": "Một vùng đất tự nhiên cao và dốc, thường cao hơn khu vực xung quanh.",
+      "example": "The mountain blocks moist air, creating heavy rainfall on its western slopes.",
+      "exampleTranslation": "Ngọn núi chắn không khí ẩm, tạo ra lượng mưa lớn ở các sườn phía tây.",
+      "pos": "N"
+    },
+    {
+      "term": "mountainous",
+      "definition": "Có nhiều núi hoặc bị núi non bao phủ.",
+      "example": "The mountainous interior has few roads and remains sparsely populated.",
+      "exampleTranslation": "Vùng nội địa nhiều núi có ít đường sá và vẫn thưa dân.",
+      "pos": "A"
+    },
+    {
+      "term": "region",
+      "definition": "Một khu vực hoặc vùng có đặc điểm địa lý, khí hậu hay văn hóa tương đối riêng biệt.",
+      "example": "This region contains fertile valleys formed by ancient volcanic activity.",
+      "exampleTranslation": "Vùng này có những thung lũng màu mỡ được hình thành do hoạt động núi lửa cổ đại.",
+      "pos": "N"
+    },
+    {
+      "term": "regional",
+      "definition": "Thuộc về một vùng hoặc liên quan đến một khu vực cụ thể.",
+      "example": "Regional maps help researchers compare rainfall patterns across neighboring provinces.",
+      "exampleTranslation": "Các bản đồ khu vực giúp các nhà nghiên cứu so sánh kiểu mưa giữa những tỉnh lân cận.",
+      "pos": "A"
+    },
+    {
+      "term": "terrain",
+      "definition": "Địa hình hoặc đặc điểm bề mặt của một khu vực, xét về độ cao, độ dốc và dạng đất.",
+      "example": "The island's rugged terrain made road construction expensive and vulnerable to seasonal landslides.",
+      "exampleTranslation": "Địa hình gồ ghề của hòn đảo khiến việc xây dựng đường sá tốn kém và dễ bị sạt lở theo mùa.",
+      "pos": "N"
+    },
+    {
+      "term": "topographic",
+      "definition": "Thuộc về việc mô tả hoặc thể hiện chi tiết các đặc điểm tự nhiên và độ cao của địa hình.",
+      "example": "Topographic surveys revealed steep slopes that were absent from earlier regional maps.",
+      "exampleTranslation": "Các cuộc khảo sát địa hình cho thấy những sườn dốc lớn không xuất hiện trên các bản đồ khu vực trước đây.",
+      "pos": "A"
+    },
+    {
+      "term": "topographical",
+      "definition": "Thuộc về việc mô tả hoặc thể hiện chi tiết các đặc điểm tự nhiên và độ cao của địa hình.",
+      "example": "Topographical data helped planners identify suitable routes for the proposed mountain railway.",
+      "exampleTranslation": "Dữ liệu địa hình giúp các nhà quy hoạch xác định những tuyến đường phù hợp cho tuyến đường sắt miền núi được đề xuất.",
+      "pos": "A"
+    },
+    {
+      "term": "valley",
+      "definition": "Vùng đất thấp nằm giữa các đồi hoặc núi, thường có sông hoặc dòng suối chảy qua.",
+      "example": "The river valley supports intensive agriculture because its soils are deep and fertile.",
+      "exampleTranslation": "Thung lũng sông hỗ trợ nền nông nghiệp thâm canh vì đất ở đó dày và màu mỡ.",
+      "pos": "N"
+    },
+    {
+      "term": "alloy",
+      "definition": "Hợp kim; vật liệu được tạo ra bằng cách kết hợp một kim loại với kim loại hoặc nguyên tố khác.",
+      "example": "Engineers developed a lightweight alloy that withstands high temperatures in aircraft engines.",
+      "exampleTranslation": "Các kỹ sư đã phát triển một hợp kim nhẹ có thể chịu được nhiệt độ cao trong động cơ máy bay.",
+      "pos": "N"
+    },
+    {
+      "term": "atom",
+      "definition": "Đơn vị nhỏ nhất của một nguyên tố hóa học vẫn giữ các tính chất của nguyên tố đó.",
+      "example": "Each atom consists of a nucleus surrounded by electrons occupying distinct energy levels.",
+      "exampleTranslation": "Mỗi nguyên tử gồm một hạt nhân được bao quanh bởi các electron chiếm những mức năng lượng riêng biệt.",
+      "pos": "N"
+    },
+    {
+      "term": "atomic",
+      "definition": "Thuộc về nguyên tử hoặc các quá trình, cấu trúc và năng lượng liên quan đến nguyên tử.",
+      "example": "Atomic structure determines how elements interact and form chemical bonds.",
+      "exampleTranslation": "Cấu trúc nguyên tử quyết định cách các nguyên tố tương tác và hình thành liên kết hóa học.",
+      "pos": "A"
+    },
+    {
+      "term": "chemical",
+      "definition": "Thuộc về hóa học hoặc liên quan đến các chất và sự biến đổi giữa chúng.",
+      "example": "The researchers monitored chemical changes in the soil after prolonged flooding.",
+      "exampleTranslation": "Các nhà nghiên cứu theo dõi những biến đổi hóa học trong đất sau một thời gian ngập lụt kéo dài.",
+      "pos": "A"
+    },
+    {
+      "term": "chemically",
+      "definition": "Về phương diện hóa học; xét theo tính chất hoặc thành phần hóa học.",
+      "example": "The sample was chemically stable under prolonged heating.",
+      "exampleTranslation": "Mẫu vật vẫn ổn định về mặt hóa học khi bị đun nóng trong thời gian dài.",
+      "pos": "D"
+    },
+    {
+      "term": "compound",
+      "definition": "Hợp chất được tạo thành từ hai hoặc nhiều nguyên tố liên kết hóa học với nhau.",
+      "example": "Scientists identified the compound as a product of bacterial metabolism.",
+      "exampleTranslation": "Các nhà khoa học xác định hợp chất này là sản phẩm của quá trình trao đổi chất ở vi khuẩn.",
+      "pos": "N"
+    },
+    {
+      "term": "corrosion",
+      "definition": "Sự ăn mòn hoặc phá hủy vật liệu, đặc biệt là kim loại, do phản ứng hóa học với môi trường.",
+      "example": "Protective coatings significantly reduce corrosion on steel bridges exposed to seawater.",
+      "exampleTranslation": "Các lớp phủ bảo vệ làm giảm đáng kể sự ăn mòn trên những cây cầu thép tiếp xúc với nước biển.",
+      "pos": "N"
+    },
+    {
+      "term": "element",
+      "definition": "Nguyên tố hóa học, gồm các nguyên tử có cùng số hiệu nguyên tử.",
+      "example": "Iron is an element commonly used in construction and manufacturing.",
+      "exampleTranslation": "Sắt là một nguyên tố thường được sử dụng trong xây dựng và sản xuất.",
+      "pos": "N"
+    },
+    {
+      "term": "elemental",
+      "definition": "Thuộc về một nguyên tố hóa học hoặc tồn tại ở dạng nguyên tố tự do.",
+      "example": "The analysis detected elemental sulfur in the mineral sample.",
+      "exampleTranslation": "Phân tích cho thấy lưu huỳnh nguyên tố trong mẫu khoáng vật.",
+      "pos": "A"
+    },
+    {
+      "term": "elementary",
+      "definition": "Cơ bản và ở mức nhập môn, thường làm nền tảng cho kiến thức phức tạp hơn.",
+      "example": "The textbook introduces elementary concepts before discussing complex molecular interactions.",
+      "exampleTranslation": "Cuốn giáo trình giới thiệu các khái niệm cơ bản trước khi thảo luận về những tương tác phân tử phức tạp.",
+      "pos": "A"
+    },
+    {
+      "term": "metal",
+      "definition": "Kim loại, một vật liệu thường có độ dẫn điện và dẫn nhiệt cao, đồng thời có tính dẻo.",
+      "example": "Copper is a versatile metal widely used in electrical wiring and industrial equipment.",
+      "exampleTranslation": "Đồng là một kim loại đa dụng được sử dụng rộng rãi trong dây dẫn điện và thiết bị công nghiệp.",
+      "pos": "N"
+    },
+    {
+      "term": "molecule",
+      "definition": "Phân tử, một nhóm gồm hai hoặc nhiều nguyên tử liên kết với nhau.",
+      "example": "A water molecule contains two hydrogen atoms and one oxygen atom.",
+      "exampleTranslation": "Một phân tử nước gồm hai nguyên tử hydro và một nguyên tử oxy.",
+      "pos": "N"
+    },
+    {
+      "term": "polymer",
+      "definition": "Chất có cấu trúc gồm các phân tử lớn hình thành từ nhiều đơn vị phân tử nhỏ liên kết với nhau.",
+      "example": "The polymer becomes flexible when heated, allowing manufacturers to shape it into medical tubing.",
+      "exampleTranslation": "Polymer trở nên dẻo khi được đun nóng, cho phép các nhà sản xuất tạo hình nó thành ống y tế.",
+      "pos": "N"
+    },
+    {
+      "term": "polymeric",
+      "definition": "Thuộc về polymer hoặc được cấu tạo từ polymer.",
+      "example": "Polymeric materials can reduce weight while maintaining the strength required for structural components.",
+      "exampleTranslation": "Các vật liệu polymer có thể giảm trọng lượng trong khi vẫn duy trì độ bền cần thiết cho các bộ phận kết cấu.",
+      "pos": "A"
+    },
+    {
+      "term": "reaction",
+      "definition": "Quá trình hóa học trong đó một hoặc nhiều chất biến đổi để tạo thành chất mới.",
+      "example": "The reaction between hydrogen and oxygen releases energy and produces water.",
+      "exampleTranslation": "Phản ứng giữa hydro và oxy giải phóng năng lượng và tạo ra nước.",
+      "pos": "N"
+    },
+    {
+      "term": "synthetic",
+      "definition": "Được tạo ra nhân tạo bằng các quá trình hóa học, thay vì có nguồn gốc tự nhiên.",
+      "example": "Synthetic fibers are often engineered to resist moisture, abrasion, and repeated washing.",
+      "exampleTranslation": "Các sợi tổng hợp thường được chế tạo để chống ẩm, mài mòn và việc giặt nhiều lần.",
+      "pos": "A"
+    }
+  ]
+}

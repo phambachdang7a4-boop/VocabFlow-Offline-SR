@@ -1,12 +1,12 @@
 import React from "react";
 import {
+  Image,
   Platform,
   StyleSheet,
   View,
   type ColorValue,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { MaterialSheen } from "@/components/ui";
 
@@ -14,11 +14,11 @@ import { MaterialSheen } from "@/components/ui";
 export const unstable_settings = { anchor: "dictionary" };
 
 const ICONS = {
-  index: "book-open",
-  dictionary: "book-open",
-  courses: "grid",
-  review: "repeat",
-  blank: "check-square",
+  index: require("../../assets/navigation/notebook.png"),
+  dictionary: require("../../assets/navigation/library.png"),
+  courses: require("../../assets/navigation/courses.png"),
+  review: require("../../assets/navigation/review.png"),
+  blank: require("../../assets/navigation/missions.png"),
 } as const;
 
 function ClassicTabLayout() {
@@ -27,7 +27,7 @@ function ClassicTabLayout() {
 
   const icon =
     (key: keyof typeof ICONS, hasDivider = true) =>
-    ({ color, focused }: { color: ColorValue; focused: boolean }) => (
+    ({ focused }: { color: ColorValue; focused: boolean }) => (
       <View
         style={[
           styles.tabIcon,
@@ -52,16 +52,22 @@ function ClassicTabLayout() {
             ]}
           />
         ) : null}
-        <Feather
-          name={ICONS[key]}
-          size={focused ? 25 : 27}
-          color={
-            focused
-              ? colors.buttonForeground
-              : typeof color === "string"
-                ? color
-                : colors.navigationInactive
-          }
+        <Image
+          source={ICONS[key]}
+          resizeMode="contain"
+          accessible={false}
+          style={[
+            styles.tabArtwork,
+            key === "dictionary"
+              ? styles.libraryArtwork
+              : key === "courses"
+                ? styles.courseArtwork
+                : key === "review"
+                  ? styles.reviewArtwork
+                  : key === "index"
+                    ? styles.notebookArtwork
+                    : styles.missionsArtwork,
+          ]}
         />
       </View>
     );
@@ -138,6 +144,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+  },
+  tabArtwork: {
+    maxWidth: 48,
+    maxHeight: 40,
+  },
+  libraryArtwork: {
+    width: 47,
+    height: 36,
+  },
+  courseArtwork: {
+    width: 36,
+    height: 38,
+  },
+  reviewArtwork: {
+    width: 40,
+    height: 39,
+  },
+  notebookArtwork: {
+    width: 36,
+    height: 39,
+  },
+  missionsArtwork: {
+    width: 32,
+    height: 40,
   },
   tabDivider: {
     position: "absolute",

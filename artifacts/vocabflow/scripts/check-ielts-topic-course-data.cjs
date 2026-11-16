@@ -8,6 +8,8 @@ const {
   REQUIRED_COMMON_INFLECTIONS,
   REQUIRED_RELATED_HEADWORDS,
   REDUNDANT_VERB_INFLECTION_REVIEW,
+  IELTS_EXPANSION_CANDIDATES,
+  IELTS_EXPANSION_TOPIC_ROUTES,
   COURSE_POS_OVERRIDES,
   spellingNoteForTerm,
   validateCourseExamples,
@@ -47,6 +49,56 @@ assert.equal(
   REDUNDANT_VERB_INFLECTION_REVIEW.size,
   85,
   "The manually reviewed redundant verb-form list should remain explicit.",
+);
+const expansionTerms = IELTS_EXPANSION_CANDIDATES.topics.flatMap(
+  (topic) => topic.terms,
+);
+assert.equal(
+  IELTS_EXPANSION_CANDIDATES.topics.length,
+  11,
+  "The academic reading expansion should cover all reviewed topic areas.",
+);
+assert.equal(
+  expansionTerms.length,
+  156,
+  "The reviewed IELTS expansion candidate list should remain explicit.",
+);
+assert.equal(
+  new Set(expansionTerms).size,
+  expansionTerms.length,
+  "The expansion must not repeat headwords across topics.",
+);
+for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
+  const courseTopicId = IELTS_EXPANSION_TOPIC_ROUTES[topic.id];
+  const generatedTopic = courseData.topics.find(
+    (courseTopic) => courseTopic.id === courseTopicId,
+  );
+  assert.ok(generatedTopic, `${courseTopicId} must remain an IELTS topic.`);
+  for (const term of topic.terms) {
+    assert.ok(
+      generatedTopic.terms.includes(term),
+      `${term} must remain in the topic it was selected for.`,
+    );
+    assert.equal(
+      courseData.entries[term]?.exampleSource,
+      "authored",
+      `${term} must use an authored example rather than a weak dictionary example.`,
+    );
+    assert.ok(
+      courseData.entries[term]?.exampleTranslation?.trim(),
+      `${term} must include a Vietnamese translation for its example.`,
+    );
+  }
+}
+assert.equal(
+  courseData.totalWords,
+  1351,
+  "The cleaned IELTS course plus the reviewed expansion should contain 1,351 words.",
+);
+assert.equal(
+  courseData.topics.length,
+  36,
+  "The new academic domains must be grouped into course topics with usable lesson sizes.",
 );
 assert.equal(
   hasSubjectPronounConflict(

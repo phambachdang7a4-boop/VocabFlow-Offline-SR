@@ -1,0 +1,119 @@
+{
+  "topics": [
+    {
+      "id": "psychology",
+      "title": "Tâm lý học",
+      "focus": "Nhận thức, cảm xúc, động lực và hành vi con người.",
+      "terms": [
+        "cognition", "cognitive", "conscious", "consciously", "consciousness",
+        "emotion", "emotional", "instinct", "instinctive", "motivation",
+        "perception", "perceptible", "perceptive", "personality", "stress",
+        "stressful", "trauma", "aggression", "attitude", "addict", "addiction"
+      ]
+    },
+    {
+      "id": "biology",
+      "title": "Sinh học",
+      "focus": "Tế bào, di truyền, tiến hóa, miễn dịch và sinh lý học.",
+      "terms": [
+        "adapt", "adaptation", "adaptable", "adaptive", "anatomical",
+        "biologist", "cell", "enzyme", "evolution", "evolutionary", "genetic",
+        "immune", "metabolism", "microscope", "mutation", "nutrient",
+        "physiological", "physiologist", "physiology", "reproduction", "virus"
+      ]
+    },
+    {
+      "id": "earth-science",
+      "courseTopicId": "earth-science",
+      "title": "Khoa học Trái Đất",
+      "focus": "Địa chất, địa mạo, trầm tích, thủy triều và núi lửa.",
+      "terms": [
+        "atmospheric", "continent", "continental", "earthquake", "geological",
+        "geologist", "geology", "glacier", "lithosphere", "meteorological",
+        "meteorologist", "meteorology", "oceanography", "sediment",
+        "sedimentary", "sedimentation", "seismology", "tectonic", "tidal",
+        "volcanic"
+      ]
+    },
+    {
+      "id": "astronomy",
+      "title": "Thiên văn học",
+      "focus": "Các thiên thể, hành tinh, quỹ đạo và khám phá vũ trụ.",
+      "terms": [
+        "astronomer", "astronomical", "astronomy", "celestial", "cosmic",
+        "galaxy", "gravity", "lunar", "orbit", "orbital", "planet",
+        "planetary", "satellite", "spacecraft", "telescope", "universe"
+      ]
+    },
+    {
+      "id": "archaeology",
+      "courseTopicId": "history",
+      "title": "Khảo cổ học",
+      "focus": "Di vật, mai táng, khai quật và xã hội cổ đại.",
+      "terms": [
+        "anthropological", "anthropologist", "anthropology", "burial",
+        "dynastic", "dynasty", "excavation", "pottery"
+      ]
+    },
+    {
+      "id": "linguistics",
+      "courseTopicId": "language",
+      "title": "Ngôn ngữ học",
+      "focus": "Cấu trúc ngôn ngữ, diễn ngôn, ngữ nghĩa và tiếp thu ngôn ngữ.",
+      "terms": [
+        "acquisition", "discourse", "morphology", "phonetic", "phonetics",
+        "pragmatic", "semantic", "semantics", "syntax"
+      ]
+    },
+    {
+      "id": "research-methods",
+      "courseTopicId": "academic-methods",
+      "title": "Phương pháp nghiên cứu",
+      "focus": "Dữ liệu, mẫu khảo sát, biến số và phương pháp định tính, định lượng.",
+      "terms": [
+        "correlation", "empirical", "empirically", "methodological",
+        "methodology", "qualitative", "quantitative", "sample", "statistic",
+        "statistical", "statistics", "survey", "variable"
+      ]
+    },
+    {
+      "id": "philosophy",
+      "courseTopicId": "academic-methods",
+      "title": "Triết học và tư duy",
+      "focus": "Lập luận, lý tính, đạo đức và các khái niệm triết học.",
+      "terms": [
+        "logic", "logical", "metaphysical", "moral", "morally", "philosopher",
+        "philosophical", "philosophy", "rational",
+        "rationalism", "rationalist", "virtue"
+      ]
+    },
+    {
+      "id": "climate-science",
+      "courseTopicId": "earth-science",
+      "title": "Khí hậu và khí quyển",
+      "focus": "Khí hậu, khí nhà kính và tầng ozone.",
+      "terms": ["climate", "dioxide", "ozone"]
+    },
+    {
+      "id": "geography",
+      "title": "Địa lý và địa hình",
+      "focus": "Địa hình, vùng miền, bờ biển và bản đồ.",
+      "terms": [
+        "altitude", "cartographer", "cartographic", "coast", "coastal",
+        "geographer", "geographical", "geography", "island", "mountain",
+        "mountainous", "region", "regional", "terrain", "topographic",
+        "topographical", "valley"
+      ]
+    },
+    {
+      "id": "materials-science",
+      "title": "Hóa học và vật liệu",
+      "focus": "Nguyên tử, phân tử, hợp chất, kim loại và vật liệu tổng hợp.",
+      "terms": [
+        "alloy", "atom", "atomic", "chemical", "chemically", "compound",
+        "corrosion", "element", "elemental", "elementary", "metal",
+        "molecule", "polymer", "polymeric", "reaction", "synthetic"
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@
 - [Gói audio offline](offline-audio-packaging.md) — Từ điển âm thanh lớn được tải riêng từ App Storage, không nhúng vào APK.
 - [Đối chiếu đại từ trong mệnh đề IELTS](ielts-pronoun-clause-checks.md) — Chỉ so sánh các chủ ngữ tường minh khi hai câu có số mệnh đề nhận diện tương ứng.
 - [Cặp ví dụ IELTS đã duyệt](ielts-reviewed-example-sources.md) — Lưu cặp Anh-Việt và ảnh chụp câu từ điển ngoài dữ liệu sinh để phát hiện thay đổi nguồn.
+- [Mở rộng từ IELTS](ielts-vocabulary-expansion.md) — Chỉ thêm mục từ có giá trị riêng; phân biệt ứng viên theo chủ đề với từ đã xác nhận trong bộ đề IELTS.
 - [Cừu Pan](vocabflow-scope.md) — Cừu Pan là nhân vật riêng, khác Corvi; hình tham chiếu của Pan đang quét dọn.
 - [Hình tượng sưu tập](statue-art-direction.md) — Ảnh tượng là bán thân cẩm thạch trắng, nền đen, 768px; hình AI phải ghi rõ không xác thực.
 - [Phẩm chất tượng](statue-rarity-tiers.md) — Tượng chỉ dùng Rare/Epic/Legendary; Common của rương vẫn giữ và dữ liệu Common cũ phải đọc được.

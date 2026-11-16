@@ -14,8 +14,19 @@ const REVIEWED_EXAMPLES_PATH = join(
   __dirname,
   "../domain/ielts-reviewed-examples.json",
 );
+const IELTS_EXPANSION_CANDIDATES_PATH = join(
+  __dirname,
+  "../../../scripts/src/ielts-expansion-candidates.json",
+);
+const IELTS_EXPANSION_CONTENT_PATH = join(
+  __dirname,
+  "../domain/ielts-ai-expansion-content.json",
+);
 const REVIEWED_EXAMPLES = JSON.parse(
   readFileSync(REVIEWED_EXAMPLES_PATH, "utf8"),
+);
+const IELTS_EXPANSION_CANDIDATES = JSON.parse(
+  readFileSync(IELTS_EXPANSION_CANDIDATES_PATH, "utf8"),
 );
 
 const TOPICS = [
@@ -223,6 +234,65 @@ const TOPICS = [
       "water waste recycl sewage sanitation wastewater pollution contaminat clean hygiene resource scarcity shortage supply treatment purification drainage river ocean freshwater drinking irrigation flood",
   },
 ];
+
+const IELTS_EXPANSION_TOPIC_ROUTES = Object.fromEntries(
+  IELTS_EXPANSION_CANDIDATES.topics.map((topic) => [
+    topic.id,
+    topic.courseTopicId ?? topic.id,
+  ]),
+);
+const IELTS_EXPANSION_COURSE_TOPICS = [
+  {
+    id: "psychology",
+    title: "Tâm lý học",
+    focus: "Nhận thức, cảm xúc, động lực và hành vi con người.",
+  },
+  {
+    id: "biology",
+    title: "Sinh học",
+    focus: "Tế bào, di truyền, tiến hóa, miễn dịch và sinh lý học.",
+  },
+  {
+    id: "earth-science",
+    title: "Khoa học Trái Đất và khí hậu",
+    focus: "Địa chất, địa mạo, khí quyển, trầm tích và biến đổi khí hậu.",
+  },
+  {
+    id: "astronomy",
+    title: "Thiên văn học",
+    focus: "Các thiên thể, hành tinh, quỹ đạo và khám phá vũ trụ.",
+  },
+  {
+    id: "academic-methods",
+    title: "Nghiên cứu và tư duy phản biện",
+    focus:
+      "Phương pháp nghiên cứu, bằng chứng, lập luận, đạo đức và tư duy triết học.",
+  },
+  {
+    id: "geography",
+    title: "Địa lý và địa hình",
+    focus: "Địa hình, vùng miền, bờ biển và bản đồ.",
+  },
+  {
+    id: "materials-science",
+    title: "Hóa học và vật liệu",
+    focus: "Nguyên tử, phân tử, hợp chất, kim loại và vật liệu tổng hợp.",
+  },
+];
+TOPICS.push(...IELTS_EXPANSION_COURSE_TOPICS.map((topic) => ({
+  ...topic,
+  prefixes: "",
+  terms: [],
+})));
+for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
+  const courseTopicId = IELTS_EXPANSION_TOPIC_ROUTES[topic.id];
+  const courseTopic = TOPICS.find((candidate) => candidate.id === courseTopicId);
+  if (!courseTopic) {
+    throw new Error(`Missing course topic route for IELTS domain ${topic.id}.`);
+  }
+  courseTopic.terms ??= [];
+  courseTopic.terms.push(...topic.terms);
+}
 
 const IELTS_SPELLING_CONVENTION =
   "Ưu tiên chính tả Anh-Anh; các dạng Anh-Mỹ hữu ích được ghi chú là biến thể.";
@@ -1792,7 +1862,20 @@ function termMatchesPrefix(term, prefix) {
 function topicCandidates(topic, dictionary, sortedTerms) {
   const selected = [];
   const seen = new Set();
-  for (const rawPrefix of topic.prefixes.split(/\s+/).filter(Boolean)) {
+  for (const rawTerm of topic.terms ?? []) {
+    const term = String(rawTerm).toLowerCase();
+    if (
+      !seen.has(term) &&
+      !LEGACY_WORDS.has(term) &&
+      !REDUNDANT_VERB_INFLECTION_REVIEW.has(term) &&
+      !DICTIONARY_SENSE_REVIEW[term] &&
+      !RARE_HEADWORD_REVIEW[term]
+    ) {
+      seen.add(term);
+      selected.push({ term, family: topic.id });
+    }
+  }
+  for (const rawPrefix of (topic.prefixes ?? "").split(/\s+/).filter(Boolean)) {
     const prefix = rawPrefix.toLowerCase();
     for (const term of sortedTerms) {
       if (
@@ -1951,6 +2034,29 @@ function loadLegacyCourse() {
 }
 
 function main() {
+  if (!existsSync(IELTS_EXPANSION_CONTENT_PATH)) {
+    throw new Error(
+      `IELTS AI expansion content is missing: ${IELTS_EXPANSION_CONTENT_PATH}`,
+    );
+  }
+  const expansionContentFile = JSON.parse(
+    readFileSync(IELTS_EXPANSION_CONTENT_PATH, "utf8"),
+  );
+  const expansionContent = Object.fromEntries(
+    (expansionContentFile.entries ?? []).map((entry) => [entry.term, entry]),
+  );
+  const expectedExpansionTerms = IELTS_EXPANSION_CANDIDATES.topics.flatMap(
+    (topic) => topic.terms,
+  );
+  if (
+    Object.keys(expansionContent).length !== expectedExpansionTerms.length ||
+    expectedExpansionTerms.some((term) => !expansionContent[term])
+  ) {
+    throw new Error(
+      `IELTS AI expansion must contain exactly ${expectedExpansionTerms.length} unique reviewed entries.`,
+    );
+  }
+
   const db = new DatabaseSync(DATABASE_PATH, { readOnly: true });
   try {
     const dictionaryRows = getDictionaryRows(db);
@@ -2019,11 +2125,20 @@ function main() {
       for (const candidate of topicCandidates(topic, dictionary, sortedTerms)) {
         if (usedTerms.has(candidate.term)) continue;
         usedTerms.add(candidate.term);
+        const aiEntry = expansionContent[candidate.term];
         words.push({
           ...candidate,
-          entry: dictionary.get(candidate.term),
-          pos: dictionary.get(candidate.term)?.pos ?? "",
-          source: "offline",
+          entry: aiEntry
+            ? {
+                definition: aiEntry.definition,
+                example: aiEntry.example,
+                exampleTranslation: aiEntry.exampleTranslation,
+                dictionarySource: "authored",
+                exampleSource: "authored",
+              }
+            : dictionary.get(candidate.term),
+          pos: aiEntry?.pos ?? dictionary.get(candidate.term)?.pos ?? "",
+          source: aiEntry ? "authored" : "offline",
         });
       }
       for (const [term, entry] of Object.entries(CURATED_TOPIC_ENTRIES)) {
@@ -2142,6 +2257,8 @@ module.exports = {
   REQUIRED_RELATED_HEADWORDS,
   REQUIRED_COMMON_INFLECTIONS,
   REDUNDANT_VERB_INFLECTION_REVIEW,
+  IELTS_EXPANSION_CANDIDATES,
+  IELTS_EXPANSION_TOPIC_ROUTES,
   RARE_HEADWORD_REVIEW,
   validateDictionarySenseReview,
   validateDictionaryPosReview,

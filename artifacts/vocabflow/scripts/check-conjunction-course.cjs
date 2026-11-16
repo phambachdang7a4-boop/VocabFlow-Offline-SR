@@ -286,7 +286,7 @@ async function checkCourseContentAndProgress() {
     ieltsTopicCourse.IELTS_TOPIC_COURSE_TITLE,
     "Từ vựng IELTS theo chủ đề",
   );
-  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 29);
+  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 36);
   assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length > 50);
   assert.deepEqual(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.map((lesson) => lesson.title),
