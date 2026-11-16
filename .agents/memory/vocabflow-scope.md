@@ -36,6 +36,13 @@ Corvi là linh vật chính thức của VocabFlow. Hình pixel-art người dù
 
 **How to apply:** Dùng hình đã gửi làm tham chiếu nhất quán khi thể hiện Corvi: quạ đen đeo kính, mặc áo vest/nơ đỏ trong thư viện. Artwork vector hiện tại cần giữ các dấu hiệu nhận diện này cùng rương viền bạc; dùng tên Corvi và tông đen Hắc Diệu Thạch cho bậc rương cao nhất.
 
+## Baron
+Baron là nhân vật đứng sau quầy trong hình The Baron Trade ở Cửa Hàng; đây không phải Corvi.
+
+**Why:** Người dùng đã đính chính danh tính nhân vật trong hình Cửa Hàng.
+
+**How to apply:** Gọi nhân vật đó là Baron trong mô tả và nội dung liên quan; không đổi nhãn hoặc giao diện nếu người dùng chỉ yêu cầu ghi nhận.
+
 ## Cừu Pan
 Cừu Pan là một nhân vật riêng của VocabFlow, không phải Corvi. Hình tham chiếu người dùng gửi mô tả Pan đang quét dọn hành lang.
 
