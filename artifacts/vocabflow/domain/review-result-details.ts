@@ -14,6 +14,49 @@ function uniqueIpa(values: string[]): string[] {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }
 
+function normalizeIpaVariant(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLocaleLowerCase("en")
+    .replace(/^[\s/[\]()]+|[\s/[\]()]+$/gu, "")
+    .replace(/[.\s]/gu, "")
+    .replace(/:/gu, "ː");
+}
+
+function ipaVariantKeys(value: string): string[] {
+  return value
+    .split(/\s*[,;]\s*/u)
+    .map(normalizeIpaVariant)
+    .filter(Boolean);
+}
+
+function removeKnownIpaVariants(
+  values: string[],
+  knownVariants: ReadonlySet<string>,
+): string[] {
+  const seen = new Set<string>();
+  const remainingValues: string[] = [];
+
+  for (const value of values) {
+    const remainingVariants = value
+      .split(/\s*[,;]\s*/u)
+      .map((variant) => variant.trim())
+      .filter((variant) => {
+        const key = normalizeIpaVariant(variant);
+        if (!key || knownVariants.has(key) || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+    if (remainingVariants.length) {
+      remainingValues.push(remainingVariants.join(", "));
+    }
+  }
+
+  return remainingValues;
+}
+
 function parseSavedPronunciations(value: string): ReviewPronunciationLines {
   const result: ReviewPronunciationLines = { us: [], uk: [], unspecified: [] };
   const unlabelled: string[] = [];
@@ -62,11 +105,16 @@ export function groupReviewPronunciations(
       .filter((item) => pronunciationAccent(item.region) === "uk")
       .map((item) => item.ipa),
   );
+  const finalUs = us.length ? us : saved.us;
+  const finalUk = uk.length ? uk : saved.uk;
+  const knownVariants = new Set(
+    [...finalUs, ...finalUk].flatMap(ipaVariantKeys),
+  );
 
   return {
-    us: us.length ? us : saved.us,
-    uk: uk.length ? uk : saved.uk,
-    unspecified: saved.unspecified,
+    us: finalUs,
+    uk: finalUk,
+    unspecified: removeKnownIpaVariants(saved.unspecified, knownVariants),
   };
 }
 

@@ -30,12 +30,12 @@ export function soundCueFor(event: SoundEvent): CueName {
 export async function withSoundOutcome<T>(
   operation: () => Promise<T>,
   play: (cue: CueName) => unknown,
-  successCue: CueName,
+  successCue: CueName | null,
   errorCue: CueName = soundCueFor("operationFailed"),
 ): Promise<T> {
   try {
     const result = await operation();
-    play(successCue);
+    if (successCue) play(successCue);
     return result;
   } catch (error) {
     play(errorCue);

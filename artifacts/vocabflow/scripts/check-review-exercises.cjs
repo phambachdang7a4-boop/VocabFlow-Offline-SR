@@ -2,9 +2,9 @@ const assert = require('node:assert/strict');
 const { mkdtempSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
-const { loadTs, loadDictionaryDomain, srs, createRepository } = require('./test-support.cjs');
+const { loadTs, loadDictionaryDomain, loadLocalDictionaryAdditions, srs, createRepository } = require('./test-support.cjs');
 const dictionary = loadDictionaryDomain();
-const localDictionaryAdditions = loadTs(join(__dirname, '../domain/dictionary-local-additions.ts'));
+const localDictionaryAdditions = loadLocalDictionaryAdditions();
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const resultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
@@ -30,12 +30,16 @@ assert.deepEqual(
     { ipa: '/rɪˈsɪprəkeɪt/', region: 'NAmE' },
     { ipa: '/rɪˈsɪprəkeɪt/', region: 'BrE' },
   ], ''),
-  { us: ['/rɪˈsɪprəkeɪt/'], uk: ['/rɪˈsɪprəkeɪt/'] },
+  {
+    us: ['/rɪˈsɪprəkeɪt/'],
+    uk: ['/rɪˈsɪprəkeɪt/'],
+    unspecified: [],
+  },
   'Keep American and British IPA in separately labeled groups.',
 );
 assert.deepEqual(
   resultDetails.groupReviewPronunciations([], 'Anh-Mỹ: /test-us/ · Anh-Anh: /test-uk/'),
-  { us: ['/test-us/'], uk: ['/test-uk/'] },
+  { us: ['/test-us/'], uk: ['/test-uk/'], unspecified: [] },
   'Recover regional labels from legacy saved IPA.',
 );
 assert.equal(

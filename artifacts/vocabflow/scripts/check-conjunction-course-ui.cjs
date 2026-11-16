@@ -1,11 +1,13 @@
 const assert = require("node:assert/strict");
 const { join } = require("node:path");
-const { loadTs } = require("./test-support.cjs");
+const {
+  loadLocalDictionaryAdditions,
+  loadToeicTopicCourseDomain,
+  loadTs,
+} = require("./test-support.cjs");
 const colors = loadTs(join(__dirname, "../constants/colors.ts")).default.light;
 const courseDomain = loadTs(join(__dirname, "../domain/conjunction-course.ts"), {
-  "./dictionary-local-additions": loadTs(
-    join(__dirname, "../domain/dictionary-local-additions.ts"),
-  ),
+  "./dictionary-local-additions": loadLocalDictionaryAdditions(),
 });
 const linkingAdverbDomain = loadTs(
   join(__dirname, "../domain/linking-adverb-course.ts"),
@@ -18,14 +20,7 @@ const ieltsTopicDomain = loadTs(
     ),
   },
 );
-const toeicTopicDomain = loadTs(
-  join(__dirname, "../domain/toeic-topic-course.ts"),
-  {
-    "./toeic-topic-course-data.json": require(
-      "../domain/toeic-topic-course-data.json",
-    ),
-  },
-);
+const toeicTopicDomain = loadToeicTopicCourseDomain();
 const officeAppsDomain = loadTs(
   join(__dirname, "../domain/office-apps-course.ts"),
 );

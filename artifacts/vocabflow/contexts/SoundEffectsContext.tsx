@@ -25,6 +25,7 @@ interface SoundEffectsValue extends SoundPreferences {
   error: string | null;
   unlockFromGesture: () => void;
   play: (cue: CueName) => void;
+  playReviewNote: (index: number) => void;
   startLoop: (key: string, cue: CueName) => void;
   stopLoop: (key: string) => void;
   setEnabled: (enabled: boolean) => Promise<void>;
@@ -127,6 +128,13 @@ export function SoundEffectsProvider({
     [ready],
   );
 
+  const playReviewNote = useCallback(
+    (index: number) => {
+      if (ready) controllerRef.current?.playReviewNote(index);
+    },
+    [ready],
+  );
+
   const startLoop = useCallback(
     (key: string, cue: CueName) => {
       if (ready) controllerRef.current?.startLoop(key, cue);
@@ -217,6 +225,7 @@ export function SoundEffectsProvider({
       error,
       unlockFromGesture,
       play,
+      playReviewNote,
       startLoop,
       stopLoop,
       setEnabled,
@@ -230,6 +239,7 @@ export function SoundEffectsProvider({
       error,
       unlockFromGesture,
       play,
+      playReviewNote,
       startLoop,
       stopLoop,
       setEnabled,

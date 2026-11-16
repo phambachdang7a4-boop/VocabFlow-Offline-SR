@@ -32,9 +32,21 @@ export function normalizeReviewAnswer(value: string): string {
   return compactReviewAnswer(value).toLocaleLowerCase('en');
 }
 
+export function normalizeReviewChoice(value: string): string {
+  return displayReviewAnswer(value)
+    .trim()
+    .replace(/\p{White_Space}+/gu, ' ')
+    .toLocaleLowerCase('en');
+}
+
 export function checkReviewAnswer(answer: string, term: string): boolean {
   const actual = normalizeReviewAnswer(answer);
   return !!actual && actual === normalizeReviewAnswer(term);
+}
+
+export function checkReviewChoiceAnswer(answer: string, term: string): boolean {
+  const actual = normalizeReviewChoice(answer);
+  return !!actual && actual === normalizeReviewChoice(term);
 }
 
 /** Dictionary idioms are saved with their POS marker at the start of meaning. */
@@ -89,10 +101,10 @@ function multipleChoiceOptions(
   seed: string,
 ): string[] | null {
   if (!notebookWords.some(candidate => candidate.id === word.id)) return null;
-  const answer = normalizeReviewAnswer(word.term);
+  const answer = normalizeReviewChoice(word.term);
   const uniqueDistractors = new Map<string, string>();
   for (const candidate of notebookWords) {
-    const key = normalizeReviewAnswer(candidate.term);
+    const key = normalizeReviewChoice(candidate.term);
     if (!key || key === answer || uniqueDistractors.has(key)) continue;
     uniqueDistractors.set(key, candidate.term);
   }
@@ -108,8 +120,8 @@ function multipleChoiceOptions(
 
   const options = [word.term, ...orderedDistractors.slice(0, 3)];
   return options.sort((left, right) => {
-    const leftHash = hash(`${seed}:o:${normalizeReviewAnswer(left)}`);
-    const rightHash = hash(`${seed}:o:${normalizeReviewAnswer(right)}`);
+    const leftHash = hash(`${seed}:o:${normalizeReviewChoice(left)}`);
+    const rightHash = hash(`${seed}:o:${normalizeReviewChoice(right)}`);
     return leftHash - rightHash || left.localeCompare(right);
   });
 }

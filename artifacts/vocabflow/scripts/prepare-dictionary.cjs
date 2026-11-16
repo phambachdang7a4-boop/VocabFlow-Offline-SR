@@ -6,6 +6,7 @@ const { createHash } = require('node:crypto');
 const { join, resolve } = require('node:path');
 const { createRequire } = require('node:module');
 const ts = require('typescript');
+const { loadLocalDictionaryAdditions } = require('./test-support.cjs');
 
 function configFromTs(path, dependencies = {}) {
   const code = ts.transpileModule(readFileSync(path, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
@@ -18,9 +19,7 @@ function configFromTs(path, dependencies = {}) {
 }
 
 (async () => {
-  const localDictionaryAdditions = configFromTs(
-    join(__dirname, '../domain/dictionary-local-additions.ts'),
-  );
+  const localDictionaryAdditions = loadLocalDictionaryAdditions();
   const { DICTIONARY } = configFromTs(
     join(__dirname, '../domain/dictionary.ts'),
     { './dictionary-local-additions': localDictionaryAdditions },

@@ -11,9 +11,58 @@ const TOEIC_EXAMPLE_TRANSLATIONS_PATH = join(
   __dirname,
   "../domain/toeic-example-translations.json",
 );
-const TOEIC_EXAMPLE_TRANSLATIONS = JSON.parse(
-  readFileSync(TOEIC_EXAMPLE_TRANSLATIONS_PATH, "utf8"),
-);
+const TOEIC_AUTHORED_ENTRIES = {
+  accounting: {
+    definition:
+      "Kế toán; việc ghi chép, phân loại và báo cáo các giao dịch tài chính.",
+    example: "The accounting department reviewed the quarterly financial statements.",
+    exampleTranslation:
+      "Phòng kế toán đã rà soát các báo cáo tài chính theo quý.",
+    partOfSpeech: "N",
+    posGroup: "noun",
+  },
+  banking: {
+    definition: "Hoạt động ngân hàng; các dịch vụ do ngân hàng cung cấp.",
+    example: "The bank introduced a new online banking service for businesses.",
+    exampleTranslation:
+      "Ngân hàng đã giới thiệu một dịch vụ ngân hàng trực tuyến mới dành cho doanh nghiệp.",
+    partOfSpeech: "N",
+    posGroup: "noun",
+  },
+  meeting: {
+    definition: "Cuộc họp; buổi gặp có tổ chức để trao đổi hoặc quyết định.",
+    example: "The meeting started after everyone found a seat.",
+    exampleTranslation:
+      "Cuộc họp bắt đầu sau khi mọi người đã tìm được chỗ ngồi.",
+    partOfSpeech: "N",
+    posGroup: "noun",
+  },
+  marketing: {
+    definition:
+      "Tiếp thị; hoạt động nghiên cứu, quảng bá và đưa sản phẩm đến khách hàng.",
+    example: "The marketing team launched a campaign for the new product.",
+    exampleTranslation:
+      "Nhóm tiếp thị đã triển khai chiến dịch cho sản phẩm mới.",
+    partOfSpeech: "N",
+    posGroup: "noun",
+  },
+  recording: {
+    definition: "Bản ghi âm hoặc ghi hình; dữ liệu được lưu lại bằng thiết bị.",
+    example: "The recording sounded clear and natural.",
+    exampleTranslation: "Bản ghi âm nghe rõ và tự nhiên.",
+    partOfSpeech: "N",
+    posGroup: "noun",
+  },
+};
+const TOEIC_EXAMPLE_TRANSLATIONS = {
+  ...JSON.parse(readFileSync(TOEIC_EXAMPLE_TRANSLATIONS_PATH, "utf8")),
+  ...Object.fromEntries(
+    Object.entries(TOEIC_AUTHORED_ENTRIES).map(([term, entry]) => [
+      term,
+      entry.exampleTranslation,
+    ]),
+  ),
+};
 
 const TOEIC_SPELLING_CONVENTION =
   "Ưu tiên chính tả Anh-Anh; các dạng Anh-Mỹ hữu ích được ghi rõ ở mục từ.";
@@ -97,7 +146,11 @@ function validateToeicExampleTranslations(data) {
     }
   }
   for (const term of Object.keys(TOEIC_EXAMPLE_TRANSLATIONS)) {
-    if (!Object.hasOwn(entries, term)) {
+    if (
+      !Object.hasOwn(entries, term) &&
+      !term.endsWith("s") &&
+      !term.endsWith("ing")
+    ) {
       errors.push(`- ${term}: authored translation has no TOEIC course entry`);
     }
   }
@@ -399,6 +452,26 @@ const EXCLUDED_HEADWORDS = new Set([
   "trainable",
 ]);
 
+const NON_INDEPENDENT_TOEIC_FORMS = new Set([
+  "communicating",
+  "discounting",
+  "guidelines",
+  "exports",
+  "leaves",
+  "loaning",
+  "patenting",
+  "patents",
+  "planing",
+  "profits",
+  "saving",
+  "selling",
+  "services",
+  "stocks",
+  "tracking",
+  "traveling",
+  "withdrawals",
+]);
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -410,6 +483,90 @@ function normalizePos(value) {
   if (["a", "adj", "adjective"].includes(pos)) return "adjective";
   if (["adv", "adverb"].includes(pos)) return "adverb";
   return "other";
+}
+
+function isInflectionOnlyDefinition(definition) {
+  return /^(?:dạng (?:viết )?khác|(?:dạng )?số nhiều của|quá khứ(?: phân từ)? của|phân từ .* của|hiện tại phân từ của|dạng .*?(?:phân từ|gerund).*? của|động từ chia ở ngôi thứ ba số ít|dạng ngôi thứ ba số ít)/i.test(
+    String(definition ?? "").trim(),
+  );
+}
+
+function inflectionLemmaCandidates(term) {
+  const candidates = new Set();
+  if (term.endsWith("ing")) {
+    const stem = term.slice(0, -3);
+    candidates.add(stem);
+    candidates.add(`${stem}e`);
+    if (/([a-z])\1$/.test(stem)) candidates.add(stem.slice(0, -1));
+    if (term.endsWith("ying")) {
+      candidates.add(`${term.slice(0, -4)}ie`);
+    }
+  } else if (term.endsWith("ies")) {
+    candidates.add(`${term.slice(0, -3)}y`);
+  } else if (term.endsWith("es")) {
+    candidates.add(term.slice(0, -2));
+    candidates.add(term.slice(0, -1));
+  } else if (term.endsWith("s")) {
+    candidates.add(term.slice(0, -1));
+  }
+  return [...candidates].filter(Boolean);
+}
+
+function hasVerbLemma(term, partOfSpeechByWord) {
+  return inflectionLemmaCandidates(term).some((candidate) =>
+    partOfSpeechByWord.get(candidate)?.has("verb"),
+  );
+}
+
+function shouldExcludeNonIndependentForm(term, row, partOfSpeechByWord) {
+  if (NON_INDEPENDENT_TOEIC_FORMS.has(term)) return true;
+  if (
+    (term.endsWith("s") || term.endsWith("ing")) &&
+    isInflectionOnlyDefinition(row.definition)
+  ) {
+    return true;
+  }
+  return (
+    normalizePos(row.pos) === "verb" &&
+    (term.endsWith("s") || term.endsWith("ing")) &&
+    hasVerbLemma(term, partOfSpeechByWord)
+  );
+}
+
+function validateToeicInflectionData(data) {
+  const entries = data.entries ?? {};
+  const partOfSpeechByWord = new Map(
+    Object.entries(entries).map(([term, entry]) => [
+      term,
+      new Set([normalizePos(entry.partOfSpeech)]),
+    ]),
+  );
+  const errors = [];
+  for (const [term, entry] of Object.entries(entries)) {
+    if (NON_INDEPENDENT_TOEIC_FORMS.has(term)) {
+      errors.push(`- ${term}: non-independent inflected form is still included`);
+      continue;
+    }
+    if (
+      (term.endsWith("s") || term.endsWith("ing")) &&
+      isInflectionOnlyDefinition(entry.definition)
+    ) {
+      errors.push(`- ${term}: definition only describes an inflected form`);
+      continue;
+    }
+    if (
+      normalizePos(entry.partOfSpeech) === "verb" &&
+      (term.endsWith("s") || term.endsWith("ing")) &&
+      hasVerbLemma(term, partOfSpeechByWord)
+    ) {
+      errors.push(`- ${term}: verb inflection duplicates a course root`);
+    }
+  }
+  if (errors.length) {
+    throw new Error(
+      `TOEIC course contains inflected forms:\n${errors.join("\n")}`,
+    );
+  }
 }
 
 function usableExample(term, value) {
@@ -448,6 +605,14 @@ function buildDictionaryIndex(db) {
        WHERE w.lang_code = 'en' AND d.definition_lang = 'vi'`,
     )
     .all();
+  const partOfSpeechByWord = new Map();
+  for (const row of rows) {
+    const term = String(row.word ?? "").trim().toLowerCase();
+    if (!/^[a-z]+$/.test(term)) continue;
+    const partsOfSpeech = partOfSpeechByWord.get(term) ?? new Set();
+    partsOfSpeech.add(normalizePos(row.pos));
+    partOfSpeechByWord.set(term, partsOfSpeech);
+  }
   const entries = new Map();
   for (const row of rows) {
     const term = String(row.word ?? "").trim().toLowerCase();
@@ -462,6 +627,12 @@ function buildDictionaryIndex(db) {
       definition.length > 240 ||
       /^(?:dạng (?:viết )?khác|số nhiều của|quá khứ của|phân từ .* của|xem [a-z])/i.test(
         definition,
+      ) ||
+      /^(?:xem [a-z])/i.test(definition) ||
+      shouldExcludeNonIndependentForm(
+        term,
+        { ...row, definition },
+        partOfSpeechByWord,
       ) ||
       !usableExample(term, example)
     ) {
@@ -495,16 +666,17 @@ function createTopicWords(topic, dictionary, sortedTerms, assignedTerms) {
         seen.add(term);
         assignedTerms.add(term);
         const source = dictionary.get(term);
+        const authored = TOEIC_AUTHORED_ENTRIES[term];
         words.push({
           term,
           family: prefix,
-          definition: source.definition,
-          example: source.example,
+          definition: authored?.definition ?? source.definition,
+          example: authored?.example ?? source.example,
           exampleTranslation: TOEIC_EXAMPLE_TRANSLATIONS[term] ?? "",
-          dictionarySource: "offline",
-          exampleSource: "offline",
-          partOfSpeech: source.pos ?? "",
-          posGroup: normalizePos(source.pos),
+          dictionarySource: authored ? "authored" : "offline",
+          exampleSource: authored ? "authored" : "offline",
+          partOfSpeech: authored?.partOfSpeech ?? source.pos ?? "",
+          posGroup: authored?.posGroup ?? normalizePos(source.pos),
         });
       }
     }
@@ -539,6 +711,7 @@ function main() {
       entries,
     });
     validateToeicSpellingData(output);
+    validateToeicInflectionData(output);
     validateToeicExampleTranslations(output);
     writeFileSync(OUTPUT_PATH, `${JSON.stringify(output)}\n`, "utf8");
     console.log(
@@ -560,7 +733,11 @@ module.exports = {
   TOEIC_SPELLING_CONVENTION,
   applyToeicSpellingLabels,
   britishEquivalent,
+  inflectionLemmaCandidates,
+  isInflectionOnlyDefinition,
+  shouldExcludeNonIndependentForm,
   spellingNoteFor,
+  validateToeicInflectionData,
   validateToeicSpellingData,
   validateToeicExampleTranslations,
 };

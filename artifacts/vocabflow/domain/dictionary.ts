@@ -1,6 +1,12 @@
 import type { WordInput } from '../data/types';
 import { ALL_LOCAL_DICTIONARY_ADDITIONS } from './dictionary-local-additions';
 
+const localAdditionTerms = new Set(
+  ALL_LOCAL_DICTIONARY_ADDITIONS.map((item) =>
+    item.term.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en'),
+  ),
+);
+
 export const DICTIONARY = {
   commit: '388adc0826300912e5b0311c089e0e70494b065f',
   sha256: '2b65bea9577c2a4149caa90940c806f321d1c6cfac503ed8bbd9f93e43a0033a',
@@ -147,8 +153,8 @@ export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pr
     dictionaryPartOfSpeechLabel(sense.pos),
     sense.subPos?.trim(),
   ].filter(Boolean).join(' · ');
-  const isLocalAddition = ALL_LOCAL_DICTIONARY_ADDITIONS.some(
-    (item) => item.term === entry.term,
+  const isLocalAddition = localAdditionTerms.has(
+    entry.term.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en'),
   );
   return {
     term: entry.term,

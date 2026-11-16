@@ -148,6 +148,7 @@ type CourseCatalogItem = {
   icon: React.ComponentProps<typeof Feather>["name"];
   testIdPrefix: string;
   wordCount?: number;
+  unitLabel?: string;
   topicCount?: number;
 };
 
@@ -211,12 +212,13 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: TOEIC_TOPIC_COURSE_ID,
     title: TOEIC_TOPIC_COURSE_TITLE,
     description:
-      `Học ${TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC, từ văn phòng đến công tác. ${TOEIC_TOPIC_COURSE_SPELLING_CONVENTION}`,
+      `Học ${TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm từ thực tế qua ${TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC. Mỗi cụm có nghĩa tiếng Việt, câu ví dụ và bản dịch. ${TOEIC_TOPIC_COURSE_SPELLING_CONVENTION}`,
     lessons: TOEIC_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(TOEIC_TOPIC_COURSE_ENTRIES)),
     icon: "briefcase",
     testIdPrefix: "toeic",
     wordCount: TOEIC_TOPIC_COURSE_WORD_COUNT,
+    unitLabel: "cụm từ",
     topicCount: TOEIC_TOPIC_WORD_LIST.length,
   },
   {
@@ -675,7 +677,7 @@ export default function CoursesScreen() {
                   )}{" "}
                   câu
                   {activeCourse.wordCount
-                    ? ` · ${activeCourse.wordCount.toLocaleString("vi-VN")} từ`
+                    ? ` · ${activeCourse.wordCount.toLocaleString("vi-VN")} ${activeCourse.unitLabel ?? "từ"}`
                     : ""}{" "}
                   · học ngoại tuyến
                 </Text>

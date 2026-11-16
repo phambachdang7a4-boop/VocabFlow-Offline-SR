@@ -424,6 +424,7 @@ export default function ReviewScreen() {
       current.processed.includes(id)
     )
       return;
+    if (correct === true) sound.playReviewNote(current.currentCombo);
     const endedCombo = correct !== true ? current.currentCombo : 0;
     const comboIndex = current.comboRewardCount + (endedCombo > 0 ? 1 : 0);
     const mistakes =

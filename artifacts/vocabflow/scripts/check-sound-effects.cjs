@@ -74,6 +74,11 @@ const nativeDependencies = {
 soundNames.forEach((name, index) => {
   nativeDependencies[`uisfx/sounds/organic/${name}.mp3`] = index + 1;
 });
+for (let index = 0; index < 16; index += 1) {
+  nativeDependencies[
+    `../assets/sounds/review-scale/note-${String(index).padStart(2, "0")}.wav`
+  ] = 100 + index;
+}
 const nativeEngineModule = loadTs(
   join(__dirname, "../domain/sound-engine.native.ts"),
   nativeDependencies,
@@ -110,7 +115,36 @@ const fakeWebPlayer = {
 class FakeAudioContext {
   constructor() {
     this.state = "suspended";
+    this.currentTime = 2;
+    this.destination = {};
+    this.oscillators = [];
     webLog.push("context");
+  }
+  createOscillator() {
+    const oscillator = {
+      type: "sine",
+      frequency: {
+        value: 0,
+        setValueAtTime(value) { this.value = value; },
+      },
+      onended: null,
+      connect() {},
+      disconnect() {},
+      start() {},
+      stop() { this.onended?.(); },
+    };
+    this.oscillators.push(oscillator);
+    return oscillator;
+  }
+  createGain() {
+    return {
+      gain: {
+        setValueAtTime() {},
+        exponentialRampToValueAtTime() {},
+      },
+      connect() {},
+      disconnect() {},
+    };
   }
   async resume() {
     webLog.push("resume");
@@ -158,6 +192,10 @@ function makeFakeEngine({ returnNull = false } = {}) {
     },
     play(cue, options) {
       calls.push(`play:${cue}:${options?.loop ? "loop" : "one-shot"}`);
+      return returnNull ? null : handle;
+    },
+    playReviewNote(index) {
+      calls.push(`note:${index}`);
       return returnNull ? null : handle;
     },
     stopAll() {
@@ -341,6 +379,8 @@ function makeFakeEngine({ returnNull = false } = {}) {
   );
   assert.equal(controller.getLoopCount(), 1);
   assert.equal(controller.play("success"), handle);
+  assert.equal(controller.playReviewNote(2), handle);
+  assert.ok(calls.includes("note:2"));
   controller.setVolume(0.4);
   assert.equal(controller.getVolume(), 0.4);
   controller.setEnabled(false);
@@ -351,6 +391,8 @@ function makeFakeEngine({ returnNull = false } = {}) {
     null,
     "Mute suppresses later cues immediately.",
   );
+  assert.equal(controller.playReviewNote(2), null,
+    "Mute suppresses review melody notes too.");
   const stopIndex = calls.indexOf("stop-handle");
   const muteIndex = calls.indexOf("enabled:false");
   assert.ok(
@@ -458,6 +500,14 @@ function makeFakeEngine({ returnNull = false } = {}) {
   assert.equal(webOptions.volume, 0.7);
   assert.equal(webOptions.enabled, true);
   assert.ok(webOptions.context instanceof FakeAudioContext);
+  const browserNote = browserEngine.playReviewNote(0);
+  assert.ok(browserNote, "Web review notes use the existing unlocked AudioContext.");
+  assert.equal(
+    Number(webOptions.context.oscillators.at(-1).frequency.value.toFixed(2)),
+    261.63,
+    "The first melody note is Do.",
+  );
+  browserNote.stop();
   assert.equal(
     browserEngine.play("success"),
     null,
@@ -482,6 +532,11 @@ function makeFakeEngine({ returnNull = false } = {}) {
     true,
     "Completed native one-shots release their player.",
   );
+  const nativeReviewNote = nativeEngine.playReviewNote(0);
+  assert.ok(nativeReviewNote);
+  assert.equal(nativePlayers.at(-1).sourceId, 100,
+    "Native review melody plays its bundled Do sound.");
+  nativePlayers.at(-1).emit(true);
   const nativeLoop = nativeEngine.play("processing", { loop: true });
   assert.equal(nativePlayers.at(-1).loop, true);
   nativeEngine.setVolume(0.25);

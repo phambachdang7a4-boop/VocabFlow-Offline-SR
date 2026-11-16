@@ -1,10 +1,10 @@
 const assert = require('node:assert/strict');
 const { join } = require('node:path');
-const { loadTs, loadDictionaryDomain, srs } = require('./test-support.cjs');
+const { loadTs, loadDictionaryDomain, loadLocalDictionaryAdditions, srs } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
 const dictionary = loadDictionaryDomain();
-const localDictionaryAdditions = loadTs(join(__dirname, '../domain/dictionary-local-additions.ts'));
+const localDictionaryAdditions = loadLocalDictionaryAdditions();
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
 const reviewResultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
@@ -17,6 +17,38 @@ assert.deepEqual(
   reviewResultDetails.groupReviewPronunciations([], '/teɪk/'),
   { us: [], uk: [], unspecified: ['/teɪk/'] },
   'Do not label an untagged saved pronunciation as US or UK.',
+);
+assert.deepEqual(
+  reviewResultDetails.groupReviewPronunciations(
+    [
+      { ipa: '/ˈbɪznəs/, /ˈbɪznɪs/', region: 'US' },
+      { ipa: '/ˈbɪznəs/', region: 'UK' },
+    ],
+    '/ˈbɪznəs/',
+  ),
+  {
+    us: ['/ˈbɪznəs/, /ˈbɪznɪs/'],
+    uk: ['/ˈbɪznəs/'],
+    unspecified: [],
+  },
+  'Hide an untagged IPA row when every pronunciation is already shown for US or UK.',
+);
+assert.deepEqual(
+  reviewResultDetails.groupReviewPronunciations(
+    [{ ipa: '[ˈbɪznəs]', region: 'US' }],
+    '/ˈbɪznəs/ · /ˌbiːznəs/',
+  ),
+  {
+    us: ['[ˈbɪznəs]'],
+    uk: [],
+    unspecified: ['/ˌbiːznəs/'],
+  },
+  'Normalize slash/bracket formatting and keep genuinely different unlabelled readings.',
+);
+assert.equal(
+  exercises.checkReviewChoiceAnswer('everyday', 'every day'),
+  false,
+  'Choice grading preserves word boundaries instead of merging distinct answers.',
 );
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
@@ -53,13 +85,17 @@ function mount(file, properties = {}, initial = {}) {
   };
   const comboRewardCalls = [];
   const sessionResultCalls = [];
+  const soundCalls = [];
+  const reviewNoteCalls = [];
   const speechContext = {
     ready: true, autoRead: initial.speechAutoRead ?? false, slowRead: false, stopSpeaking: async () => {},
     speakWord: async word => { speechCalls.push(word); },
   };
   const soundContext = {
     ready: true, enabled: true, volume: 0.7, saving: false, error: null,
-    unlockFromGesture() {}, play() {}, startLoop() {}, stopLoop() {},
+    unlockFromGesture() {}, play(cue) { soundCalls.push(cue); },
+    playReviewNote(index) { reviewNoteCalls.push(index); },
+    startLoop() {}, stopLoop() {},
     setEnabled: async () => {}, setVolume: async () => {}, retryLoad: async () => {},
   };
   const react = {
@@ -152,6 +188,8 @@ function mount(file, properties = {}, initial = {}) {
     shareCalls,
     comboRewardCalls,
     sessionResultCalls,
+    soundCalls,
+    reviewNoteCalls,
     byId(id) { render(); return find(tree, node => node.props?.testID === id); },
     byType(type) { render(); return find(tree, node => node.type === type); },
     update(next) { Object.assign(context, next); dirty = true; render(); },
@@ -372,10 +410,13 @@ async function startReview(screen) {
   let current = both.byType('ReviewCard').props;
   assert.deepEqual(both.speechCalls, ['test'], 'Auto-pronunciation remains enabled for non-quiz review cards.');
   assert.equal(current.exercise.kind, 'meaning');
+  assert.deepEqual(both.reviewNoteCalls, []);
   const stableExercise = current.exercise;
   both.time('2026-11-07T23:59:59.500');
   assert.equal(both.byType('ReviewCard').props.exercise, stableExercise, 'Clock rerenders cannot reshuffle the question or hints');
   current.onCommitted(1, true);
+  assert.deepEqual(both.reviewNoteCalls, [0],
+    'The first correct answer starts the melody on Do.');
   both.byType('ReviewCard').props.onNext();
   current = both.byType('ReviewCard').props;
   assert.equal(current.word.id, 2);
@@ -384,6 +425,8 @@ async function startReview(screen) {
   assert.equal(current.exercise.prompt, 'They ________ it.', 'Same English word with a different meaning remains a separate question');
   assert.equal(current.exercise.choices.length, 3, 'Sentence blanks must have three or four choices from the notebook.');
   current.onCommitted(2, false);
+  assert.deepEqual(both.reviewNoteCalls, [0],
+    'An incorrect answer does not advance the melody.');
   await both.settle();
   assert.equal(both.comboRewardCalls.length, 0,
     'Ending a streak shorter than 20 does not award Stone.');
@@ -406,6 +449,24 @@ async function startReview(screen) {
   assert.equal(both.byId('review-summary-personal-record').props.children.join(''), '1');
   both.byId('review-summary-close').props.onPress();
   assert.ok(both.byId('review-start'));
+
+  const streakWords = Array.from({ length: 4 }, (_, index) => ({
+    ...word,
+    id: 70 + index,
+    term: `streak-${index}`,
+    nextReviewOn: '2026-11-07',
+  }));
+  const streakScreen = mount('../app/(tabs)/review.tsx', {}, {
+    words: streakWords,
+  });
+  await startReview(streakScreen);
+  for (const [index, correct] of [true, true, false, true].entries()) {
+    const currentCard = streakScreen.byType('ReviewCard').props;
+    currentCard.onCommitted(currentCard.word.id, correct);
+    if (index < 3) currentCard.onNext();
+  }
+  assert.deepEqual(streakScreen.reviewNoteCalls, [0, 1, 0],
+    'Correct answers climb the scale; an incorrect answer resets the next note to Do.');
   await startReview(both);
   const abandoned = both.byType('ReviewCard').props;
   both.byId('review-back-overview').props.onPress();
@@ -431,6 +492,49 @@ async function startReview(screen) {
   ];
   const sentenceExercise = exercises.createReviewExercise(sentenceWord, 1, 0, sentenceWords);
   assert.equal(sentenceExercise.kind, 'multiple-choice');
+  const wrongChoiceIndex = sentenceExercise.choices.findIndex(
+    choice => choice !== sentenceWord.term,
+  );
+  const wrongAnswerCalls = [];
+  const wrongCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(sentenceWord),
+    exercise: sentenceExercise,
+  }, {
+    recordReview: async (...args) => { wrongAnswerCalls.push(args); },
+  });
+  wrongCard.byId(`review-choice-${wrongChoiceIndex}`).props.onPress();
+  await wrongCard.settle();
+  assert.deepEqual(wrongAnswerCalls, [[sentenceWord.id, false, 0]],
+    'A selected distractor is persisted as an incorrect answer.');
+  assert.equal(wrongCard.byId('review-result-status').props.children.join(''), 'Sai');
+  assert.equal(
+    wrongCard.byId('review-result').props.style.find(style => style?.backgroundColor)?.backgroundColor,
+    palette.destructive,
+    'Incorrect feedback uses the red destructive surface.',
+  );
+  assert.equal(
+    wrongCard.byId('review-answer-user').props.children.join(''),
+    sentenceExercise.choices[wrongChoiceIndex],
+    'Show which wrong option was actually graded.',
+  );
+  assert.deepEqual(wrongCard.soundCalls, ['error'],
+    'An incorrect saved answer plays the fail sound.');
+  wrongCard.unmount();
+  const typedWrongCalls = [];
+  const typedWrongCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps({ ...word, term: 'recorded', meaning: 'đã ghi lại' }),
+  }, {
+    recordReview: async (...args) => { typedWrongCalls.push(args); },
+  });
+  typedWrongCard.byId('review-answer-input').props.onChangeText('record');
+  typedWrongCard.byId('review-check').props.onPress();
+  await typedWrongCard.settle();
+  assert.deepEqual(typedWrongCalls, [[word.id, false, 0]],
+    'A mistyped answer must remain incorrect and must not be graded as its longer answer.');
+  assert.equal(typedWrongCard.byId('review-result-status').props.children.join(''), 'Sai');
+  assert.equal(typedWrongCard.byId('review-answer-user').props.children.join(''), 'record');
+  assert.deepEqual(typedWrongCard.soundCalls, ['error']);
+  typedWrongCard.unmount();
   const fragmentWord = {
     ...sentenceWord,
     id: 91,
@@ -657,6 +761,24 @@ async function startReview(screen) {
   assert.equal(card.byId('review-result-modal'), undefined);
   assert.ok(card.byId('review-result-details'),
     'Word details are visible from the first answer result state.');
+  assert.equal(
+    card.byId('review-result').props.style.find(style => style?.backgroundColor)?.backgroundColor,
+    palette.success,
+    'Correct feedback uses the green success surface.',
+  );
+  assert.equal(
+    find(card.byId('review-result-details'), node =>
+      node.type === 'Text' &&
+      ['THÔNG TIN TỪ', 'ĐÁP ÁN'].includes(
+        Array.isArray(node.props.children)
+          ? node.props.children.join('')
+          : node.props.children,
+      )),
+    undefined,
+    'Remove the two redundant labels directly below the correct status.',
+  );
+  assert.ok(card.byId('review-answer-correct'),
+    'Keep the answer and all other word details in the existing layout.');
   const resultPanelStyles = card.byId('review-result').props.style;
   assert.ok(resultPanelStyles.some(style => style?.position === 'absolute'),
     'Keep the expanded answer and word details anchored beneath the review question.');

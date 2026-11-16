@@ -31,10 +31,52 @@ function loadTs(filePath, dependencies = {}, globals = {}) {
   return module.exports;
 }
 
-function loadDictionaryDomain() {
-  const localAdditions = loadTs(
-    join(__dirname, "../domain/dictionary-local-additions.ts"),
+function loadToeicTopicCourseDataLoader() {
+  const dependencies = {
+    "./toeic-topic-course-data.json": require(
+      "../domain/toeic-topic-course-data.json",
+    ),
+  };
+  const topicIds = [
+    "general-business",
+    "office-issues",
+    "personnel",
+    "finance-accounting",
+    "purchasing",
+    "travel-transportation",
+    "dining-hospitality",
+    "health-medical",
+    "real-estate",
+    "entertainment-events",
+  ];
+  for (const topicId of topicIds) {
+    dependencies[`./toeic-topic-course-data/${topicId}.json`] = require(
+      `../domain/toeic-topic-course-data/${topicId}.json`,
+    );
+  }
+  return loadTs(
+    join(__dirname, "../domain/toeic-topic-course-data-loader.ts"),
+    dependencies,
   );
+}
+
+function loadToeicTopicCourseDomain(dataLoader = loadToeicTopicCourseDataLoader()) {
+  return loadTs(join(__dirname, "../domain/toeic-topic-course.ts"), {
+    "./toeic-topic-course-data-loader": dataLoader,
+  });
+}
+
+function loadLocalDictionaryAdditions(
+  dataLoader = loadToeicTopicCourseDataLoader(),
+) {
+  return loadTs(
+    join(__dirname, "../domain/dictionary-local-additions.ts"),
+    { "./toeic-topic-course-data-loader": dataLoader },
+  );
+}
+
+function loadDictionaryDomain() {
+  const localAdditions = loadLocalDictionaryAdditions();
   return loadTs(join(__dirname, "../domain/dictionary.ts"), {
     "./dictionary-local-additions": localAdditions,
   });
@@ -154,6 +196,9 @@ module.exports = {
   srs,
   reviewStatistics,
   createRepository,
+  loadLocalDictionaryAdditions,
+  loadToeicTopicCourseDomain,
+  loadToeicTopicCourseDataLoader,
   loadTs,
   missionChests,
   missionShop,

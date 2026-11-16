@@ -1,3 +1,5 @@
+import { TOEIC_TOPIC_COURSE_ENTRIES } from "./toeic-topic-course-data-loader";
+
 export interface LocalDictionaryAddition {
   term: string;
   definition: string;
@@ -5,9 +7,10 @@ export interface LocalDictionaryAddition {
   exampleTranslation: string;
   pos: string;
   subPos: string | null;
+  allowAdditionalSenses?: boolean;
 }
 
-export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v2";
+export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v3";
 
 export const LOCAL_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] = [
   {
@@ -168,7 +171,19 @@ export const LOCAL_DICTIONARY_WORD_ADDITIONS: LocalDictionaryAddition[] = [
   },
 ];
 
+export const TOEIC_TOPIC_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] =
+  Object.entries(TOEIC_TOPIC_COURSE_ENTRIES).map(([term, entry]) => ({
+    term,
+    definition: entry.definition,
+    example: entry.example,
+    exampleTranslation: entry.exampleTranslation,
+    pos: "phrase",
+    subPos: null,
+    allowAdditionalSenses: true,
+  }));
+
 export const ALL_LOCAL_DICTIONARY_ADDITIONS: readonly LocalDictionaryAddition[] = [
   ...LOCAL_DICTIONARY_ADDITIONS,
   ...LOCAL_DICTIONARY_WORD_ADDITIONS,
+  ...TOEIC_TOPIC_DICTIONARY_ADDITIONS,
 ];

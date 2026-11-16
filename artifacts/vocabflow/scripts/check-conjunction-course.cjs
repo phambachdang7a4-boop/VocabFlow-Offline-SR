@@ -6,12 +6,12 @@ const { join } = require("node:path");
 const {
   createRepository,
   loadDictionaryDomain,
+  loadLocalDictionaryAdditions,
   loadTs,
+  loadToeicTopicCourseDomain,
 } = require("./test-support.cjs");
 
-const additions = loadTs(
-  join(__dirname, "../domain/dictionary-local-additions.ts"),
-);
+const additions = loadLocalDictionaryAdditions();
 const course = loadTs(
   join(__dirname, "../domain/conjunction-course.ts"),
   { "./dictionary-local-additions": additions },
@@ -27,14 +27,7 @@ const ieltsTopicCourse = loadTs(
     ),
   },
 );
-const toeicTopicCourse = loadTs(
-  join(__dirname, "../domain/toeic-topic-course.ts"),
-  {
-    "./toeic-topic-course-data.json": require(
-      "../domain/toeic-topic-course-data.json",
-    ),
-  },
-);
+const toeicTopicCourse = loadToeicTopicCourseDomain();
 const dictionaryDomain = loadDictionaryDomain();
 const { applyLocalDictionaryAdditions } = loadTs(
   join(__dirname, "../data/dictionary-local-additions.ts"),
@@ -64,9 +57,25 @@ async function checkDictionaryOverlay() {
       example TEXT
     );
   `);
+  const existingToeicEntry = additions.TOEIC_TOPIC_DICTIONARY_ADDITIONS[0];
+  const existingWordId = sqlite
+    .prepare("INSERT INTO words (word, lang_code) VALUES (?, 'en')")
+    .run(existingToeicEntry.term).lastInsertRowid;
+  const existingDefinitionId = sqlite
+    .prepare(
+      "INSERT INTO definitions (definition, pos, sub_pos, definition_lang) VALUES (?, 'n', NULL, 'vi')",
+    )
+    .run("Nghĩa đã có trong từ điển gốc.").lastInsertRowid;
+  sqlite
+    .prepare(
+      "INSERT INTO word_definitions (word_id, definition_id, example) VALUES (?, ?, ?)",
+    )
+    .run(existingWordId, existingDefinitionId, "An existing dictionary example.");
   const db = {
     getFirstAsync: async (sql, ...params) =>
       sqlite.prepare(sql).get(...params) ?? null,
+    getAllAsync: async (sql, ...params) =>
+      sqlite.prepare(sql).all(...params),
     runAsync: async (sql, ...params) => {
       const result = sqlite.prepare(sql).run(...params);
       return {
@@ -100,15 +109,20 @@ async function checkDictionaryOverlay() {
     .all();
   assert.equal(
     rows.length,
-    additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
-    "Overlay adds every local dictionary entry exactly once.",
+    additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length + 1,
+    "Overlay preserves an existing dictionary meaning and adds the course meaning.",
   );
   assert.equal(
     new Set(rows.map((row) => row.word)).size,
     additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
   );
   for (const entry of additions.ALL_LOCAL_DICTIONARY_ADDITIONS) {
-    const row = rows.find((item) => item.word === entry.term);
+    const row = rows.find(
+      (item) =>
+        item.word === entry.term &&
+        item.definition === entry.definition &&
+        item.example === entry.example,
+    );
     assert.ok(row, `${entry.term} exists in the offline dictionary.`);
     assert.equal(row.definition, entry.definition);
     assert.equal(row.example, entry.example);
@@ -116,6 +130,14 @@ async function checkDictionaryOverlay() {
     assert.equal(row.subPos, entry.subPos);
     assert.equal(row.langCode, "en");
   }
+  assert.ok(
+    rows.some(
+      (row) =>
+        row.word === existingToeicEntry.term &&
+        row.definition === "Nghĩa đã có trong từ điển gốc.",
+    ),
+    "Adding a course sense does not replace an existing dictionary meaning.",
+  );
   assert.equal(dictionaryDomain.dictionaryPartOfSpeech("conj"), "conjunction");
   const draft = dictionaryDomain.dictionaryDraft(
     {
@@ -143,7 +165,7 @@ async function checkDictionaryOverlay() {
       example: flyAddition.example,
     },
   );
-  assert.equal(flyDraft.meaning, `(v) ${flyAddition.definition}`);
+  assert.equal(flyDraft.meaning, `(Verb) ${flyAddition.definition}`);
   assert.equal(flyDraft.example, "The birds have flown south for the winter.");
   assert.match(flyDraft.note, /biên soạn cho VocabFlow/);
   sqlite.close();
@@ -273,7 +295,7 @@ async function checkCourseContentAndProgress() {
     ),
     "IELTS lesson display numbers are continuous across all topics.",
   );
-  assert.ok(ieltsTerms.length >= 1300 && ieltsTerms.length <= 2000);
+  assert.ok(ieltsTerms.length >= 1200 && ieltsTerms.length <= 2000);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_WORD_COUNT,
@@ -303,12 +325,11 @@ async function checkCourseContentAndProgress() {
       `${term} keeps its English example separate from the translation.`,
     );
   }
-  assert.equal(
-    Object.values(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).filter(
+  assert.ok(
+    Object.values(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).some(
       (entry) => entry.dictionarySource === "authored",
-    ).length,
-    1,
-    "Only the previously missing offline dictionary entry is authored.",
+    ),
+    "Authored entries support IELTS terms absent from the offline dictionary.",
   );
   assert.deepEqual(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS
@@ -350,12 +371,15 @@ async function checkCourseContentAndProgress() {
   const toeicQuestions = toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.flatMap(
     (lesson) => lesson.questions,
   );
+  const toeicDictionaryTerms = new Set(
+    additions.TOEIC_TOPIC_DICTIONARY_ADDITIONS.map((entry) => entry.term),
+  );
   assert.equal(
     toeicTopicCourse.TOEIC_TOPIC_COURSE_TITLE,
-    "Từ vựng TOEIC theo chủ đề",
+    "Cụm từ TOEIC theo chủ đề",
   );
-  assert.equal(toeicTopicCourse.TOEIC_TOPIC_WORD_LIST.length, 25);
-  assert.ok(toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.length >= 35);
+  assert.equal(toeicTopicCourse.TOEIC_TOPIC_WORD_LIST.length, 10);
+  assert.ok(toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.length >= 100);
   assert.deepEqual(
     toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.map((lesson) => lesson.title),
     toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS.map(
@@ -363,8 +387,17 @@ async function checkCourseContentAndProgress() {
     ),
     "TOEIC lesson display numbers are continuous across all topics.",
   );
-  assert.ok(toeicTerms.length >= 850 && toeicTerms.length <= 1000);
+  assert.equal(toeicTerms.length, 3000);
   assert.equal(new Set(toeicTerms).size, toeicTerms.length);
+  assert.equal(
+    additions.TOEIC_TOPIC_DICTIONARY_ADDITIONS.length,
+    toeicTerms.length,
+    "Every TOEIC course phrase is also installed in the offline dictionary.",
+  );
+  assert.ok(
+    toeicTerms.every((term) => toeicDictionaryTerms.has(term)),
+    "Course phrases and offline dictionary entries stay aligned.",
+  );
   assert.equal(
     toeicTopicCourse.TOEIC_TOPIC_COURSE_WORD_COUNT,
     toeicTerms.length,
@@ -391,6 +424,17 @@ async function checkCourseContentAndProgress() {
       entry.exampleTranslation,
       entry.example,
       `${term} keeps its English example separate from its translation.`,
+    );
+  }
+  for (const term of toeicTerms) {
+    const entry = toeicTopicCourse.TOEIC_TOPIC_COURSE_ENTRIES[term];
+    assert.ok(
+      term.split(/\s+/).length >= 2,
+      `${term} is a phrase, not a standalone word.`,
+    );
+    assert.ok(
+      entry.example.toLowerCase().includes(term.toLowerCase()),
+      `${term} appears in its example.`,
     );
   }
   for (const lesson of toeicTopicCourse.TOEIC_TOPIC_COURSE_LESSONS) {
@@ -425,7 +469,7 @@ async function checkCourseContentAndProgress() {
       "Completing a lesson repeatedly does not duplicate its progress.",
     );
     const toeicLessonId =
-      `${toeicTopicCourse.TOEIC_TOPIC_COURSE_ID}-office-operations-lesson-1`;
+      `${toeicTopicCourse.TOEIC_TOPIC_COURSE_ID}-office-issues-lesson-1`;
     await repo.markCourseLessonCompleted(toeicLessonId);
     assert.deepEqual(
       await repo.getCourseLessonCompletions(

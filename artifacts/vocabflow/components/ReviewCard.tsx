@@ -27,6 +27,7 @@ import {
   checkReviewAnswer,
   compactReviewAnswer,
   displayReviewAnswer,
+  checkReviewChoiceAnswer,
   isReviewExampleUsable,
   type ReviewExercise,
 } from "@/domain/review-exercises";
@@ -219,7 +220,9 @@ export function ReviewCard({
       const cue =
         o.action === "freeze"
           ? soundCueFor("freezeEnabled")
-          : soundCueFor(o.correct ? "reviewCorrect" : "reviewIncorrect");
+          : o.correct
+            ? null
+            : soundCueFor("reviewIncorrect");
       await withSoundOutcome(
         async () => {
           if (o.action === "grade")
@@ -279,7 +282,7 @@ export function ReviewCard({
     sound.unlockFromGesture();
     commit({
       action: "grade",
-      correct: checkReviewAnswer(choice, word.term),
+      correct: checkReviewChoiceAnswer(choice, word.term),
       typed: choice,
     });
   };
@@ -372,7 +375,14 @@ export function ReviewCard({
     }
   };
 
-  const tone = graded?.correct ? c.vocabCardAccent : c.vocabCardForeground;
+  const tone = graded?.correct
+    ? c.vocabCardAccent
+    : graded
+      ? c.destructiveForeground
+      : c.vocabCardForeground;
+  const resultMuted = graded?.correct === false
+    ? c.destructiveForeground
+    : c.vocabCardMuted;
   const hintPattern =
     exercise.hint ??
     Array.from(word.term)
@@ -650,7 +660,7 @@ export function ReviewCard({
           <View testID="review-choice-options" style={styles.choiceGrid}>
             {(exercise.choices ?? []).map((choice, index) => {
               const isSelected = graded?.typed === choice;
-              const isCorrect = checkReviewAnswer(choice, word.term);
+              const isCorrect = checkReviewChoiceAnswer(choice, word.term);
               const revealRight = answered && isCorrect;
               const revealWrong = answered && isSelected && !isCorrect;
               const backgroundColor = revealRight
@@ -724,7 +734,12 @@ export function ReviewCard({
             styles.resultPanel,
             {
               height: resultPanelHeight,
-              backgroundColor: c.vocabCard,
+              backgroundColor:
+                graded?.correct === true
+                  ? c.success
+                  : graded?.correct === false
+                    ? c.destructive
+                    : c.vocabCard,
               borderRadius: c.radius + 6,
             },
           ]}
@@ -741,12 +756,15 @@ export function ReviewCard({
                 <View style={styles.resultHeader}>
                   <View style={[styles.labelRow, styles.resultStatus]}>
                     <Feather
-                      name={graded.correct ? "check-circle" : "book-open"}
+                      name={graded.correct ? "check-circle" : "x-circle"}
                       size={20}
                       color={tone}
                     />
-                    <Text style={[styles.resultTitle, { color: tone }]}>
-                      {graded.correct ? "Chính xác!" : "Đáp án"}
+                    <Text
+                      testID="review-result-status"
+                      style={[styles.resultTitle, { color: tone }]}
+                    >
+                      {graded.correct ? "Chính xác!" : "Sai"}
                     </Text>
                   </View>
                   <View testID="review-result-actions" style={styles.resultActions}>
@@ -843,33 +861,38 @@ export function ReviewCard({
                 </View>
                 <View style={styles.resultDetailsGroup}>
                   <Text
-                    style={[
-                      styles.resultDetailsLabel,
-                      { color: c.vocabCardMuted },
-                    ]}
-                  >
-                    THÔNG TIN TỪ
-                  </Text>
-                  <Text
-                    style={[
-                      styles.resultDetailsLabel,
-                      { color: c.vocabCardMuted },
-                    ]}
-                  >
-                    ĐÁP ÁN
-                  </Text>
-                  <Text
                     testID="review-answer-correct"
                     style={[styles.answer, { color: c.vocabCardForeground }]}
                   >
                     {word.term}
                   </Text>
+                  {!graded.correct ? (
+                    <>
+                      <Text
+                        style={[
+                          styles.resultDetailsLabel,
+                          { color: resultMuted },
+                        ]}
+                      >
+                        BẠN ĐÃ TRẢ LỜI
+                      </Text>
+                      <Text
+                        testID="review-answer-user"
+                        style={[
+                          styles.resultDetailsValue,
+                          { color: c.vocabCardForeground },
+                        ]}
+                      >
+                        {graded.typed.trim() || "Mình không thuộc từ này"}
+                      </Text>
+                    </>
+                  ) : null}
                 </View>
                 <View style={styles.resultDetailsGroup}>
                   <Text
                     style={[
                       styles.resultDetailsLabel,
-                      { color: c.vocabCardMuted },
+                      { color: resultMuted },
                     ]}
                   >
                     PHIÊN ÂM
@@ -880,8 +903,8 @@ export function ReviewCard({
                         style={[
                           styles.ipaAccent,
                           {
-                            color: c.vocabCardMuted,
-                            borderColor: c.vocabCardMuted,
+                            color: resultMuted,
+                            borderColor: resultMuted,
                           },
                         ]}
                         accessibilityLabel="Phiên âm Anh-Mỹ"
@@ -893,7 +916,7 @@ export function ReviewCard({
                         style={[
                           styles.small,
                           styles.ipaValue,
-                          { color: c.vocabCardMuted },
+                          { color: resultMuted },
                         ]}
                       >
                         {pronunciationLines.us.join(" · ") || "Chưa có dữ liệu"}
@@ -923,8 +946,8 @@ export function ReviewCard({
                         style={[
                           styles.ipaAccent,
                           {
-                            color: c.vocabCardMuted,
-                            borderColor: c.vocabCardMuted,
+                            color: resultMuted,
+                            borderColor: resultMuted,
                           },
                         ]}
                         accessibilityLabel="Phiên âm Anh-Anh"
@@ -936,7 +959,7 @@ export function ReviewCard({
                         style={[
                           styles.small,
                           styles.ipaValue,
-                          { color: c.vocabCardMuted },
+                          { color: resultMuted },
                         ]}
                       >
                         {pronunciationLines.uk.join(" · ") ||
@@ -959,8 +982,8 @@ export function ReviewCard({
                           style={[
                             styles.ipaAccent,
                             {
-                              color: c.vocabCardMuted,
-                              borderColor: c.vocabCardMuted,
+                              color: resultMuted,
+                              borderColor: resultMuted,
                             },
                           ]}
                           accessibilityLabel="Phiên âm chưa xác định vùng"
@@ -972,7 +995,7 @@ export function ReviewCard({
                           style={[
                             styles.small,
                             styles.ipaValue,
-                            { color: c.vocabCardMuted },
+                            { color: resultMuted },
                           ]}
                         >
                           {pronunciationLines.unspecified.join(" · ")}
@@ -985,7 +1008,7 @@ export function ReviewCard({
                   <Text
                     style={[
                       styles.resultDetailsLabel,
-                      { color: c.vocabCardMuted },
+                      { color: resultMuted },
                     ]}
                   >
                     NGHĨA TIẾNG VIỆT
@@ -1005,7 +1028,7 @@ export function ReviewCard({
                     <Text
                       style={[
                         styles.resultDetailsLabel,
-                        { color: c.vocabCardMuted },
+                        { color: resultMuted },
                       ]}
                     >
                       CÂU VÍ DỤ
@@ -1024,7 +1047,7 @@ export function ReviewCard({
                         <Text
                           style={[
                             styles.resultDetailsLabel,
-                            { color: c.vocabCardMuted },
+                            { color: resultMuted },
                           ]}
                         >
                           DỊCH NGHĨA
@@ -1042,7 +1065,7 @@ export function ReviewCard({
                     ) : null}
                   </View>
                 ) : null}
-                <Text style={[styles.small, { color: c.vocabCardMuted }]}>
+                <Text style={[styles.small, { color: resultMuted }]}>
                   {phase === "saved"
                     ? graded.correct
                       ? word.level === 6

@@ -104,29 +104,6 @@ export default function VocabularyScreen() {
     }
   };
 
-  const addBtn = (
-    <Pressable
-      testID="add-word"
-      accessibilityLabel="Thêm từ mới"
-      onPress={() => router.push('/word')}
-      style={({ pressed }) => [
-        styles.fab,
-        {
-          backgroundColor: c.button,
-          transform: [{ scale: pressed ? 0.92 : 1 }],
-          shadowColor: c.shade,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: pressed ? 0.1 : 0.22,
-          shadowRadius: 7,
-          elevation: pressed ? 1 : 4,
-        },
-      ]}
-    >
-      <MaterialSheen tone="gold" radius={16} />
-      <Feather name="plus" size={24} color={c.buttonForeground} />
-    </Pressable>
-  );
-
   const searchBar = (
     <View
       style={[
@@ -192,7 +169,6 @@ export default function VocabularyScreen() {
       {words.length > 0 ? (
         <View style={styles.notebookToolbar}>
           <Text style={[styles.notebookCount, { color: c.mutedForeground }]}>{words.length} từ trong sổ</Text>
-          {addBtn}
         </View>
       ) : null}
       {statistics ? (
@@ -328,14 +304,6 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1 },
   pad: { paddingHorizontal: 20, paddingTop: 8 },
-  fab: {
-    position: 'relative',
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   listHeader: { gap: 10 },
   notebookToolbar: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   notebookCount: { fontFamily: F.s, fontSize: 12, letterSpacing: 1.2, textTransform: 'uppercase' },

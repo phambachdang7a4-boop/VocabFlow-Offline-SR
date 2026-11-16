@@ -4,7 +4,7 @@ const { readFileSync, mkdtempSync, rmSync, writeFileSync } = require("node:fs");
 const { join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
 const { createHash } = require("node:crypto");
-const { createRepository, loadTs, loadDictionaryDomain, srs } = require("./test-support.cjs");
+const { createRepository, loadTs, loadDictionaryDomain, loadLocalDictionaryAdditions, srs } = require("./test-support.cjs");
 const sqliteConnection = loadTs(
   join(__dirname, "../data/sqlite-connection.ts"),
 );
@@ -62,9 +62,7 @@ function adapter(filename, readOnly = false) {
       "../data/basic-family-example-overrides.json": familyExamples,
     },
   );
-  const localAdditionData = loadTs(
-    join(__dirname, "../domain/dictionary-local-additions.ts"),
-  );
+  const localAdditionData = loadLocalDictionaryAdditions();
   const localAdditions = loadTs(
     join(__dirname, "../data/dictionary-local-additions.ts"),
     { "../domain/dictionary-local-additions": localAdditionData },
@@ -756,13 +754,27 @@ function adapter(filename, readOnly = false) {
     "ready",
   ]);
   assert.equal(nativeRangeRequests, expectedDownloadChunks);
+  const baseTerms = new Set(
+    reference.handle
+      .prepare("SELECT word FROM words WHERE lang_code = 'en'")
+      .all()
+      .map((row) => row.word.trim().replace(/\s+/g, " ").toLocaleLowerCase("en")),
+  );
+  const newLocalTerms = new Set(
+    localAdditionData.ALL_LOCAL_DICTIONARY_ADDITIONS.map((entry) =>
+      entry.term.trim().replace(/\s+/g, " ").toLocaleLowerCase("en"),
+    ),
+  );
+  const expectedFinalWordCount =
+    DICTIONARY.wordCount +
+    [...newLocalTerms].filter((term) => !baseTerms.has(term)).length;
   assert.equal(
     (
       await nativeDictionary.getFirstAsync(
         "SELECT COUNT(*) AS count FROM words",
       )
     ).count,
-    DICTIONARY.wordCount + localAdditionData.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
+    expectedFinalWordCount,
     "The Expo Go file writer imports the complete ranged download",
   );
   await nativeDictionary.closeAsync();

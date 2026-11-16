@@ -20,7 +20,6 @@ import {
   DICTIONARY_EXAMPLE_UPDATES,
 } from "../domain/dictionary-example-updates";
 import {
-  ALL_LOCAL_DICTIONARY_ADDITIONS,
   LOCAL_DICTIONARY_ADDITIONS_REVISION,
 } from "../domain/dictionary-local-additions";
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
@@ -146,13 +145,19 @@ async function initialize(
           "ALTER TABLE vocabflow_dictionary_meta ADD COLUMN example_revision TEXT NOT NULL DEFAULT '';",
         );
       }
+      if (!columns.some((column) => column.name === "dictionary_word_count")) {
+        await db.execAsync(
+          "ALTER TABLE vocabflow_dictionary_meta ADD COLUMN dictionary_word_count INTEGER NOT NULL DEFAULT 0;",
+        );
+      }
     }
     const cached = table
       ? await db.getFirstAsync<{
           source_hash: string;
           example_revision: string;
+          dictionary_word_count: number;
         }>(
-          "SELECT source_hash, example_revision FROM vocabflow_dictionary_meta LIMIT 1",
+          "SELECT source_hash, example_revision, dictionary_word_count FROM vocabflow_dictionary_meta LIMIT 1",
         )
       : null;
     if (cached?.source_hash !== DICTIONARY.sha256) {
@@ -229,6 +234,11 @@ async function initialize(
           );
         await applyExampleUpdates(imported);
         await applyLocalDictionaryAdditions(imported);
+        const totalWordCount = await imported.getFirstAsync<{ count: number }>(
+          "SELECT COUNT(*) AS count FROM words",
+        );
+        if ((totalWordCount?.count ?? 0) < DICTIONARY.wordCount)
+          throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
         await backupDatabaseAsync({
           sourceDatabase: imported,
           destDatabase: db,
@@ -242,20 +252,19 @@ async function initialize(
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
-      if (
-        count?.count !==
-        DICTIONARY.wordCount + ALL_LOCAL_DICTIONARY_ADDITIONS.length
-      )
+      if (!count || count.count < DICTIONARY.wordCount)
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       await db.withTransactionAsync(async () => {
         await db.execAsync(`CREATE TABLE IF NOT EXISTS vocabflow_dictionary_meta (
           source_hash TEXT NOT NULL,
-          example_revision TEXT NOT NULL DEFAULT ''
+          example_revision TEXT NOT NULL DEFAULT '',
+          dictionary_word_count INTEGER NOT NULL DEFAULT 0
         ); DELETE FROM vocabflow_dictionary_meta;`);
         await db.runAsync(
-          "INSERT INTO vocabflow_dictionary_meta (source_hash, example_revision) VALUES (?, ?)",
+          "INSERT INTO vocabflow_dictionary_meta (source_hash, example_revision, dictionary_word_count) VALUES (?, ?, ?)",
           DICTIONARY.sha256,
           DICTIONARY_CONTENT_REVISION,
+          count.count,
         );
       });
     } else if (cached.example_revision !== DICTIONARY_CONTENT_REVISION) {
@@ -271,15 +280,19 @@ async function initialize(
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
-      if (
-        count?.count !==
-        DICTIONARY.wordCount + ALL_LOCAL_DICTIONARY_ADDITIONS.length
-      )
+      if (!count || count.count < DICTIONARY.wordCount)
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       await db.runAsync(
-        "UPDATE vocabflow_dictionary_meta SET example_revision = ?",
+        "UPDATE vocabflow_dictionary_meta SET example_revision = ?, dictionary_word_count = ?",
         DICTIONARY_CONTENT_REVISION,
+        count.count,
       );
+    } else if (cached?.dictionary_word_count) {
+      const count = await db.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM words",
+      );
+      if (count?.count !== cached.dictionary_word_count)
+        throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
     }
     // No application query may mutate the reference dictionary after setup.
     await db.execAsync("PRAGMA query_only = ON;");
@@ -326,6 +339,21 @@ export function openDictionary(
   return connection;
 }
 
+async function hasExpectedDictionaryWordCount(
+  db: SQLiteDatabase,
+): Promise<boolean> {
+  const [actual, expected] = await Promise.all([
+    db.getFirstAsync<{ count: number }>("SELECT COUNT(*) AS count FROM words"),
+    db.getFirstAsync<{ dictionary_word_count: number }>(
+      "SELECT dictionary_word_count FROM vocabflow_dictionary_meta LIMIT 1",
+    ),
+  ]);
+  return (
+    (actual?.count ?? 0) >= DICTIONARY.wordCount &&
+    actual?.count === expected?.dictionary_word_count
+  );
+}
+
 export async function getOfflineDictionaryStatus(): Promise<{
   state: "missing" | "installed" | "damaged";
   bytes: number;
@@ -333,13 +361,7 @@ export async function getOfflineDictionaryStatus(): Promise<{
   if (Platform.OS === "web") {
     try {
       const db = await openDictionary();
-      const count = await db.getFirstAsync<{ count: number }>(
-        "SELECT COUNT(*) AS count FROM words",
-      );
-      if (
-        count?.count !==
-        DICTIONARY.wordCount + ALL_LOCAL_DICTIONARY_ADDITIONS.length
-      ) {
+      if (!(await hasExpectedDictionaryWordCount(db))) {
         return { state: "damaged", bytes: DICTIONARY.bytes };
       }
       return { state: "installed", bytes: DICTIONARY.bytes };
@@ -352,13 +374,10 @@ export async function getOfflineDictionaryStatus(): Promise<{
   const file = new File(Paths.document, "SQLite", filename);
   if (!file.exists) return { state: "missing", bytes: 0 };
   const bytes = file.size ?? 0;
-  if (bytes !== DICTIONARY.bytes) return { state: "damaged", bytes };
+  if (bytes < DICTIONARY.bytes) return { state: "damaged", bytes };
   try {
     const db = await openDictionary();
-    const count = await db.getFirstAsync<{ count: number }>(
-      "SELECT COUNT(*) AS count FROM words",
-    );
-    if (count?.count !== DICTIONARY.wordCount)
+    if (!(await hasExpectedDictionaryWordCount(db)))
       return { state: "damaged", bytes };
     return { state: "installed", bytes };
   } catch (error) {

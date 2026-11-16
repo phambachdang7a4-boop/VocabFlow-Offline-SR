@@ -1,4 +1,11 @@
-import courseData from "./toeic-topic-course-data.json";
+import {
+  TOEIC_TOPIC_COURSE_DATA,
+  TOEIC_TOPIC_COURSE_ENTRIES,
+  type ToeicTopicCourseEntry,
+} from "./toeic-topic-course-data-loader";
+
+export { TOEIC_TOPIC_COURSE_ENTRIES } from "./toeic-topic-course-data-loader";
+export type { ToeicTopicCourseEntry } from "./toeic-topic-course-data-loader";
 
 export interface ToeicTopicCourseQuestion {
   term: string;
@@ -15,41 +22,13 @@ export interface ToeicTopicCourseLesson {
   questions: readonly ToeicTopicCourseQuestion[];
 }
 
-export interface ToeicTopicCourseEntry {
-  definition: string;
-  example: string;
-  exampleTranslation: string;
-  spellingNote?: string;
-  dictionarySource: "offline" | "authored";
-  exampleSource: "offline" | "authored";
-  partOfSpeech: string;
-  posGroup: string;
-  family: string;
-}
+const data = TOEIC_TOPIC_COURSE_DATA;
 
-interface ToeicTopicCourseData {
-  spellingConvention: string;
-  totalWords: number;
-  topics: {
-    id: string;
-    title: string;
-    focus: string;
-    terms: string[];
-  }[];
-  entries: Record<string, ToeicTopicCourseEntry>;
-}
-
-const data = courseData as ToeicTopicCourseData;
-
-export const TOEIC_TOPIC_COURSE_ID = "toeic-topic-vocabulary-v1";
-export const TOEIC_TOPIC_COURSE_TITLE = "Từ vựng TOEIC theo chủ đề";
+export const TOEIC_TOPIC_COURSE_ID = "toeic-topic-collocations-v2";
+export const TOEIC_TOPIC_COURSE_TITLE = "Cụm từ TOEIC theo chủ đề";
 export const TOEIC_TOPIC_COURSE_SPELLING_CONVENTION =
   data.spellingConvention;
 export const TOEIC_TOPIC_COURSE_WORD_COUNT = data.totalWords;
-export const TOEIC_TOPIC_COURSE_ENTRIES: Readonly<
-  Record<string, ToeicTopicCourseEntry>
-> = data.entries;
-
 export const TOEIC_TOPIC_WORD_LIST = data.topics.map((topic) => ({
   id: topic.id,
   title: topic.title,
@@ -81,30 +60,35 @@ function choicesFor(
   allTerms: readonly string[],
 ): string[] {
   const answer = TOEIC_TOPIC_COURSE_ENTRIES[term];
-  const sameTopic = topicTerms.filter((candidate) => {
-    const entry = TOEIC_TOPIC_COURSE_ENTRIES[candidate];
-    return (
-      candidate !== term &&
-      entry.posGroup === answer.posGroup &&
-      entry.family !== answer.family
-    );
-  });
-  const sameCourse = allTerms.filter((candidate) => {
-    const entry = TOEIC_TOPIC_COURSE_ENTRIES[candidate];
-    return (
-      candidate !== term &&
-      entry.posGroup === answer.posGroup &&
-      entry.family !== answer.family
-    );
-  });
-  const fallback = allTerms.filter((candidate) => candidate !== term);
-  const pool = [...new Set([...sameTopic, ...sameCourse, ...fallback])];
-  const start = pool.length ? stableHash(term) % pool.length : 0;
   const choices = [term];
-  for (let offset = 0; offset < pool.length && choices.length < 4; offset += 1) {
-    const candidate = pool[(start + offset) % pool.length];
-    if (!choices.includes(candidate)) choices.push(candidate);
-  }
+  const addChoices = (
+    candidates: readonly string[],
+    isEligible: (candidate: string) => boolean,
+  ) => {
+    if (!candidates.length || choices.length >= 4) return;
+    const start = stableHash(term) % candidates.length;
+    for (
+      let offset = 0;
+      offset < candidates.length && choices.length < 4;
+      offset += 1
+    ) {
+      const candidate = candidates[(start + offset) % candidates.length];
+      if (!choices.includes(candidate) && isEligible(candidate)) {
+        choices.push(candidate);
+      }
+    }
+  };
+  const sameTypeDifferentFamily = (candidate: string) => {
+    const entry = TOEIC_TOPIC_COURSE_ENTRIES[candidate];
+    return (
+      candidate !== term &&
+      entry.posGroup === answer.posGroup &&
+      entry.family !== answer.family
+    );
+  };
+  addChoices(topicTerms, sameTypeDifferentFamily);
+  addChoices(allTerms, sameTypeDifferentFamily);
+  addChoices(allTerms, (candidate) => candidate !== term);
   return choices;
 }
 

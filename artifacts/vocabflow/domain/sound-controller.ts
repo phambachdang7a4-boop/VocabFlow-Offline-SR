@@ -7,6 +7,7 @@ export type SoundPlayOptions = { loop?: boolean };
 export interface SoundEngine {
   unlockFromGesture: () => void;
   play: (cue: CueName, options?: SoundPlayOptions) => PlayingSFX | null;
+  playReviewNote: (index: number) => PlayingSFX | null;
   stopAll: () => void;
   setEnabled: (enabled: boolean) => void;
   setVolume: (volume: number) => void;
@@ -63,6 +64,14 @@ export function createSoundController(
       if (disposed || !foreground || !unlocked || !enabled) return null;
       try {
         return engine.play(cue);
+      } catch {
+        return null;
+      }
+    },
+    playReviewNote(index: number) {
+      if (disposed || !foreground || !unlocked || !enabled) return null;
+      try {
+        return engine.playReviewNote(index);
       } catch {
         return null;
       }
