@@ -28,7 +28,9 @@ import {
   type AppearanceMode,
 } from "@/contexts/AppearanceContext";
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
+import { useReviewPreferences } from "@/contexts/ReviewPreferencesContext";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
+import { REVIEW_WORD_LIMIT_OPTIONS } from "@/domain/review-modes";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -69,6 +71,7 @@ export default function SettingsScreen() {
   const { words, frozenWords, loading, error, reload } = useVocabulary();
   const appearance = useAppearance();
   const speech = useSpeechPreferences();
+  const reviewPreferences = useReviewPreferences();
   const sound = useSoundEffects();
   const sync = useSyncStatus();
   const { signOut } = useClerk();
@@ -1230,6 +1233,86 @@ Nội dung tệp:
           trong APK. Audio chiếm khoảng 307 MB; nên tải bằng Wi-Fi.
         </Text>
         <View
+          testID="review-word-limit-settings"
+          style={[
+            styles.reviewLimitCard,
+            {
+              backgroundColor: c.card,
+              borderColor: c.border,
+              borderRadius: c.radius,
+            },
+          ]}
+        >
+          <MaterialSheen radius={c.radius} />
+          <View style={styles.reviewLimitHeading}>
+            <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+              Số từ tối đa mỗi phiên ôn
+            </Text>
+            <Text
+              style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+            >
+              Áp dụng cho Cơ Bản, Speed Mode và Timebound.
+            </Text>
+          </View>
+          <View style={styles.reviewLimitOptions}>
+            {REVIEW_WORD_LIMIT_OPTIONS.map((limit) => {
+              const selected = reviewPreferences.wordLimit === limit;
+              return (
+                <Pressable
+                  key={limit}
+                  testID={`review-word-limit-${limit}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${limit} từ mỗi phiên ôn`}
+                  accessibilityState={{
+                    selected,
+                    disabled: !reviewPreferences.ready || reviewPreferences.saving,
+                  }}
+                  onPress={() => {
+                    void reviewPreferences.setWordLimit(limit);
+                  }}
+                  disabled={!reviewPreferences.ready || reviewPreferences.saving}
+                  style={({ pressed }) => [
+                    styles.reviewLimitOption,
+                    {
+                      backgroundColor: selected ? c.primary : c.secondary,
+                      borderColor: selected ? c.primary : c.border,
+                      opacity: pressed ? 0.78 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.reviewLimitOptionText,
+                      {
+                        color: selected
+                          ? c.primaryForeground
+                          : c.foreground,
+                      },
+                    ]}
+                  >
+                    {limit}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+            {reviewPreferences.ready
+              ? reviewPreferences.saving
+                ? "Đang lưu lựa chọn…"
+                : "Mặc định 100 từ · lưu trên thiết bị."
+              : "Đang tải cài đặt ôn tập…"}
+          </Text>
+          {reviewPreferences.error ? (
+            <ErrorBanner
+              message={reviewPreferences.error}
+              onRetry={() => {
+                void reviewPreferences.retryLoad();
+              }}
+            />
+          ) : null}
+        </View>
+        <View
           style={[
             styles.offlineCard,
             {
@@ -1612,6 +1695,18 @@ const styles = StyleSheet.create({
   section: { fontFamily: F.b, fontSize: 12, letterSpacing: 1.6, marginTop: 6 },
   appearanceHint: { fontFamily: F.r, fontSize: 14, lineHeight: 20 },
   appearanceGroup: { borderWidth: 1, padding: 10, gap: 10 },
+  reviewLimitCard: { borderWidth: 1, padding: 14, gap: 12, overflow: "hidden" },
+  reviewLimitHeading: { gap: 4 },
+  reviewLimitOptions: { flexDirection: "row", gap: 8 },
+  reviewLimitOption: {
+    flex: 1,
+    minHeight: 42,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewLimitOptionText: { fontFamily: F.b, fontSize: 13 },
   qualityPlaceholder: {
     minHeight: 68,
     borderWidth: 1,

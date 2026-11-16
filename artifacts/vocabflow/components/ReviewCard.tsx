@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Image,
   Modal,
@@ -62,6 +63,8 @@ export interface ReviewCardProps {
   exercise: ReviewExercise;
   /** Global context error: lock input/Continue until resolved. */
   blocked: boolean;
+  /** Hide answer details and advance as soon as the SRS save succeeds. */
+  speedMode?: boolean;
   isLast: boolean;
   onCommitted: (id: number, correct: boolean | null) => void;
   onBusyChange: (busy: boolean) => void;
@@ -72,6 +75,7 @@ export function ReviewCard({
   word,
   exercise,
   blocked,
+  speedMode = false,
   isLast,
   onCommitted,
   onBusyChange,
@@ -100,6 +104,7 @@ export function ReviewCard({
   const lock = useRef(false);
   const inFlight = useRef(false);
   const outcomeRef = useRef<Outcome | null>(null);
+  const speedAdvanceStarted = useRef(false);
   const typedRef = useRef("");
   const mounted = useRef(true);
   const cb = useRef({ onCommitted, onBusyChange, onNext });
@@ -192,13 +197,21 @@ export function ReviewCard({
   ]);
 
   useEffect(() => {
-    if (!answered || !graded || !speech.ready || !speech.autoRead) return;
+    if (
+      speedMode ||
+      !answered ||
+      !graded ||
+      !speech.ready ||
+      !speech.autoRead
+    )
+      return;
     void speech.speakWord(word.term, word.dictionaryEntryId);
     return () => {
       void speech.stopSpeaking();
     };
   }, [
     answered,
+    speedMode,
     outcome,
     word.term,
     speech.ready,
@@ -257,6 +270,20 @@ export function ReviewCard({
       if (mounted.current) cb.current.onBusyChange(false);
     }
   };
+
+  useEffect(() => {
+    if (
+      !speedMode ||
+      !answered ||
+      phase !== "saved" ||
+      blocked ||
+      speedAdvanceStarted.current
+    ) {
+      return;
+    }
+    speedAdvanceStarted.current = true;
+    cb.current.onNext();
+  }, [speedMode, answered, phase, blocked]);
 
   const commit = (o: Outcome) => {
     if (lock.current || blocked) return;
@@ -663,8 +690,9 @@ export function ReviewCard({
             {(exercise.choices ?? []).map((choice, index) => {
               const isSelected = graded?.typed === choice;
               const isCorrect = checkReviewChoiceAnswer(choice, word.term);
-              const revealRight = answered && isCorrect;
-              const revealWrong = answered && isSelected && !isCorrect;
+              const revealRight = answered && !speedMode && isCorrect;
+              const revealWrong =
+                answered && !speedMode && isSelected && !isCorrect;
               const backgroundColor = revealRight
                 ? c.successSoft
                 : revealWrong
@@ -728,7 +756,7 @@ export function ReviewCard({
         ) : null}
       </View>
 
-      {answered ? (
+      {answered && !speedMode ? (
         <View
           testID="review-result"
           accessibilityLiveRegion="polite"
@@ -1136,6 +1164,39 @@ export function ReviewCard({
               disabled={phase !== "saved" || blocked || freezeBusy}
               style={styles.continueButton}
             />
+          )}
+        </View>
+      ) : null}
+
+      {speedMode && answered && phase !== "saved" ? (
+        <View
+          testID="review-speed-save-state"
+          accessibilityLiveRegion="polite"
+          style={{
+            minHeight: 58,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          {phase === "saving" ? (
+            <>
+              <ActivityIndicator color={c.primary} />
+              <Text style={[styles.small, { color: c.mutedForeground }]}>
+                Đang lưu, chuyển sang câu tiếp theo…
+              </Text>
+            </>
+          ) : (
+            <>
+              {saveError ? <ErrorBanner message={saveError} /> : null}
+              <Button
+                testID="review-retry-save"
+                label="Thử lưu lại"
+                icon="refresh-cw"
+                onPress={retry}
+                disabled={blocked}
+              />
+            </>
           )}
         </View>
       ) : null}

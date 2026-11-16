@@ -13,6 +13,7 @@ const reviewResultDetails = loadTs(
     './dictionary-local-additions': localDictionaryAdditions,
   },
 );
+const reviewModes = loadTs(join(__dirname, '../domain/review-modes.ts'));
 assert.deepEqual(
   reviewResultDetails.groupReviewPronunciations([], '/teɪk/'),
   { us: [], uk: [], unspecified: ['/teɪk/'] },
@@ -53,7 +54,7 @@ assert.equal(
 const reviewSession = loadTs(join(__dirname, '../domain/review-session.ts'));
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
-const native = Object.fromEntries(['View', 'Text', 'Image', 'Pressable', 'ScrollView', 'TextInput', 'Modal'].map(type => [type, type]));
+const native = Object.fromEntries(['ActivityIndicator', 'View', 'Text', 'Image', 'Pressable', 'ScrollView', 'TextInput', 'Modal'].map(type => [type, type]));
 native.StyleSheet = { create: value => value, hairlineWidth: 1 };
 native.Platform = { OS: 'android' };
 native.Keyboard = { dismiss() {} };
@@ -73,6 +74,14 @@ function mount(file, properties = {}, initial = {}) {
   let focusCleanups = [];
   const navigation = { setOptions: options => tabOptions.push(options) };
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
+  const reviewPreferences = {
+    wordLimit: initial.reviewWordLimit ?? 100,
+    ready: initial.reviewPreferencesReady ?? true,
+    saving: false,
+    error: initial.reviewPreferencesError ?? null,
+    retryLoad: async () => {},
+    setWordLimit: async () => {},
+  };
   const speechCalls = [];
   const shareCalls = [];
   native.Share = {
@@ -133,6 +142,7 @@ function mount(file, properties = {}, initial = {}) {
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }) },
     '@/contexts/VocabularyContext': { useVocabulary: () => context },
     '@/contexts/SpeechPreferencesContext': { useSpeechPreferences: () => speechContext },
+    '@/contexts/ReviewPreferencesContext': { useReviewPreferences: () => reviewPreferences },
     '@/contexts/SoundEffectsContext': { useSoundEffects: () => soundContext },
     '@/data/dictionary': {
       getDictionaryEntry: async () => initial.dictionaryEntry ?? { pronunciations: [] },
@@ -147,6 +157,7 @@ function mount(file, properties = {}, initial = {}) {
     '@/hooks/useReviewClock': { useReviewClock: () => now },
     '@/domain/srs': srs, '@/domain/review-overview': overview, '@/domain/review-exercises': exercises,
     '@/domain/review-session': reviewSession,
+    '@/domain/review-modes': reviewModes,
     '@/domain/review-result-details': reviewResultDetails,
     '@/domain/sound-cues': soundCues,
     '../assets/images/corvi-app-icon.png': 'corvi-avatar-asset',
@@ -263,6 +274,72 @@ async function startReview(screen) {
   await idiomOnly.settle();
   assert.equal(idiomOnly.byType('ReviewCard').props.exercise.kind, 'idiom-dialogue');
   idiomOnly.unmount();
+
+  const limitedWords = Array.from({ length: 60 }, (_, index) => ({
+    ...word,
+    id: index + 1,
+    term: `word${index + 1}`,
+  }));
+  const speedModeScreen = mount('../app/(tabs)/review.tsx', {}, {
+    words: limitedWords,
+    reviewWordLimit: 50,
+  });
+  speedModeScreen.byId('review-mode-dropdown').props.onPress();
+  assert.ok(speedModeScreen.byId('review-mode-options'));
+  speedModeScreen.byId('review-mode-speed').props.onPress();
+  await startReview(speedModeScreen);
+  assert.equal(
+    speedModeScreen.byId('review-session-count').props.children.join(''),
+    '0/50',
+    'The selected limit caps the queue before a session starts.',
+  );
+  assert.equal(
+    speedModeScreen.byType('ReviewCard').props.speedMode,
+    true,
+    'The selected speed mode is passed into each review card.',
+  );
+  speedModeScreen.unmount();
+
+  const originalDateNow = Date.now;
+  let fakeNow = new Date('2026-11-07T12:00:00').getTime();
+  Date.now = () => fakeNow;
+  try {
+    const timedModeScreen = mount('../app/(tabs)/review.tsx', {}, {
+      words: [word, { ...word, id: 2, term: 'check' }],
+    });
+    timedModeScreen.time(new Date(fakeNow).toISOString());
+    timedModeScreen.byId('review-mode-dropdown').props.onPress();
+    timedModeScreen.byId('review-mode-timebound').props.onPress();
+    await startReview(timedModeScreen);
+    assert.equal(
+      timedModeScreen.byId('review-timebound-countdown').props.children
+        .filter((child) => child?.type === 'Text')[0]
+        .props.children.join(''),
+      '10:00',
+      'Timebound starts at ten minutes.',
+    );
+    const timedQuestion = timedModeScreen.byType('ReviewCard').props;
+    timedQuestion.onCommitted(timedQuestion.word.id, false);
+    timedQuestion.onNext();
+    fakeNow += 10 * 60 * 1000;
+    timedModeScreen.time(new Date(fakeNow).toISOString());
+    await timedModeScreen.settle();
+    assert.ok(timedModeScreen.byId('review-session-summary'));
+    assert.equal(
+      timedModeScreen.byId('review-summary-reviewed').props.children.join(''),
+      '1/2',
+      'Timebound summarizes only words already answered when time expires.',
+    );
+    assert.equal(timedModeScreen.sessionResultCalls.at(-1).completed, true);
+    assert.equal(
+      timedModeScreen.byType('ReviewMistakeMatchGame'),
+      undefined,
+      'Time expiry ends immediately without starting the mistake round.',
+    );
+    timedModeScreen.unmount();
+  } finally {
+    Date.now = originalDateNow;
+  }
 
   const mixedDue = mount('../app/(tabs)/review.tsx', {}, {
     words: [savedIdiom, { ...word, id: 83, term: 'ordinary' }],
@@ -538,6 +615,70 @@ async function startReview(screen) {
   assert.deepEqual(wrongCard.soundCalls, ['error'],
     'An incorrect saved answer plays the fail sound.');
   wrongCard.unmount();
+  const speedAnswerCalls = [];
+  const speedNextCalls = [];
+  const speedWrongCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(sentenceWord),
+    exercise: sentenceExercise,
+    speedMode: true,
+    onNext: () => speedNextCalls.push('next'),
+  }, {
+    recordReview: async (...args) => { speedAnswerCalls.push(args); },
+  });
+  speedWrongCard.byId(`review-choice-${wrongChoiceIndex}`).props.onPress();
+  await speedWrongCard.settle();
+  assert.deepEqual(speedAnswerCalls, [[sentenceWord.id, false, 0]]);
+  assert.equal(speedWrongCard.byId('review-result'), undefined,
+    'Speed Mode skips the post-answer information panel.');
+  assert.deepEqual(speedNextCalls, ['next'],
+    'Speed Mode advances automatically after an incorrect answer is saved.');
+  speedWrongCard.unmount();
+
+  const speedCorrectCalls = [];
+  const speedCorrectNextCalls = [];
+  const speedCorrectCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(sentenceWord),
+    exercise: { kind: 'meaning', prompt: 'kiểm thử' },
+    speedMode: true,
+    onNext: () => speedCorrectNextCalls.push('next'),
+  }, {
+    speechAutoRead: true,
+    recordReview: async (...args) => { speedCorrectCalls.push(args); },
+  });
+  speedCorrectCard.byId('review-answer-input').props.onChangeText('test');
+  speedCorrectCard.byId('review-check').props.onPress();
+  await speedCorrectCard.settle();
+  assert.deepEqual(speedCorrectCalls, [[sentenceWord.id, true, 0]]);
+  assert.equal(speedCorrectCard.byId('review-result'), undefined);
+  assert.deepEqual(speedCorrectNextCalls, ['next']);
+  assert.deepEqual(speedCorrectCard.speechCalls, [],
+    'Speed Mode does not read the answer after the question has been submitted.');
+  speedCorrectCard.unmount();
+
+  let speedRetryAttempts = 0;
+  const speedRetryNextCalls = [];
+  const speedRetryCard = mount('../components/ReviewCard.tsx', {
+    ...makeProps(sentenceWord),
+    exercise: sentenceExercise,
+    speedMode: true,
+    onNext: () => speedRetryNextCalls.push('next'),
+  }, {
+    recordReview: async () => {
+      speedRetryAttempts += 1;
+      if (speedRetryAttempts === 1) throw new Error('offline save failed');
+    },
+  });
+  speedRetryCard.byId(`review-choice-${wrongChoiceIndex}`).props.onPress();
+  await speedRetryCard.settle();
+  assert.equal(speedRetryNextCalls.length, 0,
+    'A failed SRS save must not advance Speed Mode.');
+  assert.ok(speedRetryCard.byId('review-retry-save'),
+    'Speed Mode exposes the existing retry action without answer details.');
+  speedRetryCard.byId('review-retry-save').props.onPress();
+  await speedRetryCard.settle();
+  assert.deepEqual(speedRetryNextCalls, ['next']);
+  speedRetryCard.unmount();
+
   const typedWrongCalls = [];
   const typedWrongCard = mount('../components/ReviewCard.tsx', {
     ...makeProps({ ...word, term: 'recorded', meaning: 'đã ghi lại' }),

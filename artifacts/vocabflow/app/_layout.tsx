@@ -12,6 +12,7 @@ import {
   useAppearance,
 } from "@/contexts/AppearanceContext";
 import { SpeechPreferencesProvider } from "@/contexts/SpeechPreferencesContext";
+import { ReviewPreferencesProvider } from "@/contexts/ReviewPreferencesContext";
 import { SoundEffectsProvider } from "@/contexts/SoundEffectsContext";
 import { useColors } from "@/hooks/useColors";
 import { ClerkProvider, useAuth } from "@clerk/expo";
@@ -348,11 +349,13 @@ export default function RootLayout() {
               tokenCache={tokenCache}
               proxyUrl={clerkProxyUrl}
             >
-              <SpeechPreferencesProvider>
-                <SoundEffectsProvider>
-                  <AppearanceFrame />
-                </SoundEffectsProvider>
-              </SpeechPreferencesProvider>
+              <ReviewPreferencesProvider>
+                <SpeechPreferencesProvider>
+                  <SoundEffectsProvider>
+                    <AppearanceFrame />
+                  </SoundEffectsProvider>
+                </SpeechPreferencesProvider>
+              </ReviewPreferencesProvider>
             </ClerkProvider>
           </ErrorBoundary>
         </AppearanceProvider>

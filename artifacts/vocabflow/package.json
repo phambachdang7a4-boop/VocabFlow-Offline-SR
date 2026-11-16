@@ -21,6 +21,7 @@
     "check:stone-investments": "node scripts/check-stone-investment.cjs",
     "check:mission-chests": "node scripts/check-mission-chests.cjs",
     "check:review-session": "node scripts/check-review-session.cjs",
+    "check:review-modes": "node scripts/check-review-modes.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
     "check:course-word-selection": "node scripts/check-course-word-selection.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",

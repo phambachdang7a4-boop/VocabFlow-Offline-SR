@@ -48,6 +48,7 @@ import {
   SavedTotal,
 } from "@/components/ReviewOverview";
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
+import { useReviewPreferences } from "@/contexts/ReviewPreferencesContext";
 import {
   createReviewSessionSummary,
   advanceReviewCombo,
@@ -72,11 +73,20 @@ import {
 } from "@/data/vocabulary";
 import { ReviewMistakeMatchGame } from "@/components/ReviewMistakeMatchGame";
 import * as Crypto from "expo-crypto";
+import {
+  formatReviewCountdown as formatTimeboundReviewCountdown,
+  limitReviewQueue,
+  remainingTimeboundReviewMs,
+  REVIEW_MODE_OPTIONS,
+  TIMEBOUND_REVIEW_DURATION_MS,
+  type ReviewMode,
+} from "@/domain/review-modes";
 
 type Session = {
   token: number;
   sessionId: string;
   mode: "standard" | "idiom";
+  reviewMode: ReviewMode;
   queue: number[];
   processed: number[];
   answered: number[];
@@ -113,6 +123,7 @@ export default function ReviewScreen() {
   const c = useColors();
   const { words, loading, error, reload } = useVocabulary();
   const speech = useSpeechPreferences();
+  const reviewPreferences = useReviewPreferences();
   const sound = useSoundEffects();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -131,6 +142,9 @@ export default function ReviewScreen() {
   const [sessionSaveError, setSessionSaveError] = useState<string | null>(null);
   const [comboNotice, setComboNotice] = useState<ComboNotice | null>(null);
   const [reviewTabFocused, setReviewTabFocused] = useState(false);
+  const [selectedReviewMode, setSelectedReviewMode] =
+    useState<ReviewMode>("basic");
+  const [reviewModeDropdownOpen, setReviewModeDropdownOpen] = useState(false);
   const busyRef = useRef(false);
   const startingRef = useRef(false);
   const finalizingRef = useRef(false);
@@ -149,6 +163,14 @@ export default function ReviewScreen() {
     [overview.dueWords],
   );
   const inSession = !!session || !!gameWords || sessionFinalizing;
+  const timeboundRemainingMs =
+    session?.reviewMode === "timebound" &&
+    activeClockRef.current?.sessionId === session.sessionId
+      ? remainingTimeboundReviewMs(
+          activeReviewDuration(activeClockRef.current.clock, now),
+          TIMEBOUND_REVIEW_DURATION_MS,
+        )
+      : null;
 
   useFocusEffect(
     useCallback(() => {
@@ -239,10 +261,25 @@ export default function ReviewScreen() {
     speech.stopSpeaking,
   ]);
 
-  const start = async (mode: Session["mode"] = "standard") => {
-    const queueWords = mode === "idiom" ? dueIdioms : standardDueWords;
+  const start = async (
+    mode: Session["mode"] = "standard",
+    reviewMode: ReviewMode = selectedReviewMode,
+  ) => {
+    const availableWords = mode === "idiom" ? dueIdioms : standardDueWords;
+    const queueWords = limitReviewQueue(
+      availableWords,
+      reviewPreferences.wordLimit,
+    );
     const first = queueWords[0];
-    if (!first || error || loading || startingRef.current) return;
+    if (
+      !first ||
+      error ||
+      loading ||
+      !reviewPreferences.ready ||
+      reviewPreferences.error ||
+      startingRef.current
+    )
+      return;
     startingRef.current = true;
     sound.unlockFromGesture();
     setStarting(true);
@@ -265,6 +302,7 @@ export default function ReviewScreen() {
         token: ++sequence.current,
         sessionId,
         mode,
+        reviewMode,
         queue: queueWords.map((w) => w.id),
         processed: [],
         answered: [],
@@ -291,7 +329,11 @@ export default function ReviewScreen() {
       setStarting(false);
     }
   };
-  const finishSession = (current: Session, completed: boolean) => {
+  const finishSession = (
+    current: Session,
+    completed: boolean,
+    skipMistakeReview = false,
+  ) => {
     if (finalizingRef.current) return;
     finalizingRef.current = true;
     if (completed) sound.play(soundCueFor("reviewCompleted"));
@@ -364,7 +406,7 @@ export default function ReviewScreen() {
         longestCombo: current.maxCombo,
         personalComboRecord,
       };
-      if (current.mistakes.length) {
+      if (current.mistakes.length && !skipMistakeReview) {
         setPendingSummary(result);
         setGameWords(current.mistakes);
       } else {
@@ -479,7 +521,7 @@ export default function ReviewScreen() {
     const due = new Map(availableWords.map((w) => [w.id, w]));
     const id = s.queue.find((q) => !s.processed.includes(q) && due.has(q));
     if (id === undefined) {
-      finishSession(s, true);
+      finishSession(s, true, s.reviewMode === "speed");
       return;
     }
     const w = due.get(id)!;
@@ -489,10 +531,43 @@ export default function ReviewScreen() {
       word: w,
       exercise:
         s.mode === "idiom"
-            ? createIdiomReviewExercise(w)
+          ? createIdiomReviewExercise(w)
           : createReviewExercise(w, s.index + 1, s.formatOffset, words),
     });
   };
+  useEffect(() => {
+    if (
+      session?.reviewMode !== "timebound" ||
+      timeboundRemainingMs !== 0 ||
+      busy
+    ) {
+      return;
+    }
+    const current = sessionRef.current;
+    if (
+      !current ||
+      current.token !== session.token ||
+      current.reviewMode !== "timebound" ||
+      busyRef.current
+    ) {
+      return;
+    }
+    finishSession(current, true, true);
+  }, [session?.token, session?.reviewMode, timeboundRemainingMs, busy]);
+
+  const selectedReviewModeOption =
+    REVIEW_MODE_OPTIONS.find((option) => option.id === selectedReviewMode) ??
+    REVIEW_MODE_OPTIONS[0];
+  const standardSessionCount = Math.min(
+    standardDueWords.length,
+    reviewPreferences.wordLimit,
+  );
+  const idiomSessionCount = Math.min(
+    dueIdioms.length,
+    reviewPreferences.wordLimit,
+  );
+  const canStartReview =
+    reviewPreferences.ready && !reviewPreferences.error && !starting;
 
   let action: React.ReactNode;
   if (standardDueWords.length > 0 || dueIdioms.length > 0) {
@@ -504,29 +579,141 @@ export default function ReviewScreen() {
             {(standardDueWords.length + dueIdioms.length).toLocaleString("vi-VN")} từ
           </Text>
         </Text>
+        {reviewPreferences.error ? (
+          <ErrorBanner
+            message={reviewPreferences.error}
+            onRetry={() => {
+              void reviewPreferences.retryLoad();
+            }}
+          />
+        ) : null}
+        <View style={styles.reviewModePicker}>
+          <Pressable
+            testID="review-mode-dropdown"
+            accessibilityRole="button"
+            accessibilityLabel={`Chế độ ôn tập: ${selectedReviewModeOption.label}`}
+            accessibilityState={{ expanded: reviewModeDropdownOpen }}
+            onPress={() => setReviewModeDropdownOpen((isOpen) => !isOpen)}
+            disabled={!reviewPreferences.ready || starting}
+            style={({ pressed }) => [
+              styles.reviewModeTrigger,
+              {
+                backgroundColor: c.card,
+                borderColor: c.border,
+                opacity:
+                  !reviewPreferences.ready || starting
+                    ? 0.5
+                    : pressed
+                      ? 0.78
+                      : 1,
+              },
+            ]}
+          >
+            <View style={styles.reviewModeCopy}>
+              <Text
+                style={[styles.reviewModeCaption, { color: c.mutedForeground }]}
+              >
+                CHẾ ĐỘ ÔN TẬP
+              </Text>
+              <Text style={[styles.reviewModeLabel, { color: c.foreground }]}>
+                {selectedReviewModeOption.label}
+              </Text>
+              <Text
+                style={[
+                  styles.reviewModeDescription,
+                  { color: c.mutedForeground },
+                ]}
+              >
+                {selectedReviewModeOption.description}
+              </Text>
+            </View>
+            <Feather
+              name={reviewModeDropdownOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+              color={c.primary}
+            />
+          </Pressable>
+          {reviewModeDropdownOpen ? (
+            <View
+              testID="review-mode-options"
+              style={[
+                styles.reviewModeOptions,
+                { backgroundColor: c.card, borderColor: c.border },
+              ]}
+            >
+              {REVIEW_MODE_OPTIONS.map((option) => {
+                const selected = option.id === selectedReviewMode;
+                return (
+                  <Pressable
+                    key={option.id}
+                    testID={`review-mode-${option.id}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => {
+                      setSelectedReviewMode(option.id);
+                      setReviewModeDropdownOpen(false);
+                    }}
+                    style={({ pressed }) => [
+                      styles.reviewModeOption,
+                      {
+                        backgroundColor: selected
+                          ? c.accentSoft
+                          : "transparent",
+                        borderColor: c.border,
+                        opacity: pressed ? 0.75 : 1,
+                      },
+                    ]}
+                  >
+                    <View style={styles.reviewModeCopy}>
+                      <Text
+                        style={[
+                          styles.reviewModeLabel,
+                          { color: selected ? c.primary : c.foreground },
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.reviewModeDescription,
+                          { color: c.mutedForeground },
+                        ]}
+                      >
+                        {option.description}
+                      </Text>
+                    </View>
+                    {selected ? (
+                      <Feather name="check" size={18} color={c.primary} />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+        </View>
         {standardDueWords.length > 0 ? (
           <Button
             testID="review-start"
-            label={`Ôn tập từ thường · ${standardDueWords.length} từ`}
+            label={`Ôn tập từ thường · ${standardSessionCount} từ`}
             icon="play"
             onPress={() => {
-              void start();
+              void start("standard", selectedReviewMode);
             }}
             loading={starting}
-            disabled={starting}
+            disabled={!canStartReview}
           />
         ) : null}
         {dueIdioms.length ? (
           <Button
             testID="review-idiom-start"
-            label={`Ôn idiom · hội thoại và nghe · ${dueIdioms.length} từ`}
+            label={`Ôn idiom · hội thoại và nghe · ${idiomSessionCount} từ`}
             icon="message-circle"
             variant="ghost"
             onPress={() => {
-              void start("idiom");
+              void start("idiom", selectedReviewMode);
             }}
             loading={starting}
-            disabled={starting}
+            disabled={!canStartReview}
           />
         ) : null}
         {startError ? <ErrorBanner message={startError} /> : null}
@@ -668,6 +855,21 @@ export default function ReviewScreen() {
               >
                 {session.processed.length}/{session.queue.length}
               </Text>
+              {timeboundRemainingMs !== null ? (
+                <View
+                  testID="review-timebound-countdown"
+                  accessibilityLabel={`Còn ${formatTimeboundReviewCountdown(timeboundRemainingMs)}`}
+                  style={[
+                    styles.timeboundCounter,
+                    { backgroundColor: c.accentSoft, borderColor: c.border },
+                  ]}
+                >
+                  <Feather name="clock" size={12} color={c.primary} />
+                  <Text style={[styles.timeboundCounterText, { color: c.primary }]}>
+                    {formatTimeboundReviewCountdown(timeboundRemainingMs)}
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
           <Text style={[styles.sessionTitle, { color: c.foreground }]}>
@@ -787,6 +989,7 @@ export default function ReviewScreen() {
               word={session.word}
               exercise={session.exercise}
               blocked={!!error}
+              speedMode={session.reviewMode === "speed"}
               isLast={
                 !session.queue.some(
                   (q) =>
@@ -1095,6 +1298,37 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   due: { fontFamily: F.b, fontSize: 18, textAlign: "center" },
   row: { flexDirection: "row", gap: 10 },
+  reviewModePicker: { gap: 8 },
+  reviewModeTrigger: {
+    minHeight: 74,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 15,
+    paddingVertical: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  reviewModeOptions: {
+    borderWidth: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  reviewModeOption: {
+    minHeight: 62,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  reviewModeCopy: { flex: 1, gap: 3 },
+  reviewModeCaption: { fontFamily: F.b, fontSize: 10, letterSpacing: 1.1 },
+  reviewModeLabel: { fontFamily: F.b, fontSize: 15 },
+  reviewModeDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   chartCard: { padding: 16, paddingTop: 20, borderWidth: 1 },
   summaryCard: {
     position: "relative",
@@ -1190,6 +1424,21 @@ const styles = StyleSheet.create({
   sessionHeader: { paddingHorizontal: 20, paddingBottom: 12, gap: 16 },
   sessionProgressRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   sessionStats: { alignItems: "flex-end", gap: 4 },
+  timeboundCounter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderRadius: 999,
+  },
+  timeboundCounterText: {
+    fontFamily: F.b,
+    fontSize: 12,
+    fontVariant: ["tabular-nums"],
+  },
   comboCounter: {
     minWidth: 38,
     flexDirection: "row",
