@@ -272,6 +272,144 @@
   line-height: 1.45;
 }
 
+.mission-artwork-page {
+  display: grid;
+  width: min(100%, 440px);
+  min-height: 100vh;
+  margin: 0 auto;
+  align-content: start;
+  gap: 10px;
+  padding: 20px 18px 108px;
+}
+
+.mission-artwork-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mission-artwork-heading > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.mission-artwork-heading h1,
+.mission-artwork-heading p {
+  margin: 0;
+}
+
+.mission-artwork-heading h1 {
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.mission-artwork-heading p {
+  color: var(--vf-mission-muted);
+  font-size: 13px;
+}
+
+.mission-inline-wallet {
+  display: flex;
+  min-height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 0 9px;
+  border: 1px solid var(--vf-mission-border);
+  border-radius: 16px;
+  color: var(--vf-mission-gold);
+  background: #263755;
+  font-size: 11px;
+}
+
+.mission-artwork-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mission-artwork-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  min-height: 172px;
+  padding: 13px 14px;
+  overflow: hidden;
+  border: 1px solid #5873a3;
+  border-radius: 22px;
+  background:
+    linear-gradient(115deg, rgb(123 153 204 / 36%), transparent 65%),
+    var(--vf-mission-surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 17%);
+}
+
+.mission-artwork-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.mission-artwork-activity {
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+
+.mission-artwork-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+
+.mission-artwork-copy h2,
+.mission-artwork-copy p {
+  margin: 0;
+}
+
+.mission-artwork-copy h2 {
+  overflow-wrap: anywhere;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.mission-artwork-copy p {
+  color: var(--vf-mission-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mission-artwork-chest {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+
+.mission-artwork-chest svg,
+.mission-artwork-activity svg {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.mission-artwork-check {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 2px solid #f7f3ea;
+  border-radius: 50%;
+  color: #f7f3ea;
+  background: #3e8e5a;
+}
+
 .mission-bottom-nav {
   position: fixed;
   z-index: 3;
@@ -306,6 +444,13 @@
   height: 42px;
   place-items: center;
   border-radius: 14px;
+}
+
+.mission-bottom-nav button img {
+  display: block;
+  max-width: 48px;
+  max-height: 40px;
+  object-fit: contain;
 }
 
 .mission-bottom-nav button.active span {

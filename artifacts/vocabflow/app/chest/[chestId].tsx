@@ -11,7 +11,6 @@ import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, router } from "expo-router";
 import Animated, {
   FadeIn,
-  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -20,6 +19,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
+import { ChestTierArtwork } from "@/components/ChestTierArtwork";
 import { CorviChestArtwork } from "@/components/CorviChestArtwork";
 import {
   attemptMissionChestUpgrade,
@@ -30,7 +30,6 @@ import {
 import {
   CHEST_RARITIES,
   CHEST_RARITY_COLORS,
-  CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_LABELS,
   CHEST_RARITY_TEXT_COLORS,
   chestFragmentReward,
@@ -86,14 +85,6 @@ export default function MissionChestScreen() {
       { translateX: chestX.value },
       { rotateZ: `${chestRotation.value}deg` },
       { scale: chestScale.value },
-    ],
-  }));
-  const lidStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: interpolate(lidProgress.value, [0, 1], [0, -18]) },
-      {
-        rotateZ: `${interpolate(lidProgress.value, [0, 1], [0, -12])}deg`,
-      },
     ],
   }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: glowOpacity.value }));
@@ -256,7 +247,7 @@ export default function MissionChestScreen() {
               },
             ]}
           >
-            <MaterialSheen radius={24} />
+            <MaterialSheen radius={28} />
             <Pressable
               testID="tap-chest-art"
               accessibilityRole="button"
@@ -281,69 +272,13 @@ export default function MissionChestScreen() {
                   ]}
                 />
                 {chest.rarity === "legendary" ? (
-                  <CorviChestArtwork size={128} />
+                  <CorviChestArtwork size={210} />
                 ) : (
-                  <>
-                    <View
-                    style={[
-                      styles.chestBody,
-                      {
-                        backgroundColor: CHEST_RARITY_COLORS[chest.rarity],
-                        borderColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                      },
-                    ]}
-                    >
-                      <View
-                        style={[
-                          styles.chestStrap,
-                          {
-                            backgroundColor: CHEST_RARITY_ICON_COLORS[chest.rarity],
-                          },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.chestBaseBand,
-                          {
-                            backgroundColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                          },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.chestLock,
-                          {
-                            backgroundColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                          },
-                        ]}
-                      >
-                        <Feather
-                          name={chest.opened ? "unlock" : "lock"}
-                          size={16}
-                          color={CHEST_RARITY_ICON_COLORS[chest.rarity]}
-                        />
-                      </View>
-                    </View>
-                    <Animated.View
-                    style={[
-                        styles.chestLid,
-                        {
-                          backgroundColor: CHEST_RARITY_COLORS[chest.rarity],
-                          borderColor: CHEST_RARITY_TEXT_COLORS[chest.rarity],
-                        },
-                        lidStyle,
-                    ]}
-                    >
-                      <View
-                        style={[
-                          styles.chestLidBand,
-                          {
-                            backgroundColor: CHEST_RARITY_ICON_COLORS[chest.rarity],
-                          },
-                        ]}
-                      />
-                    </Animated.View>
-                  </>
+                  <ChestTierArtwork
+                    rarity={chest.rarity}
+                    size={210}
+                    lidProgress={lidProgress}
+                  />
                 )}
               </Animated.View>
             </Pressable>
@@ -520,86 +455,46 @@ const styles = StyleSheet.create({
   },
   chestCard: {
     borderWidth: 2,
-    borderRadius: 24,
-    padding: 22,
-    alignItems: "center",
-    gap: 9,
-  },
-  chestArtPressable: {
-    width: 148,
-    height: 132,
+    borderRadius: 28,
+    minHeight: 420,
+    paddingHorizontal: 18,
+    paddingVertical: 27,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
+    gap: 11,
+  },
+  chestArtPressable: {
+    width: 224,
+    height: 218,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 3,
   },
   chestArt: {
-    width: 138,
-    height: 124,
+    width: 220,
+    height: 212,
     alignItems: "center",
     justifyContent: "flex-end",
     position: "relative",
   },
   chestGlow: {
     position: "absolute",
-    width: 108,
-    height: 108,
-    borderRadius: 54,
+    width: 176,
+    height: 152,
+    borderRadius: 76,
     bottom: 1,
   },
-  chestBody: {
-    position: "absolute",
-    bottom: 6,
-    width: 100,
-    height: 68,
-    borderWidth: 3,
-    borderRadius: 14,
-    alignItems: "center",
-    overflow: "hidden",
+  chestTitle: { fontFamily: F.b, fontSize: 24, textAlign: "center" },
+  rarity: {
+    fontFamily: F.b,
+    fontSize: 24,
+    lineHeight: 31,
+    textAlign: "center",
   },
-  chestStrap: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: "43%",
-    width: 14,
-    opacity: 0.55,
-  },
-  chestBaseBand: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 10,
-    opacity: 0.8,
-  },
-  chestLock: {
-    position: "absolute",
-    top: 19,
-    width: 28,
-    height: 30,
-    borderRadius: 7,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  chestLid: {
-    position: "absolute",
-    top: 24,
-    width: 110,
-    height: 38,
-    borderWidth: 3,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    zIndex: 2,
-  },
-  chestLidBand: { width: 14, height: "100%", opacity: 0.55 },
-  chestTitle: { fontFamily: F.b, fontSize: 23, textAlign: "center" },
-  rarity: { fontFamily: F.b, fontSize: 17 },
   tapHint: {
     fontFamily: F.s,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 15,
+    lineHeight: 22,
     textAlign: "center",
   },
   detail: {
@@ -608,8 +503,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     textAlign: "center",
   },
-  attemptRow: { flexDirection: "row", gap: 10, marginVertical: 2 },
-  attemptDot: { width: 13, height: 13, borderRadius: 7 },
+  attemptRow: { flexDirection: "row", gap: 12, marginVertical: 3 },
+  attemptDot: { width: 15, height: 15, borderRadius: 8 },
   rewardPreview: {
     width: "100%",
     position: "relative",

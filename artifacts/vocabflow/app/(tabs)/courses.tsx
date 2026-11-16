@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ImageSourcePropType,
   useWindowDimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -159,6 +160,7 @@ type CourseCatalogItem = {
   lessons: readonly CourseLesson[];
   entriesByTerm: ReadonlyMap<string, CourseAnswer>;
   icon: React.ComponentProps<typeof Feather>["name"];
+  catalogArtwork: ImageSourcePropType;
   testIdPrefix: string;
   wordCount?: number;
   unitLabel?: string;
@@ -180,6 +182,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
       ]),
     ),
     icon: "book-open",
+    catalogArtwork: require("../../assets/courses/idioms.png"),
     testIdPrefix: "idioms",
     wordCount: IDIOM_COURSE_WORD_COUNT,
   },
@@ -191,6 +194,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     lessons: PHRASAL_VERB_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(PHRASAL_VERB_COURSE_ENTRIES)),
     icon: "message-circle",
+    catalogArtwork: require("../../assets/courses/phrasal-verbs.png"),
     testIdPrefix: "phrasal-verbs",
     wordCount: PHRASAL_VERB_COURSE_WORD_COUNT,
     topicCount: PHRASAL_VERB_COURSE_TOPIC_COUNT,
@@ -210,6 +214,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     ]),
     progressPrefixes: [CONJUNCTION_COURSE_ID, LINKING_ADVERB_COURSE_ID],
     icon: "git-merge",
+    catalogArtwork: require("../../assets/courses/sentence-structures.png"),
     testIdPrefix: "conjunction",
   },
   {
@@ -220,6 +225,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     lessons: IELTS_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
     icon: "globe",
+    catalogArtwork: require("../../assets/courses/ielts.png"),
     testIdPrefix: "ielts",
     wordCount: IELTS_TOPIC_COURSE_WORD_COUNT,
     topicCount: IELTS_TOPIC_WORD_LIST.length,
@@ -232,6 +238,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     lessons: TOEIC_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(TOEIC_TOPIC_COURSE_ENTRIES)),
     icon: "briefcase",
+    catalogArtwork: require("../../assets/courses/toeic.png"),
     testIdPrefix: "toeic",
     wordCount: TOEIC_TOPIC_COURSE_WORD_COUNT,
     unitLabel: "cụm từ",
@@ -245,6 +252,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     lessons: OFFICE_APPS_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(OFFICE_APPS_COURSE_ENTRIES)),
     icon: "monitor",
+    catalogArtwork: require("../../assets/courses/office-apps.png"),
     testIdPrefix: "office-apps",
     wordCount: OFFICE_APPS_COURSE_WORD_COUNT,
     topicCount: OFFICE_APPS_COURSE_TOPIC_COUNT,
@@ -615,10 +623,15 @@ export default function CoursesScreen() {
       <View
         style={[
           styles.pageHeader,
-          { paddingTop: top + 12, backgroundColor: c.header },
+          {
+            paddingTop: top + 12,
+            backgroundColor: activeCourse || activeLesson ? c.header : c.background,
+          },
         ]}
       >
-        <MaterialSheen tone="navy" radius={0} />
+        {activeCourse || activeLesson ? (
+          <MaterialSheen tone="navy" radius={0} />
+        ) : null}
         <View style={styles.pageHeaderCopy}>
           <Text style={[styles.pageKicker, { color: c.headerMuted }]}>
             {activeLesson ? "BÀI HỌC NGOẠI TUYẾN" : "KHÓA HỌC NGOẠI TUYẾN"}
@@ -938,9 +951,6 @@ export default function CoursesScreen() {
           </View>
         ) : (
           <View style={styles.courseIntro}>
-            <Text style={[styles.catalogDescription, { color: c.mutedForeground }]}>
-              Chọn một khóa học để xem bài và tiến độ của bạn.
-            </Text>
             {COURSE_CATALOG.map((course) => {
               const completedCount = completedLessons.filter((lessonId) =>
                 course.lessons.some((lesson) => lesson.id === lessonId),
@@ -969,13 +979,12 @@ export default function CoursesScreen() {
                   ]}
                 >
                   <MaterialSheen tone="navy" radius={18} />
-                  <View style={[styles.catalogIcon, { backgroundColor: c.accent }]}>
-                    <Feather
-                      name={course.icon}
-                      size={23}
-                      color={c.accentForeground}
-                    />
-                  </View>
+                  <Image
+                    source={course.catalogArtwork}
+                    resizeMode="contain"
+                    accessible={false}
+                    style={styles.catalogIcon}
+                  />
                   <View style={styles.lessonCopy}>
                     <Text style={[styles.lessonTitle, { color: c.foreground }]}>
                       {course.title}
@@ -1824,29 +1833,21 @@ const styles = StyleSheet.create({
   pageTitle: { fontFamily: F.b, fontSize: 24, letterSpacing: -0.4 },
   headerButton: { padding: 6, marginBottom: 4 },
   courseIntro: { gap: 14 },
-  catalogDescription: {
-    fontFamily: F.r,
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 2,
-  },
   catalogCard: {
     position: "relative",
     overflow: "hidden",
     minHeight: 145,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
     borderWidth: 1,
     borderRadius: 18,
     padding: 15,
   },
   catalogIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 56,
+    height: 56,
+    flexShrink: 0,
   },
   courseHero: {
     position: "relative",
@@ -1904,7 +1905,7 @@ const styles = StyleSheet.create({
   },
   lessonNumberText: { fontFamily: F.b, fontSize: 17 },
   lessonCopy: { flex: 1, gap: 4 },
-  lessonTitle: { fontFamily: F.b, fontSize: 15, lineHeight: 20 },
+  lessonTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   lessonFocus: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   lessonCount: { fontFamily: F.s, fontSize: 11 },
   courseProgress: { gap: 5, marginTop: 3 },

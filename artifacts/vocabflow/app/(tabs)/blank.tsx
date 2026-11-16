@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -18,6 +19,8 @@ import { useBottomPad } from "@/components/ScreenHeader";
 import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
 import { MissionShop } from "@/components/MissionShop";
+import { ChestTierArtwork } from "@/components/ChestTierArtwork";
+import { DailyMissionArtwork } from "@/components/DailyMissionArtwork";
 import CollectionScreen from "../collection";
 import {
   getDailyMissionOverview,
@@ -45,6 +48,9 @@ export default function BlankScreen() {
     previousCollectionState.current !== showingCollection;
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const missionArtworkSize = screenWidth < 360 ? 48 : screenWidth < 420 ? 62 : 70;
+  const chestArtworkSize = screenWidth < 360 ? 56 : screenWidth < 420 ? 70 : 78;
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,10 +115,7 @@ export default function BlankScreen() {
             <>
             <View style={styles.missionHeading}>
               <View style={styles.missionHeadingCopy}>
-                <Text style={[styles.missionEyebrow, { color: c.headerMuted }]}>
-                  VOCABFLOW · HÀNH TRÌNH HÔM NAY
-                </Text>
-                <Text style={[styles.sectionTitle, { color: c.foreground }]}>
+                <Text style={[styles.missionPageTitle, { color: c.foreground }]}>
                   Ba nhiệm vụ hôm nay
                 </Text>
                 <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
@@ -121,70 +124,26 @@ export default function BlankScreen() {
               </View>
               <View
                 style={[
-                  styles.missionHeadingBadge,
+                  styles.missionStoneBadge,
                   { backgroundColor: c.headerButton, borderColor: c.border },
                 ]}
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
+                accessibilityLabel={`Số dư ${(overview?.stoneBalance ?? 0).toLocaleString("vi-VN")} Stone`}
               >
-                <Feather name="star" size={20} color={c.accent} />
+                <Feather name="award" size={16} color={c.accent} />
+                <Text
+                  testID="stone-balance"
+                  style={[styles.missionStoneText, { color: c.foreground }]}
+                >
+                  {loading && !overview
+                    ? "— Stone"
+                    : `${(overview?.stoneBalance ?? 0).toLocaleString("vi-VN")} Stone`}
+                </Text>
               </View>
             </View>
             <MissionCollectionTabs active="missions" />
             {error ? (
               <ErrorBanner message={error} onRetry={() => void load()} />
             ) : null}
-            <View
-              style={[
-                styles.walletCard,
-                {
-                  backgroundColor: c.card,
-                  borderColor: c.border,
-                  shadowColor: c.shade,
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.14,
-                  shadowRadius: 7,
-                  elevation: 3,
-                },
-              ]}
-            >
-              <LinearGradient
-                colors={
-                  c.background === "#1E2130"
-                    ? [c.headerButton, c.vocabCard, c.vocabCardPressed]
-                    : [c.card, c.card, c.card]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <MaterialSheen radius={20} />
-              <View style={[styles.walletIcon, { backgroundColor: c.accent }]}>
-                <Feather name="award" size={24} color={c.buttonForeground} />
-              </View>
-              <View style={styles.walletText}>
-                <Text
-                  style={[styles.walletLabel, { color: c.mutedForeground }]}
-                >
-                  SỐ DƯ
-                </Text>
-                {loading && !overview ? (
-                  <ActivityIndicator color={c.primary} />
-                ) : (
-                  <Text
-                    testID="stone-balance"
-                    style={[styles.walletValue, { color: c.foreground }]}
-                  >
-                    {(overview?.stoneBalance ?? 0).toLocaleString("vi-VN")}{" "}
-                    Stone
-                  </Text>
-                )}
-              </View>
-              <Text style={[styles.walletDate, { color: c.mutedForeground }]}>
-                Hôm nay
-              </Text>
-            </View>
-
             {loading && !overview ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={c.primary} />
@@ -193,21 +152,11 @@ export default function BlankScreen() {
                 >
                   Đang tải nhiệm vụ…
                 </Text>
-              </View>
+            </View>
             ) : (
               overview?.missions.map((mission) => {
                 const finished = mission.rewarded;
                 const rewardRarity = DAILY_MISSION_CHEST_RARITY[mission.level];
-                const iconName =
-                  mission.type === "review"
-                    ? "layers"
-                    : mission.type === "add-words"
-                      ? "plus-circle"
-                      : mission.type === "time"
-                        ? "clock"
-                        : mission.type === "combo"
-                          ? "zap"
-                          : "award";
                 const progressPercent = Math.min(
                   100,
                   (mission.progress / mission.target) * 100,
@@ -262,19 +211,20 @@ export default function BlankScreen() {
                     <MaterialSheen radius={20} />
                     <View style={styles.missionTop}>
                       <View
+                        testID={`daily-mission-illustration-${mission.id}`}
                         style={[
                           styles.missionIcon,
                           {
-                            backgroundColor: finished
-                              ? c.success
-                              : c.vocabCardAccent,
+                            width: missionArtworkSize,
+                            height: missionArtworkSize,
                           },
                         ]}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
                       >
-                        <Feather
-                          name={finished ? "check" : iconName}
-                          size={21}
-                          color={finished ? "#FFFFFF" : c.buttonForeground}
+                        <DailyMissionArtwork
+                          type={mission.type}
+                          size={missionArtworkSize}
                         />
                       </View>
                       <View style={styles.missionCopy}>
@@ -315,34 +265,32 @@ export default function BlankScreen() {
                       </View>
                       <View
                         style={[
-                          styles.rewardPill,
+                          styles.rewardArtwork,
                           {
-                            backgroundColor: finished
-                              ? c.success
-                              : CHEST_RARITY_COLORS[rewardRarity],
-                            borderColor: finished
-                              ? c.success
-                              : CHEST_RARITY_TEXT_COLORS[rewardRarity],
-                            shadowColor: finished
-                              ? c.success
-                              : CHEST_RARITY_COLORS[rewardRarity],
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.24,
-                            shadowRadius: 4,
-                            elevation: 3,
+                            width: chestArtworkSize + 8,
+                            height: chestArtworkSize,
                           },
                         ]}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
                       >
-                        {!finished ? <MaterialSheen radius={15} /> : null}
-                        <Feather
-                          name={finished ? "check" : "gift"}
-                          size={finished ? 21 : 27}
-                          color={
-                            finished
-                              ? "#FFFFFF"
-                              : CHEST_RARITY_ICON_COLORS[rewardRarity]
-                          }
+                        <ChestTierArtwork
+                          rarity={rewardRarity}
+                          size={chestArtworkSize}
                         />
+                        {finished ? (
+                          <View
+                            style={[
+                              styles.rewardCheck,
+                              {
+                                backgroundColor: c.success,
+                                borderColor: c.foreground,
+                              },
+                            ]}
+                          >
+                            <Feather name="check" size={12} color={c.foreground} />
+                          </View>
+                        ) : null}
                       </View>
                     </View>
                     <View style={styles.progressRow}>
@@ -511,41 +459,19 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   missionHeadingCopy: { flex: 1, minWidth: 0, gap: 3 },
-  missionEyebrow: {
-    fontFamily: F.s,
-    fontSize: 9,
-    letterSpacing: 1.35,
-  },
-  missionHeadingBadge: {
-    width: 42,
-    height: 42,
-    flexShrink: 0,
-    borderWidth: 1,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  walletCard: {
-    position: "relative",
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 12,
+  missionPageTitle: { fontFamily: F.b, fontSize: 21 },
+  missionStoneBadge: {
+    minHeight: 34,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    overflow: "hidden",
-  },
-  walletIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: "center",
     justifyContent: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    flexShrink: 0,
+    borderWidth: 1,
+    borderRadius: 17,
   },
-  walletText: { flex: 1, minWidth: 0, gap: 3 },
-  walletLabel: { fontFamily: F.s, fontSize: 10, letterSpacing: 1.2 },
-  walletValue: { fontFamily: F.b, fontSize: 18 },
-  walletDate: { fontFamily: F.m, fontSize: 12 },
+  missionStoneText: { fontFamily: F.b, fontSize: 12 },
   sectionHeading: { gap: 2, marginTop: 6, marginBottom: 2 },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
   sectionHint: { fontFamily: F.r, fontSize: 13 },
@@ -555,34 +481,39 @@ const styles = StyleSheet.create({
     position: "relative",
     borderWidth: 1,
     borderRadius: 22,
-    padding: 14,
-    gap: 12,
+    padding: 16,
+    gap: 13,
+    minHeight: 172,
   },
-  missionTop: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  missionTop: { flexDirection: "row", alignItems: "center", gap: 9 },
   missionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
+  },
+  rewardArtwork: {
     flexShrink: 0,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "visible",
+  },
+  rewardCheck: {
+    position: "absolute",
+    right: 0,
+    top: 2,
+    width: 21,
+    height: 21,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   missionCopy: { flex: 1, minWidth: 0, gap: 3 },
   level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },
-  missionTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
-  missionDescription: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
-  missionChestLabel: { fontFamily: F.s, fontSize: 11, lineHeight: 15 },
-  rewardPill: {
-    position: "relative",
-    overflow: "hidden",
-    width: 46,
-    height: 46,
-    borderWidth: 1.5,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
+  missionTitle: { fontFamily: F.b, fontSize: 17, lineHeight: 22 },
+  missionDescription: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
+  missionChestLabel: { fontFamily: F.s, fontSize: 12, lineHeight: 16 },
   chestCard: {
     position: "relative",
     borderWidth: 1,

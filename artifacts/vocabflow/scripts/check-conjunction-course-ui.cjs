@@ -144,6 +144,12 @@ function mount(initialSavedWords = [], options = {}) {
     "@/domain/office-apps-course": officeAppsDomain,
     "@/domain/idiom-course": idiomCourseDomain,
     "@/domain/phrasal-verb-course": phrasalVerbCourseDomain,
+    "../../assets/courses/idioms.png": "idioms-course-artwork",
+    "../../assets/courses/phrasal-verbs.png": "phrasal-verbs-course-artwork",
+    "../../assets/courses/sentence-structures.png": "sentence-structures-course-artwork",
+    "../../assets/courses/ielts.png": "ielts-course-artwork",
+    "../../assets/courses/toeic.png": "toeic-course-artwork",
+    "../../assets/courses/office-apps.png": "office-apps-course-artwork",
     "../../assets/images/corvi-app-icon.png": "corvi-avatar-asset",
     "../../assets/images/pan-avatar.png": "pan-avatar-asset",
     "@/data/vocabulary": {
@@ -270,6 +276,21 @@ function mount(initialSavedWords = [], options = {}) {
   await screen.focus();
   assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
+  for (const [testId, expectedArtwork] of [
+    ["idioms-course-card", "idioms-course-artwork"],
+    ["phrasal-verbs-course-card", "phrasal-verbs-course-artwork"],
+    ["conjunction-course-card", "sentence-structures-course-artwork"],
+    ["ielts-course-card", "ielts-course-artwork"],
+    ["toeic-course-card", "toeic-course-artwork"],
+    ["office-apps-course-card", "office-apps-course-artwork"],
+  ]) {
+    const card = screen.byId(testId);
+    assert.equal(
+      find(card, (node) => node.type === "Image")?.props.source,
+      expectedArtwork,
+      `${testId} uses the matching pixel-art course icon.`,
+    );
+  }
   assert.equal(
     screen.byId("linking-adverb-course-card"),
     undefined,
