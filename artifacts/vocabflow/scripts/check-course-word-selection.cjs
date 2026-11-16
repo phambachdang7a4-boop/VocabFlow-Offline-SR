@@ -4,6 +4,7 @@ const { loadTs } = require("./test-support.cjs");
 const {
   buildCourseWordCandidates,
   courseWordSelectionKey,
+  isSingleWordCourseTerm,
 } = loadTs(join(__dirname, "../domain/course-word-selection.ts"));
 
 const entries = new Map([
@@ -46,4 +47,7 @@ assert.equal(
   courseWordSelectionKey("such  as", "ví dụ"),
   courseWordSelectionKey(" SUCH AS ", "ví dụ"),
 );
+assert.equal(isSingleWordCourseTerm("student"), true);
+assert.equal(isSingleWordCourseTerm("well-known"), true);
+assert.equal(isSingleWordCourseTerm("submit a report"), false);
 console.log("Course word selection checks passed.");

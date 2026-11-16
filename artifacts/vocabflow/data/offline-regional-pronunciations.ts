@@ -618,6 +618,51 @@ export async function getRegionalIpaForTerm(
   }
 }
 
+export async function getRegionalIpaForTerms(
+  terms: readonly string[],
+): Promise<Map<string, { ipa: string; region: string }[]>> {
+  const normalizedTerms = [
+    ...new Set(terms.map(normalizeRegionalIpaTerm).filter(Boolean)),
+  ];
+  const results = new Map<string, { ipa: string; region: string }[]>();
+  if (!normalizedTerms.length) return results;
+
+  try {
+    const db = await openSupplementDatabase();
+    if (installedRevision === undefined) {
+      installedRevision = await hasCurrentRevision(db);
+      if (installedRevision) await db.execAsync("PRAGMA query_only = ON;");
+    }
+    if (!installedRevision) return results;
+
+    for (let start = 0; start < normalizedTerms.length; start += 180) {
+      const batch = normalizedTerms.slice(start, start + 180);
+      const rows = await db.getAllAsync<{
+        termKey: string;
+        ipa: string;
+        region: string;
+      }>(
+        `SELECT term_key AS termKey, ipa,
+                CASE region WHEN 'us' THEN 'NAmE' ELSE 'BrE' END AS region
+         FROM ${dataTable}
+         WHERE term_key COLLATE NOCASE IN (${batch.map(() => "?").join(",")})
+         ORDER BY term_key, region`,
+        ...batch,
+      );
+      for (const row of rows) {
+        const key = normalizeRegionalIpaTerm(row.termKey);
+        const existing = results.get(key) ?? [];
+        existing.push({ ipa: row.ipa, region: row.region });
+        results.set(key, existing);
+      }
+    }
+    return results;
+  } catch {
+    installedRevision = false;
+    return new Map();
+  }
+}
+
 export type RegionalIpaLookupResult =
   | { state: "found"; pronunciations: { ipa: string; region: string }[] }
   | { state: "not-installed" }

@@ -104,7 +104,7 @@ assert.match(tabs, /id: "shop", label: "Cửa Hàng"/);
 assert.match(tabs, /params: \{ panel: "shop" \}/);
 assert.match(missionScreen, /<MissionShop \/>/);
 assert.match(storeScreen, /Mảnh không đổi ngược thành Stone/);
-assert.match(storeScreen, /Mỗi ngày chọn ngẫu nhiên 3 trong 7 món/);
+assert.match(storeScreen, /Ưu đãi hôm nay: chọn 3 trong 7 món/);
 assert.match(storeScreen, /testID="mission-shop-corvi-hero"/);
 assert.match(storeScreen, /testID="shop-stone-balance-badge"/);
 assert.equal(
@@ -113,18 +113,27 @@ assert.equal(
   "The current Stone balance is shown once in the hero image badge.",
 );
 assert.match(storeScreen, /testID="mission-shop-offers" style=\{styles\.offerGrid\}/);
-assert.match(storeScreen, /offerGrid:\s*\{\s*flexDirection:\s*"row"/);
+assert.match(storeScreen, /offerGrid:\s*\{\s*position:\s*"absolute"[\s\S]*flexDirection:\s*"row"/);
+assert.match(
+  storeScreen,
+  /source=\{require\("\.\.\/assets\/images\/baron-trade-full\.png"\)\}/,
+  "Daily offer cards use the full-height Baron Trade artwork.",
+);
+assert.match(storeScreen, /testID=\{`mission-shop-buy-\$\{productId\}`\}/);
+assert.match(storeScreen, /\{ backgroundColor: c\.background, borderColor: c\.accent \}/);
 assert.doesNotMatch(
   investmentScreen,
   /Số dư:\s*\{\(overview\?\.stoneBalance/,
   "The investment section no longer repeats the current balance.",
 );
-assert.match(
-  storeScreen,
-  /require\("\.\.\/assets\/images\/corvi-baron-trade\.png"\)/,
-  "The shop hero uses the cropped Baron Trade illustration, not embedded product cards.",
+assert.match(storeScreen, /resizeMode="contain"/);
+assert.match(storeScreen, /Math\.min\(windowWidth - 44, 420\)/);
+assert.match(storeScreen, /aspectRatio: 704 \/ 1524/);
+assert.equal(
+  (storeScreen.match(/testID=\{`mission-shop-offer-\$\{productId\}`\}/g) ?? []).length,
+  1,
+  "Each daily product is rendered once as an image overlay.",
 );
-assert.match(storeScreen, /aspectRatio: 704 \/ 860/);
 assert.equal(
   [...rootTabs.matchAll(/<NativeTabs\.Trigger name=/g)].length,
   5,

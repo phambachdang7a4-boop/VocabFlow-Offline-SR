@@ -6,12 +6,13 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useColors } from "@/hooks/useColors";
-import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
+import { ErrorBanner, F } from "@/components/ui";
 import { StoneInvestmentSection } from "@/components/StoneInvestmentSection";
 import {
   getMissionShopOverview,
@@ -40,6 +41,8 @@ const PRODUCT_ICONS: Record<MissionShopProductId, React.ComponentProps<typeof Fe
 
 export function MissionShop() {
   const c = useColors();
+  const { width: windowWidth } = useWindowDimensions();
+  const heroWidth = Math.min(windowWidth - 44, 420);
   const [overview, setOverview] = useState<MissionShopOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [buyingSlot, setBuyingSlot] = useState<number | null>(null);
@@ -90,7 +93,7 @@ export function MissionShop() {
       <View style={styles.intro}>
         <Text style={[styles.title, { color: c.foreground }]}>Cửa hàng của Corvi</Text>
         <Text style={[styles.hint, { color: c.mutedForeground }]}>
-          Mỗi ngày chọn ngẫu nhiên 3 trong 7 món. Cả ba ô có thể được giảm giá.
+          Ưu đãi hôm nay: chọn 3 trong 7 món, giảm ngẫu nhiên 10–60%.
         </Text>
       </View>
 
@@ -99,6 +102,7 @@ export function MissionShop() {
         style={[
           styles.heroCard,
           {
+            width: heroWidth,
             backgroundColor: c.vocabCard,
             borderColor: c.navigationBorder,
             shadowColor: c.shade,
@@ -110,9 +114,9 @@ export function MissionShop() {
         ]}
       >
         <Image
-          source={require("../assets/images/corvi-baron-trade.png")}
-          accessibilityLabel="Biển The Baron Trade và Corvi đứng sau quầy hàng"
-          resizeMode="cover"
+          source={require("../assets/images/baron-trade-full.png")}
+          accessibilityLabel="Quầy The Baron Trade với ba khung ưu đãi"
+          resizeMode="contain"
           style={styles.heroImage}
         />
         <View
@@ -141,180 +145,162 @@ export function MissionShop() {
             Stone
           </Text>
         </View>
-      </View>
-
-      <View style={styles.sectionHeading}>
-        <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-          Ưu đãi hôm nay
-        </Text>
-        <Text style={[styles.hint, { color: c.mutedForeground }]}>
-          Giảm ngẫu nhiên 10–60%. Mỗi mảnh có 3–5 lượt mua; vật phẩm khác có 1.
-        </Text>
+        {loading && !overview ? (
+          <View style={styles.offerLoading}>
+            <ActivityIndicator color={c.primary} />
+            <Text style={[styles.offerMeta, { color: c.foreground }]}>
+              Đang tải ưu đãi…
+            </Text>
+          </View>
+        ) : (
+          <View testID="mission-shop-offers" style={styles.offerGrid}>
+            {overview?.offers.map((offer) => {
+              const product = MISSION_SHOP_PRODUCTS[offer.productId];
+              const productId = offer.productId;
+              const ownedCount = overview.inventory[productId];
+              const canAfford = overview.stoneBalance >= offer.price;
+              const disabled =
+                offer.remainingStock <= 0 || !canAfford || buyingSlot !== null;
+              const fragmentColor = product.fragmentRarity
+                ? CHEST_RARITY_COLORS[product.fragmentRarity]
+                : c.secondary;
+              return (
+                <View
+                  key={offer.slot}
+                  testID={`mission-shop-offer-${productId}`}
+                  style={[
+                    styles.offerCard,
+                    { backgroundColor: c.background, borderColor: c.accent },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.fragmentIcon,
+                      { backgroundColor: fragmentColor },
+                    ]}
+                  >
+                    <Feather
+                      name={PRODUCT_ICONS[productId]}
+                      size={18}
+                      color={
+                        product.fragmentRarity
+                          ? CHEST_RARITY_ICON_COLORS[product.fragmentRarity]
+                          : c.primary
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.offerTitle,
+                      {
+                        color: product.fragmentRarity
+                          ? CHEST_RARITY_TEXT_COLORS[product.fragmentRarity]
+                          : c.foreground,
+                      },
+                    ]}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                  >
+                    {product.title}
+                  </Text>
+                  <Text
+                    style={[styles.offerDescription, { color: c.mutedForeground }]}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                  >
+                    {product.description}
+                  </Text>
+                  <Text
+                    style={[styles.offerMeta, { color: c.mutedForeground }]}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                  >
+                    Có {ownedCount}
+                    {product.fragmentRarity ? " mảnh" : " món"} · Còn{" "}
+                    {Math.max(0, offer.remainingStock)}/{offer.stock}
+                  </Text>
+                  <View
+                    style={[
+                      styles.discountBadge,
+                      { backgroundColor: c.successSoft },
+                    ]}
+                  >
+                    <Text style={[styles.discount, { color: c.successText }]}>
+                      −{offer.discountPercent}%
+                    </Text>
+                  </View>
+                  <View style={styles.priceColumn}>
+                    {offer.discountPercent > 0 ? (
+                      <Text
+                        style={[styles.oldPrice, { color: c.mutedForeground }]}
+                        numberOfLines={1}
+                      >
+                        {offer.basePrice.toLocaleString("vi-VN")}
+                      </Text>
+                    ) : (
+                      <View style={styles.discountPlaceholder} />
+                    )}
+                    <Text
+                      style={[styles.price, { color: c.foreground }]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      {offer.price.toLocaleString("vi-VN")} Stone
+                    </Text>
+                  </View>
+                  <Pressable
+                    testID={`mission-shop-buy-${productId}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      offer.remainingStock <= 0
+                        ? `${product.title} đã hết hàng hôm nay`
+                        : `Mua ${product.title} với giá ${offer.price} Stone`
+                    }
+                    accessibilityState={{ disabled }}
+                    disabled={disabled}
+                    onPress={() => void buy(offer.slot)}
+                    style={({ pressed }) => [
+                      styles.buyButton,
+                      {
+                        backgroundColor: disabled ? c.muted : c.accent,
+                        borderColor: disabled ? c.border : c.buttonPressed,
+                        opacity: pressed && !disabled ? 0.84 : 1,
+                      },
+                    ]}
+                  >
+                    {buyingSlot === offer.slot ? (
+                      <ActivityIndicator color={c.buttonForeground} />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.buyLabel,
+                          {
+                            color: disabled
+                              ? c.mutedForeground
+                              : c.buttonForeground,
+                          },
+                        ]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                      >
+                        {offer.remainingStock <= 0
+                          ? "Hết hàng"
+                          : canAfford
+                            ? "Mua"
+                            : "Thiếu Stone"}
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </View>
 
       {error ? (
         <ErrorBanner message={error} onRetry={() => void load()} />
       ) : null}
-
-      {loading && !overview ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={c.primary} />
-          <Text style={[styles.hint, { color: c.mutedForeground }]}>
-            Đang tải ưu đãi…
-          </Text>
-        </View>
-      ) : (
-        <View testID="mission-shop-offers" style={styles.offerGrid}>
-          {overview?.offers.map((offer) => {
-            const product = MISSION_SHOP_PRODUCTS[offer.productId];
-            const productId = offer.productId;
-            const ownedCount = overview.inventory[productId];
-            const canAfford = overview.stoneBalance >= offer.price;
-            const disabled =
-              offer.remainingStock <= 0 || !canAfford || buyingSlot !== null;
-            const fragmentColor = product.fragmentRarity
-              ? CHEST_RARITY_COLORS[product.fragmentRarity]
-              : c.secondary;
-            return (
-              <View
-                key={offer.slot}
-                testID={`mission-shop-offer-${productId}`}
-                style={[
-                  styles.offerCard,
-                  {
-                    backgroundColor: c.card,
-                    borderColor: c.border,
-                    shadowColor: c.shade,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 5,
-                    elevation: 2,
-                  },
-                ]}
-              >
-                <MaterialSheen radius={16} />
-                <View
-                  style={[
-                    styles.fragmentIcon,
-                    { backgroundColor: fragmentColor },
-                  ]}
-                >
-                  <Feather
-                    name={PRODUCT_ICONS[productId]}
-                    size={20}
-                    color={
-                      product.fragmentRarity
-                        ? CHEST_RARITY_ICON_COLORS[product.fragmentRarity]
-                        : c.primary
-                    }
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.offerTitle,
-                    {
-                      color: product.fragmentRarity
-                        ? CHEST_RARITY_TEXT_COLORS[product.fragmentRarity]
-                        : c.foreground,
-                    },
-                  ]}
-                  numberOfLines={2}
-                  adjustsFontSizeToFit
-                >
-                  {product.title}
-                </Text>
-                <Text
-                  style={[styles.offerMeta, { color: c.mutedForeground }]}
-                  numberOfLines={2}
-                  adjustsFontSizeToFit
-                >
-                  {product.description}
-                </Text>
-                <Text
-                  style={[styles.offerMeta, { color: c.mutedForeground }]}
-                  numberOfLines={1}
-                >
-                  Có {ownedCount}
-                  {product.fragmentRarity ? " mảnh" : " món"} · Còn{" "}
-                  {Math.max(0, offer.remainingStock)}/{offer.stock}
-                </Text>
-                <View
-                  style={[
-                    styles.discountBadge,
-                    { backgroundColor: c.successSoft },
-                  ]}
-                >
-                  <Text style={[styles.discount, { color: c.successText }]}>
-                    −{offer.discountPercent}%
-                  </Text>
-                </View>
-                <View style={styles.priceColumn}>
-                  {offer.discountPercent > 0 ? (
-                    <Text
-                      style={[styles.oldPrice, { color: c.mutedForeground }]}
-                      numberOfLines={1}
-                    >
-                      {offer.basePrice.toLocaleString("vi-VN")}
-                    </Text>
-                  ) : (
-                    <View style={styles.discountPlaceholder} />
-                  )}
-                  <Text
-                    style={[styles.price, { color: c.foreground }]}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                  >
-                    {offer.price.toLocaleString("vi-VN")} Stone
-                  </Text>
-                </View>
-                <Pressable
-                  testID={`mission-shop-buy-${productId}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    offer.remainingStock <= 0
-                      ? `${product.title} đã hết hàng hôm nay`
-                      : `Mua ${product.title} với giá ${offer.price} Stone`
-                  }
-                  accessibilityState={{ disabled }}
-                  disabled={disabled}
-                  onPress={() => void buy(offer.slot)}
-                  style={({ pressed }) => [
-                    styles.buyButton,
-                    {
-                      backgroundColor: disabled ? c.muted : c.accent,
-                      borderColor: disabled ? c.border : c.buttonPressed,
-                      opacity: pressed && !disabled ? 0.84 : 1,
-                    },
-                  ]}
-                >
-                  {buyingSlot === offer.slot ? (
-                    <ActivityIndicator color={c.buttonForeground} />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.buyLabel,
-                        {
-                          color: offer.remainingStock <= 0
-                            ? c.mutedForeground
-                            : c.buttonForeground,
-                        },
-                      ]}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                    >
-                      {offer.remainingStock <= 0
-                        ? "Hết hàng"
-                        : canAfford
-                          ? "Mua"
-                          : "Thiếu Stone"}
-                    </Text>
-                  )}
-                </Pressable>
-              </View>
-            );
-          })}
-        </View>
-      )}
 
       <Text style={[styles.footer, { color: c.mutedForeground }]}>
         Mảnh không đổi ngược thành Stone. Bảo hiểm và thư góp vốn được dùng khi
@@ -335,8 +321,8 @@ const styles = StyleSheet.create({
   title: { fontFamily: F.b, fontSize: 21 },
   hint: { fontFamily: F.r, fontSize: 13, lineHeight: 19 },
   heroCard: {
-    width: "100%",
-    aspectRatio: 704 / 860,
+    aspectRatio: 704 / 1524,
+    alignSelf: "center",
     position: "relative",
     borderWidth: 1,
     borderRadius: 22,
@@ -344,6 +330,8 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     ...StyleSheet.absoluteFill,
+    width: "100%",
+    height: "100%",
   },
   balanceBadge: {
     position: "relative",
@@ -360,35 +348,52 @@ const styles = StyleSheet.create({
   },
   balanceValue: { fontFamily: F.b, fontSize: 14 },
   balanceUnit: { fontFamily: F.s, fontSize: 11 },
-  sectionHeading: { gap: 2, marginTop: 5 },
-  sectionTitle: { fontFamily: F.b, fontSize: 18 },
-  loading: { padding: 28, alignItems: "center", gap: 9 },
-  offerGrid: { flexDirection: "row", gap: 8 },
+  offerLoading: {
+    position: "absolute",
+    left: "2%",
+    right: "2%",
+    top: "71%",
+    bottom: "2%",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  offerGrid: {
+    position: "absolute",
+    left: "2%",
+    right: "2%",
+    top: "71%",
+    bottom: "2%",
+    flexDirection: "row",
+    gap: 4,
+  },
   offerCard: {
     position: "relative",
     flex: 1,
     minWidth: 0,
     borderWidth: 1,
-    borderRadius: 16,
-    padding: 9,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 6,
     alignItems: "center",
-    gap: 6,
+    gap: 4,
   },
   fragmentIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
   },
   offerTitle: {
-    minHeight: 30,
+    minHeight: 24,
     fontFamily: F.b,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 12,
     textAlign: "center",
   },
-  offerMeta: { fontFamily: F.r, fontSize: 9, lineHeight: 13, textAlign: "center" },
+  offerDescription: { fontFamily: F.r, fontSize: 8, lineHeight: 10, textAlign: "center" },
+  offerMeta: { fontFamily: F.r, fontSize: 8, lineHeight: 10, textAlign: "center" },
   discountBadge: {
     minHeight: 18,
     paddingHorizontal: 7,
@@ -397,23 +402,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   discountPlaceholder: { minHeight: 18 },
-  priceColumn: { minHeight: 34, alignItems: "center", justifyContent: "center" },
-  discount: { fontFamily: F.b, fontSize: 10 },
+  priceColumn: { minHeight: 28, alignItems: "center", justifyContent: "center" },
+  discount: { fontFamily: F.b, fontSize: 9 },
   oldPrice: {
     fontFamily: F.r,
-    fontSize: 9,
+    fontSize: 8,
     textDecorationLine: "line-through",
   },
-  price: { fontFamily: F.b, fontSize: 10, textAlign: "center" },
+  price: { fontFamily: F.b, fontSize: 9, textAlign: "center" },
   buyButton: {
     width: "100%",
-    minHeight: 36,
+    minHeight: 28,
     paddingHorizontal: 4,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  buyLabel: { fontFamily: F.b, fontSize: 12, textAlign: "center" },
+  buyLabel: { fontFamily: F.b, fontSize: 10, textAlign: "center" },
   footer: { fontFamily: F.r, fontSize: 11, lineHeight: 16, marginTop: 2 },
 });

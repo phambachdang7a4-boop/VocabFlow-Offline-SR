@@ -74,9 +74,11 @@ import {
   markCourseLessonCompleted,
   recordStoneInvestmentStudyDay,
 } from "@/data/vocabulary";
+import { getDictionaryPronunciationsForTerms } from "@/data/dictionary";
 import { useVocabulary } from "@/contexts/VocabularyContext";
 import {
   buildCourseWordCandidates,
+  isSingleWordCourseTerm,
   type CourseWordCandidate,
 } from "@/domain/course-word-selection";
 import { useColors } from "@/hooks/useColors";
@@ -258,10 +260,10 @@ export default function CoursesScreen() {
     string | null
   >(null);
   const [bulkAddConfirmationOpen, setBulkAddConfirmationOpen] = useState(false);
-  const [bulkAddAcknowledged, setBulkAddAcknowledged] = useState(false);
   const [bulkAddProgress, setBulkAddProgress] = useState<{
     completed: number;
     total: number;
+    stage: "ipa" | "save";
   } | null>(null);
   const [bulkCourseWordsSavedMessage, setBulkCourseWordsSavedMessage] =
     useState<string | null>(null);
@@ -283,6 +285,10 @@ export default function CoursesScreen() {
   const addableAllCourseWords = allCourseWordCandidates.filter(
     (candidate) => !candidate.alreadySaved,
   );
+  const bulkIpaRequiredCount = addableAllCourseWords.filter(
+    (candidate) =>
+      isSingleWordCourseTerm(candidate.term) && !candidate.ipa.trim(),
+  ).length;
   const alreadySavedCourseWords =
     allCourseWordCandidates.length - addableAllCourseWords.length;
   const missingCourseEntries = activeCourse
@@ -348,7 +354,6 @@ export default function CoursesScreen() {
     setLessonChoices([]);
     setSelectedAnswer(null);
     setBulkAddConfirmationOpen(false);
-    setBulkAddAcknowledged(false);
     setBulkAddProgress(null);
     setBulkCourseWordsSavedMessage(null);
     setError(null);
@@ -474,7 +479,6 @@ export default function CoursesScreen() {
 
   const openBulkAddConfirmation = () => {
     if (!activeCourse || saving || addableAllCourseWords.length === 0) return;
-    setBulkAddAcknowledged(false);
     setBulkAddProgress(null);
     setBulkCourseWordsSavedMessage(null);
     setError(null);
@@ -484,42 +488,75 @@ export default function CoursesScreen() {
   const cancelBulkAdd = () => {
     if (saving) return;
     setBulkAddConfirmationOpen(false);
-    setBulkAddAcknowledged(false);
   };
 
   const addAllCourseWords = async () => {
     if (
       !activeCourse ||
       saving ||
-      !bulkAddAcknowledged ||
       addableAllCourseWords.length === 0
     ) {
       return;
     }
 
     const selected = addableAllCourseWords;
+    const wordsNeedingIpa = selected.filter(
+      (candidate) =>
+        isSingleWordCourseTerm(candidate.term) && !candidate.ipa.trim(),
+    );
     setSaving(true);
-    setBulkAddProgress({ completed: 0, total: selected.length });
+    setBulkAddProgress({
+      completed: 0,
+      total: wordsNeedingIpa.length || selected.length,
+      stage: wordsNeedingIpa.length ? "ipa" : "save",
+    });
     setError(null);
     setBulkCourseWordsSavedMessage(null);
     try {
+      const ipaByTerm = await getDictionaryPronunciationsForTerms(
+        wordsNeedingIpa.map((candidate) => candidate.term),
+        (completed, total) =>
+          setBulkAddProgress({ completed, total, stage: "ipa" }),
+      );
+      const missingIpa = wordsNeedingIpa.filter(
+        (candidate) => !ipaByTerm.get(candidate.term)?.trim(),
+      );
+      if (missingIpa.length) {
+        const examples = missingIpa
+          .slice(0, 5)
+          .map((candidate) => candidate.term)
+          .join(", ");
+        throw new Error(
+          `Chưa tìm thấy IPA cho ${missingIpa.length.toLocaleString("vi-VN")} từ đơn${examples ? ` (ví dụ: ${examples})` : ""}. Chưa có từ nào được nạp; hãy cài dữ liệu từ điển/IPA rồi thử lại.`,
+        );
+      }
+
+      setBulkAddProgress({
+        completed: 0,
+        total: selected.length,
+        stage: "save",
+      });
       await saveWords(
         selected.map((candidate) => ({
           term: candidate.term,
           meaning: candidate.meaning,
-          ipa: candidate.ipa,
+          ipa:
+            candidate.ipa.trim() ||
+            (isSingleWordCourseTerm(candidate.term)
+              ? ipaByTerm.get(candidate.term)?.trim() ?? ""
+              : ""),
           example: candidate.example,
           note: candidate.partOfSpeech
             ? `Từ loại: ${candidate.partOfSpeech}`
             : "",
         })),
-        (completed, total) => setBulkAddProgress({ completed, total }),
+        (completed, total) =>
+          setBulkAddProgress({ completed, total, stage: "save" }),
       );
       setBulkCourseWordsSavedMessage(
         `Đã nạp ${selected.length.toLocaleString("vi-VN")} từ mới vào Sổ từ; bỏ qua ${alreadySavedCourseWords.toLocaleString("vi-VN")} từ đã có cùng nghĩa.`,
       );
       setBulkAddConfirmationOpen(false);
-      setBulkAddAcknowledged(false);
       setBulkAddProgress(null);
     } catch (failure) {
       setBulkAddProgress(null);
@@ -993,14 +1030,14 @@ export default function CoursesScreen() {
               <View style={styles.bulkAddDialogHeading}>
                 <View
                   style={[
-                    styles.bulkAddWarningIcon,
-                    { backgroundColor: c.destructiveSoft },
+                    styles.bulkAddInfoIcon,
+                    { backgroundColor: c.secondary },
                   ]}
                 >
                   <Feather
-                    name="alert-triangle"
+                    name="book-open"
                     size={21}
-                    color={c.destructive}
+                    color={c.primary}
                   />
                 </View>
                 <View style={styles.bulkAddDialogTitleCopy}>
@@ -1057,66 +1094,18 @@ export default function CoursesScreen() {
                       </Text>
                     </View>
                   ) : null}
-                </View>
-
-                <View
-                  style={[
-                    styles.bulkAddRiskBox,
-                    {
-                      backgroundColor: c.destructiveSoft,
-                      borderColor: c.destructive,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.bulkAddRiskTitle, { color: c.destructiveText }]}>
-                    Rủi ro cần đọc trước
-                  </Text>
-                  <Text style={[styles.bulkAddRiskText, { color: c.destructiveText }]}>
-                    • Quá tải ôn tập: {addableAllCourseWords.length.toLocaleString("vi-VN")} từ mới đều bắt đầu ở Cấp 1, làm tăng đáng kể số lượt ôn.
-                  </Text>
-                  <Text style={[styles.bulkAddRiskText, { color: c.destructiveText }]}>
-                    • Dễ sai: nghĩa và câu ví dụ trong khóa có thể chưa chính xác hoặc chưa hợp ngữ cảnh. Hãy kiểm tra lại trước khi học.
-                  </Text>
-                  <Text style={[styles.bulkAddRiskText, { color: c.destructiveText }]}>
-                    • Khóa học không cung cấp IPA cho thao tác này nên phiên âm sẽ để trống. Không có hoàn tác cả lô; sau đó chỉ có thể xóa từng từ.
-                  </Text>
-                </View>
-
-                <Pressable
-                  testID={`${activeCourse.testIdPrefix}-bulk-add-acknowledgement`}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: bulkAddAcknowledged, disabled: saving }}
-                  accessibilityLabel="Tôi đã đọc rủi ro và muốn nạp toàn bộ từ mới vào Sổ từ"
-                  onPress={() => {
-                    if (!saving)
-                      setBulkAddAcknowledged((acknowledged) => !acknowledged);
-                  }}
-                  style={styles.bulkAddAcknowledgement}
-                >
-                  <View
-                    style={[
-                      styles.bulkAddCheckbox,
-                      {
-                        backgroundColor: bulkAddAcknowledged
-                          ? c.primary
-                          : "transparent",
-                        borderColor: bulkAddAcknowledged ? c.primary : c.border,
-                      },
-                    ]}
-                  >
-                    {bulkAddAcknowledged ? (
-                      <Feather name="check" size={15} color={c.accentForeground} />
-                    ) : null}
+                  <View style={styles.bulkAddSummaryRow}>
+                    <Text style={[styles.bulkAddSummaryLabel, { color: c.foreground }]}>
+                      Từ đơn cần bổ sung IPA
+                    </Text>
+                    <Text style={[styles.bulkAddSummaryValue, { color: c.foreground }]}>
+                      {bulkIpaRequiredCount.toLocaleString("vi-VN")}
+                    </Text>
                   </View>
-                  <Text
-                    style={[
-                      styles.bulkAddAcknowledgementText,
-                      { color: c.foreground },
-                    ]}
-                  >
-                    Tôi đã đọc các rủi ro và muốn tiếp tục.
-                  </Text>
-                </Pressable>
+                </View>
+                <Text style={[styles.bulkAddHint, { color: c.mutedForeground }]}>
+                  Từ đơn sẽ được tra IPA ngoại tuyến; cụm từ không cần IPA.
+                </Text>
 
                 {error ? (
                   <View
@@ -1155,7 +1144,9 @@ export default function CoursesScreen() {
                         { color: c.foreground },
                       ]}
                     >
-                      Đang nạp từ vào Sổ:{" "}
+                      {bulkAddProgress.stage === "ipa"
+                        ? "Đang bổ sung IPA:"
+                        : "Đang nạp từ vào Sổ:"}{" "}
                       {bulkAddProgress.completed.toLocaleString("vi-VN")} /{" "}
                       {bulkAddProgress.total.toLocaleString("vi-VN")}
                     </Text>
@@ -1197,14 +1188,10 @@ export default function CoursesScreen() {
                   label={
                     saving
                       ? "Đang nạp từ..."
-                      : `Tôi hiểu, nạp ${addableAllCourseWords.length.toLocaleString("vi-VN")} từ`
+                      : `Nạp ${addableAllCourseWords.length.toLocaleString("vi-VN")} từ`
                   }
                   onPress={() => void addAllCourseWords()}
-                  disabled={
-                    saving ||
-                    !bulkAddAcknowledged ||
-                    addableAllCourseWords.length === 0
-                  }
+                  disabled={saving || addableAllCourseWords.length === 0}
                   loading={saving}
                   style={styles.bulkAddActionButton}
                 />
@@ -2058,7 +2045,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 11,
   },
-  bulkAddWarningIcon: {
+  bulkAddInfoIcon: {
     width: 42,
     height: 42,
     borderRadius: 14,
@@ -2084,34 +2071,6 @@ const styles = StyleSheet.create({
   },
   bulkAddSummaryLabel: { flex: 1, fontFamily: F.r, fontSize: 13 },
   bulkAddSummaryValue: { fontFamily: F.b, fontSize: 15 },
-  bulkAddRiskBox: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 13,
-    gap: 8,
-  },
-  bulkAddRiskTitle: { fontFamily: F.b, fontSize: 14 },
-  bulkAddRiskText: { fontFamily: F.r, fontSize: 13, lineHeight: 19 },
-  bulkAddAcknowledgement: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 4,
-  },
-  bulkAddCheckbox: {
-    width: 23,
-    height: 23,
-    borderWidth: 1.5,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bulkAddAcknowledgementText: {
-    flex: 1,
-    fontFamily: F.s,
-    fontSize: 13,
-    lineHeight: 19,
-  },
   bulkAddError: { borderWidth: 1, borderRadius: 12, padding: 11 },
   bulkAddProgress: { gap: 8, paddingVertical: 2 },
   bulkAddProgressCopy: {

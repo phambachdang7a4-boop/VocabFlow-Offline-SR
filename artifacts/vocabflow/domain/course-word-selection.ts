@@ -19,6 +19,11 @@ export interface CourseWordCandidate {
   alreadySaved: boolean;
 }
 
+export function isSingleWordCourseTerm(term: string): boolean {
+  const normalized = term.normalize("NFKC").trim().replace(/\s+/g, " ");
+  return normalized.length > 0 && !normalized.includes(" ");
+}
+
 export function courseWordSelectionKey(term: string, meaning: string): string {
   const normalize = (value: string) =>
     value.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("en");

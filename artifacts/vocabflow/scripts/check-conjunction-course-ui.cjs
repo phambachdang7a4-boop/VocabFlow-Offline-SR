@@ -97,6 +97,7 @@ function mount(initialSavedWords = [], options = {}) {
   const savedWords = [...initialSavedWords];
   const savedWordInputs = [];
   const savedWordBatches = [];
+  const ipaLookupCalls = [];
   const react = {
     createElement: element,
     useState(initial) {
@@ -147,6 +148,15 @@ function mount(initialSavedWords = [], options = {}) {
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
       markCourseLessonCompleted: async (lessonId) => completed.push(lessonId),
       recordStoneInvestmentStudyDay: async () => undefined,
+    },
+    "@/data/dictionary": {
+      getDictionaryPronunciationsForTerms: async (terms, onProgress) => {
+        ipaLookupCalls.push([...terms]);
+        if (options.pronunciationLookup)
+          return options.pronunciationLookup(terms, onProgress);
+        onProgress?.(terms.length, terms.length);
+        return new Map(terms.map((term) => [term, `/${term}/`]));
+      },
     },
     "@/contexts/VocabularyContext": {
       useVocabulary: () => ({
@@ -209,6 +219,7 @@ function mount(initialSavedWords = [], options = {}) {
     savedWords,
     savedWordInputs,
     savedWordBatches,
+    ipaLookupCalls,
   };
 }
 
@@ -682,44 +693,30 @@ function mount(initialSavedWords = [], options = {}) {
   const bulkModal = bulkScreen.byId("office-apps-bulk-add-confirmation");
   assert.equal(bulkModal.props.visible, true);
   assert.ok(bulkScreen.byId("office-apps-bulk-add-summary"));
-  assert.ok(
-    find(bulkModal, (node) =>
-      node.type === "Text" &&
-      String(node.props?.children ?? "").includes("Quá tải ôn tập"),
-    ),
-    "The confirmation warns that adding a whole course can overload reviews.",
-  );
-  assert.ok(
-    find(bulkModal, (node) =>
-      node.type === "Text" &&
-      String(node.props?.children ?? "").includes("Dễ sai"),
-    ),
-    "The confirmation warns that course meanings and examples can be wrong.",
+  assert.doesNotMatch(textContent(bulkModal), /Rủi ro cần đọc trước|Quá tải ôn tập|Dễ sai/);
+  assert.match(
+    textContent(bulkModal),
+    /Từ đơn sẽ được tra IPA ngoại tuyến; cụm từ không cần IPA/,
   );
   assert.equal(
-    bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
-    true,
-    "The final add button remains disabled until the learner acknowledges the risks.",
-  );
-  bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
-  await bulkScreen.settle();
-  assert.equal(
-    bulkScreen.savedWordInputs.length,
-    0,
-    "Calling the guarded confirm action without acknowledgment adds nothing.",
-  );
-  bulkScreen
-    .byId("office-apps-bulk-add-acknowledgement")
-    .props.onPress();
-  assert.equal(
-    bulkScreen.byId("office-apps-bulk-add-acknowledgement").props.accessibilityState
-      .checked,
-    true,
+    bulkScreen.byId("office-apps-bulk-add-acknowledgement"),
+    undefined,
+    "The risk acknowledgment is removed after the IPA handling is implemented.",
   );
   assert.equal(
     bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
     false,
+    "The final add button no longer requires risk acknowledgment.",
   );
+  const expectedIpaTerms = allOfficeCandidates
+    .filter(
+      (candidate) =>
+        !candidate.alreadySaved &&
+        courseWordSelectionDomain.isSingleWordCourseTerm(candidate.term) &&
+        !candidate.ipa.trim(),
+    )
+    .map((candidate) => candidate.term);
+  assert.ok(expectedIpaTerms.length > 0);
   bulkScreen.byId("office-apps-bulk-add-confirm").props.onPress();
   assert.equal(
     bulkScreen.byId("office-apps-bulk-add-confirm").props.disabled,
@@ -730,6 +727,12 @@ function mount(initialSavedWords = [], options = {}) {
     bulkScreen.byId("office-apps-bulk-add-cancel").props.disabled,
     true,
     "The learner cannot close the confirmation during the database transaction.",
+  );
+  await bulkScreen.settle();
+  assert.deepEqual(
+    bulkScreen.ipaLookupCalls[0],
+    expectedIpaTerms,
+    "IPA lookup only includes single-word entries that do not already have IPA.",
   );
   const progress = bulkScreen.byId("office-apps-bulk-add-progress");
   assert.ok(progress, "A visible progress status appears during the large save.");
@@ -791,6 +794,22 @@ function mount(initialSavedWords = [], options = {}) {
     ),
     "Bulk-saved words without a part of speech do not produce an empty label.",
   );
+  assert.ok(
+    bulkScreen.savedWordInputs
+      .filter((input) =>
+        courseWordSelectionDomain.isSingleWordCourseTerm(input.term),
+      )
+      .every((input) => input.ipa.trim()),
+    "Every bulk-saved single word receives IPA.",
+  );
+  assert.ok(
+    bulkScreen.savedWordInputs
+      .filter((input) =>
+        !courseWordSelectionDomain.isSingleWordCourseTerm(input.term),
+      )
+      .every((input) => input.ipa === ""),
+    "Multi-word phrases do not require IPA.",
+  );
   assert.equal(
     bulkScreen.savedWordInputs.find(
       (input) => input.term === firstNewOfficeCandidate.term,
@@ -818,6 +837,34 @@ function mount(initialSavedWords = [], options = {}) {
     bulkScreen.byId("office-apps-bulk-add-button").props.disabled,
     true,
     "After import, the course button prevents re-adding already saved words.",
+  );
+
+  const missingIpaScreen = mount([], {
+    pronunciationLookup: async () => new Map(),
+  });
+  await missingIpaScreen.focus();
+  missingIpaScreen.byId("office-apps-course-card").props.onPress();
+  missingIpaScreen.byId("office-apps-bulk-add-button").props.onPress();
+  missingIpaScreen.byId("office-apps-bulk-add-confirm").props.onPress();
+  await missingIpaScreen.settle();
+  assert.equal(
+    missingIpaScreen.savedWordInputs.length,
+    0,
+    "The bulk import does not add single-word entries without found IPA.",
+  );
+  assert.equal(
+    missingIpaScreen.savedWordBatches.length,
+    0,
+    "Missing IPA is detected before the bulk database transaction.",
+  );
+  assert.match(
+    textContent(missingIpaScreen.byId("office-apps-bulk-add-error")),
+    /Chưa tìm thấy IPA cho/,
+  );
+  assert.equal(
+    missingIpaScreen.byId("office-apps-bulk-add-confirmation").props.visible,
+    true,
+    "The learner can install IPA data and retry without losing the dialog.",
   );
   console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {

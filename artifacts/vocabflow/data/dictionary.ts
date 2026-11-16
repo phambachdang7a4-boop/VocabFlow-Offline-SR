@@ -10,8 +10,10 @@ import { Platform } from "react-native";
 import { sha256 } from "@noble/hashes/sha2.js";
 import {
   DICTIONARY,
+  formatDictionaryPronunciations,
   mergeDictionaryPronunciations,
   type DictionaryStage,
+  type DictionaryPronunciation,
 } from "../domain/dictionary";
 import { dictionaryDownloadUrl } from "../domain/dictionary-download";
 import { dictionaryImportBytes } from "../domain/dictionary-import";
@@ -25,6 +27,7 @@ import {
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
 import {
   getRegionalIpaForTerm,
+  getRegionalIpaForTerms,
   installOfflineRegionalIpa,
   downloadOfflineRegionalIpaPart as downloadRegionalIpaPart,
   type RegionalIpaSourceId,
@@ -411,6 +414,70 @@ export async function searchDictionary(query: string, offset = 0) {
 export async function suggestDictionary(query: string) {
   return suggestInDictionary(await openDictionary(), query);
 }
+
+export async function getDictionaryPronunciationsForTerms(
+  terms: readonly string[],
+  onProgress?: (completed: number, total: number) => void,
+): Promise<Map<string, string>> {
+  const cleanTerms = [...new Set(
+    terms.map((term) => term.trim().replace(/\s+/g, " ")).filter(Boolean),
+  )];
+  const normalizedTerms = [
+    ...new Set(cleanTerms.map((term) =>
+      term.normalize("NFKC").toLocaleLowerCase("en"),
+    )),
+  ];
+  if (!cleanTerms.length) return new Map();
+  const baseByTerm = new Map<string, DictionaryPronunciation[]>();
+  let db: SQLiteDatabase | null = null;
+
+  try {
+    db = await openDictionary();
+  } catch (failure) {
+    if (!(failure instanceof DictionaryDownloadConsentRequired)) throw failure;
+  }
+
+  if (db) {
+    for (let start = 0; start < normalizedTerms.length; start += 180) {
+      const batch = normalizedTerms.slice(start, start + 180);
+      const rows = await db.getAllAsync<{
+        term: string;
+        ipa: string;
+        region: string | null;
+      }>(
+        `SELECT w.word AS term, p.ipa, p.region
+         FROM words w
+         JOIN pronunciations p ON p.word_id = w.id
+         WHERE w.lang_code = 'en'
+           AND w.word COLLATE NOCASE IN (${batch.map(() => "?").join(",")})
+         ORDER BY w.word COLLATE NOCASE, w.id, p.id`,
+        ...batch,
+      );
+      for (const row of rows) {
+        const key = row.term.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("en");
+        const existing = baseByTerm.get(key) ?? [];
+        existing.push({ ipa: row.ipa, region: row.region });
+        baseByTerm.set(key, existing);
+      }
+      onProgress?.(start + batch.length, normalizedTerms.length);
+    }
+  } else {
+    onProgress?.(normalizedTerms.length, normalizedTerms.length);
+  }
+
+  const regionalByTerm = await getRegionalIpaForTerms(cleanTerms);
+  const results = new Map<string, string>();
+  for (const term of cleanTerms) {
+    const key = term.normalize("NFKC").toLocaleLowerCase("en");
+    const merged = mergeDictionaryPronunciations(
+      baseByTerm.get(key) ?? [],
+      regionalByTerm.get(key) ?? [],
+    );
+    results.set(term, formatDictionaryPronunciations(merged));
+  }
+  return results;
+}
+
 export async function getRandomUnlearnedDictionaryWord(
   learnedTerms: ReadonlySet<string>,
 ) {

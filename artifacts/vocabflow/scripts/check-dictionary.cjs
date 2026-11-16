@@ -14,6 +14,7 @@ const source = resolve(
   "../../../generated-artifacts/dictionary/dictionary_en_vi.db",
 );
 const handles = new Set();
+const regionalIpaByTerm = new Map();
 let personal;
 
 function adapter(filename, readOnly = false) {
@@ -573,6 +574,12 @@ function adapter(filename, readOnly = false) {
         "./dictionary-local-additions": localAdditions,
         "./offline-regional-pronunciations": {
           getRegionalIpaForTerm: async () => [],
+          getRegionalIpaForTerms: async (terms) =>
+            new Map(
+              terms
+                .filter((term) => regionalIpaByTerm.has(term))
+                .map((term) => [term, regionalIpaByTerm.get(term)]),
+            ),
           installOfflineRegionalIpa: async () => ({ entryCount: 0, usCount: 0, ukCount: 0 }),
         },
         "./dictionary-queries": queries,
@@ -628,6 +635,17 @@ function adapter(filename, readOnly = false) {
     /Cần xác nhận/,
   );
   await assert.rejects(repo.suggestDictionary("helo"), /Cần xác nhận/);
+  regionalIpaByTerm.set("regional-only", [
+    { ipa: "/ˈriːdʒənəl/", region: "BrE" },
+  ]);
+  assert.equal(
+    (await repo.getDictionaryPronunciationsForTerms(["regional-only"])).get(
+      "regional-only",
+    ),
+    "Anh-Anh: /ˈriːdʒənəl/",
+    "Bulk pronunciation lookup can use installed regional IPA without downloading the main dictionary.",
+  );
+  regionalIpaByTerm.clear();
   assert.equal(
     downloads,
     0,
@@ -654,6 +672,14 @@ function adapter(filename, readOnly = false) {
     { state: "installed", bytes: DICTIONARY.bytes },
     "An installed browser SQLite dictionary is recognized without FileSystem",
   );
+  const pronunciationProgress = [];
+  const bulkPronunciations = await repo.getDictionaryPronunciationsForTerms(
+    ["hello", "water"],
+    (completed, total) => pronunciationProgress.push({ completed, total }),
+  );
+  assert.ok(bulkPronunciations.get("hello"));
+  assert.ok(bulkPronunciations.get("water"));
+  assert.deepEqual(pronunciationProgress.at(-1), { completed: 2, total: 2 });
   for (const update of exampleUpdates.DICTIONARY_EXAMPLE_UPDATES) {
     const stored = await loaded.getFirstAsync(
       "SELECT example FROM word_definitions WHERE id = ? AND word_id = ?",

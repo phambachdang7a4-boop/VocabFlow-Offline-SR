@@ -230,6 +230,25 @@ async function checkOfflineLookupStates() {
     pronunciations: [{ ipa: "/wˈɔːtɐ/", region: "BrE" }],
   });
 
+  const batchDatabase = database();
+  batchDatabase.getAllAsync = async (sql, ...terms) => {
+    assert.match(sql, /term_key COLLATE NOCASE IN/);
+    assert.deepEqual(terms, ["water", "read"]);
+    return [
+      { termKey: "water", ipa: "/wˈɔːtɐ/", region: "BrE" },
+      { termKey: "read", ipa: "/riːd/", region: "NAmE" },
+    ];
+  };
+  const batchLookup = loadOfflineData(batchDatabase);
+  assert.deepEqual(
+    await batchLookup.getRegionalIpaForTerms(["Water", "read"]),
+    new Map([
+      ["water", [{ ipa: "/wˈɔːtɐ/", region: "BrE" }]],
+      ["read", [{ ipa: "/riːd/", region: "NAmE" }]],
+    ]),
+    "Large imports resolve regional IPA in a batched exact-term query.",
+  );
+
   const absent = loadOfflineData(database({ hasTable: false }));
   assert.deepEqual(await absent.getRegionalIpaLookupForTerm("water"), {
     state: "not-installed",
