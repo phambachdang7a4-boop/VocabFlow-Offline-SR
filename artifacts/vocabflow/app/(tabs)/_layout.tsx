@@ -7,66 +7,22 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { Feather } from "@expo/vector-icons";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { Tabs, useSegments } from "expo-router";
-import { NativeTabs } from "expo-router/native-tabs";
-import { SymbolView } from "expo-symbols";
+import { Tabs } from "expo-router";
 import { MaterialSheen } from "@/components/ui";
 
 // Start guests in the Thư Viện; they can reach the notebook from its tab.
 export const unstable_settings = { anchor: "dictionary" };
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs backBehavior="initialRoute">
-      <NativeTabs.Trigger name="dictionary">
-        <NativeTabs.Trigger.Icon
-          sf={{
-            default: "books.vertical",
-            selected: "books.vertical.fill",
-          }}
-        />
-        <NativeTabs.Trigger.Label>Thư Viện</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="courses">
-        <NativeTabs.Trigger.Icon
-          sf={{ default: "square.grid.2x2", selected: "square.grid.2x2.fill" }}
-        />
-        <NativeTabs.Trigger.Label>Khóa học</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="review">
-        <NativeTabs.Trigger.Icon
-          sf={{ default: "arrow.2.circlepath", selected: "arrow.2.circlepath" }}
-        />
-        <NativeTabs.Trigger.Label>Ôn tập</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Icon
-          sf={{ default: "book", selected: "book.fill" }}
-        />
-        <NativeTabs.Trigger.Label>Sổ từ</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="blank">
-        <NativeTabs.Trigger.Icon
-          sf={{ default: "checklist", selected: "checklist" }}
-        />
-        <NativeTabs.Trigger.Label>Nhiệm Vụ</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
 const ICONS = {
-  index: { sf: "book", fe: "book-open" },
-  dictionary: { sf: "books.vertical", fe: "book-open" },
-  courses: { sf: "square.grid.2x2", fe: "grid" },
-  review: { sf: "arrow.2.circlepath", fe: "repeat" },
-  blank: { sf: "checklist", fe: "check-square" },
+  index: "book-open",
+  dictionary: "book-open",
+  courses: "grid",
+  review: "repeat",
+  blank: "check-square",
 } as const;
 
 function ClassicTabLayout() {
   const colors = useColors();
-  const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
 
   const icon =
@@ -77,13 +33,13 @@ function ClassicTabLayout() {
           styles.tabIcon,
           {
             backgroundColor: focused ? colors.button : "transparent",
-            borderColor: focused ? colors.accentSoft : "transparent",
+            borderColor: focused ? colors.goldSheen : "transparent",
             borderWidth: focused ? 1 : 0,
             shadowColor: colors.shade,
             shadowOffset: { width: 0, height: focused ? 2 : 0 },
-            shadowOpacity: focused ? 0.24 : 0,
-            shadowRadius: focused ? 4 : 0,
-            elevation: focused ? 3 : 0,
+            shadowOpacity: focused ? 0.28 : 0,
+            shadowRadius: focused ? 5 : 0,
+            elevation: focused ? 4 : 0,
           },
         ]}
       >
@@ -92,29 +48,21 @@ function ClassicTabLayout() {
             pointerEvents="none"
             style={[
               styles.tabDivider,
-              { backgroundColor: colors.navigationBorder },
+              { backgroundColor: colors.navigationInactive },
             ]}
           />
         ) : null}
-        {isIOS ? (
-          <SymbolView
-            name={ICONS[key].sf}
-            tintColor={focused ? colors.buttonForeground : color}
-            size={focused ? 20 : 22}
-          />
-        ) : (
-          <Feather
-            name={ICONS[key].fe}
-            size={focused ? 20 : 22}
-            color={
-              focused
-                ? colors.buttonForeground
-                : typeof color === "string"
-                  ? color
-                  : colors.navigationInactive
-            }
-          />
-        )}
+        <Feather
+          name={ICONS[key]}
+          size={focused ? 25 : 27}
+          color={
+            focused
+              ? colors.buttonForeground
+              : typeof color === "string"
+                ? color
+                : colors.navigationInactive
+          }
+        />
       </View>
     );
 
@@ -124,20 +72,26 @@ function ClassicTabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.navigationActive,
         tabBarInactiveTintColor: colors.navigationInactive,
-        tabBarLabelStyle: { fontFamily: "Inter_600SemiBold", fontSize: 10 },
-        tabBarItemStyle: { paddingHorizontal: 0 },
+        tabBarLabelStyle: {
+          fontFamily: "Inter_600SemiBold",
+          fontSize: 11,
+          marginTop: 1,
+          marginBottom: 5,
+        },
+        tabBarItemStyle: { paddingHorizontal: 0, paddingTop: 4 },
         headerShown: false,
         sceneStyle: { backgroundColor: colors.background },
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.navigation,
-          borderTopWidth: 1,
-          borderTopColor: colors.navigationBorder,
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
           elevation: 0,
           shadowColor: colors.shade,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 10,
+          shadowOpacity: 0.22,
+          shadowRadius: 12,
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          overflow: "hidden",
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () => (
@@ -178,23 +132,23 @@ function ClassicTabLayout() {
 
 const styles = StyleSheet.create({
   tabIcon: {
-    width: 48,
-    height: 34,
-    borderRadius: 13,
+    width: 54,
+    height: 48,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
   tabDivider: {
     position: "absolute",
-    left: -20,
-    width: 2,
-    height: 26,
+    left: -14,
+    width: 1,
+    height: 38,
     borderRadius: 2,
-    opacity: 0.6,
+    opacity: 0.48,
   },
 });
 
 export default function TabLayout() {
-  return isLiquidGlassAvailable() ? <NativeTabLayout /> : <ClassicTabLayout />;
+  return <ClassicTabLayout />;
 }
