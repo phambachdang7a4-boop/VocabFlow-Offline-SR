@@ -110,8 +110,8 @@ export function MissionShop() {
         ]}
       >
         <Image
-          source={require("../assets/images/corvi-shop-counter.png")}
-          accessibilityLabel="Corvi đứng sau quầy hàng trong thư viện"
+          source={require("../assets/images/corvi-baron-trade.png")}
+          accessibilityLabel="Biển The Baron Trade và Corvi đứng sau quầy hàng"
           resizeMode="cover"
           style={styles.heroImage}
         />
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   hint: { fontFamily: F.r, fontSize: 13, lineHeight: 19 },
   heroCard: {
     width: "100%",
-    aspectRatio: 540 / 502,
+    aspectRatio: 704 / 860,
     position: "relative",
     borderWidth: 1,
     borderRadius: 22,

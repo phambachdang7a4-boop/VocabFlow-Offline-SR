@@ -121,9 +121,10 @@ assert.doesNotMatch(
 );
 assert.match(
   storeScreen,
-  /require\("\.\.\/assets\/images\/corvi-shop-counter\.png"\)/,
-  "The shop hero uses the cropped Corvi illustration, not the full screenshot.",
+  /require\("\.\.\/assets\/images\/corvi-baron-trade\.png"\)/,
+  "The shop hero uses the cropped Baron Trade illustration, not embedded product cards.",
 );
+assert.match(storeScreen, /aspectRatio: 704 \/ 860/);
 assert.equal(
   [...rootTabs.matchAll(/<NativeTabs\.Trigger name=/g)].length,
   5,
