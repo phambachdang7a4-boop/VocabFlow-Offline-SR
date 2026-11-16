@@ -422,10 +422,11 @@
     "make up to": {
       "flags": ["usage-review"],
       "note": "The selected sentence is awkward and does not clearly explain what amount is being made up.",
-      "decision": "retained",
-      "reviewNote": "Flagged the source wording for further lexical review; no independent correction could be verified, so the source example and meaning are retained without changing the pinned dictionary.",
-      "approvedExample": "He offered to make up to the total amount.",
-      "approvedTranslation": "Anh ta đã đề nghị tăng số tiền nhận được lên tổng số tiền.",
+      "decision": "corrected",
+      "reviewNote": "Longman Dictionary of Contemporary English confirms “make (it) up to somebody” as a phrasal verb meaning to do something to show you are sorry for problems you caused. The source example does not support its amount-increase meaning, so the course now uses a new example of the independently verified sense. Source: https://www.ldoceonline.com/dictionary/make-up-to",
+      "approvedDefinition": "Làm điều gì đó để đền bù cho ai về những rắc rối mình đã gây ra.",
+      "approvedExample": "She wanted to make up to her friend for missing the wedding.",
+      "approvedTranslation": "Cô ấy muốn bù đắp cho bạn mình vì đã lỡ đám cưới.",
       "exampleSha256": "a91ec05f15c0430b056bf39247b7dc662913cf6057306f340aa002bcc8d91298",
       "definitionSha256": "a36e29feaa4fdeee35df8acaee50b6c274f7964be4582dfc6fde3747c32cef54",
       "sourceScreenshot": "phrasal-verb-review-evidence/make-up-to.png"
