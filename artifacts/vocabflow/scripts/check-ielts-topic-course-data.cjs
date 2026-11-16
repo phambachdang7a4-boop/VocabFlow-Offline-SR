@@ -7,6 +7,7 @@ const {
   RARE_HEADWORD_REVIEW,
   REQUIRED_COMMON_INFLECTIONS,
   REQUIRED_RELATED_HEADWORDS,
+  REDUNDANT_VERB_INFLECTION_REVIEW,
   COURSE_POS_OVERRIDES,
   spellingNoteForTerm,
   validateCourseExamples,
@@ -27,6 +28,26 @@ function cloneCourseData() {
 }
 
 validateCourseExamples(courseData.entries);
+const allIeltsTerms = new Set(
+  courseData.topics.flatMap((topic) => topic.terms),
+);
+for (const term of REDUNDANT_VERB_INFLECTION_REVIEW) {
+  assert.equal(
+    courseData.entries[term],
+    undefined,
+    `${term} must stay out of IELTS lessons as a redundant verb form.`,
+  );
+  assert.equal(
+    allIeltsTerms.has(term),
+    false,
+    `${term} must not be selected again when the course is rebuilt.`,
+  );
+}
+assert.equal(
+  REDUNDANT_VERB_INFLECTION_REVIEW.size,
+  85,
+  "The manually reviewed redundant verb-form list should remain explicit.",
+);
 assert.equal(
   hasSubjectPronounConflict(
     "She coached him through the interview.",

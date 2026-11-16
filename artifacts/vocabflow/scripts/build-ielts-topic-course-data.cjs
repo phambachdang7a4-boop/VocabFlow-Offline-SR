@@ -362,6 +362,23 @@ const LEGACY_WORDS = new Set(["curriculum", "literacy", "tuition", "compulsory",
   "nutrition", "prevention", "sedentary", "obesity", "wellbeing", "employment",
   "inequality", "urbanization", "infrastructure", "unemployment"]);
 
+// These are only third-person-singular or -ing verb forms whose base verb is
+// already taught. Keep lexicalized nouns/adjectives such as marketing,
+// banking, painting, shopping, and developing in the course.
+const REDUNDANT_VERB_INFLECTION_REVIEW = new Set(
+  `accenting affording assesses assessing banks biases branding brands budgeting
+campaigning championing cleans coaches coaching corrupting courting courts
+deforesting deserting dieting diets electing elects empowering encrypting enrolling
+equaling equals experimenting farms films floods foresting fueling fuels functioning
+games importing imports infecting interning inventing investing judges laboring labors
+ministering motors paints plans powers presses preventing profiting progresses
+progressing punishes races rails recruiting renewing renews reporting researches
+researching sculpting ships soils studying supplying teaming teams tours trades trains
+transiting treating treats tutoring tutors unions votes wages wastes winds`
+    .trim()
+    .split(/\s+/),
+);
+
 const LEGACY_SOCIETY_ENTRIES = {
   employment: {
     definition: "Việc làm; tình trạng có công việc được trả lương.",
@@ -590,10 +607,6 @@ const COURSE_EXAMPLE_OVERRIDES = {
   enroll: {
     example: "Students can enroll in the course online before classes begin.",
     exampleTranslation: "Học sinh có thể đăng ký khóa học trực tuyến trước khi lớp bắt đầu.",
-  },
-  renews: {
-    example: "The city renews its public transport fleet every year.",
-    exampleTranslation: "Thành phố đổi mới đội xe giao thông công cộng mỗi năm.",
   },
   artificially: {
     example: "The lake's water level was artificially maintained during the drought.",
@@ -937,7 +950,6 @@ const REQUIRED_COMMON_INFLECTIONS = [
   "graduated",
   "enrolled",
   "polluted",
-  "renewing",
   "automated",
   "recruited",
   "taxed",
@@ -1786,6 +1798,7 @@ function topicCandidates(topic, dictionary, sortedTerms) {
       if (
         !seen.has(term) &&
         !LEGACY_WORDS.has(term) &&
+        !REDUNDANT_VERB_INFLECTION_REVIEW.has(term) &&
         !DICTIONARY_SENSE_REVIEW[term] &&
         !RARE_HEADWORD_REVIEW[term] &&
         termMatchesPrefix(term, prefix)
@@ -1948,6 +1961,32 @@ function main() {
     validateReviewedExamples(REVIEWED_EXAMPLES, dictionaryRows);
     const sortedTerms = [...dictionary.keys()].sort();
     const legacy = loadLegacyCourse();
+    const filteredLegacyTopics = legacy.topics.map((topic) => ({
+      ...topic,
+      terms: topic.terms.filter(
+        (term) => !REDUNDANT_VERB_INFLECTION_REVIEW.has(term),
+      ),
+    }));
+    const filteredLegacyEntries = Object.fromEntries(
+      Object.entries(legacy.entries).filter(
+        ([term]) => !REDUNDANT_VERB_INFLECTION_REVIEW.has(term),
+      ),
+    );
+    const filteredLegacyLessons = new Map(
+      [...legacy.lessons].map(([topicId, lesson]) => [
+        topicId,
+        {
+          ...lesson,
+          questions: lesson.questions.filter(
+            (question) =>
+              !REDUNDANT_VERB_INFLECTION_REVIEW.has(question.term),
+          ),
+        },
+      ]),
+    );
+    legacy.topics = filteredLegacyTopics;
+    legacy.entries = filteredLegacyEntries;
+    legacy.lessons = filteredLegacyLessons;
     validateOfflineExampleSources(legacy.entries, dictionaryRows);
     const legacyTopics = new Map(
       legacy.topics.map((topic) => [topic.id, topic]),
@@ -2102,6 +2141,7 @@ module.exports = {
   DICTIONARY_DEFINITION_REVIEW,
   REQUIRED_RELATED_HEADWORDS,
   REQUIRED_COMMON_INFLECTIONS,
+  REDUNDANT_VERB_INFLECTION_REVIEW,
   RARE_HEADWORD_REVIEW,
   validateDictionarySenseReview,
   validateDictionaryPosReview,

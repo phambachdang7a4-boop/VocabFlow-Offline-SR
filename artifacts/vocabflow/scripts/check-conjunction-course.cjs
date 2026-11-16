@@ -295,7 +295,7 @@ async function checkCourseContentAndProgress() {
     ),
     "IELTS lesson display numbers are continuous across all topics.",
   );
-  assert.ok(ieltsTerms.length >= 1200 && ieltsTerms.length <= 2000);
+  assert.ok(ieltsTerms.length >= 1100 && ieltsTerms.length <= 2000);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_WORD_COUNT,
