@@ -34,16 +34,11 @@ function ClassicTabLayout() {
         style={[
           styles.tabIcon,
           {
-              backgroundColor: "transparent",
-              borderColor: "transparent",
-              borderWidth: 0,
-              shadowOpacity: 0,
-              shadowRadius: 0,
-              elevation: 0,
+            backgroundColor: focused ? colors.navigationActive : "transparent",
           },
         ]}
       >
-          {hasDivider && !focused ? (
+        {hasDivider ? (
           <View
             pointerEvents="none"
             style={[
@@ -67,6 +62,7 @@ function ClassicTabLayout() {
                   : key === "index"
                     ? styles.notebookArtwork
                     : styles.missionsArtwork,
+            styles.artworkOnTop,
           ]}
         />
       </View>
@@ -78,20 +74,20 @@ function ClassicTabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.buttonForeground,
         tabBarInactiveTintColor: colors.navigationInactive,
-        tabBarActiveBackgroundColor: colors.button,
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
           fontSize: 11,
           lineHeight: 14,
           marginTop: 1,
           marginBottom: 2,
+          textAlign: "center",
           includeFontPadding: false,
         },
         tabBarItemStyle: {
-          paddingHorizontal: 0,
-          paddingTop: 2,
-          paddingBottom: 2,
-          marginBottom: isWeb ? 34 : 0,
+          paddingHorizontal: 1,
+          paddingTop: 1,
+          paddingBottom: 1,
+          marginHorizontal: 2,
           borderRadius: 16,
         },
         headerShown: false,
@@ -101,6 +97,8 @@ function ClassicTabLayout() {
           backgroundColor: "transparent",
           borderTopWidth: 0,
           elevation: 0,
+          paddingTop: 4,
+          paddingBottom: isWeb ? 34 : insets.bottom,
           shadowColor: colors.shade,
           shadowOpacity: 0.22,
           shadowRadius: 12,
@@ -147,9 +145,9 @@ function ClassicTabLayout() {
 
 const styles = StyleSheet.create({
   tabIcon: {
-    width: 54,
-    height: 48,
-    borderRadius: 15,
+    width: 52,
+    height: 44,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -185,6 +183,10 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 2,
     opacity: 0.48,
+    zIndex: 0,
+  },
+  artworkOnTop: {
+    zIndex: 1,
   },
 });
 

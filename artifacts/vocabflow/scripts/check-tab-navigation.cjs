@@ -21,8 +21,13 @@ assert.match(
 );
 assert.match(
   layout,
-  /tabBarActiveBackgroundColor:\s*colors\.button/,
-  "The selected tab background uses the existing gold button color.",
+  /backgroundColor:\s*focused\s*\?\s*colors\.navigationActive\s*:\s*"transparent"/,
+  "Only the selected icon receives the gold background.",
+);
+assert.doesNotMatch(
+  layout,
+  /tabBarActiveBackgroundColor/,
+  "The full tab item must not become a gold block.",
 );
 assert.match(
   layout,
@@ -31,11 +36,12 @@ assert.match(
 );
 assert.match(
   layout,
-  /marginBottom:\s*isWeb\s*\?\s*34\s*:\s*0/,
-  "The web tab content leaves its 34px bottom safe area clear.",
+  /paddingBottom:\s*isWeb\s*\?\s*34\s*:\s*insets\.bottom/,
+  "The tab bar preserves the platform bottom safe area.",
 );
 assert.match(layout, /lineHeight:\s*14/);
 assert.match(layout, /includeFontPadding:\s*false/);
+assert.match(layout, /textAlign:\s*"center"/);
 
 for (const icon of ["library", "courses", "review", "notebook", "missions"]) {
   assert.ok(

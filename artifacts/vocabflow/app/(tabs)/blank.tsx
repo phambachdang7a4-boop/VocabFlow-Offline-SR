@@ -49,8 +49,8 @@ export default function BlankScreen() {
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const missionArtworkSize = screenWidth < 360 ? 48 : screenWidth < 420 ? 62 : 70;
-  const chestArtworkSize = screenWidth < 360 ? 56 : screenWidth < 420 ? 70 : 78;
+  const missionArtworkSize = screenWidth < 360 ? 56 : 64;
+  const chestArtworkSize = screenWidth < 360 ? 56 : 64;
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -266,9 +266,13 @@ export default function BlankScreen() {
                       <View
                         style={[
                           styles.rewardArtwork,
+                          rewardRarity === "rare" ? styles.goldRewardGlow : null,
                           {
                             width: chestArtworkSize + 8,
                             height: chestArtworkSize,
+                            ...(rewardRarity === "rare"
+                              ? { shadowColor: CHEST_RARITY_COLORS.rare }
+                              : {}),
                           },
                         ]}
                         accessibilityElementsHidden
@@ -277,6 +281,16 @@ export default function BlankScreen() {
                         <ChestTierArtwork
                           rarity={rewardRarity}
                           size={chestArtworkSize}
+                          mark={
+                            rewardRarity === "common"
+                              ? "C"
+                              : rewardRarity === "uncommon"
+                                ? "S"
+                                : rewardRarity === "rare"
+                                  ? "G"
+                                  : undefined
+                          }
+                          sparkle={rewardRarity === "rare"}
                         />
                         {finished ? (
                           <View
@@ -459,7 +473,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   missionHeadingCopy: { flex: 1, minWidth: 0, gap: 3 },
-  missionPageTitle: { fontFamily: F.b, fontSize: 21 },
+  missionPageTitle: { fontFamily: F.b, fontSize: 23 },
   missionStoneBadge: {
     minHeight: 34,
     flexDirection: "row",
@@ -481,11 +495,12 @@ const styles = StyleSheet.create({
     position: "relative",
     borderWidth: 1,
     borderRadius: 22,
-    padding: 16,
-    gap: 13,
+    padding: 14,
+    gap: 12,
     minHeight: 172,
+    marginBottom: 4,
   },
-  missionTop: { flexDirection: "row", alignItems: "center", gap: 9 },
+  missionTop: { flexDirection: "row", alignItems: "center", gap: 8 },
   missionIcon: {
     flexShrink: 0,
     alignItems: "center",
@@ -497,6 +512,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "visible",
+  },
+  goldRewardGlow: {
+    shadowOpacity: 0.48,
+    shadowRadius: 9,
+    elevation: 5,
   },
   rewardCheck: {
     position: "absolute",
@@ -546,7 +566,7 @@ const styles = StyleSheet.create({
   },
   openChestText: { fontFamily: F.b, fontSize: 13 },
   progressRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  track: { flex: 1, height: 8, borderRadius: 5, overflow: "hidden" },
+  track: { flex: 1, height: 6, borderRadius: 5, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 5 },
   progressText: {
     minWidth: 58,

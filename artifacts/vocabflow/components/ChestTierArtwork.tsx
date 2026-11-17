@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
-import Svg, { Path, Rect } from "react-native-svg";
+import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import { type ChestRarity } from "@/domain/mission-chests";
 
 type ChestPalette = {
@@ -77,10 +77,14 @@ export function ChestTierArtwork({
   rarity,
   size,
   lidProgress,
+  mark,
+  sparkle = false,
 }: {
   rarity: ChestRarity;
   size: number;
   lidProgress?: SharedValue<number>;
+  mark?: string;
+  sparkle?: boolean;
 }) {
   const palette = PALETTES[rarity];
   const closedLidProgress = useSharedValue(0);
@@ -181,9 +185,35 @@ export function ChestTierArtwork({
         <Rect x="103" y="125" width="14" height="18" fill={palette.lidLight} />
         <Rect x="108" y="129" width="5" height="9" fill={palette.shadow} />
         <Rect x="106" y="137" width="9" height="6" fill={palette.shadow} />
+        {mark ? (
+          <SvgText
+            x="110"
+            y="137"
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="900"
+            fill={palette.outline}
+          >
+            {mark}
+          </SvgText>
+        ) : null}
 
         <Rect x="44" y="78" width="10" height="10" fill={palette.gem} />
         <Rect x="166" y="78" width="10" height="10" fill={palette.gem} />
+        {sparkle ? (
+          <>
+            <Path
+              d="M15 49h5v-5h5v5h5v5h-5v5h-5v-5h-5zm170-19h5v-5h5v5h5v5h-5v5h-5v-5h-5z"
+              fill={palette.trim}
+              opacity="0.9"
+            />
+            <Path
+              d="M194 63h3v-4h3v4h4v3h-4v4h-3v-4h-3z"
+              fill={palette.gem}
+              opacity="0.85"
+            />
+          </>
+        ) : null}
       </Svg>
 
       <Animated.View
