@@ -20,6 +20,7 @@ import { ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { MissionCollectionTabs } from "@/components/MissionCollectionTabs";
 import { MissionShop } from "@/components/MissionShop";
 import { ChestTierArtwork } from "@/components/ChestTierArtwork";
+import { CorviChestArtwork } from "@/components/CorviChestArtwork";
 import { DailyMissionArtwork } from "@/components/DailyMissionArtwork";
 import CollectionScreen from "../collection";
 import {
@@ -388,7 +389,10 @@ export default function BlankScreen() {
                       { backgroundColor: c.headerButton },
                     ]}
                   >
-                    <Feather name="gift" size={19} color={c.accent} />
+                    <CorviChestArtwork
+                      size={38}
+                      testID="corvi-chest-progress-icon"
+                    />
                   </View>
                   <View style={styles.corviProgressCopy}>
                     <Text

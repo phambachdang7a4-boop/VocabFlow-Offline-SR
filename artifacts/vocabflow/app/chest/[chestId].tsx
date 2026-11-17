@@ -251,7 +251,10 @@ export default function MissionChestScreen() {
                   ]}
                 />
                 {chest.rarity === "legendary" ? (
-                  <CorviChestArtwork size={210} />
+                  <CorviChestArtwork
+                    size={210}
+                    testID="corvi-chest-open-artwork"
+                  />
                 ) : (
                   <ChestTierArtwork
                     rarity={chest.rarity}

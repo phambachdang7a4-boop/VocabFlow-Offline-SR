@@ -50,8 +50,8 @@ type FragmentRarity = "rare" | "epic" | "legendary";
 const FRAGMENT_RARITY_ORDER: FragmentRarity[] = ["epic", "rare", "legendary"];
 const STATUE_UNLOCK_COST = 10;
 const FRAGMENT_ICON_SOURCES: Record<FragmentRarity, ImageSourcePropType> = {
-  rare: require("../assets/images/puzzle-gold.png"),
-  epic: require("../assets/images/puzzle-silver.png"),
+  rare: require("../assets/images/puzzle-silver.png"),
+  epic: require("../assets/images/puzzle-gold.png"),
   legendary: require("../assets/images/puzzle-platinum.png"),
 };
 const pixelatedImageStyle =
