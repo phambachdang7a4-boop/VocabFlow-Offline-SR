@@ -95,6 +95,62 @@ assert.equal(
   1351,
   "The cleaned IELTS course plus the reviewed expansion should contain 1,351 words.",
 );
+const reviewedLearnerFacingCorrections = {
+  elderly: {
+    definition: "Cao tuổi; thuộc về người lớn tuổi.",
+  },
+  citizen: {
+    definition:
+      "Công dân; người được pháp luật công nhận là thành viên của một quốc gia.",
+    example: "Every citizen has basic rights.",
+    exampleTranslation: "Mọi công dân đều có các quyền cơ bản.",
+  },
+  intern: {
+    definition:
+      "Thực tập sinh; người tạm thời làm việc để học và tích lũy kinh nghiệm chuyên môn.",
+    example: "The intern helped analyse data for a public health study.",
+    exampleTranslation:
+      "Thực tập sinh đã hỗ trợ phân tích dữ liệu cho một nghiên cứu sức khỏe cộng đồng.",
+  },
+  pastor: {
+    definition:
+      "Mục sư; người lãnh đạo một cộng đồng Kitô giáo và hướng dẫn đời sống tinh thần của tín đồ.",
+    example: "The pastor helped preserve the church's historical records.",
+    exampleTranslation:
+      "Mục sư đã góp phần bảo tồn các tư liệu lịch sử của nhà thờ.",
+  },
+  exercise: {
+    definition:
+      "Thực thi hoặc sử dụng (quyền, quyền lực hay trách nhiệm).",
+  },
+  profession: {
+    definition:
+      "Nghề nghiệp; công việc đòi hỏi kiến thức hoặc kỹ năng chuyên môn.",
+    example: "Medicine became her chosen profession after graduation.",
+    exampleTranslation:
+      "Sau khi tốt nghiệp, cô chọn ngành y làm nghề nghiệp.",
+  },
+  traveling: {
+    definition:
+      "Việc đi du lịch; hoạt động di chuyển đến các địa điểm khác nhau.",
+    example: "Traveling can expose students to different cultures.",
+    exampleTranslation:
+      "Việc đi du lịch có thể giúp sinh viên tiếp xúc với những nền văn hóa khác nhau.",
+  },
+};
+for (const [term, expected] of Object.entries(
+  reviewedLearnerFacingCorrections,
+)) {
+  const entry = courseData.entries[term];
+  assert.ok(entry, `${term} remains in the IELTS course.`);
+  assert.equal(entry.definition, expected.definition);
+  assert.equal(entry.dictionarySource, "authored");
+  if (expected.example) {
+    assert.equal(entry.example, expected.example);
+    assert.equal(entry.exampleTranslation, expected.exampleTranslation);
+    assert.equal(entry.exampleSource, "authored");
+  }
+}
 assert.equal(
   courseData.topics.length,
   36,

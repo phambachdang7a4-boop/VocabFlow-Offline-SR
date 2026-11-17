@@ -538,6 +538,30 @@ const LEGACY_SOCIETY_LESSON = {
 // Reviewed IELTS example pairs are pinned here so regeneration cannot restore
 // a previously identified English/Vietnamese meaning mismatch.
 const COURSE_EXAMPLE_OVERRIDES = {
+  citizen: {
+    example: "Every citizen has basic rights.",
+    exampleTranslation: "Mọi công dân đều có các quyền cơ bản.",
+  },
+  intern: {
+    example: "The intern helped analyse data for a public health study.",
+    exampleTranslation:
+      "Thực tập sinh đã hỗ trợ phân tích dữ liệu cho một nghiên cứu sức khỏe cộng đồng.",
+  },
+  pastor: {
+    example: "The pastor helped preserve the church's historical records.",
+    exampleTranslation:
+      "Mục sư đã góp phần bảo tồn các tư liệu lịch sử của nhà thờ.",
+  },
+  profession: {
+    example: "Medicine became her chosen profession after graduation.",
+    exampleTranslation:
+      "Sau khi tốt nghiệp, cô chọn ngành y làm nghề nghiệp.",
+  },
+  traveling: {
+    example: "Traveling can expose students to different cultures.",
+    exampleTranslation:
+      "Việc đi du lịch có thể giúp sinh viên tiếp xúc với những nền văn hóa khác nhau.",
+  },
   graduation: {
     example: "She celebrated her graduation after completing her degree.",
     exampleTranslation: "Cô ấy ăn mừng lễ tốt nghiệp sau khi hoàn thành chương trình học.",
@@ -793,6 +817,18 @@ const COURSE_EXAMPLE_OVERRIDES = {
 };
 
 const COURSE_DEFINITION_OVERRIDES = {
+  elderly: "Cao tuổi; thuộc về người lớn tuổi.",
+  citizen:
+    "Công dân; người được pháp luật công nhận là thành viên của một quốc gia.",
+  intern:
+    "Thực tập sinh; người tạm thời làm việc để học và tích lũy kinh nghiệm chuyên môn.",
+  pastor:
+    "Mục sư; người lãnh đạo một cộng đồng Kitô giáo và hướng dẫn đời sống tinh thần của tín đồ.",
+  exercise:
+    "Thực thi hoặc sử dụng (quyền, quyền lực hay trách nhiệm).",
+  profession:
+    "Nghề nghiệp; công việc đòi hỏi kiến thức hoặc kỹ năng chuyên môn.",
+  traveling: "Việc đi du lịch; hoạt động di chuyển đến các địa điểm khác nhau.",
   tutor: "Gia sư; người dạy kèm cho một cá nhân hoặc nhóm nhỏ.",
   classroom: "Lớp học; phòng học trong trường.",
   enroll: "Đăng ký hoặc ghi danh tham gia khóa học, trường học hay chương trình.",
@@ -980,6 +1016,36 @@ const DICTIONARY_SENSE_REVIEW = {
 // example used by the lesson. Keep both source fields pinned so a dictionary
 // refresh cannot silently replace a reviewed mismatch.
 const DICTIONARY_DEFINITION_REVIEW = {
+  elderly: {
+    definition: "người cao tuổi",
+    example:
+      "The hospital had a number of elderly patients who had been there for many years.",
+  },
+  citizen: {
+    definition: "Người dân thành thị.",
+    example: "The citizen paid taxes on time.",
+  },
+  intern: {
+    definition: "Người bị giam giữ (trong một khu vực nhất định... ).",
+    example: "The intern stayed in the camp for months.",
+  },
+  pastor: {
+    definition: "Người chăn súc vật, mục đồng.",
+    example: "The pastor watched the sheep near the hill.",
+  },
+  exercise: {
+    definition:
+      "Sự thi hành, sự thực hiện; sự sử dụng (quyền, nghề nghiệp, chức năng... ).",
+    example: "You may exercise your right to speak freely.",
+  },
+  profession: {
+    definition: "Nghề, nghề nghiệp.",
+    example: "What is your current profession in life?",
+  },
+  traveling: {
+    definition: "Sự dời chỗ, sự di chuyển.",
+    example: "The traveling of chairs made the room crowded.",
+  },
   tutor: {
     definition: "Người giám hộ (đứa trẻ vị thành niên).",
     example: "The tutor met the student after class.",

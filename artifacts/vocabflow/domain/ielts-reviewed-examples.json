@@ -12,6 +12,56 @@
       "He kept the obesity on the desk."
     ]
   },
+  "citizen": {
+    "example": "Every citizen has basic rights.",
+    "exampleTranslation": "Mọi công dân đều có các quyền cơ bản.",
+    "dictionaryExamples": [
+      "The citizen paid taxes on time.",
+      "Every citizen has basic rights.",
+      "The citizen helped repair the street."
+    ]
+  },
+  "intern": {
+    "example": "The intern helped analyse data for a public health study.",
+    "exampleTranslation": "Thực tập sinh đã hỗ trợ phân tích dữ liệu cho một nghiên cứu sức khỏe cộng đồng.",
+    "dictionaryExamples": [
+      "The intern learned quickly during rounds.",
+      "The intern stayed in the camp for months.",
+      "They intern the family in a safe area.",
+      "She will intern at the hospital this year.",
+      "He will intern as a trainee teacher."
+    ]
+  },
+  "pastor": {
+    "example": "The pastor helped preserve the church's historical records.",
+    "exampleTranslation": "Mục sư đã góp phần bảo tồn các tư liệu lịch sử của nhà thờ.",
+    "dictionaryExamples": [
+      "The pastor greeted everyone at the door.",
+      "The pastor watched the sheep near the hill.",
+      "A pastor sang from the high tree branch."
+    ]
+  },
+  "profession": {
+    "example": "Medicine became her chosen profession after graduation.",
+    "exampleTranslation": "Sau khi tốt nghiệp, cô chọn ngành y làm nghề nghiệp.",
+    "dictionaryExamples": [
+      "What is your current profession in life?",
+      "The whole profession met to discuss training.",
+      "Her profession of thanks sounded sincere.",
+      "His profession of faith was very serious."
+    ]
+  },
+  "traveling": {
+    "example": "Traveling can expose students to different cultures.",
+    "exampleTranslation": "Việc đi du lịch có thể giúp sinh viên tiếp xúc với những nền văn hóa khác nhau.",
+    "dictionaryExamples": [
+      "Traveling can teach you a lot.",
+      "The traveling of chairs made the room crowded.",
+      "The camera used traveling for the moving shot.",
+      "She bought a traveling bag for the trip.",
+      "The traveling shop visits small towns each week."
+    ]
+  },
   "inequality": {
     "example": "The report examines income inequality between rural and urban households.",
     "exampleTranslation": "Báo cáo xem xét bất bình đẳng thu nhập giữa các hộ gia đình nông thôn và thành thị.",
