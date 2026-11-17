@@ -277,7 +277,7 @@ export const LINKING_ADVERB_COURSE_LESSONS: readonly LinkingAdverbCourseLesson[]
         {
           term: "instead",
           prompt:
-            "The café had no tables, so we ordered takeaway _____.",
+            "The café had no tables, so we ordered takeaway _____ of waiting for a seat.",
           choices: ["instead", "meanwhile", "consequently", "indeed"],
         },
         {

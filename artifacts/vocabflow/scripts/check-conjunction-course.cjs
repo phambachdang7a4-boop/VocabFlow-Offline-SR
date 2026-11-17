@@ -436,16 +436,519 @@ const sentenceStructureAnswerUniquenessReviews = new Map([
   ],
 ]);
 
+const conjunctionAnswerUniquenessReviews = new Map([
+  [
+    "as soon as",
+    {
+      answer: "as soon as",
+      distractors: {
+        "even though":
+          "This introduces a contrast, not the immediate time when the message should be sent.",
+        "provided that":
+          "This makes seeing the lights a condition, but does not express the requested immediate timing.",
+        "in order that":
+          "This introduces a purpose clause, while seeing the lights is the time trigger.",
+      },
+    },
+  ],
+  [
+    "by the time",
+    {
+      answer: "by the time",
+      distractors: {
+        "in case":
+          "This would make reaching the village a precaution, not a time by which safety had lasted.",
+        "even if":
+          "This gives a hypothetical condition, not the ambulance's actual arrival time.",
+        "so that":
+          "This would make the ambulance's arrival a purpose or result, not the stated time boundary.",
+      },
+    },
+  ],
+  [
+    "just as",
+    {
+      answer: "just as",
+      distractors: {
+        "even if":
+          "This means the kick happens regardless of a possible whistle, not at the same moment.",
+        "in order that":
+          "This would make the whistle a purpose for kicking rather than a simultaneous event.",
+        "provided that":
+          "This makes the whistle a condition for the kick instead of marking exact simultaneity.",
+      },
+    },
+  ],
+  [
+    "now when",
+    {
+      answer: "now when",
+      distractors: {
+        "in case":
+          "This describes preparation for a possible event, not the repeated memory triggered by hearing the bell.",
+        "provided that":
+          "This makes hearing the bell a condition, but the sentence describes a recurring time trigger.",
+        "so that":
+          "This would give a purpose for hearing the bell, not the repeated event that prompts the memory.",
+      },
+    },
+  ],
+  [
+    "now that",
+    {
+      answer: "now that",
+      distractors: {
+        "in case":
+          "This expresses precaution, while the completed repair is the reason the library can reopen.",
+        "as if":
+          "This would make the repair seem hypothetical, despite the prompt stating it is complete.",
+        "even if":
+          "This makes the completed repair hypothetical instead of presenting it as the cause of reopening.",
+      },
+    },
+  ],
+  [
+    "as long as",
+    {
+      answer: "as long as",
+      distractors: {
+        "in case":
+          "This describes borrowing as a precaution, not as something allowed on the return condition.",
+        "even though":
+          "This introduces a contrast, but returning the compass is a condition for borrowing it.",
+        "just as":
+          "This marks simultaneous events and cannot express the stated requirement for borrowing.",
+      },
+    },
+  ],
+  [
+    "in case",
+    {
+      answer: "in case",
+      distractors: {
+        "if only":
+          "This expresses a wish or regret, not a precaution to take before help may be needed.",
+        "even if":
+          "This means the saving happens regardless of need, not as preparation for possible need.",
+        "so that":
+          "This would state a purpose, but the prompt specifically prepares for a possible emergency.",
+      },
+    },
+  ],
+  [
+    "even if",
+    {
+      answer: "even if",
+      distractors: {
+        "even though":
+          "The forecast is uncertain, so snow is only a possibility rather than an established fact.",
+        "in case":
+          "This normally introduces a precaution, not a condition under which the airport stays open.",
+        "by the time":
+          "This requires a time boundary, but the prompt states that the outcome holds despite possible snow.",
+      },
+    },
+  ],
+  [
+    "even though",
+    {
+      answer: "even though",
+      distractors: {
+        "in case":
+          "The prompt states that the road was in fact icy, not that the bus arrived as a precaution.",
+        "provided that":
+          "This makes the icy road a condition for arriving on time, not a real obstacle overcome.",
+        "so that":
+          "This would make the icy road a purpose or result, rather than a factual concession.",
+      },
+    },
+  ],
+  [
+    "provided that",
+    {
+      answer: "provided that",
+      distractors: {
+        "even though":
+          "This marks a contrast, but sealing the sample is a requirement for acceptance.",
+        "if only":
+          "This expresses a wish or regret, not the lab's condition for accepting the sample.",
+        "in case":
+          "This describes a precaution, while the prompt makes sealing a requirement for acceptance.",
+      },
+    },
+  ],
+  [
+    "if only",
+    {
+      answer: "if only",
+      distractors: {
+        "even if":
+          "This introduces a hypothetical condition, but the exclamation expresses regret about the past.",
+        "as though":
+          "This means “as if” and cannot introduce the speaker's wish to have kept the receipt.",
+        "by the time":
+          "This introduces a time boundary, not a past regret or unrealized wish.",
+      },
+    },
+  ],
+  [
+    "as much as",
+    {
+      answer: "as much as",
+      distractors: {
+        "provided that":
+          "This states a condition for approval, but the prompt contrasts liking the idea with lacking figures.",
+        "in case":
+          "This introduces a precaution, not the concession that the speaker likes the idea.",
+        "as though":
+          "This means “as if” and does not introduce the concessive contrast in this sentence.",
+      },
+    },
+  ],
+  [
+    "as if",
+    {
+      answer: "as if",
+      distractors: {
+        "so that":
+          "This gives a purpose, but the child is not speaking in order to know the author for years.",
+        "in case":
+          "This introduces a precaution, not the comparison between the child's manner and long familiarity.",
+        "provided that":
+          "This states a condition, while the prompt compares how the child spoke with an imagined history.",
+      },
+    },
+  ],
+  [
+    "as though",
+    {
+      answer: "as though",
+      distractors: {
+        "as long as":
+          "This expresses duration or a condition, not the dog's appearance of believing the bowl is full.",
+        "so that":
+          "This introduces purpose or result, not the imagined state suggested by the dog's stare.",
+        "provided that":
+          "This states a condition and does not express the bowl's unreal, imagined fullness.",
+      },
+    },
+  ],
+  [
+    "as far as",
+    {
+      answer: "as far as",
+      distractors: {
+        "provided that":
+          "This makes the map-based observation a condition, rather than limiting the speaker's knowledge.",
+        "in order that":
+          "This introduces a purpose clause, but the speaker is reporting a limited observation.",
+        "even though":
+          "This introduces a contrast, while the sentence limits the claim to what the map shows.",
+      },
+    },
+  ],
+  [
+    "inasmuch as",
+    {
+      answer: "inasmuch as",
+      distractors: {
+        "as though":
+          "This introduces a comparison, not the stated reason the form must be returned.",
+        "by the time":
+          "This introduces a time boundary, but missing signatures explain why approval is denied.",
+        "so that":
+          "This states a purpose or result, not the reason the form cannot be approved.",
+      },
+    },
+  ],
+  [
+    "in order that",
+    {
+      answer: "in order that",
+      distractors: {
+        "even if":
+          "This introduces a condition, while the visitors' ability to follow is the guide's purpose.",
+        "as if":
+          "This introduces a comparison, not the intended result of repeating each step slowly.",
+        "in case":
+          "This describes a precaution, but the guide repeats the steps with the purpose of helping visitors follow.",
+      },
+    },
+  ],
+  [
+    "so that",
+    {
+      answer: "so that",
+      distractors: {
+        "inasmuch as":
+          "This gives a reason, but preventing confusion is the purpose of labeling the jars.",
+        "as far as":
+          "This limits the extent of a claim and cannot express the intended purpose here.",
+        "even though":
+          "This introduces a concession, but nobody confusing the spices is the intended result.",
+      },
+    },
+  ],
+]);
+
+const linkingAdverbAnswerUniquenessReviews = new Map([
+  [
+    "accordingly",
+    {
+      answer: "accordingly",
+      distractors: {
+        "however":
+          "This signals contrast, but the schedule was changed to match the new opening hours.",
+        "meanwhile":
+          "This signals simultaneous events, but the schedule adjustment responds to the changed hours.",
+        "instead":
+          "This replaces one action with another, but the sentence describes adjusting the schedule to fit.",
+      },
+    },
+  ],
+  [
+    "consequently",
+    {
+      answer: "consequently",
+      distractors: {
+        "meanwhile":
+          "This signals simultaneous events, but leaving the passport at home caused the missed flight.",
+        "nonetheless":
+          "This means an outcome happened despite an obstacle, but the missed flight follows from the lost passport.",
+        "rather":
+          "This corrects or restates an idea, but the second clause gives the consequence of leaving the passport.",
+      },
+    },
+  ],
+  [
+    "hence",
+    {
+      answer: "hence",
+      distractors: {
+        "indeed":
+          "This emphasizes or confirms a point, but taking another route follows from the bridge closure.",
+        "similarly":
+          "This compares like cases, but the route change is a consequence of the closure.",
+        "meanwhile":
+          "This signals simultaneous events, but the second clause follows from the bridge being closed.",
+      },
+    },
+  ],
+  [
+    "therefore",
+    {
+      answer: "therefore",
+      distractors: {
+        "however":
+          "This signals an unexpected contrast, but passing every safety test supports readiness to ship.",
+        "likewise":
+          "This compares a similar case, but the sentence draws a conclusion from the test results.",
+        "rather":
+          "This corrects or restates an idea, but readiness is a conclusion supported by the passed tests.",
+      },
+    },
+  ],
+  [
+    "then",
+    {
+      answer: "then",
+      distractors: {
+        "however":
+          "This signals contrast, but placing the jar is the next step after labeling it.",
+        "indeed":
+          "This emphasizes a claim, but the prompt needs a connector for the next step in sequence.",
+        "meanwhile":
+          "This signals concurrent actions, but the prompt explicitly says labeling must happen first.",
+      },
+    },
+  ],
+  [
+    "finally",
+    {
+      answer: "finally",
+      distractors: {
+        "meanwhile":
+          "This signals simultaneous activity, but finding the signature concludes an hour-long search.",
+        "similarly":
+          "This compares like cases, but the sentence describes the eventual discovery after searching.",
+        "instead":
+          "This replaces one choice with another, but finding the signature is the search's final result.",
+      },
+    },
+  ],
+  [
+    "furthermore",
+    {
+      answer: "furthermore",
+      distractors: {
+        "instead":
+          "This replaces one option with another, but battery life is an additional benefit of the bike.",
+        "then":
+          "This marks a next step in time, but the second clause adds another supporting feature.",
+        "hence":
+          "This draws a result or conclusion, but affordability does not cause the battery to last all day.",
+      },
+    },
+  ],
+  [
+    "moreover",
+    {
+      answer: "moreover",
+      distractors: {
+        "meanwhile":
+          "This marks events happening at the same time, but Sunday opening is an additional fact about the museum.",
+        "rather":
+          "This corrects or restates an idea, but the second clause adds another positive feature.",
+        "therefore":
+          "This draws a conclusion, but being free does not establish that the museum is open every Sunday.",
+      },
+    },
+  ],
+  [
+    "meanwhile",
+    {
+      answer: "meanwhile",
+      distractors: {
+        "rather":
+          "This corrects or restates an idea, but chopping vegetables happens while the rice cooks.",
+        "however":
+          "This signals contrast, but cooking rice and chopping vegetables are concurrent tasks.",
+        "indeed":
+          "This emphasizes or confirms a claim, but the prompt marks two tasks happening at the same time.",
+      },
+    },
+  ],
+  [
+    "indeed",
+    {
+      answer: "indeed",
+      distractors: {
+        "instead":
+          "This replaces one choice with another, but the six-hour climb confirms the hike was demanding.",
+        "accordingly":
+          "This describes an adjustment to a situation, but the climb is evidence supporting the first claim.",
+        "similarly":
+          "This compares like cases, but the second clause supplies evidence about the same hike.",
+      },
+    },
+  ],
+  [
+    "likewise",
+    {
+      answer: "likewise",
+      distractors: {
+        "then":
+          "This marks a next step in a sequence, but the brother's volunteering parallels Mai's action.",
+        "however":
+          "This signals contrast, but both siblings gave time to help at the shelter.",
+        "consequently":
+          "This gives a cause-and-effect result, but the brother's action is a parallel example.",
+      },
+    },
+  ],
+  [
+    "similarly",
+    {
+      answer: "similarly",
+      distractors: {
+        "meanwhile":
+          "This signals simultaneous events, but the second class is presented as a comparable case.",
+        "instead":
+          "This replaces one option with another, but the second class made progress as a parallel example.",
+        "therefore":
+          "This draws a conclusion from the first clause, but the prompt only presents a comparable result.",
+      },
+    },
+  ],
+  [
+    "however",
+    {
+      answer: "however",
+      distractors: {
+        "accordingly":
+          "This describes an adjustment, but the rain contrasts with the forecast rather than responding to it.",
+        "likewise":
+          "This compares like cases, but the rain is the opposite of what the forecast led readers to expect.",
+        "indeed":
+          "This emphasizes or confirms a claim, but the rain contradicts the promised sunshine.",
+      },
+    },
+  ],
+  [
+    "nevertheless",
+    {
+      answer: "nevertheless",
+      distractors: {
+        "hence":
+          "This gives a result, but continuing to the summit happens despite the steep path.",
+        "meanwhile":
+          "This signals simultaneous events, but the second clause describes persisting despite an obstacle.",
+        "therefore":
+          "This draws a conclusion, but the hikers continued in spite of the difficulty.",
+      },
+    },
+  ],
+  [
+    "nonetheless",
+    {
+      answer: "nonetheless",
+      distractors: {
+        "moreover":
+          "This adds a supporting point, but building the desk happened despite the difficult instructions.",
+        "then":
+          "This marks a next step in time, but the sentence emphasizes persistence despite an obstacle.",
+        "accordingly":
+          "This describes an adjustment, but Ava built the desk despite the instructions' complexity.",
+      },
+    },
+  ],
+  [
+    "instead",
+    {
+      answer: "instead",
+      distractors: {
+        "meanwhile":
+          "This signals simultaneous events, but takeaway replaces eating at the unavailable café tables.",
+        "consequently":
+          "This cannot form the required “consequently of waiting” phrase; the sentence needs the replacement phrase “instead of.”",
+        "indeed":
+          "This emphasizes or confirms a claim, but takeaway is an alternative to sitting at the café.",
+      },
+    },
+  ],
+  [
+    "rather",
+    {
+      answer: "rather",
+      distractors: {
+        "accordingly":
+          "This describes an adjustment, but the second clause corrects the stated assumption about the problem.",
+        "finally":
+          "This marks a last step or outcome, but the sentence revises the explanation of the problem.",
+        "likewise":
+          "This compares similar cases, but the second clause replaces the price explanation with the actual issue.",
+      },
+    },
+  ],
+]);
+
 // Add a { term, alternative } entry when an audit finds a second plausible answer.
 // The check below intentionally fails until the question is rewritten or the
 // competing choice is removed.
 const sentenceStructureAmbiguityFindings = [];
+const conjunctionAmbiguityFindings = [];
+const linkingAdverbAmbiguityFindings = [];
 
-function checkSentenceStructureAnswerUniqueness(questions) {
+function checkAnswerUniqueness({
+  courseName,
+  questions,
+  reviews,
+  ambiguityFindings,
+}) {
   assert.equal(
-    sentenceStructureAmbiguityFindings.length,
+    ambiguityFindings.length,
     0,
-    `Sentence-structure questions have multiple plausible answers: ${sentenceStructureAmbiguityFindings
+    `${courseName} questions have multiple plausible answers: ${ambiguityFindings
       .map(({ term, alternative }) => `${term}: ${alternative}`)
       .join("; ")}. Rewrite the prompt or remove the competing choice.`,
   );
@@ -453,12 +956,12 @@ function checkSentenceStructureAnswerUniqueness(questions) {
     questions.map((question) => [question.term, question]),
   );
   assert.equal(
-    sentenceStructureAnswerUniquenessReviews.size,
+    reviews.size,
     questionsByTerm.size,
-    "Every sentence-structure grammar question must have a uniqueness review.",
+    `Every ${courseName} question must have a uniqueness review.`,
   );
   for (const question of questions) {
-    const review = sentenceStructureAnswerUniquenessReviews.get(question.term);
+    const review = reviews.get(question.term);
     assert.ok(
       review,
       `${question.term} is missing its answer-uniqueness review.`,
@@ -483,7 +986,7 @@ function checkSentenceStructureAnswerUniqueness(questions) {
       );
     }
   }
-  for (const term of sentenceStructureAnswerUniquenessReviews.keys()) {
+  for (const term of reviews.keys()) {
     assert.ok(
       questionsByTerm.has(term),
       `${term} has a uniqueness review but no grammar question.`,
@@ -673,6 +1176,14 @@ async function checkCourseContentAndProgress() {
       `${term} does not compete with the similar answer ${distractor}.`,
     );
   }
+  const conjunctionQuestions =
+    course.CONJUNCTION_COURSE_LESSONS.flatMap((lesson) => lesson.questions);
+  checkAnswerUniqueness({
+    courseName: "Conjunction-course",
+    questions: conjunctionQuestions,
+    reviews: conjunctionAnswerUniquenessReviews,
+    ambiguityFindings: conjunctionAmbiguityFindings,
+  });
   assert.match(
     conjunctionQuestionByTerm.get("even if").prompt,
     /forecast is uncertain/i,
@@ -748,6 +1259,12 @@ async function checkCourseContentAndProgress() {
       `${term} does not compete with the similar answer ${distractor}.`,
     );
   }
+  checkAnswerUniqueness({
+    courseName: "Linking-adverb-course",
+    questions: linkedQuestions,
+    reviews: linkingAdverbAnswerUniquenessReviews,
+    ambiguityFindings: linkingAdverbAmbiguityFindings,
+  });
   assert.match(
     linkingQuestionByTerm.get("finally").prompt,
     /after an hour of checking every sheet.*at last/i,
@@ -757,6 +1274,11 @@ async function checkCourseContentAndProgress() {
     linkingQuestionByTerm.get("indeed").prompt,
     /confirming how strenuous it was/i,
     "The indeed question makes the second clause explicit evidence for the first.",
+  );
+  assert.match(
+    linkingQuestionByTerm.get("instead").prompt,
+    /_____ of waiting for a seat/i,
+    "The instead question makes the replacement meaning and required phrase explicit.",
   );
   assert.ok(
     !linkingQuestionByTerm.get("meanwhile").choices.includes("accordingly"),
@@ -768,7 +1290,12 @@ async function checkCourseContentAndProgress() {
   const patternEntries =
     sentenceStructurePatternCourse.SENTENCE_STRUCTURE_PATTERN_ENTRIES;
   const patternQuestions = patternLessons.flatMap((lesson) => lesson.questions);
-  checkSentenceStructureAnswerUniqueness(patternQuestions);
+  checkAnswerUniqueness({
+    courseName: "Sentence-structure",
+    questions: patternQuestions,
+    reviews: sentenceStructureAnswerUniquenessReviews,
+    ambiguityFindings: sentenceStructureAmbiguityFindings,
+  });
   const patternTerms = Object.keys(patternEntries);
   assert.deepEqual(
     patternLessons.map((lesson) => lesson.title),
