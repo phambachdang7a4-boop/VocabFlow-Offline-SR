@@ -555,7 +555,7 @@ const conjunctionAnswerUniquenessReviews = new Map([
       answer: "even though",
       distractors: {
         "in case":
-          "The prompt states that the road was in fact icy, not that the bus arrived as a precaution.",
+          "The prompt establishes that the road was icy, making this a factual concession rather than a precaution.",
         "provided that":
           "This makes the icy road a condition for arriving on time, not a real obstacle overcome.",
         "so that":
@@ -1190,7 +1190,7 @@ async function checkCourseContentAndProgress() {
   );
   assert.match(
     conjunctionQuestionByTerm.get("even though").prompt,
-    /in fact/i,
+    /road was icy/i,
   );
   assert.match(conjunctionQuestionByTerm.get("if only").prompt, /!/);
   assert.match(

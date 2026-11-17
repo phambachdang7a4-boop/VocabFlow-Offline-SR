@@ -10,14 +10,14 @@ export interface LocalDictionaryAddition {
   allowAdditionalSenses?: boolean;
 }
 
-export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v3";
+export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v4";
 
 export const LOCAL_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] = [
   {
     term: "as if",
     definition: "Như thể, như là; dùng để giới thiệu một tình huống có vẻ đúng hoặc tưởng tượng.",
-    example: "The child spoke as if she had met the author.",
-    exampleTranslation: "Đứa trẻ nói như thể em đã gặp tác giả.",
+    example: "The child spoke to the author as if they had known each other for years.",
+    exampleTranslation: "Đứa trẻ nói chuyện với tác giả như thể hai người đã quen nhau nhiều năm.",
     pos: "conj",
     subPos: "subordinating",
   },
@@ -64,8 +64,8 @@ export const LOCAL_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] = [
   {
     term: "by the time",
     definition: "Đến lúc mà; thường nêu một mốc trước đó một việc đã hoàn tất.",
-    example: "By the time the ambulance reached the village, the hiker was safe.",
-    exampleTranslation: "Đến lúc xe cứu thương tới làng, người đi bộ đường dài đã an toàn.",
+    example: "The rescue team had been waiting at the village for two hours by the time the ambulance arrived.",
+    exampleTranslation: "Đến lúc xe cứu thương đến, đội cứu hộ đã chờ ở làng được hai tiếng.",
     pos: "conj",
     subPos: "subordinating",
   },
@@ -136,16 +136,16 @@ export const LOCAL_DICTIONARY_ADDITIONS: LocalDictionaryAddition[] = [
   {
     term: "if only",
     definition: "Giá mà; mở đầu lời ước hoặc sự tiếc nuối.",
-    example: "If only I had kept the receipt, I could return the headphones.",
-    exampleTranslation: "Giá mà tôi đã giữ hóa đơn, tôi đã có thể trả lại tai nghe.",
+    example: "If only I had kept the receipt, I could have returned the headphones.",
+    exampleTranslation: "Giá mà tôi đã giữ hóa đơn thì tôi đã có thể trả lại tai nghe.",
     pos: "conj",
     subPos: "subordinating",
   },
   {
     term: "just as",
     definition: "Đúng lúc, ngay khi; nêu hai việc xảy ra gần như đồng thời.",
-    example: "Just as the referee blew the whistle, the striker kicked the ball.",
-    exampleTranslation: "Đúng lúc trọng tài thổi còi, tiền đạo sút bóng.",
+    example: "Just as the referee blew the whistle to start the match, the striker kicked the ball.",
+    exampleTranslation: "Đúng lúc trọng tài thổi còi khai cuộc, tiền đạo sút bóng.",
     pos: "conj",
     subPos: "subordinating",
   },

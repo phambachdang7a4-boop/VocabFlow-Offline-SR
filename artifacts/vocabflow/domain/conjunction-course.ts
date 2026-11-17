@@ -31,13 +31,13 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
       {
         term: "by the time",
         prompt:
-          "The hiker had been safe for two hours _____ the ambulance finally reached the village.",
+          "The rescue team had been waiting at the village for two hours _____ the ambulance arrived.",
         choices: ["by the time", "in case", "even if", "so that"],
       },
       {
         term: "just as",
         prompt:
-          "The striker kicked the ball _____ the referee blew the whistle—at exactly the same moment.",
+          "The striker kicked the ball _____ the referee blew the whistle to start the match.",
         choices: ["just as", "even if", "in order that", "provided that"],
       },
       {
@@ -78,7 +78,7 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
       {
         term: "even though",
         prompt:
-          "_____ the road was in fact icy, the bus still arrived on time.",
+          "_____ the road was icy, the bus still arrived on time.",
         choices: ["even though", "in case", "provided that", "so that"],
       },
       {
@@ -107,7 +107,7 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
       {
         term: "as if",
         prompt:
-          "Although the child had just met the author, she spoke _____ she had known her for years.",
+          "The child spoke to the author _____ they had known each other for years.",
         choices: ["as if", "so that", "in case", "provided that"],
       },
       {
@@ -185,9 +185,9 @@ const CONJUNCTION_COURSE_EXAMPLE_OVERRIDES: Readonly<
 > = {
   "as if": {
     example:
-      "Although the child had just met the author, she spoke as if she had known her for years.",
+      "The child spoke to the author as if they had known each other for years.",
     exampleTranslation:
-      "Dù chỉ vừa gặp tác giả, đứa trẻ vẫn nói như thể đã quen bà ấy nhiều năm.",
+      "Đứa trẻ nói chuyện với tác giả như thể hai người đã quen nhau nhiều năm.",
   },
   "as though": {
     example: "The dog stared at the empty bowl as though it were still full.",
@@ -208,9 +208,9 @@ const CONJUNCTION_COURSE_EXAMPLE_OVERRIDES: Readonly<
   },
   "by the time": {
     example:
-      "The hiker had been safe for two hours by the time the ambulance reached the village.",
+      "The rescue team had been waiting at the village for two hours by the time the ambulance arrived.",
     exampleTranslation:
-      "Người đi bộ đường dài đã an toàn được hai tiếng khi xe cứu thương tới làng.",
+      "Đến lúc xe cứu thương đến, đội cứu hộ đã chờ ở làng được hai tiếng.",
   },
   "even if": {
     example:
@@ -220,9 +220,9 @@ const CONJUNCTION_COURSE_EXAMPLE_OVERRIDES: Readonly<
   },
   "even though": {
     example:
-      "Even though the road was in fact icy, the bus still arrived on time.",
+      "Even though the road was icy, the bus still arrived on time.",
     exampleTranslation:
-      "Mặc dù đường thực sự đóng băng, xe buýt vẫn đến đúng giờ.",
+      "Mặc dù mặt đường phủ băng, xe buýt vẫn đến đúng giờ.",
   },
   "if only": {
     example:
@@ -232,9 +232,9 @@ const CONJUNCTION_COURSE_EXAMPLE_OVERRIDES: Readonly<
   },
   "just as": {
     example:
-      "The striker kicked the ball just as the referee blew the whistle—at precisely the same moment.",
+      "The striker kicked the ball just as the referee blew the whistle to start the match.",
     exampleTranslation:
-      "Tiền đạo sút bóng đúng lúc trọng tài thổi còi—chính xác cùng một thời điểm.",
+      "Tiền đạo sút bóng đúng lúc trọng tài thổi còi khai cuộc.",
   },
   "now that": {
     example:
