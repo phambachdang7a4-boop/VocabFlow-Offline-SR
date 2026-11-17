@@ -1918,6 +1918,212 @@ async function checkCourseContentAndProgress() {
     /top surface rather than inside a drawer/i,
     "The location question distinguishes the desk top from other desk locations.",
   );
+  const reviewedPatternExamplePairs = {
+    "either … or": [
+      "For this assignment, each student must either write an individual reflection or submit one joint report.",
+      "Với bài tập này, mỗi học viên phải chọn viết bài cảm nhận cá nhân hoặc nộp một báo cáo chung.",
+    ],
+    "neither … nor": [
+      "The old plan provided neither enough time to inspect the site nor a safe route to the entrance.",
+      "Kế hoạch cũ không dành đủ thời gian để kiểm tra địa điểm, cũng không có lối đi an toàn tới lối vào.",
+    ],
+    "not only … but also": [
+      "The reading app is not only easy to use but also available offline.",
+      "Ứng dụng đọc này không chỉ dễ sử dụng mà còn dùng được khi ngoại tuyến.",
+    ],
+    "no matter how": [
+      "No matter how carefully the team checked the measurements, the old scale produced inconsistent results.",
+      "Dù nhóm kiểm tra các số đo cẩn thận đến đâu, chiếc cân cũ vẫn cho kết quả không nhất quán.",
+    ],
+    "so … that": [
+      "The archive was so vast that the researchers needed several weeks to catalogue its contents.",
+      "Kho lưu trữ rộng lớn đến mức các nhà nghiên cứu cần vài tuần để lập danh mục nội dung.",
+    ],
+    "the more … the more": [
+      "The more evidence the team examined, the more confident its conclusion became.",
+      "Nhóm càng xem xét nhiều bằng chứng thì càng tự tin vào kết luận của mình.",
+    ],
+    "not only did": [
+      "Not only did the revised schedule reduce delays, but it also lowered operating costs.",
+      "Lịch trình sửa đổi không chỉ giảm chậm trễ mà còn hạ chi phí vận hành.",
+    ],
+    "no sooner … than": [
+      "No sooner had the train left than the storm reached the station.",
+      "Tàu vừa rời đi thì cơn bão đã tới nhà ga.",
+    ],
+    "it was … that": [
+      "It was a simple water filter that the research team designed, not a costly pump.",
+      "Thứ nhóm nghiên cứu thiết kế là một bộ lọc nước đơn giản, chứ không phải máy bơm đắt tiền.",
+    ],
+    "having completed": [
+      "Having completed the final inspection, the engineer signed the safety certificate.",
+      "Sau khi hoàn tất đợt kiểm tra cuối cùng, kỹ sư đã ký giấy chứng nhận an toàn.",
+    ],
+    "so do I": [
+      "“I enjoy reading historical biographies.” “So do I,” Minh replied.",
+      "“Tôi thích đọc tiểu sử lịch sử.” “Tôi cũng vậy,” Minh đáp.",
+    ],
+    "neither have I": [
+      "“I haven't visited the new gallery yet.” “Neither have I,” Lan replied.",
+      "“Tôi vẫn chưa đến phòng trưng bày mới.” “Tôi cũng chưa,” Lan đáp.",
+    ],
+    "one / ones": [
+      "I prefer the blue one to the red ones because the blue jacket is in better condition.",
+      "Tôi thích chiếc màu xanh hơn những chiếc màu đỏ vì chiếc áo khoác xanh còn tốt hơn.",
+    ],
+    "in advance": [
+      "To secure a seat, please register in advance rather than waiting until the day of the event.",
+      "Để giữ chỗ, vui lòng đăng ký trước thay vì chờ đến ngày diễn ra sự kiện.",
+    ],
+    "at risk of": [
+      "Without urgent repairs, the old bridge is at risk of collapse.",
+      "Nếu không được sửa chữa khẩn cấp, cây cầu cũ có nguy cơ sập.",
+    ],
+    "on behalf of": [
+      "I am writing on behalf of the residents' committee to thank the volunteers.",
+      "Tôi viết thư thay mặt ban đại diện cư dân để cảm ơn các tình nguyện viên.",
+    ],
+    "rely on": [
+      "During the field study, the researchers had to rely on local guides for accurate directions.",
+      "Trong chuyến khảo sát thực địa, các nhà nghiên cứu phải dựa vào hướng dẫn viên địa phương để có chỉ đường chính xác.",
+    ],
+    "apologize for": [
+      "The supplier chose to apologize for the delay and offer a full refund.",
+      "Nhà cung cấp quyết định xin lỗi vì sự chậm trễ và đề nghị hoàn tiền đầy đủ.",
+    ],
+    "be responsible for": [
+      "As project lead, Mai is responsible for checking each citation before publication.",
+      "Với vai trò trưởng dự án, Mai chịu trách nhiệm kiểm tra từng trích dẫn trước khi xuất bản.",
+    ],
+    "be familiar with": [
+      "Please read the guide so you can become familiar with the new application process.",
+      "Vui lòng đọc hướng dẫn để làm quen với quy trình nộp đơn mới.",
+    ],
+    "access to": [
+      "Every student should have access to reliable internet during the course.",
+      "Mọi học viên đều nên có quyền tiếp cận Internet ổn định trong suốt khóa học.",
+    ],
+    "prevent someone from": [
+      "A clear warning can prevent someone from using the equipment incorrectly.",
+      "Một cảnh báo rõ ràng có thể ngăn ai đó sử dụng thiết bị sai cách.",
+    ],
+    "take part in": [
+      "Several local schools will take part in the regional science fair.",
+      "Một số trường địa phương sẽ tham gia hội chợ khoa học cấp vùng.",
+    ],
+    "in September": [
+      "The new term begins in September.",
+      "Học kỳ mới bắt đầu vào tháng Chín.",
+    ],
+    "on 2 June": [
+      "The conference opens on 2 June.",
+      "Hội nghị khai mạc vào ngày 2 tháng Sáu.",
+    ],
+    "at 8:30 a.m.": [
+      "The guided tour starts at 8:30 a.m.",
+      "Chuyến tham quan có hướng dẫn bắt đầu lúc 8 giờ 30 sáng.",
+    ],
+    "in the morning": [
+      "The bakery is open in the morning.",
+      "Tiệm bánh mở cửa vào buổi sáng.",
+    ],
+    "at night": [
+      "The park closes to visitors at night.",
+      "Công viên đóng cửa với khách tham quan vào ban đêm.",
+    ],
+    "in a small drawer": [
+      "The spare key is kept in a small drawer in the kitchen.",
+      "Chìa khóa dự phòng được cất trong một ngăn kéo nhỏ ở nhà bếp.",
+    ],
+    "on the desk": [
+      "Leave the signed form on the desk.",
+      "Hãy để tờ đơn đã ký trên bàn.",
+    ],
+    "at the main entrance": [
+      "I'll wait for you at the main entrance.",
+      "Tôi sẽ đợi bạn ở lối vào.",
+    ],
+    "in Singapore": [
+      "They have lived in Singapore since 2020.",
+      "Họ đã sống ở Singapore từ năm 2020.",
+    ],
+    "believe in": [
+      "Many people believe in the value of learning a little every day.",
+      "Nhiều người tin vào giá trị của việc học một chút mỗi ngày.",
+    ],
+    "focus on": [
+      "The report should focus on the causes of the delay.",
+      "Bản báo cáo nên tập trung vào những nguyên nhân gây chậm trễ.",
+    ],
+    "good at": [
+      "My sister is good at solving logic puzzles.",
+      "Chị tôi giỏi giải các câu đố logic.",
+    ],
+    "interested in": [
+      "Tariq is interested in marine biology.",
+      "Tariq quan tâm đến ngành sinh học biển.",
+    ],
+  };
+  const assertPatternExamplePair = (term, entry) => {
+    const [expectedExample, expectedTranslation] =
+      reviewedPatternExamplePairs[term] ?? [];
+    assert.ok(
+      expectedExample && expectedTranslation,
+      `Sentence-structure pattern "${term}" has a reviewed English–Vietnamese pair.`,
+    );
+    const exampleLower = entry.example.toLowerCase();
+    const targetPartOverrides = {
+      "be responsible for": ["responsible for"],
+      "be familiar with": ["familiar with"],
+    };
+    const targetParts = (
+      targetPartOverrides[term] ??
+      term.split(/\s*(?:…|\/)\s*/)
+    )
+      .map((part) => part.trim().toLowerCase())
+      .filter(Boolean);
+    const requiredCounts = new Map();
+    for (const part of targetParts) {
+      requiredCounts.set(part, (requiredCounts.get(part) ?? 0) + 1);
+    }
+    for (const [part, requiredCount] of requiredCounts) {
+      const foundCount = exampleLower.split(part).length - 1;
+      assert.ok(
+        foundCount >= requiredCount,
+        `Sentence-structure pattern "${term}" is missing "${part}" from its English example.`,
+      );
+    }
+    assert.deepEqual(
+      [entry.example, entry.exampleTranslation],
+      [expectedExample, expectedTranslation],
+      `Sentence-structure pattern "${term}" must keep its reviewed English–Vietnamese example pair.`,
+    );
+  };
+  assert.deepEqual(
+    Object.keys(reviewedPatternExamplePairs).sort(),
+    [...patternTerms].sort(),
+    "Every sentence-structure pattern has one reviewed English–Vietnamese pair.",
+  );
+  for (const [term, entry] of Object.entries(patternEntries)) {
+    assertPatternExamplePair(term, entry);
+  }
+  assert.throws(
+    () =>
+      assertPatternExamplePair("no sooner … than", {
+        ...patternEntries["no sooner … than"],
+        example: "The train had left before the storm reached the station.",
+      }),
+    /Sentence-structure pattern "no sooner … than" is missing "no sooner"/,
+  );
+  assert.throws(
+    () =>
+      assertPatternExamplePair("no sooner … than", {
+        ...patternEntries["no sooner … than"],
+        exampleTranslation:
+          "Cơn bão đã tới ga trước khi đoàn tàu rời đi.",
+      }),
+    /Sentence-structure pattern "no sooner … than" must keep its reviewed English–Vietnamese example pair/,
+  );
   assert.equal(patternTerms.length, 36);
   assert.equal(patternQuestions.length, patternTerms.length);
   assert.deepEqual(
