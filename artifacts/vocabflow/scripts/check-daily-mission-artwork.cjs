@@ -147,12 +147,12 @@ assert.match(
 );
 assert.match(
   missionScreen,
-  /const missionArtworkSize = compactLayout \? 48 : 64/,
+  /const missionArtworkSize = compactLayout \? 42 : 48/,
   "Mission art scales down on compact screens.",
 );
 assert.match(
   missionScreen,
-  /const chestArtworkSize = compactLayout \? 44 : 56/,
+  /const chestArtworkSize = compactLayout \? 48 : 54/,
   "Chest art scales down on compact screens.",
 );
 assert.match(
@@ -192,9 +192,12 @@ assert.match(
 );
 assert.match(
   missionScreen,
-  /color: finished \? c\.successText : c\.foreground/,
-  "The chest label uses readable theme colors for both reward states.",
+  /const rewardLabelColor = finished\s*\?\s*c\.successText/,
+  "Received rewards keep the existing success-label color.",
 );
+for (const tierColor of ["#C77B30", "#A9B4C2", "#E8B84A"]) {
+  assert.ok(missionScreen.includes(tierColor), `The ${tierColor} tier label color is applied.`);
+}
 assert.match(
   missionScreen,
   /`Đã nhận · Rương \$\{CHEST_RARITY_LABELS\[rewardRarity\]\}`/,
@@ -210,10 +213,15 @@ assert.match(
   /color=\{c\.successText\}/,
   "The received checkmark uses a high-contrast success color.",
 );
+assert.doesNotMatch(
+  missionScreen,
+  /styles\.rewardArtwork,[\s\S]{0,260}backgroundColor: c\.input/,
+  "The chest artwork has no separate background tile.",
+);
 assert.match(
   missionScreen,
-  /backgroundColor: c\.input,\s*borderColor: c\.border,\s*borderWidth: 1/,
-  "The chest artwork sits on a distinct, theme-aware surface.",
+  /borderRadius: 24,[\s\S]{0,120}minHeight: 150/,
+  "Mission cards use the requested rounded, compact size.",
 );
 assert.match(
   missionScreen,

@@ -49,8 +49,8 @@ export default function BlankScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const compactLayout = screenWidth < 360;
-  const missionArtworkSize = compactLayout ? 48 : 64;
-  const chestArtworkSize = compactLayout ? 44 : 56;
+  const missionArtworkSize = compactLayout ? 42 : 48;
+  const chestArtworkSize = compactLayout ? 48 : 54;
   const scrollBottom = Platform.OS === "web" ? Math.max(bottom, 120) : bottom;
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
@@ -169,6 +169,25 @@ export default function BlankScreen() {
               overview?.missions.map((mission) => {
                 const finished = mission.rewarded;
                 const rewardRarity = DAILY_MISSION_CHEST_RARITY[mission.level];
+                const rewardMark =
+                  rewardRarity === "common"
+                    ? "C"
+                    : rewardRarity === "uncommon"
+                      ? "S"
+                      : rewardRarity === "rare"
+                        ? "G"
+                        : undefined;
+                const rewardLabelColor = finished
+                  ? c.successText
+                  : c.background === "#1E2130"
+                    ? rewardRarity === "common"
+                      ? "#C77B30"
+                      : rewardRarity === "uncommon"
+                        ? "#A9B4C2"
+                        : rewardRarity === "rare"
+                          ? "#E8B84A"
+                          : c.foreground
+                    : c.foreground;
                 const progressPercent = Math.min(
                   100,
                   (mission.progress / mission.target) * 100,
@@ -221,7 +240,7 @@ export default function BlankScreen() {
                         style={StyleSheet.absoluteFill}
                       />
                     ) : null}
-                    <MaterialSheen radius={20} />
+                    <MaterialSheen radius={24} />
                     <View style={styles.missionTop}>
                       <View
                         testID={`daily-mission-illustration-${mission.id}`}
@@ -250,6 +269,7 @@ export default function BlankScreen() {
                           CẤP {mission.level}
                         </Text>
                         <Text
+                          numberOfLines={2}
                           style={[
                             styles.missionTitle,
                             { color: finished ? c.successText : c.foreground },
@@ -258,6 +278,7 @@ export default function BlankScreen() {
                           {mission.title}
                         </Text>
                         <Text
+                          numberOfLines={2}
                           style={[
                             styles.missionDescription,
                             { color: c.mutedForeground },
@@ -265,20 +286,26 @@ export default function BlankScreen() {
                         >
                           {mission.description}
                         </Text>
+                        <Text
+                          testID={`daily-mission-chest-${mission.id}`}
+                          numberOfLines={2}
+                          style={[
+                            styles.missionChestLabel,
+                            { color: rewardLabelColor },
+                          ]}
+                        >
+                          {finished
+                            ? `Đã nhận · Rương ${CHEST_RARITY_LABELS[rewardRarity]}`
+                            : `Rương ${CHEST_RARITY_LABELS[rewardRarity]} khi hoàn thành`}
+                        </Text>
                       </View>
-                    </View>
-                    <View style={styles.missionRewardRow}>
                       <View
                         style={[
                           styles.rewardArtwork,
                           rewardRarity === "rare" ? styles.goldRewardGlow : null,
                           {
-                            width: chestArtworkSize + 8,
+                            width: chestArtworkSize,
                             height: chestArtworkSize,
-                            backgroundColor: c.input,
-                            borderColor: c.border,
-                            borderWidth: 1,
-                            borderRadius: 12,
                             ...(rewardRarity === "rare"
                               ? { shadowColor: CHEST_RARITY_COLORS.rare }
                               : {}),
@@ -290,17 +317,18 @@ export default function BlankScreen() {
                         <ChestTierArtwork
                           rarity={rewardRarity}
                           size={chestArtworkSize}
-                          mark={
-                            rewardRarity === "common"
-                              ? "C"
-                              : rewardRarity === "uncommon"
-                                ? "S"
-                                : rewardRarity === "rare"
-                                  ? "G"
-                                  : undefined
-                          }
                           sparkle={rewardRarity === "rare"}
                         />
+                        {rewardMark ? (
+                          <Text
+                            style={[
+                              styles.chestMark,
+                              { color: CHEST_RARITY_ICON_COLORS[rewardRarity] },
+                            ]}
+                          >
+                            {rewardMark}
+                          </Text>
+                        ) : null}
                         {finished ? (
                           <View
                             testID={`daily-mission-rewarded-${mission.id}`}
@@ -320,17 +348,6 @@ export default function BlankScreen() {
                           </View>
                         ) : null}
                       </View>
-                      <Text
-                        testID={`daily-mission-chest-${mission.id}`}
-                        style={[
-                          styles.missionChestLabel,
-                          { color: finished ? c.successText : c.foreground },
-                        ]}
-                      >
-                        {finished
-                          ? `Đã nhận · Rương ${CHEST_RARITY_LABELS[rewardRarity]}`
-                          : `Rương ${CHEST_RARITY_LABELS[rewardRarity]} khi hoàn thành`}
-                      </Text>
                     </View>
                     <View style={styles.progressRow}>
                       <View
@@ -521,14 +538,24 @@ const styles = StyleSheet.create({
   missionCard: {
     position: "relative",
     borderWidth: 1,
-    borderRadius: 22,
-    padding: 14,
-    gap: 12,
-    minHeight: 172,
-    marginBottom: 4,
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 8,
+    minHeight: 150,
+    marginBottom: 2,
   },
-  missionCardCompact: { padding: 10, gap: 9 },
-  missionTop: { flexDirection: "row", alignItems: "center", gap: 8 },
+  missionCardCompact: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 7,
+  },
+  missionTop: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   missionIcon: {
     flexShrink: 0,
     alignItems: "center",
@@ -557,17 +584,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  missionCopy: { flex: 1, minWidth: 0, gap: 3 },
-  level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },
-  missionTitle: { fontFamily: F.b, fontSize: 17, lineHeight: 22 },
-  missionDescription: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
-  missionChestLabel: { fontFamily: F.s, fontSize: 12, lineHeight: 16 },
-  missionRewardRow: {
-    minHeight: 38,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  chestMark: {
+    position: "absolute",
+    top: 30,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontFamily: F.b,
+    fontSize: 8,
+    lineHeight: 9,
   },
+  missionCopy: { flex: 1, minWidth: 0, gap: 2 },
+  level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },
+  missionTitle: { fontFamily: F.b, fontSize: 17, lineHeight: 21 },
+  missionDescription: { fontFamily: F.r, fontSize: 13, lineHeight: 16 },
+  missionChestLabel: { fontFamily: F.s, fontSize: 13, lineHeight: 17 },
   chestCard: {
     position: "relative",
     borderWidth: 1,
@@ -599,8 +630,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   openChestText: { fontFamily: F.b, fontSize: 13 },
-  progressRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  track: { flex: 1, height: 6, borderRadius: 5, overflow: "hidden" },
+  progressRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  track: { flex: 1, height: 8, borderRadius: 5, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 5 },
   progressText: {
     minWidth: 58,
