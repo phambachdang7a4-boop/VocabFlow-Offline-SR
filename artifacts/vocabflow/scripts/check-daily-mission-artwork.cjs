@@ -46,6 +46,7 @@ const { DailyMissionArtwork } = loadTs(
     "../assets/images/icon-timer.png": "timer-image",
     "../assets/images/icon-combo.png": "combo-image",
     "../assets/images/icon-words.png": "words-image",
+    "../assets/images/icon-add-words.png": "add-words-image",
   },
 );
 let activeColors = colors.light;
@@ -84,10 +85,6 @@ const { ChestTierArtwork } = loadTs(
 );
 
 const expectedArtwork = {
-  "add-words": {
-    type: "Path",
-    props: { d: "M8 18h23q7 0 9 6 2-6 9-6h23v43H49q-7 0-9 6-2-6-9-6H8z" },
-  },
   grade: {
     type: "Path",
     props: { d: "m40 15 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" },
@@ -97,6 +94,7 @@ const missionImageTypes = {
   time: "timer-image",
   combo: "combo-image",
   review: "words-image",
+  "add-words": "add-words-image",
 };
 const missionTypes = ["review", "add-words", "grade", "time", "combo"];
 const collectElements = (node, result = []) => {

@@ -15,6 +15,7 @@ const MISSION_IMAGE_SOURCES: Partial<
   time: require("../assets/images/icon-timer.png"),
   combo: require("../assets/images/icon-combo.png"),
   review: require("../assets/images/icon-words.png"),
+  "add-words": require("../assets/images/icon-add-words.png"),
 };
 
 export function DailyMissionArtwork({
