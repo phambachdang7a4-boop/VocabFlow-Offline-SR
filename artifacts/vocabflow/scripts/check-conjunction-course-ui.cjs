@@ -21,6 +21,9 @@ const ieltsTopicDomain = loadTs(
     "./ielts-topic-course-data.json": require(
       "../domain/ielts-topic-course-data.json",
     ),
+    "./ielts-advanced-terms.json": require(
+      "../domain/ielts-advanced-terms.json",
+    ),
   },
 );
 const toeicTopicDomain = loadToeicTopicCourseDomain();
@@ -792,7 +795,13 @@ function mount(initialSavedWords = [], options = {}) {
   assert.equal(idiomSaveRetryScreen.savedWordInputs.length, idiomLesson.questions.length);
   assert.equal(idiomSaveRetryScreen.byId("idioms-word-selection"), undefined);
   assert.ok(screen.byId("ielts-course-card"));
+  assert.ok(screen.byId("ielts-advanced-course-card"));
   screen.byId("ielts-course-card").props.onPress();
+  await screen.settle();
+  assert.ok(
+    screen.byId("ielts-chapter-people-society"),
+    "IELTS lessons are displayed under a chapter heading.",
+  );
   const ieltsLesson = ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS[0];
   screen.byId("ielts-lesson-1").props.onPress();
   await screen.settle();

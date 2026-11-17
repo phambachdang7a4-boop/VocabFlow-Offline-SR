@@ -35,6 +35,13 @@ import {
   SENTENCE_STRUCTURE_PATTERN_LESSONS,
 } from "@/domain/sentence-structure-patterns";
 import {
+  IELTS_ADVANCED_COURSE_ENTRIES,
+  IELTS_ADVANCED_COURSE_ID,
+  IELTS_ADVANCED_COURSE_LESSONS,
+  IELTS_ADVANCED_COURSE_TITLE,
+  IELTS_ADVANCED_COURSE_WORD_COUNT,
+  IELTS_ADVANCED_SOURCE_LESSON_IDS_BY_LESSON,
+  IELTS_ADVANCED_TOPIC_WORD_LIST,
   IELTS_TOPIC_COURSE_ENTRIES,
   IELTS_TOPIC_COURSE_ID,
   IELTS_TOPIC_COURSE_LESSONS,
@@ -42,6 +49,7 @@ import {
   IELTS_TOPIC_COURSE_TITLE,
   IELTS_TOPIC_COURSE_WORD_COUNT,
   IELTS_TOPIC_WORD_LIST,
+  mapIeltsStandardAttempt,
 } from "@/domain/ielts-topic-course";
 import {
   TOEIC_TOPIC_COURSE_ENTRIES,
@@ -156,6 +164,9 @@ type CourseLesson = {
   focus: string;
   topicId?: string;
   topicTitle?: string;
+  chapterId?: string;
+  chapterTitle?: string;
+  chapterNumber?: number;
   questions: readonly CourseQuestion[];
 };
 
@@ -266,7 +277,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: IELTS_TOPIC_COURSE_ID,
     title: IELTS_TOPIC_COURSE_TITLE,
     description:
-      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ qua ${IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS, chia thành những bài học vừa sức. ${IELTS_TOPIC_COURSE_SPELLING_CONVENTION}`,
+      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ vựng phổ biến và học thuật qua ${IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS. ${IELTS_TOPIC_COURSE_SPELLING_CONVENTION}`,
     lessons: IELTS_TOPIC_COURSE_LESSONS,
     entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
     icon: "globe",
@@ -274,6 +285,19 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     testIdPrefix: "ielts",
     wordCount: IELTS_TOPIC_COURSE_WORD_COUNT,
     topicCount: IELTS_TOPIC_WORD_LIST.length,
+  },
+  {
+    id: IELTS_ADVANCED_COURSE_ID,
+    title: IELTS_ADVANCED_COURSE_TITLE,
+    description:
+      `Luyện ${IELTS_ADVANCED_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ học thuật khó và thuật ngữ chuyên sâu qua ${IELTS_ADVANCED_TOPIC_WORD_LIST.length} chủ đề.`,
+    lessons: IELTS_ADVANCED_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(IELTS_ADVANCED_COURSE_ENTRIES)),
+    icon: "globe",
+    catalogArtwork: require("../../assets/courses/ielts.png"),
+    testIdPrefix: "ielts-advanced",
+    wordCount: IELTS_ADVANCED_COURSE_WORD_COUNT,
+    topicCount: IELTS_ADVANCED_TOPIC_WORD_LIST.length,
   },
   {
     id: TOEIC_TOPIC_COURSE_ID,
@@ -406,8 +430,19 @@ export default function CoursesScreen() {
       const attempts = await Promise.all(
         progressPrefixes.map((prefix) => getCourseLessonAttempts(prefix)),
       );
-      setCompletedLessons(progress.flat());
-      setLessonAttempts(attempts.flat());
+      const completedIds = new Set(progress.flat());
+      for (const [advancedLessonId, sourceLessonIds] of Object.entries(
+        IELTS_ADVANCED_SOURCE_LESSON_IDS_BY_LESSON,
+      )) {
+        if (
+          sourceLessonIds.length > 0 &&
+          sourceLessonIds.every((lessonId) => completedIds.has(lessonId))
+        ) {
+          completedIds.add(advancedLessonId);
+        }
+      }
+      setCompletedLessons([...completedIds]);
+      setLessonAttempts(attempts.flat().map(mapIeltsStandardAttempt));
       setError(null);
     } catch (failure) {
       setError(
@@ -474,9 +509,12 @@ export default function CoursesScreen() {
   const startLesson = async (lesson: CourseLesson) => {
     setSaving(true);
     try {
-      const savedAttempt = (await getCourseLessonAttempts(lesson.id)).find(
+      const storedAttempt = (await getCourseLessonAttempts(lesson.id)).find(
         (attempt) => attempt.lessonId === lesson.id,
       );
+      const savedAttempt = storedAttempt
+        ? mapIeltsStandardAttempt(storedAttempt)
+        : undefined;
       const validAttempt =
         savedAttempt &&
         savedAttempt.currentIndex < lesson.questions.length &&
@@ -500,7 +538,10 @@ export default function CoursesScreen() {
         updatedAt: new Date().toISOString(),
       };
       const persistedAttempt = validAttempt
-        ? validAttempt
+        ? storedAttempt &&
+          JSON.stringify(validAttempt) !== JSON.stringify(storedAttempt)
+          ? await saveCourseLessonAttempt(validAttempt)
+          : validAttempt
         : await saveCourseLessonAttempt(attempt);
       setLessonAttempts((previous) => [
         ...previous.filter((item) => item.lessonId !== lesson.id),
@@ -1134,6 +1175,24 @@ export default function CoursesScreen() {
                 const attempt = lessonAttempts.find(
                   (item) => item.lessonId === lesson.id,
                 );
+                const startsChapter =
+                  lesson.chapterId !== undefined &&
+                  lesson.chapterId !==
+                    activeCourse.lessons[index - 1]?.chapterId;
+                const chapterLessons = startsChapter
+                  ? activeCourse.lessons.filter(
+                      (candidate) =>
+                        candidate.chapterId === lesson.chapterId,
+                    )
+                  : [];
+                const chapterCompletedCount = chapterLessons.filter(
+                  (candidate) => completedLessons.includes(candidate.id),
+                ).length;
+                const chapterWordCount = chapterLessons.reduce(
+                  (count, candidate) =>
+                    count + candidate.questions.length,
+                  0,
+                );
                 const startsTopic =
                   activeCourse.topicCount !== undefined &&
                   lesson.topicId !==
@@ -1145,6 +1204,61 @@ export default function CoursesScreen() {
                   : 0;
                 return (
                   <React.Fragment key={lesson.id}>
+                    {startsChapter ? (
+                      <View
+                        testID={`${activeCourse.testIdPrefix}-chapter-${lesson.chapterId}`}
+                        accessibilityLabel={`${lesson.chapterTitle}, ${chapterCompletedCount} trên ${chapterLessons.length} bài hoàn thành`}
+                        style={[
+                          styles.chapterGroupHeading,
+                          {
+                            backgroundColor: c.card,
+                            borderColor: c.border,
+                          },
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.chapterNumberBadge,
+                            { backgroundColor: c.primary },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.chapterNumberText,
+                              { color: c.primaryForeground },
+                            ]}
+                          >
+                            CHƯƠNG {lesson.chapterNumber}
+                          </Text>
+                        </View>
+                        <View style={styles.chapterGroupCopy}>
+                          <Text
+                            style={[
+                              styles.chapterGroupTitle,
+                              { color: c.foreground },
+                            ]}
+                          >
+                            {lesson.chapterTitle}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.chapterGroupHint,
+                              { color: c.mutedForeground },
+                            ]}
+                          >
+                            {chapterLessons.length} bài · {chapterWordCount} từ
+                          </Text>
+                        </View>
+                        <Text
+                          style={[
+                            styles.chapterProgress,
+                            { color: c.primary },
+                          ]}
+                        >
+                          {chapterCompletedCount}/{chapterLessons.length}
+                        </Text>
+                      </View>
+                    ) : null}
                     {startsTopic ? (
                       <View style={styles.topicGroupHeading}>
                         <Text
@@ -2379,8 +2493,37 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
   sectionHint: { fontFamily: F.r, fontSize: 12 },
+  chapterGroupHeading: {
+    marginTop: 16,
+    marginBottom: 4,
+    minHeight: 70,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  chapterNumberBadge: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 54,
+    minHeight: 38,
+    borderRadius: 11,
+    paddingHorizontal: 7,
+  },
+  chapterNumberText: {
+    fontFamily: F.b,
+    fontSize: 9,
+    letterSpacing: 0.35,
+  },
+  chapterGroupCopy: { flex: 1, minWidth: 0, gap: 3 },
+  chapterGroupTitle: { fontFamily: F.b, fontSize: 15, lineHeight: 19 },
+  chapterGroupHint: { fontFamily: F.r, fontSize: 11 },
+  chapterProgress: { fontFamily: F.s, fontSize: 12 },
   topicGroupHeading: {
-    marginTop: 8,
+    marginTop: 9,
     marginBottom: 1,
     gap: 3,
   },

@@ -28,6 +28,9 @@ const ieltsTopicCourse = loadTs(
     "./ielts-topic-course-data.json": require(
       "../domain/ielts-topic-course-data.json",
     ),
+    "./ielts-advanced-terms.json": require(
+      "../domain/ielts-advanced-terms.json",
+    ),
   },
 );
 const toeicTopicCourse = loadToeicTopicCourseDomain();
@@ -2346,37 +2349,111 @@ async function checkCourseContentAndProgress() {
   const ieltsTerms = ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.flatMap(
     (topic) => topic.terms,
   );
+  const chapterTopicIds = ieltsTopicCourse.IELTS_COURSE_CHAPTERS.flatMap(
+    (chapter) => chapter.topicIds,
+  );
+  const ieltsAdvancedTerms = ieltsTopicCourse.IELTS_ADVANCED_TOPIC_WORD_LIST.flatMap(
+    (topic) => topic.terms,
+  );
   const ieltsQuestions = ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.flatMap(
     (lesson) => lesson.questions,
   );
+  const ieltsAdvancedQuestions =
+    ieltsTopicCourse.IELTS_ADVANCED_COURSE_LESSONS.flatMap(
+      (lesson) => lesson.questions,
+    );
   assert.equal(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_TITLE,
-    "Từ vựng IELTS theo chủ đề",
+    "IELTS",
   );
-  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 36);
-  assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length > 50);
+  assert.equal(ieltsTopicCourse.IELTS_ADVANCED_COURSE_TITLE, "IELTS Nâng cao");
+  assert.equal(ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.length, 38);
+  assert.equal(ieltsTopicCourse.IELTS_COURSE_CHAPTERS.length, 10);
   assert.deepEqual(
-    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.map((lesson) => lesson.title),
-    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.map(
-      (_, index) => `Bài ${index + 1}`,
-    ),
-    "IELTS lesson display numbers are continuous across all topics.",
+    [...chapterTopicIds].sort(),
+    ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.map((topic) => topic.id).sort(),
+    "Every IELTS topic belongs to exactly one chapter.",
   );
-  assert.ok(ieltsTerms.length >= 1100 && ieltsTerms.length <= 2000);
+  assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.length > 50);
+  assert.ok(ieltsTopicCourse.IELTS_ADVANCED_COURSE_LESSONS.length > 0);
+  assert.deepEqual(
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.every(
+      (lesson) =>
+        lesson.title.startsWith("Bài ") ||
+        lesson.title.startsWith("Reading · Bài "),
+    ),
+    true,
+    "Standard IELTS lessons keep their numbered topic labels.",
+  );
+  assert.ok(ieltsTerms.length > 6000);
+  assert.ok(ieltsAdvancedTerms.length > 0 && ieltsAdvancedTerms.length < 1000);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
+  assert.equal(new Set(ieltsAdvancedTerms).size, ieltsAdvancedTerms.length);
+  assert.equal(
+    new Set([...ieltsTerms, ...ieltsAdvancedTerms]).size,
+    ieltsTerms.length + ieltsAdvancedTerms.length,
+    "Standard and advanced IELTS courses do not duplicate terms.",
+  );
+  assert.equal(
+    ieltsTerms.length + ieltsAdvancedTerms.length,
+    7045,
+    "The split keeps every existing IELTS term.",
+  );
   assert.equal(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_WORD_COUNT,
     ieltsTerms.length,
   );
+  assert.equal(
+    ieltsTopicCourse.IELTS_ADVANCED_COURSE_WORD_COUNT,
+    ieltsAdvancedTerms.length,
+  );
+  for (const lessons of [
+    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS,
+    ieltsTopicCourse.IELTS_ADVANCED_COURSE_LESSONS,
+  ]) {
+    assert.ok(
+      lessons.every(
+        (lesson) =>
+          lesson.chapterId &&
+          lesson.chapterTitle &&
+          lesson.chapterNumber &&
+          ieltsTopicCourse.IELTS_COURSE_CHAPTERS.some(
+            (chapter) =>
+              chapter.id === lesson.chapterId &&
+              chapter.title === lesson.chapterTitle,
+          ),
+      ),
+      "Every IELTS lesson has a valid chapter.",
+    );
+    assert.ok(
+      lessons.every(
+        (lesson, index) =>
+          index === 0 ||
+          (lesson.chapterNumber ?? 0) >=
+            (lessons[index - 1].chapterNumber ?? 0),
+      ),
+      "Lessons are ordered by chapter.",
+    );
+  }
   assert.deepEqual(
     [...ieltsQuestions.map((question) => question.term)].sort(),
     [...ieltsTerms].sort(),
-    "Every IELTS word has one exercise.",
+    "Every standard IELTS word has one exercise.",
+  );
+  assert.deepEqual(
+    [...ieltsAdvancedQuestions.map((question) => question.term)].sort(),
+    [...ieltsAdvancedTerms].sort(),
+    "Every advanced IELTS word has one exercise.",
   );
   assert.deepEqual(
     Object.keys(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES).sort(),
     [...ieltsTerms].sort(),
     "Every IELTS word has course feedback content.",
+  );
+  assert.deepEqual(
+    Object.keys(ieltsTopicCourse.IELTS_ADVANCED_COURSE_ENTRIES).sort(),
+    [...ieltsAdvancedTerms].sort(),
+    "Every advanced IELTS word has course feedback content.",
   );
   for (const [term, entry] of Object.entries(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES,
@@ -2398,22 +2475,19 @@ async function checkCourseContentAndProgress() {
     ),
     "Authored entries support IELTS terms absent from the offline dictionary.",
   );
-  assert.deepEqual(
-    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS
-      .filter(
-        (lesson) =>
-          lesson.id.startsWith("ielts-topic-vocabulary-v1-") &&
-          !lesson.id.includes("-lesson-"),
-      )
-      .slice(0, 5)
-      .map((lesson) => lesson.id),
-    [
-      "ielts-topic-vocabulary-v1-education",
-      "ielts-topic-vocabulary-v1-environment",
-      "ielts-topic-vocabulary-v1-technology",
-      "ielts-topic-vocabulary-v1-health",
-      "ielts-topic-vocabulary-v1-society-work",
-    ],
+  const legacyIeltsLessonIds = [
+    "ielts-topic-vocabulary-v1-education",
+    "ielts-topic-vocabulary-v1-environment",
+    "ielts-topic-vocabulary-v1-technology",
+    "ielts-topic-vocabulary-v1-health",
+    "ielts-topic-vocabulary-v1-society-work",
+  ];
+  assert.ok(
+    legacyIeltsLessonIds.every((id) =>
+      ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS.some(
+        (lesson) => lesson.id === id,
+      ),
+    ),
     "Existing lesson IDs remain stable so saved progress remains visible.",
   );
   for (const lesson of ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS) {
@@ -2425,11 +2499,65 @@ async function checkCourseContentAndProgress() {
       assert.ok(ieltsTopicCourse.IELTS_TOPIC_COURSE_ENTRIES[question.term]);
     }
   }
+  for (const lesson of ieltsTopicCourse.IELTS_ADVANCED_COURSE_LESSONS) {
+    assert.ok(lesson.questions.length > 0 && lesson.questions.length <= 35);
+    for (const question of lesson.questions) {
+      assert.ok(question.prompt.includes("_____"));
+      assert.equal(new Set(question.choices).size, 4);
+      assert.ok(question.choices.includes(question.term));
+      assert.ok(
+        ieltsTopicCourse.IELTS_ADVANCED_COURSE_ENTRIES[question.term],
+      );
+    }
+  }
   assert.ok(
-    ieltsTopicCourse.IELTS_TOPIC_COURSE_LESSONS
-      .filter((lesson) => lesson.id.includes("-lesson-"))
-      .every((lesson) => lesson.questions.length >= 15),
-    "New lessons use substantial word groups.",
+    ieltsTopicCourse.IELTS_ADVANCED_COURSE_LESSONS.every(
+      (lesson) => lesson.title.startsWith("Bài "),
+    ),
+    "Advanced IELTS lessons keep continuous display numbers.",
+  );
+  const ieltsAdvancedSet = new Set(ieltsAdvancedTerms);
+  const mixedLegacyLesson = Object.entries(
+    ieltsTopicCourse.IELTS_PRE_SPLIT_LESSON_QUESTION_TERMS,
+  ).find(([, terms]) =>
+    terms.some((term) => ieltsAdvancedSet.has(term)) &&
+    terms.some((term) => !ieltsAdvancedSet.has(term)),
+  );
+  assert.ok(mixedLegacyLesson, "The migration test has a mixed old lesson.");
+  const [legacyLessonId, legacyLessonTerms] = mixedLegacyLesson;
+  const firstAdvancedIndex = legacyLessonTerms.findIndex((term) =>
+    ieltsAdvancedSet.has(term),
+  );
+  const firstStandardWrongIndex = legacyLessonTerms.findIndex(
+    (term) => !ieltsAdvancedSet.has(term),
+  );
+  const resumedAttempt = ieltsTopicCourse.mapIeltsStandardAttempt({
+    lessonId: legacyLessonId,
+    currentIndex: firstAdvancedIndex,
+    correctCount: firstAdvancedIndex,
+    wrongQuestionIndices: [firstAdvancedIndex, firstStandardWrongIndex],
+    retryIndex: 0,
+    retrying: true,
+    selectedAnswer: null,
+  });
+  assert.deepEqual(
+    resumedAttempt.wrongQuestionIndices,
+    [
+      legacyLessonTerms
+        .slice(0, firstStandardWrongIndex)
+        .filter((term) => !ieltsAdvancedSet.has(term)).length,
+    ],
+    "Saved wrong answers map onto the shorter standard IELTS lesson.",
+  );
+  assert.equal(
+    ieltsTopicCourse.IELTS_ADVANCED_COURSE_LESSONS.every((lesson) =>
+      ieltsTopicCourse.IELTS_ADVANCED_SOURCE_LESSON_IDS_BY_LESSON[lesson.id]
+        ?.every((sourceId) =>
+          ieltsTopicCourse.IELTS_PRE_SPLIT_LESSON_QUESTION_TERMS[sourceId],
+        ),
+    ),
+    true,
+    "Advanced lesson progress can inherit completion from its original lesson IDs.",
   );
 
   const toeicTerms = toeicTopicCourse.TOEIC_TOPIC_WORD_LIST.flatMap(

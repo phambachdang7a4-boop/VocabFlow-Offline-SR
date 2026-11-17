@@ -8,3 +8,9 @@ Chỉ thêm headword có giá trị học riêng; loại dạng chia -s, -ing ho
 **Why:** Người dùng yêu cầu không tăng số lượng bằng các dạng từ lặp. Từ điển offline và ví dụ do AI soạn không chứng minh một từ xuất hiện trong đề IELTS chính thức.
 
 **How to apply:** Trước khi thêm từ, đối chiếu khóa hiện tại, nghĩa độc lập và dạng gốc; với dạng phân từ được giữ lại, định nghĩa và ví dụ phải thể hiện nghĩa tính từ/danh từ thay vì chỉ ghi công thức ngữ pháp. Kiểm tra nghĩa, câu ví dụ, bản dịch tiếng Việt. Chỉ gắn nhãn mức độ/tần suất IELTS khi có nguồn phù hợp.
+
+Phân chia “IELTS” và “IELTS Nâng cao” hiện là phân loại biên soạn theo độ khó giảng dạy, không phải chứng nhận CEFR. Không mô tả danh sách là B2/C1/C2 đã xác minh cho đến khi đối chiếu với nguồn cấp độ đáng tin cậy.
+
+**Why:** Dữ liệu từ vựng offline không có nhãn CEFR hoặc điểm tần suất chuẩn; tên “Nâng cao” mô tả mục tiêu học, không xác nhận cấp độ chính thức.
+
+**How to apply:** Khi nhắc đến hai khóa, gọi đây là nhóm học thường/nâng cao theo biên soạn; giữ lại nguồn và nghĩa từ, và rà lại cấp độ bằng nguồn CEFR hoặc chuyên gia trước khi công bố nhãn chính thức.

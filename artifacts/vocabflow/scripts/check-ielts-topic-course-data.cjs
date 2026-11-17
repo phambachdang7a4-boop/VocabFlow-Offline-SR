@@ -348,7 +348,10 @@ assert.equal(
 );
 const ieltsCourseDomain = loadTs(
   join(__dirname, "../domain/ielts-topic-course.ts"),
-  { "./ielts-topic-course-data.json": courseData },
+  {
+    "./ielts-topic-course-data.json": courseData,
+    "./ielts-advanced-terms.json": require("../domain/ielts-advanced-terms.json"),
+  },
 );
 const expectedReadingLessonCounts = {
   education: 5,
