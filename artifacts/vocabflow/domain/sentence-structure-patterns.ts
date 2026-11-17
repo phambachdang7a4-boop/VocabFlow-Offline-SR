@@ -603,7 +603,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
 > = {
   "either … or": {
     definition:
-      "Cặp liên từ chỉ lựa chọn giữa hai khả năng. Hai vế sau either và or nên cùng dạng ngữ pháp; dùng khi chọn một phương án, không chọn cả hai.",
+      "Cặp liên từ nối hai phương án để chọn một trong hai theo ngữ cảnh. Hai vế sau either và or nên cùng dạng ngữ pháp; nếu muốn nói cả hai đều không đúng, dùng neither … nor.",
     example:
       "For this assignment, each student must either write an individual reflection or submit one joint report.",
     exampleTranslation:
@@ -619,7 +619,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "not only … but also": {
     definition:
-      "Cặp liên từ nhấn mạnh rằng cả hai đặc điểm hoặc hành động đều đúng. Giữ hai vế sau not only và but also cùng dạng; khi mở đầu mệnh đề bằng Not only, thường phải đảo trợ động từ lên trước chủ ngữ.",
+      "Cặp liên từ nhấn mạnh rằng cả hai đặc điểm hoặc hành động đều đúng. Giữ hai vế nối với not only và but also cùng dạng; nếu Not only đứng đầu một mệnh đề, đảo trợ động từ lên trước chủ ngữ.",
     example:
       "The reading app is not only easy to use but also available offline.",
     exampleTranslation:
@@ -627,7 +627,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "no matter how": {
     definition:
-      "Nghĩa là “dù… đến mức nào”. Theo sau how là tính từ hoặc trạng từ rồi đến chủ ngữ và động từ; kết quả ở mệnh đề chính không đổi.",
+      "Nghĩa là “dù… đến mức nào”. Dùng no matter how + tính từ/trạng từ + chủ ngữ + động từ; kết quả ở mệnh đề chính vẫn không thay đổi dù mức độ ra sao.",
     example:
       "No matter how carefully the team checked the measurements, the old scale produced inconsistent results.",
     exampleTranslation:
@@ -643,7 +643,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "the more … the more": {
     definition:
-      "Cấu trúc so sánh kép diễn tả hai sự việc thay đổi cùng chiều: “càng… thì càng…”. Mỗi vế có the more, theo sau là danh từ, tính từ hoặc trạng từ phù hợp.",
+      "Cấu trúc so sánh kép diễn tả hai yếu tố thay đổi cùng chiều: “càng… thì càng…”. Mỗi vế bắt đầu bằng the more; sau đó có thể là danh từ rồi đến chủ ngữ và động từ, hoặc tính từ/trạng từ trong một mệnh đề.",
     example:
       "The more evidence the team examined, the more confident its conclusion became.",
     exampleTranslation:
@@ -651,7 +651,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "not only did": {
     definition:
-      "Khi Not only đứng đầu mệnh đề ở thì quá khứ đơn, đảo did lên trước chủ ngữ và dùng động từ nguyên mẫu. Mệnh đề song hành thường tiếp tục bằng but (also).",
+      "Khi Not only đứng đầu mệnh đề quá khứ đơn để nhấn mạnh, dùng Not only + did + chủ ngữ + động từ nguyên mẫu; không dùng động từ quá khứ sau did. Mệnh đề song hành thường tiếp tục bằng but (also).",
     example:
       "Not only did the revised schedule reduce delays, but it also lowered operating costs.",
     exampleTranslation:
@@ -659,7 +659,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "no sooner … than": {
     definition:
-      "Cấu trúc đảo ngữ diễn tả việc thứ hai xảy ra ngay sau việc thứ nhất. Khi No sooner đứng đầu câu, dùng had + chủ ngữ + quá khứ phân từ, rồi nối mệnh đề sau bằng than.",
+      "Diễn tả việc thứ hai xảy ra ngay sau việc thứ nhất. Khi No sooner đứng đầu câu, dùng No sooner + had + chủ ngữ + quá khứ phân từ, rồi than + chủ ngữ + động từ quá khứ đơn.",
     example:
       "No sooner had the train left than the storm reached the station.",
     exampleTranslation:
@@ -667,7 +667,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "it was … that": {
     definition:
-      "Câu chẻ It was … that nhấn mạnh một thành phần trong câu, chẳng hạn người thực hiện hoặc vật được tác động. Chọn that hoặc who phù hợp với thành phần được nhấn mạnh.",
+      "Câu chẻ It was + thành phần cần nhấn mạnh + that + phần còn lại của câu. Ở ví dụ này, that nối phần được nhấn mạnh (vật được thiết kế) với mệnh đề còn lại; với người, đôi khi có thể dùng who thay that.",
     example:
       "It was a simple water filter that the research team designed, not a costly pump.",
     exampleTranslation:
@@ -683,7 +683,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "so do I": {
     definition:
-      "Dùng so + trợ động từ + chủ ngữ để đồng tình với một câu khẳng định. Chọn trợ động từ theo thì và động từ của câu trước; ở đây do thay cho enjoy reading.",
+      "Dùng So + trợ động từ + chủ ngữ để đồng tình với câu khẳng định. Lấy trợ động từ phù hợp với động từ và thì của câu trước; ở đây do thay cho enjoy reading. Trật tự là trợ động từ rồi đến chủ ngữ.",
     example:
       "“I enjoy reading historical biographies.” “So do I,” Minh replied.",
     exampleTranslation:
@@ -691,7 +691,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "neither have I": {
     definition:
-      "Dùng neither + trợ động từ + chủ ngữ để đồng tình với một câu phủ định. Trợ động từ phải khớp với thì của câu trước; hiện tại hoàn thành dùng have/has.",
+      "Dùng Neither + trợ động từ + chủ ngữ để đồng tình với câu phủ định. Lấy trợ động từ phù hợp với động từ và thì của câu trước; hiện tại hoàn thành dùng have/has. Trật tự là trợ động từ rồi đến chủ ngữ.",
     example:
       "“I haven't visited the new gallery yet.” “Neither have I,” Lan replied.",
     exampleTranslation:
@@ -723,7 +723,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "on behalf of": {
     definition:
-      "Cụm giới từ nghĩa là “thay mặt cho”, dùng khi phát biểu hoặc hành động đại diện cho một người hay nhóm.",
+      "Cụm giới từ nghĩa là “thay mặt cho” hoặc “vì lợi ích của”, dùng khi nói hay hành động đại diện cho một người hoặc nhóm.",
     example:
       "I am writing on behalf of the residents' committee to thank the volunteers.",
     exampleTranslation:
@@ -731,7 +731,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "rely on": {
     definition:
-      "Rely on + người/vật nghĩa là dựa vào hoặc tin cậy ai, điều gì; giới từ on đi cùng động từ rely.",
+      "Rely on + người/vật nghĩa là dựa vào hoặc tin cậy người hay điều đó để được hỗ trợ; giới từ on đi với động từ rely trong nghĩa này.",
     example:
       "During the field study, the researchers had to rely on local guides for accurate directions.",
     exampleTranslation:
@@ -747,7 +747,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "be responsible for": {
     definition:
-      "Be responsible for + danh từ hoặc V-ing nghĩa là chịu trách nhiệm về việc gì hoặc phụ trách làm việc đó.",
+      "Be responsible for + danh từ hoặc V-ing nghĩa là chịu trách nhiệm hoặc phụ trách việc đó; trong ngữ cảnh khác, responsible for cũng có thể chỉ nguyên nhân gây ra điều gì.",
     example:
       "As project lead, Mai is responsible for checking each citation before publication.",
     exampleTranslation:
@@ -850,7 +850,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "believe in": {
     definition:
-      "Believe in + người, ý tưởng hoặc giá trị nghĩa là tin vào hoặc tin rằng điều đó có giá trị; in là giới từ cố định của cụm này.",
+      "Believe in + người, ý tưởng hoặc giá trị nghĩa là tin tưởng người đó, hoặc tin điều/ý tưởng đó có thật hay đáng tin; in đi với believe trong các nghĩa này. Không nhầm với believe someone (tin lời ai nói).",
     example: "Many people believe in the value of learning a little every day.",
     exampleTranslation:
       "Nhiều người tin vào giá trị của việc học một chút mỗi ngày.",
@@ -864,7 +864,7 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
   },
   "good at": {
     definition:
-      "Good at + danh từ hoặc V-ing diễn tả làm tốt hoặc có năng khiếu ở lĩnh vực, hoạt động đó.",
+      "Good at + danh từ hoặc V-ing diễn tả giỏi hoặc có năng khiếu trong lĩnh vực/hoạt động đó; khác good for, nghĩa là có ích hoặc phù hợp.",
     example: "My sister is good at solving logic puzzles.",
     exampleTranslation:
       "Chị tôi giỏi giải các câu đố logic.",

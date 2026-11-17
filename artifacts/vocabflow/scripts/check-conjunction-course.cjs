@@ -2149,6 +2149,59 @@ async function checkCourseContentAndProgress() {
       `${term} has a Vietnamese example translation.`,
     );
   }
+  const sentenceStructureDefinitionClarityChecks = [
+    [
+      "either … or",
+      /chọn một trong hai.*nếu muốn nói cả hai đều không đúng, dùng neither … nor/,
+      "The choice pattern distinguishes selecting an option from denying both.",
+    ],
+    [
+      "not only … but also",
+      /hai đặc điểm hoặc hành động đều đúng.*nếu Not only đứng đầu một mệnh đề, đảo trợ động từ/,
+      "The paired conjunction distinguishes two asserted items from fronted-clause inversion.",
+    ],
+    [
+      "no matter how",
+      /tính từ\/trạng từ \+ chủ ngữ \+ động từ.*kết quả ở mệnh đề chính vẫn không thay đổi/,
+      "The concession pattern explains both its clause form and unchanged outcome.",
+    ],
+    [
+      "the more … the more",
+      /hai yếu tố thay đổi cùng chiều.*Mỗi vế bắt đầu bằng the more.*chủ ngữ và động từ/,
+      "The comparison pattern explains the relationship and shows that each side forms a clause.",
+    ],
+    [
+      "no sooner … than",
+      /No sooner \+ had \+ chủ ngữ \+ quá khứ phân từ.*than \+ chủ ngữ \+ động từ quá khứ đơn/,
+      "The sequence pattern distinguishes the two clause forms and their order.",
+    ],
+    [
+      "it was … that",
+      /It was \+ thành phần cần nhấn mạnh \+ that \+ phần còn lại của câu/,
+      "The cleft explanation states what is focused and how the rest of the sentence follows.",
+    ],
+    [
+      "so do I",
+      /So \+ trợ động từ \+ chủ ngữ để đồng tình với câu khẳng định/,
+      "The positive agreement reply states the polarity and auxiliary-subject order.",
+    ],
+    [
+      "neither have I",
+      /Neither \+ trợ động từ \+ chủ ngữ để đồng tình với câu phủ định/,
+      "The negative agreement reply states the polarity and auxiliary-subject order.",
+    ],
+  ];
+  for (const [
+    term,
+    clarityPattern,
+    reason,
+  ] of sentenceStructureDefinitionClarityChecks) {
+    assert.match(
+      patternEntries[term].definition,
+      clarityPattern,
+      `${term} explanation remains clear: ${reason}`,
+    );
+  }
   const prepositionTerms = [
     "in advance",
     "at risk of",
