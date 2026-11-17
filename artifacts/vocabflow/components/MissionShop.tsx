@@ -42,7 +42,8 @@ const PRODUCT_ICONS: Record<MissionShopProductId, React.ComponentProps<typeof Fe
 export function MissionShop() {
   const c = useColors();
   const { width: windowWidth } = useWindowDimensions();
-  const heroWidth = Math.min(windowWidth - 44, 420);
+  const compactOffers = windowWidth < 360;
+  const heroWidth = Math.min(windowWidth - 36, 420);
   const [overview, setOverview] = useState<MissionShopOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [buyingSlot, setBuyingSlot] = useState<number | null>(null);
@@ -170,12 +171,14 @@ export function MissionShop() {
                   testID={`mission-shop-offer-${productId}`}
                   style={[
                     styles.offerCard,
+                    compactOffers ? styles.offerCardCompact : null,
                     { backgroundColor: c.background, borderColor: c.accent },
                   ]}
                 >
                   <View
                     style={[
                       styles.fragmentIcon,
+                      compactOffers ? styles.fragmentIconCompact : null,
                       { backgroundColor: fragmentColor },
                     ]}
                   >
@@ -192,6 +195,7 @@ export function MissionShop() {
                   <Text
                     style={[
                       styles.offerTitle,
+                      compactOffers ? styles.offerTitleCompact : null,
                       {
                         color: product.fragmentRarity
                           ? CHEST_RARITY_TEXT_COLORS[product.fragmentRarity]
@@ -204,14 +208,22 @@ export function MissionShop() {
                     {product.title}
                   </Text>
                   <Text
-                    style={[styles.offerDescription, { color: c.mutedForeground }]}
+                    style={[
+                      styles.offerDescription,
+                      compactOffers ? styles.offerDescriptionCompact : null,
+                      { color: c.mutedForeground },
+                    ]}
                     numberOfLines={3}
                     adjustsFontSizeToFit
                   >
                     {product.description}
                   </Text>
                   <Text
-                    style={[styles.offerMeta, { color: c.mutedForeground }]}
+                    style={[
+                      styles.offerMeta,
+                      compactOffers ? styles.offerMetaCompact : null,
+                      { color: c.mutedForeground },
+                    ]}
                     numberOfLines={2}
                     adjustsFontSizeToFit
                   >
@@ -229,7 +241,12 @@ export function MissionShop() {
                       −{offer.discountPercent}%
                     </Text>
                   </View>
-                  <View style={styles.priceColumn}>
+                  <View
+                    style={[
+                      styles.priceColumn,
+                      compactOffers ? styles.priceColumnCompact : null,
+                    ]}
+                  >
                     {offer.discountPercent > 0 ? (
                       <Text
                         style={[styles.oldPrice, { color: c.mutedForeground }]}
@@ -380,6 +397,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 3,
   },
+  offerCardCompact: { paddingVertical: 4 },
   fragmentIcon: {
     width: 30,
     height: 30,
@@ -387,6 +405,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  fragmentIconCompact: { width: 28, height: 28 },
   offerTitle: {
     height: 28,
     width: "100%",
@@ -396,6 +415,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
   },
+  offerTitleCompact: { height: 24 },
   offerDescription: {
     height: 38,
     width: "100%",
@@ -405,6 +425,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
   },
+  offerDescriptionCompact: { height: 34 },
   offerMeta: {
     height: 22,
     width: "100%",
@@ -414,6 +435,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
   },
+  offerMetaCompact: { height: 20 },
   discountBadge: {
     height: 18,
     minWidth: 43,
@@ -428,6 +450,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  priceColumnCompact: { height: 26 },
   discount: { fontFamily: F.b, fontSize: 9 },
   oldPrice: {
     fontFamily: F.r,
@@ -437,7 +460,7 @@ const styles = StyleSheet.create({
   price: { fontFamily: F.b, fontSize: 9, textAlign: "center" },
   buyButton: {
     width: "100%",
-    height: 32,
+    minHeight: 36,
     paddingHorizontal: 4,
     borderWidth: 1,
     borderRadius: 8,

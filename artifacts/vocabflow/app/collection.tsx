@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
   type ImageSourcePropType,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -179,6 +180,7 @@ const PORTRAIT_SOURCE_TYPE_LABELS = {
 
 export default function CollectionScreen() {
   const c = useColors();
+  const compactGallery = useWindowDimensions().width < 360;
   const insets = useSafeAreaInsets();
   const bottomPad = useBottomPad();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
@@ -564,6 +566,7 @@ export default function CollectionScreen() {
                       }}
                       style={[
                         styles.artCard,
+                        compactGallery ? styles.artCardCompact : null,
                         {
                           backgroundColor: c.card,
                           borderColor: c.border,
@@ -979,6 +982,7 @@ const styles = StyleSheet.create({
     padding: 6,
     gap: 4,
   },
+  artCardCompact: { width: "31.5%" },
   artImage: {
     width: "100%",
     aspectRatio: 1,

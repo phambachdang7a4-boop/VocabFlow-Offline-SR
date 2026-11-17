@@ -629,12 +629,32 @@ assert.match(collectionScreen, /progressTrack/);
 assert.match(
   collectionScreen,
   /width:\s*"23%"/,
-  "Unlocked statues are arranged in four columns on the collection grid.",
+  "Unlocked statues use four columns when the screen has room.",
+);
+assert.match(
+  collectionScreen,
+  /const compactGallery = useWindowDimensions\(\)\.width < 360/,
+  "The statue gallery switches to its compact layout below 360 pixels.",
+);
+assert.match(
+  collectionScreen,
+  /artCardCompact:\s*\{\s*width:\s*"31\.5%"\s*\}/,
+  "The compact statue gallery fits three readable cards per row.",
+);
+assert.match(
+  collectionScreen,
+  /paddingBottom:\s*bottomPad/,
+  "The collection reserves scroll space above bottom navigation.",
 );
 assert.match(
   collectionScreen,
   /justifyContent:\s*"space-between"/,
-  "Four statue tiles are spaced across each grid row.",
+  "Statue tiles are spaced across each grid row.",
+);
+assert.match(
+  missionCollectionTabs,
+  /useWindowDimensions\(\)\.width < 360/,
+  "Mission, shop, and collection tabs use compact labels on narrow screens.",
 );
 assert.match(
   collectionScreen,

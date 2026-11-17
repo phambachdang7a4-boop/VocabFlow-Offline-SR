@@ -127,7 +127,10 @@ assert.doesNotMatch(
   "The investment section no longer repeats the current balance.",
 );
 assert.match(storeScreen, /resizeMode="contain"/);
-assert.match(storeScreen, /Math\.min\(windowWidth - 44, 420\)/);
+assert.match(storeScreen, /Math\.min\(windowWidth - 36, 420\)/);
+assert.match(storeScreen, /const compactOffers = windowWidth < 360/);
+assert.match(storeScreen, /offerCardCompact:\s*\{\s*paddingVertical:\s*4\s*\}/);
+assert.match(missionScreen, /paddingBottom:\s*scrollBottom/);
 assert.match(storeScreen, /aspectRatio: 704 \/ 1524/);
 assert.equal(
   (storeScreen.match(/testID=\{`mission-shop-offer-\$\{productId\}`\}/g) ?? []).length,
