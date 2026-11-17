@@ -1,5 +1,8 @@
 import type { VocabularyWord } from '../data/types';
 import { exampleSegments } from './dictionary';
+import { CONJUNCTION_COURSE_ENTRY_BY_TERM } from './conjunction-course';
+import { LINKING_ADVERB_COURSE_ENTRIES } from './linking-adverb-course';
+import { SENTENCE_STRUCTURE_PATTERN_ENTRIES } from './sentence-structure-patterns';
 
 export interface ReviewExercise {
   kind:
@@ -62,6 +65,38 @@ export function isIdiomVocabularyWord(
   return (
     /^\s*\(idioms?\b[^)]*\)\s*/iu.test(word.meaning) ||
     /\btừ loại\s*:\s*idioms?\b/iu.test(word.note ?? '')
+  );
+}
+
+const SENTENCE_STRUCTURE_COURSE_TERMS = new Set(
+  [
+    ...CONJUNCTION_COURSE_ENTRY_BY_TERM.keys(),
+    ...Object.keys(LINKING_ADVERB_COURSE_ENTRIES),
+    ...Object.keys(SENTENCE_STRUCTURE_PATTERN_ENTRIES),
+  ].map((term) =>
+    displayReviewAnswer(term).trim().replace(/\p{White_Space}+/gu, ' ').toLocaleLowerCase('en'),
+  ),
+);
+
+export function isSentenceStructureVocabularyWord(
+  word: Pick<VocabularyWord, 'term' | 'note'>,
+): boolean {
+  const normalizedTerm = displayReviewAnswer(word.term)
+    .trim()
+    .replace(/\p{White_Space}+/gu, ' ')
+    .toLocaleLowerCase('en');
+  return (
+    SENTENCE_STRUCTURE_COURSE_TERMS.has(normalizedTerm) ||
+    /\b(?:sentence structure|cấu trúc câu|từ nối)\b/iu.test(word.note ?? '')
+  );
+}
+
+export function isEligibleForReviewMistakeMatch(
+  word: Pick<VocabularyWord, 'term' | 'meaning' | 'note'>,
+): boolean {
+  return (
+    !isIdiomVocabularyWord(word) &&
+    !isSentenceStructureVocabularyWord(word)
   );
 }
 

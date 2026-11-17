@@ -35,6 +35,7 @@ interface IeltsTopicCourseData {
     title: string;
     focus: string;
     terms: string[];
+    readingTerms: string[];
     legacyLesson: {
       id: string;
       title: string;
@@ -59,7 +60,7 @@ export const IELTS_TOPIC_COURSE_ENTRIES: Readonly<
 export const IELTS_TOPIC_WORD_LIST = data.topics.map((topic) => ({
   id: topic.id,
   title: topic.title,
-  terms: topic.terms,
+  terms: [...topic.terms, ...topic.readingTerms],
 }));
 
 function escapeRegExp(value: string): string {
@@ -78,34 +79,30 @@ function stableHash(value: string): number {
   return hash;
 }
 
+interface IeltsTopicCourseChoicePool {
+  terms: string[];
+  indexByTerm: Map<string, number>;
+}
+
 function choicesFor(
   term: string,
-  topicTerms: readonly string[],
-  allTerms: readonly string[],
+  pool: IeltsTopicCourseChoicePool,
 ): string[] {
-  const answer = IELTS_TOPIC_COURSE_ENTRIES[term];
-  const sameTopic = topicTerms.filter((candidate) => {
-    const entry = IELTS_TOPIC_COURSE_ENTRIES[candidate];
-    return (
-      candidate !== term &&
-      entry.posGroup === answer.posGroup &&
-      entry.family !== answer.family
-    );
-  });
-  const sameCourse = allTerms.filter((candidate) => {
-    const entry = IELTS_TOPIC_COURSE_ENTRIES[candidate];
-    return (
-      candidate !== term &&
-      entry.posGroup === answer.posGroup &&
-      entry.family !== answer.family
-    );
-  });
-  const fallback = allTerms.filter((candidate) => candidate !== term);
-  const pool = [...new Set([...sameTopic, ...sameCourse, ...fallback])];
-  const start = pool.length ? stableHash(term) % pool.length : 0;
+  const poolLength = Math.max(0, pool.terms.length - 1);
+  const excludedIndex = pool.indexByTerm.get(term) ?? -1;
+  const start = poolLength ? stableHash(term) % poolLength : 0;
   const choices = [term];
-  for (let offset = 0; offset < pool.length && choices.length < 4; offset += 1) {
-    const candidate = pool[(start + offset) % pool.length];
+  for (
+    let offset = 0;
+    offset < poolLength && choices.length < 4;
+    offset += 1
+  ) {
+    const poolIndex = (start + offset) % poolLength;
+    const orderedIndex =
+      excludedIndex >= 0 && poolIndex >= excludedIndex
+        ? poolIndex + 1
+        : poolIndex;
+    const candidate = pool.terms[orderedIndex];
     if (!choices.includes(candidate)) choices.push(candidate);
   }
   return choices;
@@ -115,12 +112,50 @@ function createQuestions(
   terms: readonly string[],
   allTerms: readonly string[],
 ): IeltsTopicCourseQuestion[] {
+  const poolsByGroup = new Map<string, IeltsTopicCourseChoicePool>();
+  for (const term of terms) {
+    const answer = IELTS_TOPIC_COURSE_ENTRIES[term];
+    const key = `${answer.posGroup}\u0000${answer.family}`;
+    if (poolsByGroup.has(key)) continue;
+
+    const sameTopic = terms.filter((candidate) => {
+      const entry = IELTS_TOPIC_COURSE_ENTRIES[candidate];
+      return (
+        candidate !== term &&
+        entry.posGroup === answer.posGroup &&
+        entry.family !== answer.family
+      );
+    });
+    const sameCourse = allTerms.filter((candidate) => {
+      const entry = IELTS_TOPIC_COURSE_ENTRIES[candidate];
+      return (
+        candidate !== term &&
+        entry.posGroup === answer.posGroup &&
+        entry.family !== answer.family
+      );
+    });
+    const prioritizedTerms = [...new Set([...sameTopic, ...sameCourse])];
+    const prioritizedSet = new Set(prioritizedTerms);
+    const poolTerms = [
+      ...prioritizedTerms,
+      ...allTerms.filter((candidate) => !prioritizedSet.has(candidate)),
+    ];
+    poolsByGroup.set(key, {
+      terms: poolTerms,
+      indexByTerm: new Map(poolTerms.map((candidate, index) => [candidate, index])),
+    });
+  }
+
   return terms.map((term) => {
     const entry = IELTS_TOPIC_COURSE_ENTRIES[term];
+    const key = `${entry.posGroup}\u0000${entry.family}`;
     return {
       term,
       prompt: blankTerm(entry.example, term),
-      choices: choicesFor(term, terms, allTerms),
+      choices: choicesFor(
+        term,
+        poolsByGroup.get(key) ?? { terms: [], indexByTerm: new Map() },
+      ),
     };
   });
 }
@@ -146,7 +181,11 @@ function splitLessonTerms(terms: readonly string[]): string[][] {
 }
 
 function buildLessons(): IeltsTopicCourseLesson[] {
-  const allTerms = data.topics.flatMap((topic) => topic.terms);
+  const coreTerms = data.topics.flatMap((topic) => topic.terms);
+  const allTerms = data.topics.flatMap((topic) => [
+    ...topic.terms,
+    ...topic.readingTerms,
+  ]);
   const lessons: IeltsTopicCourseLesson[] = [];
 
   for (const topic of data.topics) {
@@ -168,6 +207,17 @@ function buildLessons(): IeltsTopicCourseLesson[] {
       lessons.push({
         id: `${IELTS_TOPIC_COURSE_ID}-${topic.id}-lesson-${lessonNumber}`,
         title: `Bài ${lessons.length + 1}`,
+        focus: topic.focus,
+        topicId: topic.id,
+        topicTitle: topic.title,
+        questions: createQuestions(terms, coreTerms),
+      });
+    });
+
+    splitLessonTerms(topic.readingTerms).forEach((terms, index) => {
+      lessons.push({
+        id: `${IELTS_TOPIC_COURSE_ID}-${topic.id}-reading-lesson-${index + 1}`,
+        title: `Reading · Bài ${index + 1}`,
         focus: topic.focus,
         topicId: topic.id,
         topicTitle: topic.title,

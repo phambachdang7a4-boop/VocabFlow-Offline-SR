@@ -5,7 +5,22 @@ const { join } = require('node:path');
 const { loadTs, loadDictionaryDomain, loadLocalDictionaryAdditions, srs, createRepository } = require('./test-support.cjs');
 const dictionary = loadDictionaryDomain();
 const localDictionaryAdditions = loadLocalDictionaryAdditions();
-const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
+const conjunctionCourse = loadTs(
+  join(__dirname, '../domain/conjunction-course.ts'),
+  { './dictionary-local-additions': localDictionaryAdditions },
+);
+const linkingAdverbCourse = loadTs(
+  join(__dirname, '../domain/linking-adverb-course.ts'),
+);
+const sentenceStructurePatterns = loadTs(
+  join(__dirname, '../domain/sentence-structure-patterns.ts'),
+);
+const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), {
+  './dictionary': dictionary,
+  './conjunction-course': conjunctionCourse,
+  './linking-adverb-course': linkingAdverbCourse,
+  './sentence-structure-patterns': sentenceStructurePatterns,
+});
 const resultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
   {
@@ -101,6 +116,28 @@ assert.equal(
   'Course-saved idioms are recognized through their POS note.',
 );
 assert.equal(exercises.isIdiomVocabularyWord({ ...word, meaning: '(verb) break the ice' }), false);
+assert.equal(exercises.isEligibleForReviewMistakeMatch(idiomWord), false);
+const sentenceStructureTerm = Object.keys(
+  sentenceStructurePatterns.SENTENCE_STRUCTURE_PATTERN_ENTRIES,
+)[0];
+assert.equal(
+  exercises.isEligibleForReviewMistakeMatch({
+    ...word,
+    term: sentenceStructureTerm,
+    note: '',
+  }),
+  false,
+  'Sentence-structure terms must not enter the wrong-answer matching game.',
+);
+assert.equal(
+  exercises.isEligibleForReviewMistakeMatch({
+    ...word,
+    term: 'ordinary',
+    note: '',
+  }),
+  true,
+  'Regular vocabulary remains eligible for the wrong-answer matching game.',
+);
 const idiomDialogue = exercises.createIdiomDialogueExercise(idiomWord);
 assert.equal(idiomDialogue.kind, 'idiom-dialogue');
 assert.equal(idiomDialogue.dialoguePrompt,

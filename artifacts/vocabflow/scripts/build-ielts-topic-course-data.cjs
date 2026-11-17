@@ -22,6 +22,14 @@ const IELTS_EXPANSION_CONTENT_PATH = join(
   __dirname,
   "../domain/ielts-ai-expansion-content.json",
 );
+const IELTS_READING_TOPIC_MAP_PATH = join(
+  __dirname,
+  "../domain/ielts-reading-vocabulary-topic-map.json",
+);
+const IELTS_READING_EXAMPLE_TRANSLATIONS_PATH = join(
+  __dirname,
+  "../domain/ielts-reading-example-translations.json",
+);
 const REVIEWED_EXAMPLES = JSON.parse(
   readFileSync(REVIEWED_EXAMPLES_PATH, "utf8"),
 );
@@ -234,6 +242,238 @@ const TOPICS = [
       "water waste recycl sewage sanitation wastewater pollution contaminat clean hygiene resource scarcity shortage supply treatment purification drainage river ocean freshwater drinking irrigation flood",
   },
 ];
+const IELTS_READING_TOPIC = {
+  id: "general-reading",
+  title: "Đọc hiểu tổng hợp",
+  focus: "Từ vựng học thuật và các từ thường gặp trong bài đọc IELTS.",
+  prefixes: "",
+};
+const READING_IRREGULAR_FORMS = new Map(
+  Object.entries({
+    arose: "arise",
+    arisen: "arise",
+    became: "become",
+    begun: "begin",
+    began: "begin",
+    bitten: "bite",
+    bit: "bite",
+    blew: "blow",
+    blown: "blow",
+    bore: "bear",
+    borne: "bear",
+    bred: "breed",
+    brought: "bring",
+    built: "build",
+    bought: "buy",
+    caught: "catch",
+    chose: "choose",
+    chosen: "choose",
+    crept: "creep",
+    dealt: "deal",
+    dug: "dig",
+    drew: "draw",
+    drawn: "draw",
+    drank: "drink",
+    drunk: "drink",
+    drove: "drive",
+    driven: "drive",
+    ate: "eat",
+    eaten: "eat",
+    fell: "fall",
+    fallen: "fall",
+    fed: "feed",
+    fled: "flee",
+    flung: "fling",
+    flew: "fly",
+    flown: "fly",
+    forbade: "forbid",
+    forbidden: "forbid",
+    forgot: "forget",
+    forgotten: "forget",
+    froze: "freeze",
+    frozen: "freeze",
+    gave: "give",
+    given: "give",
+    went: "go",
+    gone: "go",
+    got: "get",
+    gotten: "get",
+    grew: "grow",
+    grown: "grow",
+    hung: "hang",
+    heard: "hear",
+    hid: "hide",
+    hidden: "hide",
+    held: "hold",
+    kept: "keep",
+    knew: "know",
+    known: "know",
+    laid: "lay",
+    led: "lead",
+    left: "leave",
+    lent: "lend",
+    lay: "lie",
+    lain: "lie",
+    lost: "lose",
+    made: "make",
+    meant: "mean",
+    met: "meet",
+    misled: "mislead",
+    misunderstood: "misunderstand",
+    overcame: "overcome",
+    overran: "overrun",
+    oversold: "oversell",
+    paid: "pay",
+    proved: "prove",
+    proven: "prove",
+    ran: "run",
+    rang: "ring",
+    risen: "rise",
+    rose: "rise",
+    saw: "see",
+    seen: "see",
+    sought: "seek",
+    sold: "sell",
+    sent: "send",
+    shook: "shake",
+    shaken: "shake",
+    shone: "shine",
+    shot: "shoot",
+    showed: "show",
+    shown: "show",
+    shrank: "shrink",
+    shrunk: "shrink",
+    sang: "sing",
+    sung: "sing",
+    sank: "sink",
+    sunk: "sink",
+    sat: "sit",
+    slept: "sleep",
+    slid: "slide",
+    spoke: "speak",
+    spoken: "speak",
+    spent: "spend",
+    spun: "spin",
+    stood: "stand",
+    stole: "steal",
+    stolen: "steal",
+    stuck: "stick",
+    stung: "sting",
+    struck: "strike",
+    swore: "swear",
+    sworn: "swear",
+    swept: "sweep",
+    swam: "swim",
+    swum: "swim",
+    taught: "teach",
+    tore: "tear",
+    torn: "tear",
+    told: "tell",
+    thought: "think",
+    threw: "throw",
+    thrown: "throw",
+    understood: "understand",
+    woke: "wake",
+    woken: "wake",
+    wore: "wear",
+    worn: "wear",
+    wept: "weep",
+    won: "win",
+    withdrew: "withdraw",
+    withdrawn: "withdraw",
+    wrote: "write",
+    written: "write",
+    learnt: "learn",
+    burnt: "burn",
+    dreamt: "dream",
+    clad: "clothe",
+    better: "good",
+    best: "good",
+    worse: "bad",
+    worst: "bad",
+    farther: "far",
+    farthest: "far",
+    further: "far",
+    furthest: "far",
+    less: "little",
+    least: "little",
+    more: "many",
+    most: "many",
+    children: "child",
+    men: "man",
+    women: "woman",
+    mice: "mouse",
+    geese: "goose",
+    teeth: "tooth",
+    feet: "foot",
+    oxen: "ox",
+    cacti: "cactus",
+    fungi: "fungus",
+    genera: "genus",
+    larvae: "larva",
+    loci: "locus",
+    millennia: "millennium",
+    oases: "oasis",
+    curricula: "curriculum",
+    criteria: "criterion",
+    phenomena: "phenomenon",
+    indices: "index",
+    antennae: "antenna",
+    leaves: "leaf",
+    knives: "knife",
+    lives: "life",
+    wives: "wife",
+    calves: "calf",
+    selves: "self",
+  }),
+);
+
+function isInflectionOf(term, base) {
+  if (!term || !base || term === base) return false;
+  if (READING_IRREGULAR_FORMS.get(term) === base) return true;
+
+  const forms = new Set([
+    `${base}s`,
+    `${base}es`,
+    `${base}ed`,
+    `${base}ing`,
+    `${base}er`,
+    `${base}est`,
+    `${base}d`,
+    `${base}r`,
+    `${base}st`,
+  ]);
+  if (base.endsWith("y")) {
+    forms.add(`${base.slice(0, -1)}ies`);
+    forms.add(`${base.slice(0, -1)}ied`);
+    forms.add(`${base.slice(0, -1)}ier`);
+    forms.add(`${base.slice(0, -1)}iest`);
+    forms.add(`${base.slice(0, -1)}ying`);
+  }
+  if (base.endsWith("e")) {
+    forms.add(`${base.slice(0, -1)}ing`);
+    forms.add(`${base.slice(0, -1)}er`);
+    forms.add(`${base.slice(0, -1)}est`);
+    forms.add(`${base}d`);
+    forms.add(`${base}r`);
+    forms.add(`${base}st`);
+  }
+  if (base.endsWith("ie")) {
+    forms.add(`${base.slice(0, -2)}ying`);
+  }
+  if (/[bcdfghjklmnpqrstvwxz]$/.test(base) && base.length > 2) {
+    const doubled = `${base}${base.at(-1)}`;
+    forms.add(`${doubled}ed`);
+    forms.add(`${doubled}ing`);
+    forms.add(`${doubled}er`);
+    forms.add(`${doubled}est`);
+  }
+  if (base.endsWith("c")) {
+    forms.add(`${base}ked`);
+    forms.add(`${base}king`);
+  }
+  return forms.has(term);
+}
 
 const IELTS_EXPANSION_TOPIC_ROUTES = Object.fromEntries(
   IELTS_EXPANSION_CANDIDATES.topics.map((topic) => [
@@ -1587,7 +1827,8 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
     errors.push("- IELTS British-English spelling convention is missing or changed");
   }
   const topicWordCount = (courseData.topics ?? []).reduce(
-    (sum, topic) => sum + (topic.terms?.length ?? 0),
+    (sum, topic) =>
+      sum + (topic.terms?.length ?? 0) + (topic.readingTerms?.length ?? 0),
     0,
   );
   if (courseData.totalWords !== topicWordCount) {
@@ -1608,10 +1849,11 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
 
   const topicByTerm = new Map();
   for (const topic of courseData.topics ?? []) {
-    if (!topic.terms?.length) {
+    const terms = [...(topic.terms ?? []), ...(topic.readingTerms ?? [])];
+    if (!terms.length) {
       errors.push(`- ${topic.id}: topic has no terms`);
     }
-    for (const rawTerm of topic.terms ?? []) {
+    for (const rawTerm of terms) {
       const term = rawTerm.trim().toLowerCase();
       const previousTopic = topicByTerm.get(term);
       if (previousTopic && previousTopic !== topic.id) {
@@ -2162,6 +2404,62 @@ function main() {
     validateDictionaryDefinitionReview(dictionary);
     validateReviewedExamples(REVIEWED_EXAMPLES, dictionaryRows);
     const sortedTerms = [...dictionary.keys()].sort();
+    const readingTopicMap = JSON.parse(
+      readFileSync(IELTS_READING_TOPIC_MAP_PATH, "utf8"),
+    );
+    const readingExampleTranslationsFile = JSON.parse(
+      readFileSync(IELTS_READING_EXAMPLE_TRANSLATIONS_PATH, "utf8"),
+    );
+    const readingExampleTranslations = new Map(
+      (readingExampleTranslationsFile.entries ?? []).map((entry) => [
+        entry.term,
+        entry,
+      ]),
+    );
+    const readingTopicDefinitions = [...TOPICS, IELTS_READING_TOPIC];
+    const readingTopicIds = new Set(
+      readingTopicDefinitions.map((topic) => topic.id),
+    );
+    const readingTermByHeadword = new Map();
+    for (const record of readingTopicMap.entries ?? []) {
+      if (
+        !record ||
+        !/^[a-z]+$/.test(record.term ?? "") ||
+        !/^[a-z]+$/.test(record.canonicalTerm ?? "") ||
+        !readingTopicIds.has(record.topicId)
+      ) {
+        throw new Error("IELTS Reading import contains an invalid word or topic.");
+      }
+
+      let term = record.term;
+      if (
+        record.canonicalTerm !== record.term &&
+        isInflectionOf(record.term, record.canonicalTerm) &&
+        dictionary.has(record.canonicalTerm)
+      ) {
+        term = record.canonicalTerm;
+      }
+      if (
+        !dictionary.has(term) ||
+        REDUNDANT_VERB_INFLECTION_REVIEW.has(term) ||
+        RARE_HEADWORD_REVIEW[term] ||
+        DICTIONARY_SENSE_REVIEW[term]
+      ) {
+        continue;
+      }
+
+      const candidate = {
+        term,
+        topicId: record.topicId,
+        priority: (record.term === term ? 2 : 0) +
+          (record.topicId === "general-reading" ? 0 : 1),
+      };
+      const previous = readingTermByHeadword.get(term);
+      if (!previous || candidate.priority > previous.priority) {
+        readingTermByHeadword.set(term, candidate);
+      }
+    }
+
     const legacy = loadLegacyCourse();
     const filteredLegacyTopics = legacy.topics.map((topic) => ({
       ...topic,
@@ -2195,7 +2493,7 @@ function main() {
     );
     const legacyLessons = legacy.lessons;
     const usedTerms = new Set();
-    const topics = TOPICS.map((topic) => {
+    const topics = readingTopicDefinitions.map((topic) => {
       const oldTopic = legacyTopics.get(topic.id);
       const words = [];
       if (oldTopic) {
@@ -2259,17 +2557,40 @@ function main() {
         title: topic.title,
         focus: topic.focus,
         words,
+        readingWords: [],
         legacyLesson: legacyLessons.get(topic.id) ?? null,
       };
     });
 
+    const generatedTopicById = new Map(
+      topics.map((topic) => [topic.id, topic]),
+    );
+    for (const candidate of readingTermByHeadword.values()) {
+      if (usedTerms.has(candidate.term)) continue;
+      const topic = generatedTopicById.get(candidate.topicId);
+      if (!topic) {
+        throw new Error(
+          `IELTS Reading import references an unknown topic: ${candidate.topicId}`,
+        );
+      }
+      usedTerms.add(candidate.term);
+      topic.readingWords.push({
+        term: candidate.term,
+        family: topic.id,
+        entry: dictionary.get(candidate.term),
+        pos: dictionary.get(candidate.term)?.pos ?? "",
+        source: "offline",
+      });
+    }
+
     const entries = {};
     for (const topic of topics) {
-      for (const word of topic.words) {
+      for (const word of [...topic.words, ...topic.readingWords]) {
         if (!word.entry) {
           throw new Error(`Không có mục từ điển cho từ cũ: ${word.term}`);
         }
         const savedTranslation = legacy.exampleTranslations[word.term];
+        const readingTranslation = readingExampleTranslations.get(word.term);
         entries[word.term] = {
           definition: word.entry.definition,
           example: word.entry.example,
@@ -2277,7 +2598,9 @@ function main() {
             word.entry.exampleTranslation ||
             (savedTranslation?.example === word.entry.example
               ? savedTranslation.translation
-              : ""),
+              : readingTranslation?.example === word.entry.example
+                ? readingTranslation.translation
+                : ""),
           dictionarySource: word.entry.dictionarySource ?? "offline",
           exampleSource: word.entry.exampleSource ?? "offline",
           partOfSpeech: word.pos,
@@ -2294,6 +2617,22 @@ function main() {
       }
     }
 
+    const missingReadingTranslations = topics
+      .flatMap((topic) => topic.readingWords)
+      .filter((word) => {
+        const translation = readingExampleTranslations.get(word.term);
+        return (
+          translation?.example !== word.entry.example ||
+          !translation?.translation?.trim()
+        );
+      })
+      .map((word) => word.term);
+    if (missingReadingTranslations.length) {
+      throw new Error(
+        `IELTS Reading import is missing ${missingReadingTranslations.length} matching Vietnamese example translations.`,
+      );
+    }
+
     for (const [term, example] of Object.entries(COURSE_EXAMPLE_OVERRIDES)) {
       if (!entries[term]) {
         throw new Error(`Không tìm thấy từ để áp dụng ví dụ IELTS đã biên soạn: ${term}`);
@@ -2306,7 +2645,10 @@ function main() {
     applySpellingVariantNotes(entries);
     validateCourseExamples(entries);
 
-    const totalWords = topics.reduce((sum, topic) => sum + topic.words.length, 0);
+    const totalWords = topics.reduce(
+      (sum, topic) => sum + topic.words.length + topic.readingWords.length,
+      0,
+    );
     const output = {
       generatedFrom: "dictionary_en_vi.db",
       spellingConvention: IELTS_SPELLING_CONVENTION,
@@ -2316,6 +2658,7 @@ function main() {
         title: topic.title,
         focus: topic.focus,
         terms: topic.words.map((word) => word.term),
+        readingTerms: topic.readingWords.map((word) => word.term),
         legacyLesson: topic.legacyLesson,
       })),
       entries,
@@ -2326,7 +2669,9 @@ function main() {
       `Built IELTS course data: ${totalWords} unique words across ${topics.length} topics; excluded ${Object.keys(DICTIONARY_SENSE_REVIEW).length} reviewed dictionary sense mismatches and ${Object.keys(RARE_HEADWORD_REVIEW).length} reviewed rare or obsolete headwords.`,
     );
     for (const topic of topics) {
-      console.log(`- ${topic.title}: ${topic.words.length} words`);
+      console.log(
+        `- ${topic.title}: ${topic.words.length} existing + ${topic.readingWords.length} Reading words`,
+      );
     }
   } finally {
     db.close();
@@ -2358,6 +2703,8 @@ module.exports = {
   IELTS_EXPANSION_CANDIDATES,
   IELTS_EXPANSION_TOPIC_ROUTES,
   IELTS_COURSE_TOPICS: TOPICS,
+  IELTS_READING_TOPIC,
+  isInflectionOf,
   topicCandidates,
   dictionaryEntryIndex,
   getDictionaryRows,

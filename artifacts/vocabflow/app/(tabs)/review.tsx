@@ -19,6 +19,7 @@ import {
   createReviewExercise,
   createIdiomReviewExercise,
   isIdiomVocabularyWord,
+  isEligibleForReviewMistakeMatch,
   type ReviewExercise,
 } from "@/domain/review-exercises";
 import type { VocabularyWord } from "@/data/types";
@@ -478,7 +479,10 @@ export default function ReviewScreen() {
     const endedCombo = correct !== true ? current.currentCombo : 0;
     const comboIndex = current.comboRewardCount + (endedCombo > 0 ? 1 : 0);
     const mistakes =
-      correct === false && !current.mistakes.some((word) => word.id === id)
+      correct === false &&
+      current.mode !== "idiom" &&
+      isEligibleForReviewMistakeMatch(current.word) &&
+      !current.mistakes.some((word) => word.id === id)
         ? [...current.mistakes, current.word]
         : current.mistakes;
     const combo = advanceReviewCombo(

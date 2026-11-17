@@ -1,5 +1,7 @@
 const assert = require("node:assert/strict");
 const courseData = require("../domain/ielts-topic-course-data.json");
+const readingVocabularyMap = require("../domain/ielts-reading-vocabulary-topic-map.json");
+const readingExampleTranslations = require("../domain/ielts-reading-example-translations.json");
 const {
   DICTIONARY_SENSE_REVIEW,
   DICTIONARY_DEFINITION_REVIEW,
@@ -33,7 +35,13 @@ function cloneCourseData() {
 
 validateCourseExamples(courseData.entries);
 const allIeltsTerms = new Set(
-  courseData.topics.flatMap((topic) => topic.terms),
+  courseData.topics.flatMap((topic) => [
+    ...topic.terms,
+    ...(topic.readingTerms ?? []),
+  ]),
+);
+const importedReadingTerms = courseData.topics.flatMap(
+  (topic) => topic.readingTerms ?? [],
 );
 for (const term of REDUNDANT_VERB_INFLECTION_REVIEW) {
   assert.equal(
@@ -128,10 +136,51 @@ for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
   }
 }
 assert.equal(
-  courseData.totalWords,
+  courseData.topics.reduce((count, topic) => count + topic.terms.length, 0),
   1342,
-  "The reviewed IELTS course plus the expansion should contain 1,342 words.",
+  "The existing IELTS lessons should retain their 1,342 words.",
 );
+assert.equal(
+  readingVocabularyMap.entries.length,
+  readingVocabularyMap.candidateCount,
+  "Every Reading vocabulary candidate should have a topic assignment.",
+);
+assert.ok(
+  importedReadingTerms.length >= 3000,
+  "The IELTS Reading import should retain at least 3,000 dictionary-backed headwords.",
+);
+assert.equal(
+  allIeltsTerms.size,
+  courseData.totalWords,
+  "The IELTS course must not repeat a headword across existing and Reading lessons.",
+);
+assert.equal(
+  importedReadingTerms.length,
+  new Set(importedReadingTerms).size,
+  "The IELTS Reading topics must not repeat imported headwords.",
+);
+assert.equal(
+  readingExampleTranslations.entries.length,
+  importedReadingTerms.length,
+  "Every imported Reading word must have a translated example.",
+);
+const readingTranslationsByTerm = new Map(
+  readingExampleTranslations.entries.map((entry) => [entry.term, entry]),
+);
+for (const term of importedReadingTerms) {
+  const translation = readingTranslationsByTerm.get(term);
+  assert.ok(courseData.entries[term], `${term} must have an offline dictionary entry.`);
+  assert.equal(
+    translation?.example,
+    courseData.entries[term].example,
+    `${term} must use the same example as its translated source.`,
+  );
+  assert.equal(
+    translation?.translation,
+    courseData.entries[term].exampleTranslation,
+    `${term} must use its saved Vietnamese example translation.`,
+  );
+}
 const expectedReviewedTopicCounts = {
   education: 41,
   work: 42,
@@ -224,8 +273,8 @@ for (const [term, expected] of Object.entries(
 }
 assert.equal(
   courseData.topics.length,
-  36,
-  "The new academic domains must be grouped into course topics with usable lesson sizes.",
+  37,
+  "The existing topics and the general Reading topic must remain available.",
 );
 assert.equal(
   hasSubjectPronounConflict(
@@ -310,6 +359,7 @@ for (const [term, entry] of Object.entries(courseData.entries)) {
 
 const duplicateTopicTerm = cloneCourseData();
 duplicateTopicTerm.topics[1].terms.push(duplicateTopicTerm.topics[0].terms[0]);
+duplicateTopicTerm.totalWords += 1;
 assert.throws(
   () => validateCourseDataAgainstAuthoredOverrides(duplicateTopicTerm),
   /headword appears in multiple topics/,
@@ -317,7 +367,10 @@ assert.throws(
 );
 
 const emptyTopic = cloneCourseData();
+emptyTopic.totalWords -=
+  emptyTopic.topics[0].terms.length + emptyTopic.topics[0].readingTerms.length;
 emptyTopic.topics[0].terms = [];
+emptyTopic.topics[0].readingTerms = [];
 assert.throws(
   () => validateCourseDataAgainstAuthoredOverrides(emptyTopic),
   /education: topic has no terms/,
@@ -364,7 +417,10 @@ for (const [term, review] of Object.entries(
 }
 
 const courseTopicTerms = new Set(
-  courseData.topics.flatMap((topic) => topic.terms),
+  courseData.topics.flatMap((topic) => [
+    ...topic.terms,
+    ...topic.readingTerms,
+  ]),
 );
 for (const term of Object.keys(RARE_HEADWORD_REVIEW)) {
   assert.equal(
@@ -388,6 +444,7 @@ for (const term of Object.keys(RARE_HEADWORD_REVIEW)) {
 
   const reintroducedTopicTerm = cloneCourseData();
   reintroducedTopicTerm.topics[0].terms.push(term);
+  reintroducedTopicTerm.totalWords += 1;
   assert.throws(
     () => validateCourseDataAgainstAuthoredOverrides(reintroducedTopicTerm),
     new RegExp(`${term}: reviewed rare or obsolete headword remains in the course`),

@@ -5,7 +5,22 @@ const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const overview = loadTs(join(__dirname, '../domain/review-overview.ts'), { './srs': srs });
 const dictionary = loadDictionaryDomain();
 const localDictionaryAdditions = loadLocalDictionaryAdditions();
-const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), { './dictionary': dictionary });
+const conjunctionCourse = loadTs(
+  join(__dirname, '../domain/conjunction-course.ts'),
+  { './dictionary-local-additions': localDictionaryAdditions },
+);
+const linkingAdverbCourse = loadTs(
+  join(__dirname, '../domain/linking-adverb-course.ts'),
+);
+const sentenceStructurePatterns = loadTs(
+  join(__dirname, '../domain/sentence-structure-patterns.ts'),
+);
+const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), {
+  './dictionary': dictionary,
+  './conjunction-course': conjunctionCourse,
+  './linking-adverb-course': linkingAdverbCourse,
+  './sentence-structure-patterns': sentenceStructurePatterns,
+});
 const reviewResultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
   {
@@ -254,6 +269,22 @@ async function startReview(screen) {
     'Idiom answers use the same normal review result and SRS path.');
   idiomMode.unmount();
 
+  const idiomMistake = mount('../app/(tabs)/review.tsx', {}, {
+    words: [savedIdiom],
+  });
+  idiomMistake.byId('review-idiom-start').props.onPress();
+  await idiomMistake.settle();
+  idiomMistake.byType('ReviewCard').props.onCommitted(savedIdiom.id, false);
+  idiomMistake.byType('ReviewCard').props.onNext();
+  await idiomMistake.settle();
+  assert.equal(
+    idiomMistake.byType('ReviewMistakeMatchGame'),
+    undefined,
+    'Wrong idiom answers do not enter the matching game.',
+  );
+  assert.ok(idiomMistake.byId('review-session-summary'));
+  idiomMistake.unmount();
+
   const listeningIdiom = { ...savedIdiom, id: 84, reviewCount: 1 };
   const idiomListeningMode = mount('../app/(tabs)/review.tsx', {}, {
     words: [listeningIdiom],
@@ -381,6 +412,37 @@ async function startReview(screen) {
     'The ordinary review session excludes due idioms.');
   assert.notEqual(mixedDue.byType('ReviewCard').props.exercise.kind, 'idiom-dialogue');
   mixedDue.unmount();
+
+  const structureTerm = Object.keys(
+    sentenceStructurePatterns.SENTENCE_STRUCTURE_PATTERN_ENTRIES,
+  )[0];
+  const structureEntry =
+    sentenceStructurePatterns.SENTENCE_STRUCTURE_PATTERN_ENTRIES[structureTerm];
+  const structureReview = mount('../app/(tabs)/review.tsx', {}, {
+    words: [
+      { ...word, id: 84, term: 'ordinary', meaning: 'bình thường' },
+      {
+        ...word,
+        id: 85,
+        term: structureTerm,
+        meaning: structureEntry.definition,
+        note: '',
+      },
+    ],
+  });
+  await startReview(structureReview);
+  for (let index = 0; index < 2; index++) {
+    const card = structureReview.byType('ReviewCard').props;
+    card.onCommitted(card.word.id, false);
+    card.onNext();
+    await structureReview.settle();
+  }
+  assert.deepEqual(
+    structureReview.byType('ReviewMistakeMatchGame').props.words.map(item => item.id),
+    [84],
+    'The matching game retains ordinary vocabulary mistakes but filters sentence-structure terms.',
+  );
+  structureReview.unmount();
 
   const screen = mount('../app/(tabs)/review.tsx');
   assert.equal(
