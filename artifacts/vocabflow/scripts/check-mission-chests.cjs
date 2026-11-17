@@ -608,9 +608,22 @@ assert.match(
 );
 assert.match(
   collectionScreen,
-  /FRAGMENT_RARITY_ORDER: ChestRarity\[\] = \["rare", "epic", "legendary"\]/,
-  "Fragment progress shows Rare and higher only.",
+  /FRAGMENT_RARITY_ORDER: FragmentRarity\[\] = \["epic", "rare", "legendary"\]/,
+  "Fragment cards display in Silver, Gold, Platinum order without changing their rarity keys.",
 );
+assert.match(
+  collectionScreen,
+  /rare:\s*require\("\.\.\/assets\/images\/puzzle-gold\.png"\)[\s\S]*epic:\s*require\("\.\.\/assets\/images\/puzzle-silver\.png"\)[\s\S]*legendary:\s*require\("\.\.\/assets\/images\/puzzle-platinum\.png"\)/,
+  "Collection fragment artwork is mapped by rarity key.",
+);
+assert.match(
+  collectionScreen,
+  /fragmentImage:\s*\{\s*width:\s*72,\s*height:\s*72/,
+  "Collection fragment artwork uses the requested 72dp size.",
+);
+assert.match(collectionScreen, /resizeMode="contain"/);
+assert.match(collectionScreen, /resizeMethod="scale"/);
+assert.match(collectionScreen, /imageRendering:\s*"pixelated"/);
 assert.match(
   collectionScreen,
   /STATUE_UNLOCK_COST = 10/,

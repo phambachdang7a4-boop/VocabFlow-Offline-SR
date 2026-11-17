@@ -3,9 +3,12 @@ import {
   ActivityIndicator,
   Image,
   Pressable,
+  Platform,
   StyleSheet,
   Text,
   View,
+  type ImageSourcePropType,
+  type ImageStyle,
   useWindowDimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -20,10 +23,6 @@ import {
   type MissionShopOverview,
 } from "@/data/vocabulary";
 import {
-  CHEST_RARITY_COLORS,
-  CHEST_RARITY_ICON_COLORS,
-} from "@/domain/mission-chests";
-import {
   MISSION_SHOP_PRODUCTS,
   type MissionShopProductId,
 } from "@/domain/mission-shop";
@@ -37,6 +36,18 @@ const PRODUCT_ICONS: Record<MissionShopProductId, React.ComponentProps<typeof Fe
   low_capital_invite: "trending-up",
   high_capital_invite: "trending-up",
 };
+const FRAGMENT_ICON_SOURCES: Record<
+  "rare" | "epic" | "legendary",
+  ImageSourcePropType
+> = {
+  rare: require("../assets/images/puzzle-gold.png"),
+  epic: require("../assets/images/puzzle-silver.png"),
+  legendary: require("../assets/images/puzzle-platinum.png"),
+};
+const pixelatedImageStyle =
+  Platform.OS === "web"
+    ? ({ imageRendering: "pixelated" } as unknown as ImageStyle)
+    : null;
 
 export function MissionShop() {
   const c = useColors();
@@ -161,9 +172,6 @@ export function MissionShop() {
               const canAfford = overview.stoneBalance >= offer.price;
               const disabled =
                 offer.remainingStock <= 0 || !canAfford || buyingSlot !== null;
-              const fragmentColor = product.fragmentRarity
-                ? CHEST_RARITY_COLORS[product.fragmentRarity]
-                : c.secondary;
               return (
                 <View
                   key={offer.slot}
@@ -174,23 +182,34 @@ export function MissionShop() {
                     { backgroundColor: c.background, borderColor: c.accent },
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.fragmentIcon,
-                      compactOffers ? styles.fragmentIconCompact : null,
-                      { backgroundColor: fragmentColor },
-                    ]}
-                  >
-                    <Feather
-                      name={PRODUCT_ICONS[productId]}
-                      size={18}
-                      color={
-                        product.fragmentRarity
-                          ? CHEST_RARITY_ICON_COLORS[product.fragmentRarity]
-                          : c.primary
-                      }
+                  {product.fragmentRarity ? (
+                    <Image
+                      testID={`mission-shop-fragment-icon-${product.fragmentRarity}`}
+                      source={FRAGMENT_ICON_SOURCES[product.fragmentRarity]}
+                      accessibilityLabel={`Mảnh ${product.fragmentRarity}`}
+                      resizeMode="contain"
+                      resizeMethod="scale"
+                      style={[
+                        styles.fragmentImage,
+                        compactOffers ? styles.fragmentImageCompact : null,
+                        pixelatedImageStyle,
+                      ]}
                     />
-                  </View>
+                  ) : (
+                    <View
+                      style={[
+                        styles.fragmentIcon,
+                        compactOffers ? styles.fragmentIconCompact : null,
+                        { backgroundColor: c.secondary },
+                      ]}
+                    >
+                      <Feather
+                        name={PRODUCT_ICONS[productId]}
+                        size={18}
+                        color={c.primary}
+                      />
+                    </View>
+                  )}
                   <Text
                     style={[
                       styles.offerTitle,
@@ -401,6 +420,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   fragmentIconCompact: { width: 28, height: 28 },
+  fragmentImage: { width: 40, height: 40 },
+  fragmentImageCompact: { width: 32, height: 32 },
   offerTitle: {
     height: 28,
     width: "100%",

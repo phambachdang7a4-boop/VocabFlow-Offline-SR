@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 
@@ -92,6 +92,27 @@ const storeScreen = readFileSync(
   join(__dirname, "../components/MissionShop.tsx"),
   "utf8",
 );
+assert.match(
+  storeScreen,
+  /rare:\s*require\("\.\.\/assets\/images\/puzzle-gold\.png"\)[\s\S]*epic:\s*require\("\.\.\/assets\/images\/puzzle-silver\.png"\)[\s\S]*legendary:\s*require\("\.\.\/assets\/images\/puzzle-platinum\.png"\)/,
+  "Shop fragment offers use artwork mapped by rarity key.",
+);
+assert.match(storeScreen, /source=\{FRAGMENT_ICON_SOURCES\[product\.fragmentRarity\]\}/);
+assert.match(storeScreen, /resizeMode="contain"/);
+assert.match(storeScreen, /resizeMethod="scale"/);
+assert.match(storeScreen, /imageRendering:\s*"pixelated"/);
+for (const asset of [
+  "puzzle-silver.png",
+  "puzzle-gold.png",
+  "puzzle-platinum.png",
+]) {
+  const png = readFileSync(join(__dirname, "../assets/images", asset));
+  assert.equal(
+    png.subarray(0, 8).toString("hex"),
+    "89504e470d0a1a0a",
+    `${asset} is a valid PNG asset.`,
+  );
+}
 const investmentScreen = readFileSync(
   join(__dirname, "../components/StoneInvestmentSection.tsx"),
   "utf8",

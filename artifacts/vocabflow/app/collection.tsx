@@ -12,6 +12,7 @@ import {
   View,
   useWindowDimensions,
   type ImageSourcePropType,
+  type ImageStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -45,8 +46,18 @@ const GALLERY_RARITY_ORDER: ChestRarity[] = [
   "epic",
   "rare",
 ];
-const FRAGMENT_RARITY_ORDER: ChestRarity[] = ["rare", "epic", "legendary"];
+type FragmentRarity = "rare" | "epic" | "legendary";
+const FRAGMENT_RARITY_ORDER: FragmentRarity[] = ["epic", "rare", "legendary"];
 const STATUE_UNLOCK_COST = 10;
+const FRAGMENT_ICON_SOURCES: Record<FragmentRarity, ImageSourcePropType> = {
+  rare: require("../assets/images/puzzle-gold.png"),
+  epic: require("../assets/images/puzzle-silver.png"),
+  legendary: require("../assets/images/puzzle-platinum.png"),
+};
+const pixelatedImageStyle =
+  Platform.OS === "web"
+    ? ({ imageRendering: "pixelated" } as unknown as ImageStyle)
+    : null;
 const STATUE_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Common",
   uncommon: "Uncommon",
@@ -442,25 +453,25 @@ export default function CollectionScreen() {
                 ]}
               >
                 <MaterialSheen radius={15} />
-                <View
-                  style={[
-                    styles.rarityIcon,
-                    { backgroundColor: CHEST_RARITY_COLORS[rarity] },
-                  ]}
-                >
-                  {crafting === rarity ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={CHEST_RARITY_ICON_COLORS[rarity]}
-                    />
-                  ) : (
-                    <MaterialCommunityIcons
-                      name="puzzle"
-                      size={24}
-                      color={CHEST_RARITY_ICON_COLORS[rarity]}
-                    />
-                  )}
-                </View>
+                {crafting === rarity ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={CHEST_RARITY_ICON_COLORS[rarity]}
+                    style={styles.fragmentImage}
+                  />
+                ) : (
+                  <Image
+                    testID={`collection-fragment-icon-${rarity}`}
+                    source={FRAGMENT_ICON_SOURCES[rarity]}
+                    accessibilityLabel={`Mảnh ${tileLabel}`}
+                    resizeMode="contain"
+                    resizeMethod="scale"
+                    style={[
+                      styles.fragmentImage,
+                      pixelatedImageStyle,
+                    ]}
+                  />
+                )}
                 <Text
                   style={[
                     styles.rarityName,
@@ -931,19 +942,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 15,
     width: "31%",
-    aspectRatio: 1,
+    minHeight: 150,
     padding: 8,
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+    gap: 3,
   },
-  rarityIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  fragmentImage: { width: 72, height: 72, alignSelf: "center" },
   rarityName: { fontFamily: F.b, fontSize: 13, textAlign: "center" },
   fragmentCount: { fontFamily: F.r, fontSize: 12 },
   unavailable: { fontFamily: F.r, fontSize: 10, textAlign: "center" },
