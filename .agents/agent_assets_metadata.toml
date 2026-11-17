@@ -182,3 +182,17 @@ mtime_ms = 1794886937740
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/ebedae7a-af2a-4331-8dab-4b7f4648f09a/844857a9-f3e1-4065-a8be-6e54a9a14201"
 storage_version_token = "1794886976629544"
 content_type = "image/png"
+
+[[outputs]]
+id = "vqn-zffWIgPKitt-pLREO"
+uri = "file://generated-artifacts/ielts-advanced-cefr-audit.csv"
+type = "table"
+title = "Đối chiếu CEFR cho 694 từ IELTS Nâng cao"
+description = "Bảng 694 từ với mức Oxford 5000 và CEFR-J, từ loại nguồn, bất đồng và mục chưa được xác minh."
+logical_id = "b8b56301-a676-4c74-98a0-f9402ca4fdf9"
+content_hash = "sha256:aa2e1d48b82ca6a55617d9135920ea427eefb9053df4650a17d26041fb2e914d"
+size = 85680
+mtime_ms = 1794949116027
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/b8b56301-a676-4c74-98a0-f9402ca4fdf9/26e57e72-e7e7-4740-8915-27507702cc8d"
+storage_version_token = "1794949165105095"
+content_type = "text/csv"
