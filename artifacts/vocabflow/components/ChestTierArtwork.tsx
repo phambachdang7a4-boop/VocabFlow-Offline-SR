@@ -22,6 +22,14 @@ const CHEST_IMAGE_SOURCES: Partial<Record<ChestRarity, ImageSourcePropType>> = {
   rare: require("../assets/images/chest-gold.png"),
 };
 
+const CHEST_LID_IMAGE_SOURCES: Partial<
+  Record<ChestRarity, ImageSourcePropType>
+> = {
+  common: require("../assets/images/chest-copper-lid.png"),
+  uncommon: require("../assets/images/chest-silver-lid.png"),
+  rare: require("../assets/images/chest-gold-lid.png"),
+};
+
 type ChestPalette = {
   body: string;
   bodyLight: string;
@@ -114,8 +122,9 @@ export function ChestTierArtwork({
     ],
   }));
   const chestImage = CHEST_IMAGE_SOURCES[rarity];
+  const chestLidImage = CHEST_LID_IMAGE_SOURCES[rarity];
 
-  if (chestImage) {
+  if (chestImage && chestLidImage) {
     const imageStyle = {
       width: size,
       height: size,
@@ -123,14 +132,36 @@ export function ChestTierArtwork({
     } as ImageStyle;
 
     return (
-      <Animated.View style={[{ width: size, height: size }, lidStyle]}>
+      <View style={{ width: size, height: size, position: "relative" }}>
         <Image
+          testID="chest-body"
           source={chestImage}
           resizeMode="contain"
           resizeMethod="scale"
           style={imageStyle}
         />
-      </Animated.View>
+        <Animated.View
+          testID="chest-lid"
+          pointerEvents="none"
+          style={[
+            {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: size,
+              height: size,
+            },
+            lidStyle,
+          ]}
+        >
+          <Image
+            source={chestLidImage}
+            resizeMode="contain"
+            resizeMethod="scale"
+            style={imageStyle}
+          />
+        </Animated.View>
+      </View>
     );
   }
 

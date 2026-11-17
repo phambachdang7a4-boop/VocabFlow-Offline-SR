@@ -77,6 +77,9 @@ const { ChestTierArtwork } = loadTs(
     "../assets/images/chest-copper.png": "copper-chest-image",
     "../assets/images/chest-silver.png": "silver-chest-image",
     "../assets/images/chest-gold.png": "gold-chest-image",
+    "../assets/images/chest-copper-lid.png": "copper-chest-lid-image",
+    "../assets/images/chest-silver-lid.png": "silver-chest-lid-image",
+    "../assets/images/chest-gold-lid.png": "gold-chest-lid-image",
   },
 );
 
@@ -256,13 +259,26 @@ for (const [rarity, source] of [
   ["rare", "gold-chest-image"],
 ]) {
   const artwork = ChestTierArtwork({ rarity, size: 64 });
-  assert.equal(artwork.props.children.type, "Image");
-  assert.equal(artwork.props.children.props.source, source);
-  assert.equal(artwork.props.children.props.resizeMode, "contain");
-  assert.equal(artwork.props.children.props.resizeMethod, "scale");
-  assert.equal(artwork.props.children.props.style.width, 64);
-  assert.equal(artwork.props.children.props.style.height, 64);
-  assert.equal(artwork.props.children.props.style.imageRendering, "pixelated");
+  const [bodyImage, animatedLid] = artwork.props.children;
+  const lidImage = animatedLid.props.children;
+  assert.equal(bodyImage.type, "Image");
+  assert.equal(bodyImage.props.testID, "chest-body");
+  assert.equal(bodyImage.props.source, source);
+  assert.equal(animatedLid.type, "AnimatedView");
+  assert.equal(animatedLid.props.testID, "chest-lid");
+  assert.equal(animatedLid.props.pointerEvents, "none");
+  assert.equal(lidImage.type, "Image");
+  assert.equal(
+    lidImage.props.source,
+    source.replace("chest-image", "chest-lid-image"),
+  );
+  for (const image of [bodyImage, lidImage]) {
+    assert.equal(image.props.resizeMode, "contain");
+    assert.equal(image.props.resizeMethod, "scale");
+    assert.equal(image.props.style.width, 64);
+    assert.equal(image.props.style.height, 64);
+    assert.equal(image.props.style.imageRendering, "pixelated");
+  }
 }
 
 for (const [themeName, theme] of Object.entries(colors)) {

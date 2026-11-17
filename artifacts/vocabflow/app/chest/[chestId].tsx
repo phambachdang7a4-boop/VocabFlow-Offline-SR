@@ -75,18 +75,8 @@ export default function MissionChestScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const busyRef = useRef(false);
-  const chestScale = useSharedValue(1);
-  const chestX = useSharedValue(0);
-  const chestRotation = useSharedValue(0);
   const lidProgress = useSharedValue(0);
   const glowOpacity = useSharedValue(0);
-  const chestMotionStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: chestX.value },
-      { rotateZ: `${chestRotation.value}deg` },
-      { scale: chestScale.value },
-    ],
-  }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: glowOpacity.value }));
   const ruleSet = chest?.ruleSet ?? 1;
   const superUpgrade = chest?.superUpgrade ?? false;
@@ -137,30 +127,6 @@ export default function MissionChestScreen() {
     setError(null);
     setMessage(null);
     lidProgress.value = withTiming(0, { duration: 80 });
-    chestScale.value = withSequence(
-      withTiming(0.9, { duration: 65 }),
-      withSpring(1.08, { damping: 7, stiffness: 260 }),
-      withTiming(0.93, { duration: 70 }),
-      withSpring(1.06, { damping: 7, stiffness: 260 }),
-      withTiming(0.97, { duration: 70 }),
-      withSpring(1, { damping: 8, stiffness: 240 }),
-    );
-    chestX.value = withSequence(
-      withTiming(-7, { duration: 38 }),
-      withTiming(7, { duration: 44 }),
-      withTiming(-5, { duration: 42 }),
-      withTiming(5, { duration: 44 }),
-      withTiming(-3, { duration: 42 }),
-      withTiming(0, { duration: 65 }),
-    );
-    chestRotation.value = withSequence(
-      withTiming(-4, { duration: 38 }),
-      withTiming(4, { duration: 44 }),
-      withTiming(-3, { duration: 42 }),
-      withTiming(3, { duration: 44 }),
-      withTiming(-2, { duration: 42 }),
-      withTiming(0, { duration: 65 }),
-    );
     glowOpacity.value = withSequence(
       withTiming(0.22, { duration: 90 }),
       withTiming(0.04, { duration: 90 }),
@@ -262,7 +228,7 @@ export default function MissionChestScreen() {
               hitSlop={12}
               style={styles.chestArtPressable}
             >
-              <Animated.View style={[styles.chestArt, chestMotionStyle]}>
+              <View style={styles.chestArt}>
                 <Animated.View
                   pointerEvents="none"
                   style={[
@@ -280,7 +246,7 @@ export default function MissionChestScreen() {
                     lidProgress={lidProgress}
                   />
                 )}
-              </Animated.View>
+              </View>
             </Pressable>
             {chest.opened ? (
               <Text style={[styles.chestTitle, { color: c.foreground }]}>
