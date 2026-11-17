@@ -1321,6 +1321,130 @@ function assertConjunctionExamplePairs(dictionaryEntries, courseEntries) {
   }
 }
 
+const expectedLinkingAdverbExamplePairs = {
+  accordingly: [
+    "The opening hours changed, so we adjusted our schedule accordingly.",
+    "Giờ mở cửa đã thay đổi, vì vậy chúng tôi điều chỉnh lịch trình cho phù hợp.",
+  ],
+  consequently: [
+    "Leo left his passport at home; consequently, he could not board the flight.",
+    "Leo để quên hộ chiếu ở nhà; vì vậy, cậu ấy không thể lên máy bay.",
+  ],
+  hence: [
+    "The bridge is closed; hence, we must take another route.",
+    "Cây cầu đã đóng; vì vậy, chúng ta phải đi đường khác.",
+  ],
+  therefore: [
+    "Every safety test passed; therefore, the device is ready to ship.",
+    "Mọi bài kiểm tra an toàn đều đạt; vì vậy, thiết bị đã sẵn sàng để giao.",
+  ],
+  then: [
+    "Label each jar; then, place it on the correct shelf.",
+    "Hãy dán nhãn từng lọ; sau đó, đặt lọ lên đúng kệ.",
+  ],
+  finally: [
+    "We checked every page and finally found the missing signature.",
+    "Chúng tôi kiểm tra từng trang và cuối cùng tìm thấy chữ ký còn thiếu.",
+  ],
+  furthermore: [
+    "The bike is affordable; furthermore, its battery lasts all day.",
+    "Chiếc xe đạp có giá phải chăng; hơn nữa, pin dùng được cả ngày.",
+  ],
+  moreover: [
+    "The museum is free; moreover, it is open every Sunday.",
+    "Bảo tàng miễn phí; hơn nữa, nơi này mở cửa vào mỗi Chủ nhật.",
+  ],
+  meanwhile: [
+    "The rice is cooking; meanwhile, chop the vegetables.",
+    "Cơm đang nấu; trong lúc đó, hãy cắt rau củ.",
+  ],
+  however: [
+    "The forecast promised sunshine; however, it rained all afternoon.",
+    "Dự báo nói trời sẽ nắng; tuy nhiên, trời mưa suốt buổi chiều.",
+  ],
+  nevertheless: [
+    "The path was steep; nevertheless, the hikers continued to the summit.",
+    "Con đường dốc; dù vậy, nhóm đi bộ vẫn tiếp tục lên đỉnh.",
+  ],
+  nonetheless: [
+    "The instructions looked complicated; nonetheless, Ava built the desk.",
+    "Hướng dẫn trông có vẻ phức tạp; mặc dù thế, Ava vẫn lắp được chiếc bàn.",
+  ],
+  instead: [
+    "The café had no tables, so we ordered takeaway instead.",
+    "Quán cà phê không còn bàn, vì vậy chúng tôi gọi đồ mang đi thay vào đó.",
+  ],
+  rather: [
+    "The problem was not the price; rather, the delivery was too slow.",
+    "Vấn đề không nằm ở giá; đúng hơn là khâu giao hàng quá chậm.",
+  ],
+  indeed: [
+    "The hike was demanding; indeed, we climbed for six hours.",
+    "Chuyến đi bộ thật vất vả; quả thật, chúng tôi đã leo suốt sáu tiếng.",
+  ],
+  likewise: [
+    "Mai volunteered at the shelter; likewise, her brother gave up weekends to help.",
+    "Mai tình nguyện ở mái ấm; tương tự, anh trai cô cũng dành cuối tuần để giúp đỡ.",
+  ],
+  similarly: [
+    "The first class improved its scores. Similarly, the second class made progress.",
+    "Lớp đầu tiên cải thiện điểm số. Tương tự, lớp thứ hai cũng tiến bộ.",
+  ],
+};
+
+function assertLinkingAdverbExamplePairs(dictionaryEntries, courseEntries) {
+  const expectedTerms = Object.keys(expectedLinkingAdverbExamplePairs).sort();
+  const actualDictionaryTerms = dictionaryEntries
+    .filter((entry) => entry.pos === "adv")
+    .map((entry) => entry.term)
+    .sort();
+  for (const term of actualDictionaryTerms) {
+    assert.ok(
+      Object.hasOwn(expectedLinkingAdverbExamplePairs, term),
+      `Unreviewed dictionary linking-adverb example pair for "${term}".`,
+    );
+  }
+  for (const term of Object.keys(courseEntries)) {
+    assert.ok(
+      Object.hasOwn(expectedLinkingAdverbExamplePairs, term),
+      `Missing reviewed linking-adverb example pair for "${term}".`,
+    );
+  }
+  const dictionaryByTerm = new Map(
+    dictionaryEntries.map((entry) => [entry.term, entry]),
+  );
+  for (const term of expectedTerms) {
+    const expectedPair = expectedLinkingAdverbExamplePairs[term];
+    for (const [source, entry] of [
+      ["dictionary", dictionaryByTerm.get(term)],
+      ["course", courseEntries[term]],
+    ]) {
+      assert.ok(
+        entry,
+        `Missing ${source} linking-adverb example pair for "${term}".`,
+      );
+      if (
+        entry.example !== expectedPair[0] ||
+        entry.exampleTranslation !== expectedPair[1]
+      ) {
+        throw new Error(
+          `Linking-adverb ${source} example pair mismatch for "${term}".`,
+        );
+      }
+    }
+  }
+  assert.deepEqual(
+    actualDictionaryTerms,
+    expectedTerms,
+    "Linking-adverb dictionary entries must cover every reviewed example term.",
+  );
+  assert.deepEqual(
+    Object.keys(courseEntries).sort(),
+    expectedTerms,
+    "Linking-adverb course entries must cover every reviewed example term.",
+  );
+}
+
 async function checkDictionaryOverlay() {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(`
@@ -1601,6 +1725,53 @@ async function checkCourseContentAndProgress() {
 
   const linkingTerms = Object.keys(
     linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+  );
+  const linkingAdverbDictionaryEntries =
+    additions.LINKING_ADVERB_DICTIONARY_ADDITIONS;
+  assertLinkingAdverbExamplePairs(
+    linkingAdverbDictionaryEntries,
+    linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+  );
+  const mismatchedLinkingAdverbExamples = {
+    ...linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+    however: {
+      ...linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES.however,
+      exampleTranslation:
+        "Dự báo nói trời sẽ nắng; vì vậy, trời mưa suốt buổi chiều.",
+    },
+  };
+  assert.throws(
+    () =>
+      assertLinkingAdverbExamplePairs(
+        linkingAdverbDictionaryEntries,
+        mismatchedLinkingAdverbExamples,
+      ),
+    /Linking-adverb course example pair mismatch for "however"/,
+    "A translation that changes a linking adverb's meaning fails clearly.",
+  );
+  const missingLinkingAdverbExamples = {
+    ...linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+  };
+  delete missingLinkingAdverbExamples.however;
+  assert.throws(
+    () =>
+      assertLinkingAdverbExamplePairs(
+        linkingAdverbDictionaryEntries,
+        missingLinkingAdverbExamples,
+      ),
+    /Missing course linking-adverb example pair for "however"/,
+    "A missing linking-adverb example pair fails clearly.",
+  );
+  assert.throws(
+    () =>
+      assertLinkingAdverbExamplePairs(
+        linkingAdverbDictionaryEntries.filter(
+          (entry) => entry.term !== "however",
+        ),
+        linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+      ),
+    /Missing dictionary linking-adverb example pair for "however"/,
+    "A missing dictionary linking-adverb example pair fails clearly.",
   );
   const linkedQuestions = linkingAdverbCourse.LINKING_ADVERB_COURSE_LESSONS.flatMap(
     (lesson) => lesson.questions,
