@@ -939,6 +939,136 @@ const sentenceStructureAmbiguityFindings = [];
 const conjunctionAmbiguityFindings = [];
 const linkingAdverbAmbiguityFindings = [];
 
+// Keep both versions anchored to the same usage scenario; update the cues when
+// intentionally rewriting a pair of aligned examples.
+const linkingAdverbExampleUsageChecks = new Map([
+  [
+    "accordingly",
+    {
+      example: [/opening hours changed/i, /adjusted our schedule/i],
+      exercise: [/opening hours changed/i, /adjusted our schedule/i],
+    },
+  ],
+  [
+    "consequently",
+    {
+      example: [/left his passport at home/i, /could not board the flight/i],
+      exercise: [/left his passport at home/i, /could not board the flight/i],
+    },
+  ],
+  [
+    "hence",
+    {
+      example: [/bridge is closed/i, /take another route/i],
+      exercise: [/bridge is closed/i, /take another route/i],
+    },
+  ],
+  [
+    "therefore",
+    {
+      example: [/safety test passed/i, /device is ready to ship/i],
+      exercise: [/safety test passed/i, /device is ready to ship/i],
+    },
+  ],
+  [
+    "then",
+    {
+      example: [/label(?:ing)? each jar/i, /place it on the correct shelf/i],
+      exercise: [/label(?:ing)? each jar/i, /place it on the correct shelf/i],
+    },
+  ],
+  [
+    "finally",
+    {
+      example: [/checked every page/i, /finally found the missing signature/i],
+      exercise: [/checking every sheet/i, /found it at last/i],
+    },
+  ],
+  [
+    "furthermore",
+    {
+      example: [/bike is affordable/i, /battery lasts all day/i],
+      exercise: [/bike is affordable/i, /battery lasts all day/i],
+    },
+  ],
+  [
+    "moreover",
+    {
+      example: [/museum is free/i, /open every Sunday/i],
+      exercise: [/museum is free/i, /open every Sunday/i],
+    },
+  ],
+  [
+    "meanwhile",
+    {
+      example: [/rice is cooking/i, /chop the vegetables/i],
+      exercise: [/rice is cooking/i, /chop the vegetables.*while it simmers/i],
+    },
+  ],
+  [
+    "however",
+    {
+      example: [/forecast promised sunshine/i, /rained all afternoon/i],
+      exercise: [/forecast promised sunshine/i, /rained all afternoon/i],
+    },
+  ],
+  [
+    "nevertheless",
+    {
+      example: [/path was steep/i, /continued to the summit/i],
+      exercise: [/path was steep/i, /continued to the summit/i],
+    },
+  ],
+  [
+    "nonetheless",
+    {
+      example: [/instructions looked complicated/i, /built the desk/i],
+      exercise: [/instructions looked complicated/i, /built the desk/i],
+    },
+  ],
+  [
+    "instead",
+    {
+      example: [/café had no tables/i, /ordered takeaway/i],
+      exercise: [/café had no tables/i, /ordered takeaway/i],
+    },
+  ],
+  [
+    "rather",
+    {
+      example: [/not the price/i, /delivery was too slow/i],
+      exercise: [/not the price/i, /delivery was too slow/i],
+    },
+  ],
+  [
+    "indeed",
+    {
+      example: [/hike was demanding/i, /climbed for six hours/i],
+      exercise: [/hike was demanding/i, /climbed for six hours/i],
+    },
+  ],
+  [
+    "likewise",
+    {
+      example: [
+        /Mai volunteered at the shelter/i,
+        /brother gave up weekends to help/i,
+      ],
+      exercise: [
+        /Mai volunteered at the shelter/i,
+        /brother gave up weekends to help/i,
+      ],
+    },
+  ],
+  [
+    "similarly",
+    {
+      example: [/first class improved its scores/i, /second class made progress/i],
+      exercise: [/first class improved its scores/i, /second class made progress/i],
+    },
+  ],
+]);
+
 function checkAnswerUniqueness({
   courseName,
   questions,
@@ -1245,6 +1375,24 @@ async function checkCourseContentAndProgress() {
   const linkingQuestionByTerm = new Map(
     linkedQuestions.map((question) => [question.term, question]),
   );
+  assert.deepEqual(
+    [...linkingAdverbExampleUsageChecks.keys()].sort(),
+    [...linkingTerms].sort(),
+    "Every linking-adverb example has an exercise-usage consistency check.",
+  );
+  for (const term of linkingTerms) {
+    const entry = linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES[term];
+    const question = linkingQuestionByTerm.get(term);
+    const usageChecks = linkingAdverbExampleUsageChecks.get(term);
+    assert.ok(
+      usageChecks.example.every((signal) => signal.test(entry.example)),
+      `${term} example no longer demonstrates the usage targeted by its exercise.`,
+    );
+    assert.ok(
+      usageChecks.exercise.every((signal) => signal.test(question.prompt)),
+      `${term} exercise no longer matches the usage demonstrated by its example.`,
+    );
+  }
   for (const [term, distractor] of [
     ["hence", "instead"],
     ["therefore", "moreover"],
