@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -85,6 +85,15 @@ import {
 } from "@/data/vocabulary";
 import { getDictionaryPronunciationsForTerms } from "@/data/dictionary";
 import { useVocabulary } from "@/contexts/VocabularyContext";
+import { LearningGoalCard } from "@/components/LearningGoalCard";
+import {
+  readLearningGoal,
+  writeLearningGoal,
+} from "@/data/learning-goal";
+import {
+  getLearningGoalOption,
+  type LearningGoalId,
+} from "@/domain/learning-goals";
 import {
   buildCourseWordCandidates,
   isSingleWordCourseTerm,
@@ -283,6 +292,9 @@ export default function CoursesScreen() {
   const [lessonAttempts, setLessonAttempts] = useState<CourseLessonAttempt[]>([]);
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
+  const [learningGoalId, setLearningGoalId] = useState<LearningGoalId | null>(null);
+  const [learningGoalReady, setLearningGoalReady] = useState(false);
+  const [learningGoalSaving, setLearningGoalSaving] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [wrongQuestionIndices, setWrongQuestionIndices] = useState<number[]>([]);
   const [retryingMistakes, setRetryingMistakes] = useState(false);
@@ -314,6 +326,26 @@ export default function CoursesScreen() {
 
   const activeCourse =
     COURSE_CATALOG.find((course) => course.id === activeCourseId) ?? null;
+  const learningGoal = getLearningGoalOption(learningGoalId);
+  const learningGoalCourse = learningGoal
+    ? COURSE_CATALOG.find((course) => course.id === learningGoal.courseId) ?? null
+    : null;
+  const inProgressGoalLesson = learningGoalCourse?.lessons.find(
+    (lesson) =>
+      !completedLessons.includes(lesson.id) &&
+      lessonAttempts.some((attempt) => attempt.lessonId === lesson.id),
+  );
+  const recommendedGoalLesson =
+    inProgressGoalLesson ??
+    learningGoalCourse?.lessons.find(
+      (lesson) => !completedLessons.includes(lesson.id),
+    ) ??
+    null;
+  const recommendedGoalLessonAttempt = recommendedGoalLesson
+    ? lessonAttempts.find(
+        (attempt) => attempt.lessonId === recommendedGoalLesson.id,
+      )
+    : null;
   const allCourseWordCandidates = useMemo(
     () =>
       activeCourse
@@ -367,11 +399,56 @@ export default function CoursesScreen() {
     }
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void readLearningGoal()
+      .then((goal) => {
+        if (!cancelled) setLearningGoalId(goal);
+      })
+      .catch((failure) => {
+        if (!cancelled) {
+          setError(
+            failure instanceof Error
+              ? `Không thể đọc mục tiêu học đã lưu. ${failure.message}`
+              : "Không thể đọc mục tiêu học đã lưu.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLearningGoalReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       void loadProgress();
     }, [loadProgress]),
   );
+
+  const chooseLearningGoal = async (
+    goal: LearningGoalId,
+  ): Promise<boolean> => {
+    if (learningGoalSaving) return false;
+    setLearningGoalSaving(true);
+    try {
+      await writeLearningGoal(goal);
+      setLearningGoalId(goal);
+      setError(null);
+      return true;
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? `Không thể lưu mục tiêu trên thiết bị. ${failure.message}`
+          : "Không thể lưu mục tiêu trên thiết bị.",
+      );
+      return false;
+    } finally {
+      setLearningGoalSaving(false);
+    }
+  };
 
   const startLesson = async (lesson: CourseLesson) => {
     setSaving(true);
@@ -1184,6 +1261,27 @@ export default function CoursesScreen() {
           </View>
         ) : (
           <View style={styles.courseIntro}>
+            <LearningGoalCard
+              goal={learningGoal}
+              courseTitle={learningGoalCourse?.title ?? null}
+              recommendation={
+                recommendedGoalLesson
+                  ? {
+                      title: recommendedGoalLesson.title,
+                      focus: recommendedGoalLesson.focus,
+                      isResume: !!recommendedGoalLessonAttempt,
+                    }
+                  : null
+              }
+              loading={!learningGoalReady || loading}
+              saving={learningGoalSaving}
+              onChoose={chooseLearningGoal}
+              onOpenCourse={() => {
+                if (learningGoalCourse) {
+                  setActiveCourseId(learningGoalCourse.id);
+                }
+              }}
+            />
             {COURSE_CATALOG.map((course) => {
               const completedCount = completedLessons.filter((lessonId) =>
                 course.lessons.some((lesson) => lesson.id === lessonId),

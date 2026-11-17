@@ -71,7 +71,12 @@ async function fetchDictionaryChunk(
     );
   }
   const expectedRange = `bytes ${start}-${end}/${DICTIONARY.bytes}`;
-  if (response.headers.get("content-range") !== expectedRange) {
+  // Content-Range is not a CORS-safelisted response header. Public hosts may
+  // serve the correct 206 range without exposing it to browser JavaScript.
+  // If it is readable, still reject a mismatched range; the complete file's
+  // pinned SHA-256 below verifies the exact byte order when the header is hidden.
+  const contentRange = response.headers.get("content-range");
+  if (contentRange !== null && contentRange !== expectedRange) {
     await response.body?.cancel().catch(() => undefined);
     throw new Error("Máy chủ trả về đoạn từ điển không đúng vị trí.");
   }

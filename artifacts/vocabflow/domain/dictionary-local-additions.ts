@@ -10,7 +10,7 @@ export interface LocalDictionaryAddition {
   allowAdditionalSenses?: boolean;
 }
 
-export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v6";
+export const LOCAL_DICTIONARY_ADDITIONS_REVISION = "local-additions-v7";
 
 const LOCAL_DICTIONARY_ADDITION_ENTRIES: LocalDictionaryAddition[] = [
   {
@@ -366,8 +366,11 @@ const LOCAL_DICTIONARY_ADDITION_ENTRIES: LocalDictionaryAddition[] = [
 export const LOCAL_DICTIONARY_ADDITIONS =
   LOCAL_DICTIONARY_ADDITION_ENTRIES.filter((entry) => entry.pos === "conj");
 
+// These curated definitions intentionally supplement existing upstream headwords.
 export const LINKING_ADVERB_DICTIONARY_ADDITIONS =
-  LOCAL_DICTIONARY_ADDITION_ENTRIES.filter((entry) => entry.pos === "adv");
+  LOCAL_DICTIONARY_ADDITION_ENTRIES.filter((entry) => entry.pos === "adv").map(
+    (entry) => ({ ...entry, allowAdditionalSenses: true }),
+  );
 
 export const LOCAL_DICTIONARY_WORD_ADDITIONS: LocalDictionaryAddition[] = [
   {

@@ -91,16 +91,21 @@ function adapter(filename, readOnly = false) {
   const expectedDownloadChunks = Math.ceil(
     DICTIONARY.bytes / (8 * 1024 * 1024),
   );
-  function rangeResponse(source, options) {
+  function rangeResponse(source, options, includeContentRange = true) {
     const match = /^bytes=(\d+)-(\d+)$/.exec(options?.headers?.Range ?? "");
     assert.ok(match, "Dictionary downloads request a single byte range");
     const start = Number(match[1]);
     const end = Number(match[2]);
+    const headers = {
+      "content-length": String(end - start + 1),
+    };
+    if (includeContentRange) {
+      headers["content-range"] =
+        `bytes ${start}-${end}/${source.byteLength}`;
+    }
     return new Response(source.subarray(start, end + 1), {
       status: 206,
-      headers: {
-        "content-range": `bytes ${start}-${end}/${source.byteLength}`,
-      },
+      headers,
     });
   }
   for (const [tag, expected] of [
@@ -609,7 +614,13 @@ function adapter(filename, readOnly = false) {
       "Public browser dictionary downloads do not send account cookies",
     );
     downloads++;
-    return rangeResponse(bytes, options);
+    const response = rangeResponse(bytes, options, false);
+    assert.equal(
+      response.headers.get("content-range"),
+      null,
+      "Browser responses can hide Content-Range when the host does not expose it to CORS",
+    );
+    return response;
   }, "https://phone.expo.example");
   const waiting = [];
   assert.deepEqual(
