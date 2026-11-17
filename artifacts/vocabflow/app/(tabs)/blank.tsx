@@ -294,6 +294,7 @@ export default function BlankScreen() {
                         />
                         {finished ? (
                           <View
+                            testID={`daily-mission-rewarded-${mission.id}`}
                             style={[
                               styles.rewardCheck,
                               {
