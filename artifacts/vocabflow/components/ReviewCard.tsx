@@ -775,23 +775,32 @@ export function ReviewCard({
             styles.resultPanel,
             {
               height: resultPanelHeight,
-              backgroundColor:
-                graded?.correct === true
-                  ? c.success
-                  : graded?.correct === false
-                    ? c.destructive
-                    : c.vocabCard,
               borderRadius: c.radius + 6,
             },
           ]}
         >
-          <MaterialSheen radius={c.radius + 6} />
-          <ScrollView
-            testID="review-result-details-scroll"
-            style={styles.resultPanelScroll}
-            contentContainerStyle={styles.resultDetailsContent}
-            showsVerticalScrollIndicator
+          <View
+            testID="review-result-surface"
+            style={[
+              styles.resultPanelSurface,
+              {
+                backgroundColor:
+                  graded?.correct === true
+                    ? c.success
+                    : graded?.correct === false
+                      ? c.destructive
+                      : c.vocabCard,
+                borderRadius: c.radius + 6,
+              },
+            ]}
           >
+            <MaterialSheen radius={c.radius + 6} />
+            <ScrollView
+              testID="review-result-details-scroll"
+              style={styles.resultPanelScroll}
+              contentContainerStyle={styles.resultDetailsContent}
+              showsVerticalScrollIndicator
+            >
             {graded ? (
               <View testID="review-result-details" style={styles.resultInfo}>
                 <View style={styles.resultHeader}>
@@ -1153,29 +1162,30 @@ export function ReviewCard({
                 {freezeError ? <ErrorBanner message={freezeError} /> : null}
               </View>
             )}
-          </ScrollView>
-          {phase === "failed" ? (
-            <Button
-              testID="review-retry-save"
-              label="Thử lưu lại"
-              icon="refresh-cw"
-              onPress={retry}
-              disabled={blocked}
-            />
-          ) : (
-            <Button
-              testID="review-continue"
-              label={isLast ? "Kết thúc" : "Tiếp tục"}
-              icon={isLast ? "flag" : "arrow-right"}
-              onPress={() => {
-                if (phase === "saved" && !blocked && !inFlight.current)
-                  cb.current.onNext();
-              }}
-              loading={phase === "saving"}
-              disabled={phase !== "saved" || blocked || freezeBusy}
-              style={styles.continueButton}
-            />
-          )}
+            </ScrollView>
+            {phase === "failed" ? (
+              <Button
+                testID="review-retry-save"
+                label="Thử lưu lại"
+                icon="refresh-cw"
+                onPress={retry}
+                disabled={blocked}
+              />
+            ) : (
+              <Button
+                testID="review-continue"
+                label={isLast ? "Kết thúc" : "Tiếp tục"}
+                icon={isLast ? "flag" : "arrow-right"}
+                onPress={() => {
+                  if (phase === "saved" && !blocked && !inFlight.current)
+                    cb.current.onNext();
+                }}
+                loading={phase === "saving"}
+                disabled={phase !== "saved" || blocked || freezeBusy}
+                style={styles.continueButton}
+              />
+            )}
+          </View>
         </View>
       ) : null}
 
@@ -1611,6 +1621,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 20,
     elevation: 12,
+  },
+  resultPanelSurface: {
+    flex: 1,
     padding: 16,
     gap: 10,
     overflow: "hidden",

@@ -697,7 +697,7 @@ async function startReview(screen) {
     'A selected distractor is persisted as an incorrect answer.');
   assert.equal(wrongCard.byId('review-result-status').props.children.join(''), 'Sai');
   assert.equal(
-    wrongCard.byId('review-result').props.style.find(style => style?.backgroundColor)?.backgroundColor,
+    wrongCard.byId('review-result-surface').props.style.find(style => style?.backgroundColor)?.backgroundColor,
     palette.destructive,
     'Incorrect feedback uses the red destructive surface.',
   );
@@ -1015,7 +1015,7 @@ async function startReview(screen) {
   assert.ok(card.byId('review-result-details'),
     'Word details are visible from the first answer result state.');
   assert.equal(
-    card.byId('review-result').props.style.find(style => style?.backgroundColor)?.backgroundColor,
+    card.byId('review-result-surface').props.style.find(style => style?.backgroundColor)?.backgroundColor,
     palette.success,
     'Correct feedback uses the green success surface.',
   );
@@ -1037,6 +1037,16 @@ async function startReview(screen) {
     'Keep the expanded answer and word details anchored beneath the review question.');
   assert.ok(resultPanelStyles.find(style => style?.height)?.height > 272,
     'The combined answer card is large enough to show word details without opening a popup.');
+  assert.ok(
+    !resultPanelStyles.some(style => style?.overflow === 'hidden'),
+    'Keep Android elevation on the outer result card separate from rounded clipping.',
+  );
+  const resultSurfaceStyles = card.byId('review-result-surface').props.style;
+  assert.ok(
+    resultSurfaceStyles.some(style => style?.overflow === 'hidden') &&
+      resultSurfaceStyles.some(style => style?.borderRadius),
+    'Clip the scrolling result content inside its rounded inner surface.',
+  );
   assert.ok(find(card.byId('review-result'), node => node.props?.testID === 'review-continue'),
     'Continue stays available in the combined answer card.');
   assert.equal(card.byId('review-continue').props.style.minHeight, 68,
