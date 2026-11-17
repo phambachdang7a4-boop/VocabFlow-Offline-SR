@@ -101,6 +101,7 @@ function mount(initialSavedWords = [], options = {}) {
   let dirty = true;
   let tree;
   const completed = [...(options.completedLessons ?? [])];
+  const attempts = options.lessonAttempts ?? [];
   const savedWords = [...initialSavedWords];
   const savedWordInputs = [];
   const savedWordBatches = [];
@@ -161,7 +162,24 @@ function mount(initialSavedWords = [], options = {}) {
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
-      markCourseLessonCompleted: async (lessonId) => completed.push(lessonId),
+      getCourseLessonAttempts: async (courseId) =>
+        attempts.filter((attempt) => attempt.lessonId.startsWith(courseId)),
+      saveCourseLessonAttempt: async (attempt) => {
+        const saved = { ...attempt, updatedAt: new Date().toISOString() };
+        const index = attempts.findIndex(
+          (item) => item.lessonId === saved.lessonId,
+        );
+        if (index >= 0) attempts[index] = saved;
+        else attempts.push(saved);
+        return saved;
+      },
+      markCourseLessonCompleted: async (lessonId) => {
+        completed.push(lessonId);
+        const index = attempts.findIndex(
+          (attempt) => attempt.lessonId === lessonId,
+        );
+        if (index >= 0) attempts.splice(index, 1);
+      },
       recordStoneInvestmentStudyDay: async () => undefined,
     },
     "@/data/dictionary": {
@@ -232,6 +250,7 @@ function mount(initialSavedWords = [], options = {}) {
       await this.settle();
     },
     savedWords,
+    attempts,
     savedWordInputs,
     savedWordBatches,
     ipaLookupCalls,
@@ -291,6 +310,44 @@ function mount(initialSavedWords = [], options = {}) {
     ],
     "Shuffling preserves each question's full set of choices.",
   );
+  const interruptedAttempts = [];
+  const interruptedLesson = mount([], {
+    lessonAttempts: interruptedAttempts,
+  });
+  await interruptedLesson.focus();
+  interruptedLesson.byId("conjunction-course-card").props.onPress();
+  const interruptedCourseLesson = courseDomain.CONJUNCTION_COURSE_LESSONS[0];
+  interruptedLesson.byId("conjunction-lesson-1").props.onPress();
+  await interruptedLesson.settle();
+  interruptedLesson
+    .byId(`conjunction-choice-${interruptedCourseLesson.questions[0].term}`)
+    .props.onPress();
+  interruptedLesson.byId("conjunction-next").props.onPress();
+  await interruptedLesson.settle();
+  assert.deepEqual(
+    interruptedLesson.byId("conjunction-question-prompt").props.children,
+    [interruptedCourseLesson.questions[1].prompt],
+    "A lesson advances after the answer is saved.",
+  );
+  interruptedLesson.byId("conjunction-leave-lesson").props.onPress();
+  const resumedAfterRestart = mount([], {
+    lessonAttempts: interruptedAttempts,
+  });
+  await resumedAfterRestart.focus();
+  resumedAfterRestart.byId("conjunction-course-card").props.onPress();
+  const continueButton = resumedAfterRestart.byId(
+    "conjunction-resume-lesson-1",
+  );
+  assert.ok(continueButton, "Interrupted lessons show a continue button.");
+  assert.match(textContent(continueButton), /Tiếp tục/);
+  continueButton.props.onPress();
+  await resumedAfterRestart.settle();
+  assert.deepEqual(
+    resumedAfterRestart.byId("conjunction-question-prompt").props.children,
+    [interruptedCourseLesson.questions[1].prompt],
+    "A fresh app instance restores the first unanswered question.",
+  );
+  assert.equal(interruptedAttempts[0].correctCount, 1);
   await screen.focus();
   assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
@@ -345,6 +402,7 @@ function mount(initialSavedWords = [], options = {}) {
   assert.ok(!simileQuestion?.choices.includes("inasmuch as"));
   assert.ok(simileQuestion?.choices.includes("so that"));
   screen.byId("conjunction-lesson-1").props.onPress();
+  await screen.settle();
   for (let index = 0; index < lesson.questions.length; index++) {
     const question = lesson.questions[index];
     const orderBeforeAnswer = screen.choiceIds("conjunction");
@@ -382,6 +440,16 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId("conjunction-next").props.onPress();
     await screen.settle();
   }
+  assert.deepEqual(
+    screen.byId("conjunction-question-prompt").props.children,
+    [lesson.questions[0].prompt],
+    "The lesson asks missed questions again once after the first pass.",
+  );
+  screen
+    .byId(`conjunction-choice-${lesson.questions[0].term}`)
+    .props.onPress();
+  screen.byId("conjunction-next").props.onPress();
+  await screen.settle();
   assert.ok(screen.byId("conjunction-lesson-complete"));
   assert.equal(
     screen.byId("conjunction-lesson-complete").props.testID,
@@ -426,6 +494,7 @@ function mount(initialSavedWords = [], options = {}) {
   const idiomLesson = idiomCourseDomain.IDIOM_COURSE_LESSONS[0];
   assert.ok(screen.byId("idioms-lesson-1"));
   screen.byId("idioms-lesson-1").props.onPress();
+  await screen.settle();
   const wordsSavedBeforeIdioms = screen.savedWordInputs.length;
   const idiomQuestion = idiomLesson.questions[0];
   assert.deepEqual(
@@ -479,6 +548,16 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId("idioms-next").props.onPress();
     await screen.settle();
   }
+  assert.deepEqual(
+    screen.byId("idioms-question-prompt").props.children,
+    [idiomLesson.questions[1].prompt],
+    "A missed idiom is included in the end-of-lesson retry.",
+  );
+  screen
+    .byId(`idioms-choice-${idiomLesson.questions[1].term}`)
+    .props.onPress();
+  screen.byId("idioms-next").props.onPress();
+  await screen.settle();
   assert.ok(screen.byId("idioms-lesson-complete"));
   assert.equal(
     screen.savedWordInputs.length - wordsSavedBeforeIdioms,
@@ -509,6 +588,7 @@ function mount(initialSavedWords = [], options = {}) {
   screen
     .byId(`conjunction-lesson-${firstLinkingLessonIndex}`)
     .props.onPress();
+  await screen.settle();
   for (let index = 0; index < linkingLesson.questions.length; index++) {
     const question = linkingLesson.questions[index];
     assert.deepEqual(
@@ -545,6 +625,7 @@ function mount(initialSavedWords = [], options = {}) {
   structureDialogueScreen
     .byId(`conjunction-lesson-${firstStructureLessonNumber}`)
     .props.onPress();
+  await structureDialogueScreen.settle();
   const structureQuestion =
     sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS[0]
       .questions[0];
@@ -644,6 +725,7 @@ function mount(initialSavedWords = [], options = {}) {
   await idiomSaveRetryScreen.focus();
   idiomSaveRetryScreen.byId("idioms-course-card").props.onPress();
   idiomSaveRetryScreen.byId("idioms-lesson-1").props.onPress();
+  await idiomSaveRetryScreen.settle();
   for (const question of idiomLesson.questions) {
     idiomSaveRetryScreen
       .byId(`idioms-choice-${question.term}`)
@@ -665,6 +747,7 @@ function mount(initialSavedWords = [], options = {}) {
   screen.byId("ielts-course-card").props.onPress();
   const ieltsLesson = ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS[0];
   screen.byId("ielts-lesson-1").props.onPress();
+  await screen.settle();
   for (let index = 0; index < ieltsLesson.questions.length; index++) {
     const question = ieltsLesson.questions[index];
     const courseEntry =
@@ -715,6 +798,7 @@ function mount(initialSavedWords = [], options = {}) {
   screen.byId("toeic-course-card").props.onPress();
   const toeicLesson = toeicTopicDomain.TOEIC_TOPIC_COURSE_LESSONS[0];
   screen.byId("toeic-lesson-1").props.onPress();
+  await screen.settle();
   for (let index = 0; index < toeicLesson.questions.length; index++) {
     const question = toeicLesson.questions[index];
     assert.deepEqual(
@@ -749,6 +833,7 @@ function mount(initialSavedWords = [], options = {}) {
   screen.byId("office-apps-course-card").props.onPress();
   const officeLesson = officeAppsDomain.OFFICE_APPS_COURSE_LESSONS[0];
   screen.byId("office-apps-lesson-1").props.onPress();
+  await screen.settle();
   for (let index = 0; index < officeLesson.questions.length; index++) {
     const question = officeLesson.questions[index];
     const officeEntry =
@@ -809,6 +894,7 @@ function mount(initialSavedWords = [], options = {}) {
     .PHRASAL_VERB_COURSE_LESSONS[0];
   assert.equal(phrasalVerbLesson.questions.length, 20);
   screen.byId("phrasal-verbs-lesson-1").props.onPress();
+  await screen.settle();
   const firstPhrasalQuestion = phrasalVerbLesson.questions[0];
   assert.deepEqual(
     screen.byId("phrasal-verbs-question-prompt").props.children,
@@ -857,6 +943,16 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId("phrasal-verbs-next").props.onPress();
     await screen.settle();
   }
+  assert.deepEqual(
+    screen.byId("phrasal-verbs-question-prompt").props.children,
+    [firstPhrasalQuestion.prompt],
+    "Phrasal-verb mistakes are retried once after the lesson.",
+  );
+  screen
+    .byId(`phrasal-verbs-choice-${firstPhrasalQuestion.term}`)
+    .props.onPress();
+  screen.byId("phrasal-verbs-next").props.onPress();
+  await screen.settle();
   assert.ok(screen.byId("phrasal-verbs-lesson-complete"));
   assert.ok(screen.byId("phrasal-verbs-word-selection"));
   const savedBeforePhrasalCourse = screen.savedWordInputs.length;

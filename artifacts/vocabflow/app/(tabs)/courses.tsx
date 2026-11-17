@@ -76,9 +76,12 @@ import {
   PHRASAL_VERB_COURSE_WORD_COUNT,
 } from "@/domain/phrasal-verb-course";
 import {
+  getCourseLessonAttempts,
   getCourseLessonCompletions,
   markCourseLessonCompleted,
   recordStoneInvestmentStudyDay,
+  saveCourseLessonAttempt,
+  type CourseLessonAttempt,
 } from "@/data/vocabulary";
 import { getDictionaryPronunciationsForTerms } from "@/data/dictionary";
 import { useVocabulary } from "@/contexts/VocabularyContext";
@@ -277,9 +280,13 @@ export default function CoursesScreen() {
   const insets = useSafeAreaInsets();
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [lessonAttempts, setLessonAttempts] = useState<CourseLessonAttempt[]>([]);
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
   const [activeLesson, setActiveLesson] = useState<CourseLesson | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [wrongQuestionIndices, setWrongQuestionIndices] = useState<number[]>([]);
+  const [retryingMistakes, setRetryingMistakes] = useState(false);
+  const [retryQuestionPosition, setRetryQuestionPosition] = useState(0);
   const [lessonChoices, setLessonChoices] = useState<readonly string[][]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -343,7 +350,11 @@ export default function CoursesScreen() {
       const progress = await Promise.all(
         progressPrefixes.map((prefix) => getCourseLessonCompletions(prefix)),
       );
+      const attempts = await Promise.all(
+        progressPrefixes.map((prefix) => getCourseLessonAttempts(prefix)),
+      );
       setCompletedLessons(progress.flat());
+      setLessonAttempts(attempts.flat());
       setError(null);
     } catch (failure) {
       setError(
@@ -362,17 +373,60 @@ export default function CoursesScreen() {
     }, [loadProgress]),
   );
 
-  const startLesson = (lesson: CourseLesson) => {
-    setActiveLesson(lesson);
-    setQuestionIndex(0);
-    setLessonChoices(shuffleLessonChoices(lesson.questions));
-    setSelectedAnswer(null);
-    setCorrectCount(0);
-    setFinishedLessonId(null);
-    setSelectedCourseWordKeys([]);
-    setCourseWordsSavedMessage(null);
-    setIdiomsSavedAutomatically(false);
-    setError(null);
+  const startLesson = async (lesson: CourseLesson) => {
+    const savedAttempt = lessonAttempts.find(
+      (attempt) => attempt.lessonId === lesson.id,
+    );
+    const validAttempt =
+      savedAttempt &&
+      savedAttempt.currentIndex < lesson.questions.length &&
+      savedAttempt.wrongQuestionIndices.every(
+        (index) => index < lesson.questions.length,
+      ) &&
+      (!savedAttempt.retrying ||
+        savedAttempt.retryIndex < savedAttempt.wrongQuestionIndices.length)
+        ? savedAttempt
+        : null;
+    const attempt: CourseLessonAttempt = validAttempt ?? {
+      lessonId: lesson.id,
+      currentIndex: 0,
+      correctCount: 0,
+      wrongQuestionIndices: [],
+      retryIndex: 0,
+      retrying: false,
+      updatedAt: new Date().toISOString(),
+    };
+    setSaving(true);
+    try {
+      const persistedAttempt = validAttempt
+        ? validAttempt
+        : await saveCourseLessonAttempt(attempt);
+      setLessonAttempts((previous) => [
+        ...previous.filter((item) => item.lessonId !== lesson.id),
+        persistedAttempt,
+      ]);
+      setActiveLesson(lesson);
+      setQuestionIndex(persistedAttempt.currentIndex);
+      setWrongQuestionIndices(persistedAttempt.wrongQuestionIndices);
+      setRetryingMistakes(persistedAttempt.retrying);
+      setRetryQuestionPosition(persistedAttempt.retryIndex);
+      setLessonChoices(shuffleLessonChoices(lesson.questions));
+      setSelectedAnswer(null);
+      setCorrectCount(persistedAttempt.correctCount);
+      setFinishedLessonId(null);
+      setSelectedCourseWordKeys([]);
+      setCourseWordsSavedMessage(null);
+      setIdiomsSavedAutomatically(false);
+      setError(null);
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Không thể lưu tiến độ bài học.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const leaveLesson = () => {
@@ -380,6 +434,9 @@ export default function CoursesScreen() {
     setFinishedLessonId(null);
     setLessonChoices([]);
     setSelectedAnswer(null);
+    setRetryingMistakes(false);
+    setRetryQuestionPosition(0);
+    setWrongQuestionIndices([]);
     setSelectedCourseWordKeys([]);
     setCourseWordsSavedMessage(null);
     setIdiomsSavedAutomatically(false);
@@ -392,6 +449,9 @@ export default function CoursesScreen() {
     setFinishedLessonId(null);
     setLessonChoices([]);
     setSelectedAnswer(null);
+    setRetryingMistakes(false);
+    setRetryQuestionPosition(0);
+    setWrongQuestionIndices([]);
     setBulkAddConfirmationOpen(false);
     setBulkAddProgress(null);
     setBulkCourseWordsSavedMessage(null);
@@ -399,13 +459,19 @@ export default function CoursesScreen() {
     setError(null);
   };
 
-  const finishLesson = async () => {
-    if (!activeLesson || saving) return;
+  const finishLesson = async (
+    finalCorrectCount = correctCount,
+    alreadySaving = false,
+  ) => {
+    if (!activeLesson || (saving && !alreadySaving)) return;
     const lesson = activeLesson;
     const course = activeCourse;
     setSaving(true);
     try {
       await markCourseLessonCompleted(lesson.id);
+      setLessonAttempts((previous) =>
+        previous.filter((attempt) => attempt.lessonId !== lesson.id),
+      );
       setCompletedLessons((previous) =>
         previous.includes(lesson.id)
           ? previous
@@ -453,14 +519,103 @@ export default function CoursesScreen() {
     }
   };
 
-  const advance = () => {
-    if (!activeLesson || !selectedAnswer || saving) return;
-    if (questionIndex === activeLesson.questions.length - 1) {
-      void finishLesson();
-      return;
+  const advance = async () => {
+    if (!activeLesson || !currentQuestion || !selectedAnswer || saving) return;
+    const answeredCorrectly = selectedAnswer === currentQuestion.term;
+    const updatedCorrectCount =
+      correctCount + (answeredCorrectly ? 1 : 0);
+    const updatedWrongIndices =
+      !retryingMistakes && !answeredCorrectly
+        ? [...wrongQuestionIndices, questionIndex]
+        : wrongQuestionIndices;
+    const persistAttempt = async (next: CourseLessonAttempt) => {
+      const savedAttempt = await saveCourseLessonAttempt({
+        lessonId: next.lessonId,
+        currentIndex: next.currentIndex,
+        correctCount: next.correctCount,
+        wrongQuestionIndices: next.wrongQuestionIndices,
+        retryIndex: next.retryIndex,
+        retrying: next.retrying,
+      });
+      setLessonAttempts((previous) => [
+        ...previous.filter((item) => item.lessonId !== savedAttempt.lessonId),
+        savedAttempt,
+      ]);
+    };
+
+    setSaving(true);
+    try {
+      if (retryingMistakes) {
+        if (retryQuestionPosition >= wrongQuestionIndices.length - 1) {
+          await finishLesson(updatedCorrectCount, true);
+          return;
+        }
+        const nextRetryPosition = retryQuestionPosition + 1;
+        const nextQuestionIndex = wrongQuestionIndices[nextRetryPosition];
+        await persistAttempt({
+          lessonId: activeLesson.id,
+          currentIndex: nextQuestionIndex,
+          correctCount: updatedCorrectCount,
+          wrongQuestionIndices,
+          retryIndex: nextRetryPosition,
+          retrying: true,
+          updatedAt: new Date().toISOString(),
+        });
+        setCorrectCount(updatedCorrectCount);
+        setRetryQuestionPosition(nextRetryPosition);
+        setQuestionIndex(nextQuestionIndex);
+        setSelectedAnswer(null);
+        return;
+      }
+
+      if (questionIndex < activeLesson.questions.length - 1) {
+        const nextQuestionIndex = questionIndex + 1;
+        await persistAttempt({
+          lessonId: activeLesson.id,
+          currentIndex: nextQuestionIndex,
+          correctCount: updatedCorrectCount,
+          wrongQuestionIndices: updatedWrongIndices,
+          retryIndex: 0,
+          retrying: false,
+          updatedAt: new Date().toISOString(),
+        });
+        setCorrectCount(updatedCorrectCount);
+        setWrongQuestionIndices(updatedWrongIndices);
+        setQuestionIndex(nextQuestionIndex);
+        setSelectedAnswer(null);
+        return;
+      }
+
+      if (updatedWrongIndices.length > 0) {
+        const firstRetryIndex = updatedWrongIndices[0];
+        await persistAttempt({
+          lessonId: activeLesson.id,
+          currentIndex: firstRetryIndex,
+          correctCount: updatedCorrectCount,
+          wrongQuestionIndices: updatedWrongIndices,
+          retryIndex: 0,
+          retrying: true,
+          updatedAt: new Date().toISOString(),
+        });
+        setCorrectCount(updatedCorrectCount);
+        setWrongQuestionIndices(updatedWrongIndices);
+        setRetryingMistakes(true);
+        setRetryQuestionPosition(0);
+        setQuestionIndex(firstRetryIndex);
+        setSelectedAnswer(null);
+        return;
+      }
+
+      await finishLesson(updatedCorrectCount, true);
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Không thể lưu tiến độ bài học.",
+      );
+    } finally {
+      setSaving(false);
     }
-    setQuestionIndex((index) => index + 1);
-    setSelectedAnswer(null);
   };
 
   const currentQuestion =
@@ -739,6 +894,10 @@ export default function CoursesScreen() {
                   : undefined
               }
               questionIndex={questionIndex}
+              isRetryingMistakes={retryingMistakes}
+              retryQuestionPosition={retryQuestionPosition}
+              retryQuestionCount={wrongQuestionIndices.length}
+              wrongQuestionCount={wrongQuestionIndices.length}
               selectedAnswer={selectedAnswer}
               correctCount={correctCount}
               saving={saving}
@@ -752,10 +911,8 @@ export default function CoursesScreen() {
                       : "Không thể ghi nhận hoạt động học hôm nay.",
                   ),
                 );
-                if (answer === currentQuestion.term)
-                  setCorrectCount((count) => count + 1);
               }}
-              onAdvance={advance}
+              onAdvance={() => void advance()}
             />
           )
         ) : activeCourse ? (
@@ -845,6 +1002,9 @@ export default function CoursesScreen() {
             ) : (
               activeCourse.lessons.map((lesson, index) => {
                 const completed = completedLessons.includes(lesson.id);
+                const attempt = lessonAttempts.find(
+                  (item) => item.lessonId === lesson.id,
+                );
                 const startsTopic =
                   activeCourse.topicCount !== undefined &&
                   lesson.topicId !==
@@ -887,17 +1047,12 @@ export default function CoursesScreen() {
                         </Text>
                       </View>
                     ) : null}
-                    <Pressable
-                      testID={`${activeCourse.testIdPrefix}-lesson-${index + 1}`}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${lesson.topicTitle ? `${lesson.topicTitle}, ` : ""}${lesson.title}, ${lesson.questions.length} câu${completed ? ", đã hoàn thành" : ""}`}
-                      onPress={() => startLesson(lesson)}
-                      style={({ pressed }) => [
+                    <View
+                      style={[
                         styles.lessonCard,
                         {
                           backgroundColor: completed ? c.successSoft : c.card,
                           borderColor: completed ? c.success : c.border,
-                          opacity: pressed ? 0.86 : 1,
                         },
                       ]}
                     >
@@ -905,63 +1060,95 @@ export default function CoursesScreen() {
                         tone={completed ? "surface" : "navy"}
                         radius={18}
                       />
-                      <View
-                        style={[
-                          styles.lessonNumber,
-                          {
-                            backgroundColor: completed
-                              ? c.success
-                              : c.secondary,
-                          },
+                      <Pressable
+                        testID={`${activeCourse.testIdPrefix}-lesson-${index + 1}`}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${lesson.topicTitle ? `${lesson.topicTitle}, ` : ""}${lesson.title}, ${lesson.questions.length} câu${completed ? ", đã hoàn thành" : attempt ? attempt.retrying ? `, đang làm lại câu sai ${attempt.retryIndex + 1} trên ${attempt.wrongQuestionIndices.length}, chạm để tiếp tục` : `, đang học câu ${attempt.currentIndex + 1}, chạm để tiếp tục` : ""}`}
+                        onPress={() => void startLesson(lesson)}
+                        style={({ pressed }) => [
+                          styles.lessonMain,
+                          { opacity: pressed ? 0.86 : 1 },
                         ]}
                       >
-                        <Text
+                        <View
                           style={[
-                            styles.lessonNumberText,
+                            styles.lessonNumber,
                             {
-                              color: completed
-                                ? c.destructiveForeground
-                                : c.secondaryForeground,
+                              backgroundColor: completed
+                                ? c.success
+                                : c.secondary,
                             },
                           ]}
                         >
-                          {completed ? "✓" : index + 1}
-                        </Text>
-                      </View>
-                      <View style={styles.lessonCopy}>
-                        <Text
-                          style={[
-                            styles.lessonTitle,
-                            { color: completed ? c.successText : c.foreground },
-                          ]}
+                          <Text
+                            style={[
+                              styles.lessonNumberText,
+                              {
+                                color: completed
+                                  ? c.destructiveForeground
+                                  : c.secondaryForeground,
+                              },
+                            ]}
+                          >
+                            {completed ? "✓" : index + 1}
+                          </Text>
+                        </View>
+                        <View style={styles.lessonCopy}>
+                          <Text
+                            style={[
+                              styles.lessonTitle,
+                              { color: completed ? c.successText : c.foreground },
+                            ]}
+                          >
+                            {lesson.title}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.lessonFocus,
+                              { color: c.mutedForeground },
+                            ]}
+                            numberOfLines={2}
+                          >
+                            {lesson.focus}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.lessonCount,
+                              { color: completed ? c.successText : c.primary },
+                            ]}
+                          >
+                            {lesson.questions.length} từ ·{" "}
+                            {completed
+                              ? "Đã hoàn thành"
+                              : attempt
+                                ? attempt.retrying
+                                  ? `Làm lại câu sai ${attempt.retryIndex + 1}/${attempt.wrongQuestionIndices.length}`
+                                  : `Đang học · câu ${attempt.currentIndex + 1}/${lesson.questions.length}`
+                                : "Chưa học"}
+                          </Text>
+                        </View>
+                      </Pressable>
+                      {attempt && !completed ? (
+                        <Pressable
+                          testID={`${activeCourse.testIdPrefix}-resume-lesson-${index + 1}`}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Tiếp tục ${lesson.title}${attempt.retrying ? `, làm lại câu sai ${attempt.retryIndex + 1} trên ${attempt.wrongQuestionIndices.length}` : ` từ câu ${attempt.currentIndex + 1}`}`}
+                          onPress={() => void startLesson(lesson)}
+                          style={styles.lessonResumeAction}
                         >
-                          {lesson.title}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.lessonFocus,
-                            { color: c.mutedForeground },
-                          ]}
-                          numberOfLines={2}
-                        >
-                          {lesson.focus}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.lessonCount,
-                            { color: completed ? c.successText : c.primary },
-                          ]}
-                        >
-                          {lesson.questions.length} từ ·{" "}
-                          {completed ? "Đã hoàn thành" : "Chưa học"}
-                        </Text>
-                      </View>
-                      <Feather
-                        name={completed ? "check-circle" : "chevron-right"}
-                        size={22}
-                        color={completed ? c.success : c.primary}
-                      />
-                    </Pressable>
+                          <Feather name="play-circle" size={20} color={c.primary} />
+                          <Text style={[styles.lessonResumeText, { color: c.primary }]}>
+                            Tiếp tục
+                          </Text>
+                        </Pressable>
+                      ) : (
+                        <Feather
+                          name={completed ? "check-circle" : "chevron-right"}
+                          size={22}
+                          color={completed ? c.success : c.primary}
+                        />
+                      )}
+                    </View>
                   </React.Fragment>
                 );
               })
@@ -1283,6 +1470,10 @@ function QuestionView({
   entriesByTerm,
   distractorExplanations,
   questionIndex,
+  isRetryingMistakes,
+  retryQuestionPosition,
+  retryQuestionCount,
+  wrongQuestionCount,
   selectedAnswer,
   correctCount,
   saving,
@@ -1300,6 +1491,10 @@ function QuestionView({
     Record<string, Readonly<Record<string, string>>>
   >;
   questionIndex: number;
+  isRetryingMistakes: boolean;
+  retryQuestionPosition: number;
+  retryQuestionCount: number;
+  wrongQuestionCount: number;
   selectedAnswer: string | null;
   correctCount: number;
   saving: boolean;
@@ -1314,16 +1509,31 @@ function QuestionView({
     selectedAnswer && !isCorrect
       ? distractorExplanations?.[question.term]?.[selectedAnswer]
       : undefined;
-  const progress = ((questionIndex + 1) / lesson.questions.length) * 100;
+  const progress = isRetryingMistakes
+    ? ((retryQuestionPosition + 1) / Math.max(1, retryQuestionCount)) * 100
+    : ((questionIndex + 1) / lesson.questions.length) * 100;
+  const nextLabel = isRetryingMistakes
+    ? retryQuestionPosition === retryQuestionCount - 1
+      ? "Hoàn thành bài"
+      : "Câu sai tiếp theo"
+    : questionIndex === lesson.questions.length - 1
+      ? wrongQuestionCount > 0 || (selectedAnswer !== null && !isCorrect)
+        ? "Làm lại câu sai"
+        : "Hoàn thành bài"
+      : "Câu tiếp theo";
+  const displayedCorrectCount =
+    correctCount + (selectedAnswer === question.term ? 1 : 0);
 
   return (
     <View style={styles.quiz}>
       <View style={styles.quizProgressRow}>
         <Text style={[styles.quizStep, { color: c.mutedForeground }]}>
-          CÂU {questionIndex + 1} / {lesson.questions.length}
+          {isRetryingMistakes
+            ? `LÀM LẠI CÂU SAI ${retryQuestionPosition + 1}/${retryQuestionCount}`
+            : `CÂU ${questionIndex + 1} / ${lesson.questions.length}`}
         </Text>
         <Text style={[styles.quizScore, { color: c.primary }]}>
-          {correctCount} đúng
+          {displayedCorrectCount} đúng
         </Text>
       </View>
       <View style={[styles.progressTrack, { backgroundColor: c.muted }]}>
@@ -1632,11 +1842,7 @@ function QuestionView({
                 onPress={onAdvance}
                 disabled={saving}
                 style={styles.nextButton}
-                label={saving
-                  ? "Đang lưu…"
-                  : questionIndex === lesson.questions.length - 1
-                    ? "Hoàn thành bài"
-                    : "Câu tiếp theo"}
+                label={saving ? "Đang lưu…" : nextLabel}
               />
             </View>
           </View>
@@ -1735,11 +1941,7 @@ function QuestionView({
           onPress={onAdvance}
           disabled={saving}
           style={styles.nextButton}
-          label={saving
-            ? "Đang lưu…"
-            : questionIndex === lesson.questions.length - 1
-              ? "Hoàn thành bài"
-              : "Câu tiếp theo"}
+          label={saving ? "Đang lưu…" : nextLabel}
         />
       ) : null}
     </View>
@@ -2034,6 +2236,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
   },
+  lessonMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   lessonNumber: {
     width: 46,
     height: 46,
@@ -2043,6 +2252,14 @@ const styles = StyleSheet.create({
   },
   lessonNumberText: { fontFamily: F.b, fontSize: 17 },
   lessonCopy: { flex: 1, gap: 4 },
+  lessonResumeAction: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    minWidth: 58,
+    paddingVertical: 8,
+  },
+  lessonResumeText: { fontFamily: F.s, fontSize: 10 },
   lessonTitle: { fontFamily: F.b, fontSize: 16, lineHeight: 21 },
   lessonFocus: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   lessonCount: { fontFamily: F.s, fontSize: 11 },

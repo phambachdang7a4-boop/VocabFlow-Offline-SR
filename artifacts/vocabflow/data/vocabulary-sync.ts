@@ -556,6 +556,7 @@ async function replacePayloadData(
     DELETE FROM words;
     DELETE FROM sync_word_tombstones;
     DELETE FROM course_lesson_progress;
+    DELETE FROM course_lesson_attempts;
     DELETE FROM course_word_selection;
     DELETE FROM review_day_statistics;
     DELETE FROM device_review_day_statistics;

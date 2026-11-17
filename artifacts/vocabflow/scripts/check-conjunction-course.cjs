@@ -2400,19 +2400,55 @@ async function checkCourseContentAndProgress() {
   const { repo } = repository;
   try {
     const lessonId = `${course.CONJUNCTION_COURSE_ID}-time`;
+    const interruptedLessonId = `${course.CONJUNCTION_COURSE_ID}-resume`;
+    await repo.saveCourseLessonAttempt({
+      lessonId: interruptedLessonId,
+      currentIndex: 3,
+      correctCount: 2,
+      wrongQuestionIndices: [0, 2],
+      retryIndex: 0,
+      retrying: false,
+    });
     assert.deepEqual(
       await repo.getCourseLessonCompletions(course.CONJUNCTION_COURSE_ID),
       [],
     );
-    await repo.markCourseLessonCompleted(lessonId);
+    assert.deepEqual(
+      await repo.getCourseLessonAttempts(course.CONJUNCTION_COURSE_ID),
+      [
+        {
+          lessonId: interruptedLessonId,
+          currentIndex: 3,
+          correctCount: 2,
+          wrongQuestionIndices: [0, 2],
+          retryIndex: 0,
+          retrying: false,
+          updatedAt: (await repo.getCourseLessonAttempts(
+            course.CONJUNCTION_COURSE_ID,
+          ))[0].updatedAt,
+        },
+      ],
+      "An interrupted lesson stores its question position and mistakes offline.",
+    );
+    await repo.markCourseLessonCompleted(interruptedLessonId);
+    assert.deepEqual(
+      await repo.getCourseLessonAttempts(course.CONJUNCTION_COURSE_ID),
+      [],
+      "Completing a lesson clears its resumable attempt.",
+    );
     assert.deepEqual(
       await repo.getCourseLessonCompletions(course.CONJUNCTION_COURSE_ID),
-      [lessonId],
+      [interruptedLessonId],
     );
     await repo.markCourseLessonCompleted(lessonId);
     assert.deepEqual(
       await repo.getCourseLessonCompletions(course.CONJUNCTION_COURSE_ID),
-      [lessonId],
+      [interruptedLessonId, lessonId],
+    );
+    await repo.markCourseLessonCompleted(lessonId);
+    assert.deepEqual(
+      await repo.getCourseLessonCompletions(course.CONJUNCTION_COURSE_ID),
+      [interruptedLessonId, lessonId],
       "Completing a lesson repeatedly does not duplicate its progress.",
     );
     const toeicLessonId =
@@ -2430,7 +2466,7 @@ async function checkCourseContentAndProgress() {
       db
         .prepare("SELECT COUNT(*) AS count FROM course_lesson_progress")
         .get().count,
-      2,
+      3,
     );
   } finally {
     repository.db?.close();

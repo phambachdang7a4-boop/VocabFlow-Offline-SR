@@ -372,7 +372,7 @@ async function initialize(): Promise<SQLiteDatabase> {
     const version = await db.getFirstAsync<{ user_version: number }>(
       "PRAGMA user_version",
     );
-    if ((version?.user_version ?? 0) > 31) {
+    if ((version?.user_version ?? 0) > 33) {
       throw new Error(
         "Dữ liệu thuộc phiên bản mới hơn. Hãy cập nhật VocabFlow.",
       );
@@ -1269,6 +1269,31 @@ async function initialize(): Promise<SQLiteDatabase> {
           localDay(new Date()),
         );
         if ((pendingChests?.count ?? 0) > 0) await markSyncDirty(db);
+      });
+    }
+    if ((version?.user_version ?? 0) < 32) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS course_lesson_attempts (
+            lesson_id TEXT PRIMARY KEY NOT NULL,
+            current_index INTEGER NOT NULL DEFAULT 0 CHECK (current_index >= 0),
+            correct_count INTEGER NOT NULL DEFAULT 0 CHECK (correct_count >= 0),
+            wrong_question_indices TEXT NOT NULL DEFAULT '[]',
+            retry_index INTEGER NOT NULL DEFAULT 0 CHECK (retry_index >= 0),
+            retrying INTEGER NOT NULL DEFAULT 0 CHECK (retrying IN (0, 1)),
+            updated_at TEXT NOT NULL
+          );
+          PRAGMA user_version = 32;
+        `);
+      });
+    }
+    if ((version?.user_version ?? 0) < 33) {
+      await db.withTransactionAsync(async () => {
+        await db.execAsync(`
+          ALTER TABLE course_lesson_attempts
+            ADD COLUMN selected_answer TEXT;
+          PRAGMA user_version = 33;
+        `);
       });
     }
     await repairKnownExtractionExample(db);
@@ -2726,6 +2751,132 @@ export function getCourseLessonCompletions(
   });
 }
 
+export interface CourseLessonAttempt {
+  lessonId: string;
+  currentIndex: number;
+  correctCount: number;
+  wrongQuestionIndices: number[];
+  retryIndex: number;
+  retrying: boolean;
+  selectedAnswer: string | null;
+  updatedAt: string;
+}
+
+export type CourseLessonAttemptInput = Omit<CourseLessonAttempt, "updatedAt">;
+
+export function getCourseLessonAttempts(
+  lessonPrefix: string,
+): Promise<CourseLessonAttempt[]> {
+  if (!/^[a-z0-9-]{1,80}$/i.test(lessonPrefix))
+    return Promise.reject(new Error("Mã khóa học không hợp lệ."));
+  return serialize(async () => {
+    const rows = await (await database()).getAllAsync<{
+      lessonId: string;
+      currentIndex: number;
+      correctCount: number;
+      wrongQuestionIndices: string;
+      retryIndex: number;
+      retrying: number;
+      selectedAnswer: string | null;
+      updatedAt: string;
+    }>(
+      `SELECT lesson_id AS lessonId, current_index AS currentIndex,
+        correct_count AS correctCount,
+        wrong_question_indices AS wrongQuestionIndices,
+        retry_index AS retryIndex, retrying,
+        selected_answer AS selectedAnswer, updated_at AS updatedAt
+       FROM course_lesson_attempts
+       WHERE lesson_id LIKE ?`,
+      `${lessonPrefix}%`,
+    );
+    return rows.map((row) => {
+      let wrongQuestionIndices: unknown;
+      try {
+        wrongQuestionIndices = JSON.parse(row.wrongQuestionIndices);
+      } catch {
+        throw new Error("Tiến độ làm lại câu sai bị hỏng.");
+      }
+      if (
+        !Array.isArray(wrongQuestionIndices) ||
+        !wrongQuestionIndices.every(
+          (index) => Number.isSafeInteger(index) && index >= 0,
+        )
+      ) {
+        throw new Error("Tiến độ làm lại câu sai không hợp lệ.");
+      }
+      return {
+        lessonId: row.lessonId,
+        currentIndex: row.currentIndex,
+        correctCount: row.correctCount,
+        wrongQuestionIndices,
+        retryIndex: row.retryIndex,
+        retrying: row.retrying === 1,
+        selectedAnswer: row.selectedAnswer,
+        updatedAt: row.updatedAt,
+      };
+    });
+  });
+}
+
+export function saveCourseLessonAttempt(
+  attempt: CourseLessonAttemptInput,
+): Promise<CourseLessonAttempt> {
+  if (
+    !/^[a-z0-9-]{1,120}$/i.test(attempt.lessonId) ||
+    !Number.isSafeInteger(attempt.currentIndex) ||
+    attempt.currentIndex < 0 ||
+    !Number.isSafeInteger(attempt.correctCount) ||
+    attempt.correctCount < 0 ||
+    !Number.isSafeInteger(attempt.retryIndex) ||
+    attempt.retryIndex < 0 ||
+    typeof attempt.retrying !== "boolean" ||
+    !(
+      attempt.selectedAnswer === null ||
+      (typeof attempt.selectedAnswer === "string" &&
+        attempt.selectedAnswer.length <= 200)
+    ) ||
+    !Array.isArray(attempt.wrongQuestionIndices) ||
+    !attempt.wrongQuestionIndices.every(
+      (index) => Number.isSafeInteger(index) && index >= 0,
+    ) ||
+    new Set(attempt.wrongQuestionIndices).size !==
+      attempt.wrongQuestionIndices.length
+  ) {
+    return Promise.reject(new Error("Tiến độ bài học không hợp lệ."));
+  }
+  return serialize(async () => {
+    const db = await database();
+    const saved: CourseLessonAttempt = {
+      ...attempt,
+      wrongQuestionIndices: [...attempt.wrongQuestionIndices],
+      updatedAt: new Date().toISOString(),
+    };
+    await db.runAsync(
+      `INSERT INTO course_lesson_attempts
+        (lesson_id, current_index, correct_count, wrong_question_indices,
+          retry_index, retrying, selected_answer, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(lesson_id) DO UPDATE SET
+         current_index = excluded.current_index,
+         correct_count = excluded.correct_count,
+         wrong_question_indices = excluded.wrong_question_indices,
+         retry_index = excluded.retry_index,
+         retrying = excluded.retrying,
+         selected_answer = excluded.selected_answer,
+         updated_at = excluded.updated_at`,
+      saved.lessonId,
+      saved.currentIndex,
+      saved.correctCount,
+      JSON.stringify(saved.wrongQuestionIndices),
+      saved.retryIndex,
+      saved.retrying ? 1 : 0,
+      saved.selectedAnswer,
+      saved.updatedAt,
+    );
+    return saved;
+  });
+}
+
 export function markCourseLessonCompleted(lessonId: string): Promise<void> {
   if (!/^[a-z0-9-]{1,120}$/i.test(lessonId))
     return Promise.reject(new Error("Mã bài học không hợp lệ."));
@@ -2745,6 +2896,10 @@ export function markCourseLessonCompleted(lessonId: string): Promise<void> {
         lessonId,
         now,
         now,
+      );
+      await db.runAsync(
+        "DELETE FROM course_lesson_attempts WHERE lesson_id = ?",
+        lessonId,
       );
       await markInvestmentStudyDay(db, localDay(new Date(now)), "course");
       await markSyncDirty(db);
