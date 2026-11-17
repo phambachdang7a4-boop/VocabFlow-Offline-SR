@@ -1445,6 +1445,44 @@ function assertLinkingAdverbExamplePairs(dictionaryEntries, courseEntries) {
   );
 }
 
+const expectedStandaloneDictionaryExamplePairs = {
+  fly: [
+    "The birds have flown south for the winter.",
+    "Đàn chim đã bay về phương nam để tránh mùa đông.",
+  ],
+};
+
+function assertStandaloneDictionaryExamplePairs(dictionaryEntries) {
+  const dictionaryByTerm = new Map(
+    dictionaryEntries.map((entry) => [entry.term, entry]),
+  );
+
+  for (const entry of dictionaryEntries) {
+    assert.ok(
+      Object.hasOwn(expectedStandaloneDictionaryExamplePairs, entry.term),
+      `Unreviewed standalone dictionary example pair for "${entry.term}".`,
+    );
+  }
+
+  for (const [term, expectedPair] of Object.entries(
+    expectedStandaloneDictionaryExamplePairs,
+  )) {
+    const entry = dictionaryByTerm.get(term);
+    assert.ok(
+      entry,
+      `Missing standalone dictionary example pair for "${term}".`,
+    );
+    if (
+      entry.example !== expectedPair[0] ||
+      entry.exampleTranslation !== expectedPair[1]
+    ) {
+      throw new Error(
+        `Standalone dictionary example pair mismatch for "${term}".`,
+      );
+    }
+  }
+}
+
 async function checkDictionaryOverlay() {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(`
@@ -1731,6 +1769,35 @@ async function checkCourseContentAndProgress() {
   assertLinkingAdverbExamplePairs(
     linkingAdverbDictionaryEntries,
     linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
+  );
+  const standaloneDictionaryEntries =
+    additions.LOCAL_DICTIONARY_WORD_ADDITIONS;
+  assertStandaloneDictionaryExamplePairs(standaloneDictionaryEntries);
+  assert.throws(
+    () =>
+      assertStandaloneDictionaryExamplePairs([
+        ...standaloneDictionaryEntries,
+        {
+          ...standaloneDictionaryEntries[0],
+          term: "unreviewed word",
+        },
+      ]),
+    /Unreviewed standalone dictionary example pair for "unreviewed word"/,
+    "A new standalone addition requires its own reviewed pair.",
+  );
+  assert.throws(
+    () =>
+      assertStandaloneDictionaryExamplePairs(
+        standaloneDictionaryEntries.map((entry) => ({
+          ...entry,
+          exampleTranslation:
+            entry.term === "fly"
+              ? "Đàn chim đã bay về phương bắc để tránh mùa đông."
+              : entry.exampleTranslation,
+        })),
+      ),
+    /Standalone dictionary example pair mismatch for "fly"/,
+    "A standalone dictionary translation mismatch names its affected term.",
   );
   const mismatchedLinkingAdverbExamples = {
     ...linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
