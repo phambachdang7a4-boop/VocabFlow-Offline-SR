@@ -7,6 +7,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
+import { useColors } from "@/hooks/useColors";
 import { type ChestRarity } from "@/domain/mission-chests";
 
 type ChestPalette = {
@@ -87,6 +88,9 @@ export function ChestTierArtwork({
   sparkle?: boolean;
 }) {
   const palette = PALETTES[rarity];
+  const colors = useColors();
+  const outlineColor =
+    rarity === "legendary" ? colors.mutedForeground : palette.outline;
   const closedLidProgress = useSharedValue(0);
   const currentLidProgress = lidProgress ?? closedLidProgress;
   const lidStyle = useAnimatedStyle(() => ({
@@ -118,7 +122,7 @@ export function ChestTierArtwork({
           y="86"
           width="164"
           height="82"
-          fill={palette.outline}
+          fill={outlineColor}
         />
         <Rect
           x="34"
@@ -233,7 +237,7 @@ export function ChestTierArtwork({
         <Svg width={size} height={size * 0.53} viewBox="0 0 220 116">
           <Path
             d="M27 100V70H33V52H42V37H52V25H68V16H152V25H168V37H178V52H187V70H193V100Z"
-            fill={palette.outline}
+            fill={outlineColor}
           />
           <Path
             d="M34 94V68H40V50H49V39H58V29H71V22H149V29H162V39H171V50H180V68H186V94Z"

@@ -1,9 +1,11 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs, missionChests } = require("./test-support.cjs");
 const dailyMissions = loadTs(
   join(__dirname, "../domain/daily-missions.ts"),
 );
+const colors = loadTs(join(__dirname, "../constants/colors.ts")).default;
 
 const SvgElement = (name) => name;
 const React = {
@@ -39,6 +41,30 @@ const { DailyMissionArtwork } = loadTs(
     },
   },
 );
+let activeColors = colors.light;
+const { ChestTierArtwork } = loadTs(
+  join(__dirname, "../components/ChestTierArtwork.tsx"),
+  {
+    react: React,
+    "react-native": { View: SvgElement("View") },
+    "react-native-reanimated": {
+      __esModule: true,
+      default: { View: SvgElement("AnimatedView") },
+      interpolate: () => 0,
+      useAnimatedStyle: (callback) => callback(),
+      useSharedValue: (value) => ({ value }),
+    },
+    "react-native-svg": {
+      __esModule: true,
+      default: SvgElement("Svg"),
+      Svg: SvgElement("Svg"),
+      Path: SvgElement("Path"),
+      Rect: SvgElement("Rect"),
+      Text: SvgElement("SvgText"),
+    },
+    "@/hooks/useColors": { useColors: () => activeColors },
+  },
+);
 
 const expectedArtwork = {
   review: {
@@ -71,6 +97,22 @@ const collectElements = (node, result = []) => {
     collectElements(node.props?.children, result);
   }
   return result;
+};
+const colorLuminance = (hex) => {
+  const channels = hex
+    .slice(1)
+    .match(/.{2}/g)
+    .map((value) => parseInt(value, 16) / 255)
+    .map((value) =>
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+    );
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+};
+const contrastRatio = (foreground, background) => {
+  const values = [colorLuminance(foreground), colorLuminance(background)].sort(
+    (a, b) => b - a,
+  );
+  return (values[0] + 0.05) / (values[1] + 0.05);
 };
 
 for (const missionType of missionTypes) {
@@ -135,7 +177,7 @@ assert.match(
 );
 assert.match(
   missionScreen,
-  /Rương \{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn\s+thành/,
+  /`Rương \$\{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn thành`/,
   "The card displays the chest tier that the mission will award.",
 );
 assert.match(
@@ -148,6 +190,84 @@ assert.match(
   /finished \? \(\s*<View\s+testID=\{`daily-mission-rewarded-\$\{mission\.id\}`\}/,
   "A rewarded mission shows its received-reward indicator.",
 );
+assert.match(
+  missionScreen,
+  /color: finished \? c\.successText : c\.foreground/,
+  "The chest label uses readable theme colors for both reward states.",
+);
+assert.match(
+  missionScreen,
+  /`Đã nhận · Rương \$\{CHEST_RARITY_LABELS\[rewardRarity\]\}`/,
+  "The chest label names the received state as well as the tier.",
+);
+assert.match(
+  missionScreen,
+  /backgroundColor: c\.successSoft,\s*borderColor: c\.success/,
+  "The received marker has a theme-aware surface and visible border.",
+);
+assert.match(
+  missionScreen,
+  /color=\{c\.successText\}/,
+  "The received checkmark uses a high-contrast success color.",
+);
+assert.match(
+  missionScreen,
+  /backgroundColor: c\.input,\s*borderColor: c\.border,\s*borderWidth: 1/,
+  "The chest artwork sits on a distinct, theme-aware surface.",
+);
+assert.match(
+  missionScreen,
+  /backgroundColor: finished \? c\.successSoft : c\.card/,
+  "Rewarded and unclaimed missions use their matching theme surfaces.",
+);
+assert.match(
+  readFileSync(join(__dirname, "../components/ChestTierArtwork.tsx"), "utf8"),
+  /rarity === "legendary" \? colors\.mutedForeground : palette\.outline/,
+  "The darkest chest uses a theme-aware outline.",
+);
+
+for (const [themeName, theme] of Object.entries(colors)) {
+  if (themeName === "radius") continue;
+  const rewardStates = [
+    {
+      name: "unclaimed",
+      surface: theme.card,
+      label: theme.foreground,
+    },
+    {
+      name: "received",
+      surface: theme.successSoft,
+      label: theme.successText,
+    },
+  ];
+  for (const state of rewardStates) {
+    assert.ok(
+      contrastRatio(state.label, state.surface) >= 4.5,
+      `${themeName} ${state.name} chest labels are readable.`,
+    );
+  }
+  assert.ok(
+    contrastRatio(theme.mutedForeground, theme.input) >= 4.5,
+    `${themeName} legendary artwork outlines remain visible on the chest surface.`,
+  );
+
+  activeColors = theme;
+  const legendaryArtwork = ChestTierArtwork({ rarity: "legendary", size: 56 });
+  assert.ok(
+    collectElements(legendaryArtwork).some(
+      (element) =>
+        element.type === "Rect" && element.props.fill === theme.mutedForeground,
+    ),
+    `${themeName} legendary chest uses a contrasting body outline.`,
+  );
+  assert.ok(
+    collectElements(legendaryArtwork).some(
+      (element) =>
+        element.type === "Path" && element.props.fill === theme.mutedForeground,
+    ),
+    `${themeName} legendary chest uses a contrasting lid outline.`,
+  );
+}
 
 const { evaluateDailyMissions, DAILY_MISSION_CHEST_RARITY } = dailyMissions;
 const { CHEST_RARITY_LABELS } = missionChests;

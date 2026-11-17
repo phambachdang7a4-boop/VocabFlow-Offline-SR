@@ -68,7 +68,7 @@ assert.match(missionCollectionTabs, /id: "collection", label: "Bộ Sưu Tập"/
 assert.doesNotMatch(missionScreen, /testID="open-collection"/);
 assert.match(
   missionScreen,
-  /Rương \{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn\s+thành/,
+  /`Rương \$\{CHEST_RARITY_LABELS\[rewardRarity\]\} khi hoàn thành`/,
   "Each mission tells learners which chest tier it awards.",
 );
 assert.match(

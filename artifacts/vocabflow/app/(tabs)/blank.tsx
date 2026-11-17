@@ -31,7 +31,6 @@ import {
   CHEST_RARITY_COLORS,
   CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_LABELS,
-  CHEST_RARITY_TEXT_COLORS,
   chestStoneReward,
   maxChestUpgradeAttempts,
   type MissionChest,
@@ -276,6 +275,10 @@ export default function BlankScreen() {
                           {
                             width: chestArtworkSize + 8,
                             height: chestArtworkSize,
+                            backgroundColor: c.input,
+                            borderColor: c.border,
+                            borderWidth: 1,
+                            borderRadius: 12,
                             ...(rewardRarity === "rare"
                               ? { shadowColor: CHEST_RARITY_COLORS.rare }
                               : {}),
@@ -304,12 +307,16 @@ export default function BlankScreen() {
                             style={[
                               styles.rewardCheck,
                               {
-                                backgroundColor: c.success,
-                                borderColor: c.foreground,
+                                backgroundColor: c.successSoft,
+                                borderColor: c.success,
                               },
                             ]}
                           >
-                            <Feather name="check" size={12} color={c.foreground} />
+                            <Feather
+                              name="check"
+                              size={12}
+                              color={c.successText}
+                            />
                           </View>
                         ) : null}
                       </View>
@@ -317,11 +324,12 @@ export default function BlankScreen() {
                         testID={`daily-mission-chest-${mission.id}`}
                         style={[
                           styles.missionChestLabel,
-                          { color: CHEST_RARITY_TEXT_COLORS[rewardRarity] },
+                          { color: finished ? c.successText : c.foreground },
                         ]}
                       >
-                        Rương {CHEST_RARITY_LABELS[rewardRarity]} khi hoàn
-                        thành
+                        {finished
+                          ? `Đã nhận · Rương ${CHEST_RARITY_LABELS[rewardRarity]}`
+                          : `Rương ${CHEST_RARITY_LABELS[rewardRarity]} khi hoàn thành`}
                       </Text>
                     </View>
                     <View style={styles.progressRow}>
