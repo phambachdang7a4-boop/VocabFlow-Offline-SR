@@ -2387,12 +2387,32 @@ async function checkCourseContentAndProgress() {
   );
   assert.ok(ieltsTerms.length > 6000);
   assert.ok(ieltsAdvancedTerms.length > 0 && ieltsAdvancedTerms.length < 1000);
+  assert.equal(ieltsTerms.length, 6361);
+  assert.equal(ieltsAdvancedTerms.length, 684);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(new Set(ieltsAdvancedTerms).size, ieltsAdvancedTerms.length);
   assert.equal(
     new Set([...ieltsTerms, ...ieltsAdvancedTerms]).size,
     ieltsTerms.length + ieltsAdvancedTerms.length,
     "Standard and advanced IELTS courses do not duplicate terms.",
+  );
+  const oxfordB2TermsMovedToStandard = [
+    "biological",
+    "conspiracy",
+    "corporate",
+    "desperate",
+    "duration",
+    "ecosystem",
+    "entrepreneur",
+    "exotic",
+    "interval",
+    "phenomenon",
+  ];
+  assert.ok(
+    oxfordB2TermsMovedToStandard.every(
+      (term) => ieltsTerms.includes(term) && !ieltsAdvancedTerms.includes(term),
+    ),
+    "Oxford B2 terms move to standard IELTS without duplicating vocabulary.",
   );
   assert.equal(
     ieltsTerms.length + ieltsAdvancedTerms.length,

@@ -8,7 +8,10 @@
         "cognition", "cognitive", "conscious", "consciously", "consciousness",
         "emotion", "emotional", "instinct", "instinctive", "motivation",
         "perception", "perceptible", "perceptive", "personality", "stress",
-        "stressful", "trauma", "aggression", "attitude", "addict", "addiction"
+        "stressful", "trauma", "aggression", "attitude", "addict", "addiction",
+        "subconscious", "empathy", "psychoanalysis", "conditioning",
+        "introspection", "arousal", "defense mechanism", "psychometric",
+        "hallucination", "attachment", "self-efficacy"
       ]
     },
     {
@@ -19,7 +22,8 @@
         "adapt", "adaptation", "adaptable", "adaptive", "anatomical",
         "biologist", "cell", "enzyme", "evolution", "evolutionary", "genetic",
         "immune", "metabolism", "microscope", "mutation", "nutrient",
-        "physiological", "physiologist", "physiology", "reproduction", "virus"
+        "physiological", "physiologist", "physiology", "reproduction", "virus",
+        "biotechnology"
       ]
     },
     {
@@ -62,7 +66,7 @@
       "focus": "Cấu trúc ngôn ngữ, diễn ngôn, ngữ nghĩa và tiếp thu ngôn ngữ.",
       "terms": [
         "acquisition", "discourse", "morphology", "phonetic", "phonetics",
-        "pragmatic", "semantic", "semantics", "syntax"
+        "pragmatic", "semantic", "semantics", "syntax", "vernacular"
       ]
     },
     {
@@ -73,7 +77,8 @@
       "terms": [
         "correlation", "empirical", "empirically", "methodological",
         "methodology", "qualitative", "quantitative", "sample", "statistic",
-        "statistical", "statistics", "survey", "variable"
+        "statistical", "statistics", "survey", "variable", "dissertation",
+        "peer review", "metacognition", "paradigm", "epistemology"
       ]
     },
     {
@@ -102,7 +107,8 @@
         "altitude", "cartographer", "cartographic", "coast", "coastal",
         "geographer", "geographical", "geography", "island", "mountain",
         "mountainous", "region", "regional", "terrain", "topographic",
-        "topographical", "valley"
+        "topographical", "valley", "cartography", "vista", "nomad", "islet",
+        "hinterland", "estuary"
       ]
     },
     {
@@ -112,7 +118,108 @@
       "terms": [
         "alloy", "atom", "atomic", "chemical", "chemically", "compound",
         "corrosion", "element", "elemental", "elementary", "metal",
-        "molecule", "polymer", "polymeric", "reaction", "synthetic"
+        "molecule", "polymer", "polymeric", "reaction", "synthetic",
+        "nanotechnology", "quantum"
+      ]
+    },
+    {
+      "id": "culture",
+      "courseTopicId": "culture",
+      "title": "Nghệ thuật và văn hóa",
+      "focus": "Tác phẩm, thể loại, nghệ thuật và các phong trào văn hóa.",
+      "terms": [
+        "canvas", "curator", "genre", "renaissance", "depict", "impressionism",
+        "ballet", "poetry", "composer", "motif"
+      ]
+    },
+    {
+      "id": "technology",
+      "courseTopicId": "technology",
+      "title": "Công nghệ",
+      "focus": "Mô phỏng, bảo mật và ứng dụng công nghệ.",
+      "terms": ["simulation", "cybersecurity"]
+    },
+    {
+      "id": "economy",
+      "courseTopicId": "economy",
+      "title": "Kinh tế",
+      "focus": "Thị trường, tài chính, hàng hóa và hoạt động kinh tế.",
+      "terms": [
+        "monopoly", "fiscal", "commodity", "gross domestic product",
+        "liquidity", "bankruptcy", "exchange rate", "leverage"
+      ]
+    },
+    {
+      "id": "globalization",
+      "courseTopicId": "globalization",
+      "title": "Toàn cầu hóa",
+      "focus": "Thương mại, chuỗi cung ứng và kết nối kinh tế quốc tế.",
+      "terms": ["globalization", "supply chain", "trade surplus"]
+    },
+    {
+      "id": "government",
+      "courseTopicId": "government",
+      "title": "Chính phủ và chính sách",
+      "focus": "Chủ quyền, ngoại giao, bộ máy nhà nước và bầu cử.",
+      "terms": [
+        "sovereignty", "diplomacy", "constituent", "coalition", "bureaucracy",
+        "citizenry", "sanction", "referendum", "electorate"
+      ]
+    },
+    {
+      "id": "society",
+      "courseTopicId": "society",
+      "title": "Xã hội",
+      "focus": "Sự tham gia, quyền tự chủ và gắn kết xã hội.",
+      "terms": ["advocacy", "autonomy", "cohesion"]
+    },
+    {
+      "id": "environment",
+      "courseTopicId": "environment",
+      "title": "Môi trường",
+      "focus": "Nhiên liệu, dấu chân carbon, lưu vực và phục hồi môi trường.",
+      "terms": [
+        "climate change", "fossil fuel", "watershed", "reclamation",
+        "carbon footprint"
+      ]
+    },
+    {
+      "id": "education",
+      "courseTopicId": "education",
+      "title": "Giáo dục",
+      "focus": "Hoạt động học thuật và các hình thức học tập.",
+      "terms": [
+        "academia", "accreditation", "didactic", "extracurricular",
+        "co-curricular", "holistic"
+      ]
+    },
+    {
+      "id": "health",
+      "courseTopicId": "health",
+      "title": "Sức khỏe",
+      "focus": "Sức khỏe thể chất, miễn dịch và phương pháp điều trị.",
+      "terms": [
+        "mental health", "placebo", "immunity", "antioxidant", "hydration",
+        "rehabilitation", "allergen", "pharmacology", "calorie", "screening",
+        "probiotic"
+      ]
+    },
+    {
+      "id": "tourism",
+      "courseTopicId": "tourism",
+      "title": "Du lịch",
+      "focus": "Hành trình, trải nghiệm và hoạt động du lịch.",
+      "terms": ["itinerary", "souvenir", "cruise"]
+    },
+    {
+      "id": "work",
+      "courseTopicId": "work",
+      "title": "Công việc",
+      "focus": "Nghề nghiệp, kỹ năng, việc làm và đãi ngộ.",
+      "terms": [
+        "freelancer", "networking", "layoff", "subordinate", "resignation",
+        "competency", "remuneration", "delegation", "work-life balance",
+        "proficiency", "maternity leave", "severance", "redundancy"
       ]
     }
   ]

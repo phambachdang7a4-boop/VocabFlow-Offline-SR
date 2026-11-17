@@ -1092,6 +1092,321 @@
       "example": "Synthetic fibers are often engineered to resist moisture, abrasion, and repeated washing.",
       "exampleTranslation": "Các sợi tổng hợp thường được chế tạo để chống ẩm, mài mòn và việc giặt nhiều lần.",
       "pos": "A"
+    },
+    {
+      "term": "nanotechnology",
+      "definition": "Công nghệ thao tác và ứng dụng vật chất ở quy mô cực nhỏ, thường ở cấp độ nano.",
+      "example": "Nanotechnology allows engineers to design materials at an extremely small scale.",
+      "exampleTranslation": "Công nghệ nano cho phép các kỹ sư thiết kế vật liệu ở quy mô cực nhỏ.",
+      "pos": "N"
+    },
+    {
+      "term": "gross domestic product",
+      "definition": "Tổng giá trị hàng hóa và dịch vụ được sản xuất trong một quốc gia trong một khoảng thời gian.",
+      "example": "Gross domestic product rose after factories increased production.",
+      "exampleTranslation": "Tổng sản phẩm quốc nội tăng sau khi các nhà máy nâng sản lượng.",
+      "pos": "N"
+    },
+    {
+      "term": "supply chain",
+      "definition": "Mạng lưới gồm các tổ chức và hoạt động đưa sản phẩm từ nguyên liệu đến người tiêu dùng.",
+      "example": "A disruption at the port affected the entire supply chain.",
+      "exampleTranslation": "Sự gián đoạn tại cảng đã ảnh hưởng đến toàn bộ chuỗi cung ứng.",
+      "pos": "N"
+    },
+    {
+      "term": "trade surplus",
+      "definition": "Tình trạng giá trị xuất khẩu của một quốc gia lớn hơn giá trị nhập khẩu.",
+      "example": "The country recorded a trade surplus after exports increased.",
+      "exampleTranslation": "Quốc gia ghi nhận thặng dư thương mại sau khi xuất khẩu tăng.",
+      "pos": "N"
+    },
+    {
+      "term": "climate change",
+      "definition": "Sự thay đổi lâu dài của nhiệt độ và các kiểu thời tiết trên Trái Đất.",
+      "example": "Climate change is increasing the frequency of heat waves.",
+      "exampleTranslation": "Biến đổi khí hậu đang làm các đợt nắng nóng xảy ra thường xuyên hơn.",
+      "pos": "N"
+    },
+    {
+      "term": "fossil fuel",
+      "definition": "Nhiên liệu như than đá, dầu mỏ hoặc khí tự nhiên hình thành từ sinh vật cổ đại.",
+      "example": "The region still depends on fossil fuel for electricity.",
+      "exampleTranslation": "Khu vực này vẫn phụ thuộc vào nhiên liệu hóa thạch để sản xuất điện.",
+      "pos": "N"
+    },
+    {
+      "term": "reclamation",
+      "definition": "Quá trình phục hồi hoặc cải tạo đất đã bị hư hại hay không còn sử dụng được.",
+      "example": "The reclamation of former mines restored soil for farming.",
+      "exampleTranslation": "Việc cải tạo các mỏ cũ đã khôi phục đất để canh tác.",
+      "pos": "N"
+    },
+    {
+      "term": "carbon footprint",
+      "definition": "Tổng lượng khí nhà kính phát sinh trực tiếp và gián tiếp từ một cá nhân, hoạt động hoặc sản phẩm.",
+      "example": "Public transport can reduce a city's carbon footprint.",
+      "exampleTranslation": "Giao thông công cộng có thể làm giảm dấu chân carbon của một thành phố.",
+      "pos": "N"
+    },
+    {
+      "term": "accreditation",
+      "definition": "Sự công nhận chính thức rằng một tổ chức hoặc chương trình đáp ứng các tiêu chuẩn nhất định.",
+      "example": "The college renewed its accreditation after an external review.",
+      "exampleTranslation": "Trường cao đẳng đã gia hạn kiểm định sau một đợt đánh giá độc lập.",
+      "pos": "N"
+    },
+    {
+      "term": "peer review",
+      "definition": "Quy trình chuyên gia cùng lĩnh vực đánh giá một nghiên cứu trước khi công bố.",
+      "example": "Peer review helped the researchers identify weaknesses in the study.",
+      "exampleTranslation": "Phản biện đồng cấp giúp các nhà nghiên cứu nhận ra những điểm yếu của nghiên cứu.",
+      "pos": "N"
+    },
+    {
+      "term": "metacognition",
+      "definition": "Khả năng nhận biết và điều chỉnh quá trình suy nghĩ, học tập của chính mình.",
+      "example": "Metacognition encourages learners to reflect on how they solve problems.",
+      "exampleTranslation": "Siêu nhận thức khuyến khích người học suy ngẫm về cách họ giải quyết vấn đề.",
+      "pos": "N"
+    },
+    {
+      "term": "co-curricular",
+      "definition": "Có liên quan đến hoạt động học tập bổ trợ, gắn với chương trình chính khóa.",
+      "example": "The school offers co-curricular activities that connect lessons with community projects.",
+      "exampleTranslation": "Trường tổ chức các hoạt động bổ trợ chương trình học, kết nối bài học với dự án cộng đồng.",
+      "pos": "A"
+    },
+    {
+      "term": "defense mechanism",
+      "definition": "Phản ứng tâm lý thường vô thức giúp một người giảm lo âu hoặc đối phó với cảm xúc khó chịu.",
+      "example": "Denial can act as a defense mechanism when people face distressing news.",
+      "exampleTranslation": "Sự phủ nhận có thể đóng vai trò như một cơ chế phòng vệ khi con người đối mặt với tin tức gây đau buồn.",
+      "pos": "N"
+    },
+    {
+      "term": "mental health",
+      "definition": "Trạng thái sức khỏe cảm xúc, tâm lý và xã hội của một người.",
+      "example": "Regular sleep can support mental health during stressful periods.",
+      "exampleTranslation": "Ngủ đều đặn có thể hỗ trợ sức khỏe tinh thần trong những giai đoạn căng thẳng.",
+      "pos": "N"
+    },
+    {
+      "term": "self-efficacy",
+      "definition": "Niềm tin của một người rằng họ có thể thực hiện thành công một nhiệm vụ cụ thể.",
+      "example": "High self-efficacy can help students persist after setbacks.",
+      "exampleTranslation": "Niềm tin cao vào năng lực bản thân có thể giúp học sinh kiên trì sau những thất bại.",
+      "pos": "N"
+    },
+    {
+      "term": "networking",
+      "definition": "Việc xây dựng và duy trì quan hệ nghề nghiệp để trao đổi thông tin hoặc cơ hội.",
+      "example": "Professional networking helped her find a mentor in the industry.",
+      "exampleTranslation": "Việc xây dựng mạng lưới nghề nghiệp giúp cô tìm được người cố vấn trong ngành.",
+      "pos": "N"
+    },
+    {
+      "term": "layoff",
+      "definition": "Việc người lao động mất việc vì doanh nghiệp cắt giảm nhân sự, thường không phải do lỗi cá nhân.",
+      "example": "The factory announced a layoff after demand fell.",
+      "exampleTranslation": "Nhà máy thông báo cắt giảm nhân sự sau khi nhu cầu giảm.",
+      "pos": "N"
+    },
+    {
+      "term": "competency",
+      "definition": "Khả năng hoặc kỹ năng cần thiết để thực hiện tốt một công việc.",
+      "example": "The role requires competency in data analysis and clear communication.",
+      "exampleTranslation": "Vị trí này đòi hỏi năng lực phân tích dữ liệu và giao tiếp rõ ràng.",
+      "pos": "N"
+    },
+    {
+      "term": "work-life balance",
+      "definition": "Sự cân bằng giữa thời gian và năng lượng dành cho công việc với cuộc sống cá nhân.",
+      "example": "Flexible hours helped employees maintain a healthier work-life balance.",
+      "exampleTranslation": "Giờ làm linh hoạt giúp nhân viên duy trì sự cân bằng tốt hơn giữa công việc và cuộc sống.",
+      "pos": "N"
+    },
+    {
+      "term": "maternity leave",
+      "definition": "Khoảng thời gian người mẹ được nghỉ làm trước hoặc sau khi sinh con.",
+      "example": "The policy provides paid maternity leave for six months.",
+      "exampleTranslation": "Chính sách này cho phép nghỉ thai sản có lương trong sáu tháng.",
+      "pos": "N"
+    },
+    {
+      "term": "antioxidant",
+      "definition": "Chất giúp hạn chế quá trình oxy hóa có thể gây tổn hại cho tế bào.",
+      "example": "Berries contain antioxidant compounds that protect cells from damage.",
+      "exampleTranslation": "Các loại quả mọng chứa hợp chất chống oxy hóa giúp bảo vệ tế bào khỏi tổn thương.",
+      "pos": "N"
+    },
+    {
+      "term": "probiotic",
+      "definition": "Vi sinh vật sống có thể mang lại lợi ích cho sức khỏe khi được dùng với lượng phù hợp.",
+      "example": "A probiotic may help maintain a healthy balance of gut bacteria.",
+      "exampleTranslation": "Men vi sinh có thể giúp duy trì sự cân bằng lành mạnh của vi khuẩn đường ruột.",
+      "pos": "N"
+    },
+    {
+      "term": "depict",
+      "definition": "Mô tả hoặc thể hiện một người, sự vật hay tình huống bằng hình ảnh hoặc lời nói.",
+      "example": "The chart depicts a steady decline in household energy use.",
+      "exampleTranslation": "Biểu đồ mô tả mức sử dụng năng lượng trong hộ gia đình giảm đều.",
+      "pos": "V"
+    },
+    {
+      "term": "quantum",
+      "definition": "Lượng nhỏ nhất rời rạc của một đại lượng vật lý trong một hệ thống lượng tử.",
+      "example": "Quantum theory describes how matter behaves at atomic scales.",
+      "exampleTranslation": "Lý thuyết lượng tử mô tả cách vật chất hoạt động ở quy mô nguyên tử.",
+      "pos": "N"
+    },
+    {
+      "term": "simulation",
+      "definition": "Mô hình tái hiện hoạt động của một hệ thống để nghiên cứu hoặc dự đoán kết quả.",
+      "example": "The team used a computer simulation to estimate flood risk.",
+      "exampleTranslation": "Nhóm nghiên cứu dùng mô phỏng máy tính để ước tính nguy cơ lũ lụt.",
+      "pos": "N"
+    },
+    {
+      "term": "paradigm",
+      "definition": "Mô hình hoặc hệ tư tưởng định hình cách một lĩnh vực hiểu và nghiên cứu vấn đề.",
+      "example": "The discovery shifted the scientific paradigm for disease prevention.",
+      "exampleTranslation": "Phát hiện này đã làm thay đổi mô hình khoa học về phòng ngừa bệnh tật.",
+      "pos": "N"
+    },
+    {
+      "term": "monopoly",
+      "definition": "Tình trạng một doanh nghiệp duy nhất kiểm soát thị trường và hạn chế cạnh tranh.",
+      "example": "The regulator investigated the monopoly that controlled the region's water supply.",
+      "exampleTranslation": "Cơ quan quản lý điều tra công ty độc quyền kiểm soát nguồn cấp nước của khu vực.",
+      "pos": "N"
+    },
+    {
+      "term": "commodity",
+      "definition": "Nguyên liệu hoặc sản phẩm cơ bản được mua bán trên thị trường, thường có thể thay thế bằng sản phẩm tương đương.",
+      "example": "Coffee is an important commodity for many exporting countries.",
+      "exampleTranslation": "Cà phê là mặt hàng quan trọng đối với nhiều quốc gia xuất khẩu.",
+      "pos": "N"
+    },
+    {
+      "term": "liquidity",
+      "definition": "Mức độ một tài sản có thể nhanh chóng đổi thành tiền mà không mất nhiều giá trị.",
+      "example": "Banks must maintain enough liquidity to meet customers' withdrawal requests.",
+      "exampleTranslation": "Các ngân hàng phải duy trì đủ tính thanh khoản để đáp ứng yêu cầu rút tiền của khách hàng.",
+      "pos": "N"
+    },
+    {
+      "term": "globalization",
+      "definition": "Quá trình các quốc gia ngày càng kết nối về kinh tế, văn hóa và công nghệ.",
+      "example": "Globalization has connected supply chains across national borders.",
+      "exampleTranslation": "Toàn cầu hóa đã kết nối các chuỗi cung ứng xuyên biên giới quốc gia.",
+      "pos": "N"
+    },
+    {
+      "term": "sovereignty",
+      "definition": "Quyền tối cao của một quốc gia trong việc tự quản lý lãnh thổ và chính sách của mình.",
+      "example": "The agreement protects each nation's sovereignty over its natural resources.",
+      "exampleTranslation": "Thỏa thuận bảo vệ chủ quyền của mỗi quốc gia đối với tài nguyên thiên nhiên.",
+      "pos": "N"
+    },
+    {
+      "term": "citizenry",
+      "definition": "Toàn thể công dân của một quốc gia hoặc cộng đồng.",
+      "example": "The policy received broad support from the citizenry.",
+      "exampleTranslation": "Chính sách nhận được sự ủng hộ rộng rãi từ toàn thể công dân.",
+      "pos": "N"
+    },
+    {
+      "term": "advocacy",
+      "definition": "Hoạt động công khai ủng hộ một ý tưởng, quyền lợi hoặc sự thay đổi.",
+      "example": "Community advocacy helped secure safer roads near the school.",
+      "exampleTranslation": "Hoạt động vận động của cộng đồng giúp cải thiện an toàn giao thông gần trường học.",
+      "pos": "N"
+    },
+    {
+      "term": "cohesion",
+      "definition": "Mức độ gắn kết giữa các thành viên trong một nhóm hoặc xã hội.",
+      "example": "Shared public spaces can strengthen social cohesion.",
+      "exampleTranslation": "Không gian công cộng chung có thể củng cố sự gắn kết xã hội.",
+      "pos": "N"
+    },
+    {
+      "term": "conditioning",
+      "definition": "Quá trình hình thành phản ứng hoặc hành vi thông qua sự liên kết giữa các kích thích và trải nghiệm.",
+      "example": "Classical conditioning can link a neutral sound with a learned response.",
+      "exampleTranslation": "Điều kiện hóa cổ điển có thể liên kết một âm thanh trung tính với phản ứng đã học.",
+      "pos": "N"
+    },
+    {
+      "term": "arousal",
+      "definition": "Trạng thái tỉnh táo hoặc kích hoạt về mặt sinh lý và cảm xúc.",
+      "example": "The experiment measured arousal by tracking changes in heart rate.",
+      "exampleTranslation": "Thí nghiệm đo mức độ kích hoạt bằng cách theo dõi thay đổi nhịp tim.",
+      "pos": "N"
+    },
+    {
+      "term": "attachment",
+      "definition": "Mối gắn bó tình cảm giữa một người với người khác hoặc với một đối tượng.",
+      "example": "Secure attachment in early childhood can support later emotional development.",
+      "exampleTranslation": "Sự gắn bó an toàn trong những năm đầu đời có thể hỗ trợ sự phát triển cảm xúc về sau.",
+      "pos": "N"
+    },
+    {
+      "term": "placebo",
+      "definition": "Chất hoặc phương pháp không có tác dụng điều trị đặc hiệu, dùng làm đối chứng hoặc tạo hiệu ứng kỳ vọng.",
+      "example": "Some patients reported less pain after receiving a placebo.",
+      "exampleTranslation": "Một số bệnh nhân cho biết họ ít đau hơn sau khi nhận giả dược.",
+      "pos": "N"
+    },
+    {
+      "term": "cartography",
+      "definition": "Khoa học và kỹ thuật thiết kế, lập và nghiên cứu bản đồ.",
+      "example": "Modern cartography combines satellite images with field surveys.",
+      "exampleTranslation": "Bản đồ học hiện đại kết hợp ảnh vệ tinh với khảo sát thực địa.",
+      "pos": "N"
+    },
+    {
+      "term": "empathy",
+      "definition": "Khả năng thấu hiểu và chia sẻ cảm xúc hoặc góc nhìn của người khác.",
+      "example": "Empathy helps health workers understand how patients experience pain.",
+      "exampleTranslation": "Sự đồng cảm giúp nhân viên y tế hiểu bệnh nhân trải nghiệm cơn đau như thế nào.",
+      "pos": "N"
+    },
+    {
+      "term": "severance",
+      "definition": "Khoản tiền hoặc quyền lợi người lao động nhận được khi hợp đồng bị chấm dứt.",
+      "example": "The company offered severance to employees whose positions were eliminated.",
+      "exampleTranslation": "Công ty đề nghị trợ cấp thôi việc cho những nhân viên bị xóa bỏ vị trí.",
+      "pos": "N"
+    },
+    {
+      "term": "redundancy",
+      "definition": "Việc mất việc do vị trí không còn cần thiết; hoặc sự lặp lại không cần thiết.",
+      "example": "The company reduced staff redundancy after reorganizing its regional offices.",
+      "exampleTranslation": "Công ty giảm tình trạng dư thừa nhân sự sau khi tổ chức lại các văn phòng khu vực.",
+      "pos": "N"
+    },
+    {
+      "term": "immunity",
+      "definition": "Khả năng cơ thể chống lại một bệnh hoặc tác nhân gây bệnh.",
+      "example": "Vaccination can help the body build immunity to the virus.",
+      "exampleTranslation": "Tiêm chủng có thể giúp cơ thể xây dựng khả năng miễn dịch với vi-rút.",
+      "pos": "N"
+    },
+    {
+      "term": "hydration",
+      "definition": "Quá trình cung cấp hoặc duy trì đủ nước cho cơ thể.",
+      "example": "Adequate hydration is important during prolonged physical activity.",
+      "exampleTranslation": "Bổ sung đủ nước rất quan trọng khi hoạt động thể chất kéo dài.",
+      "pos": "N"
+    },
+    {
+      "term": "screening",
+      "definition": "Quá trình kiểm tra một nhóm người để phát hiện sớm bệnh hoặc nguy cơ sức khỏe.",
+      "example": "Early screening can detect the condition before symptoms become severe.",
+      "exampleTranslation": "Sàng lọc sớm có thể phát hiện tình trạng bệnh trước khi triệu chứng trở nên nghiêm trọng.",
+      "pos": "N"
     }
   ]
 }

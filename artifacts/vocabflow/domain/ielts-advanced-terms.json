@@ -1,6 +1,6 @@
 {
-  "classificationMethod": "Editorial teaching split: uncommon C1+ general academic or specialist/technical vocabulary; not an official CEFR certification.",
-  "source": "Existing IELTS topic-course vocabulary; grouped by headword and Vietnamese meaning for teaching, not certified by an official CEFR list.",
+  "classificationMethod": "Editorial teaching split using exact Oxford 5000 headword-and-part-of-speech matches as the primary CEFR reference. Oxford B2 terms are assigned to standard IELTS; Oxford C1 labels and specialist or unlisted terms remain here. This is not an official CEFR certification.",
+  "source": "Oxford Learner's Dictionaries, Oxford 3000/5000 by CEFR (https://www.oxfordlearnersdictionaries.com/wordlists/oxford3000-5000), as the primary reference; CEFR-J Wordlist v1.6 (https://www.cefr-j.org/download.html) as a secondary cross-check; existing IELTS topical vocabulary for term selection.",
   "termsByTopic": {
     "education": [
       "pedagogic",
@@ -19,7 +19,6 @@
       "biodiversity",
       "ecological",
       "deforestation",
-      "ecosystem",
       "contaminant",
       "erosion",
       "biodegradable",
@@ -111,7 +110,6 @@
     "work": [
       "careerist",
       "laborious",
-      "entrepreneur",
       "entrepreneurship",
       "ergonomics",
       "industrious",
@@ -141,7 +139,6 @@
       "barter",
       "consolidate",
       "consortium",
-      "corporate",
       "deficit",
       "diversification",
       "diversify",
@@ -197,7 +194,6 @@
     ],
     "tourism": [
       "excursion",
-      "exotic",
       "seafarer",
       "seafaring",
       "tavern",
@@ -259,7 +255,6 @@
       "criminality",
       "criminalization",
       "detain",
-      "conspiracy",
       "culprit",
       "defuse",
       "delinquency",
@@ -312,7 +307,6 @@
       "microscopic",
       "oscillation",
       "paleontologist",
-      "phenomenon",
       "polarization",
       "polarize",
       "polygraph",
@@ -480,7 +474,6 @@
       "predatory",
       "aquatic",
       "migratory",
-      "biological",
       "biologically",
       "botanical",
       "zoological",
@@ -551,7 +544,6 @@
       "depersonalization",
       "desensitize",
       "despair",
-      "desperate",
       "devious",
       "disillusion",
       "dismay",
@@ -753,10 +745,6 @@
       "obsidian",
       "substrate",
       "volatile"
-    ],
-    "time-sequence": [
-      "duration",
-      "interval"
     ],
     "general-reading": [
       "albeit",
