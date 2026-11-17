@@ -1,7 +1,9 @@
 const assert = require("node:assert/strict");
+const { join } = require("node:path");
 const courseData = require("../domain/ielts-topic-course-data.json");
 const readingVocabularyMap = require("../domain/ielts-reading-vocabulary-topic-map.json");
 const readingExampleTranslations = require("../domain/ielts-reading-example-translations.json");
+const { loadTs } = require("./test-support.cjs");
 const {
   DICTIONARY_SENSE_REVIEW,
   DICTIONARY_DEFINITION_REVIEW,
@@ -140,6 +142,19 @@ assert.equal(
   1342,
   "The existing IELTS lessons should retain their 1,342 words.",
 );
+assert.deepEqual(
+  courseData.topics.flatMap((topic) =>
+    topic.legacyLesson ? [topic.legacyLesson.id] : [],
+  ),
+  [
+    "ielts-topic-vocabulary-v1-education",
+    "ielts-topic-vocabulary-v1-environment",
+    "ielts-topic-vocabulary-v1-technology",
+    "ielts-topic-vocabulary-v1-health",
+    "ielts-topic-vocabulary-v1-society-work",
+  ],
+  "Existing IELTS lesson IDs must remain unchanged.",
+);
 assert.equal(
   readingVocabularyMap.entries.length,
   readingVocabularyMap.candidateCount,
@@ -159,6 +174,61 @@ assert.equal(
   new Set(importedReadingTerms).size,
   "The IELTS Reading topics must not repeat imported headwords.",
 );
+const readingTopicById = new Map(
+  courseData.topics.map((topic) => [topic.id, topic]),
+);
+const timeSequenceTopic = readingTopicById.get("time-sequence");
+assert.ok(timeSequenceTopic, "The time and sequence topic must be available.");
+for (const term of [
+  "afternoon",
+  "afterward",
+  "beforehand",
+  "daily",
+  "date",
+  "dawn",
+  "daylight",
+  "duration",
+  "eventual",
+  "eventually",
+  "hourly",
+  "immediate",
+  "immediately",
+  "interval",
+  "midday",
+  "midnight",
+  "nowadays",
+  "overnight",
+  "recent",
+  "recently",
+  "temporary",
+  "tomorrow",
+  "weekend",
+  "weekly",
+  "yearly",
+  "yesterday",
+]) {
+  assert.ok(
+    timeSequenceTopic.readingTerms.includes(term),
+    `${term} must remain in the time and sequence topic.`,
+  );
+}
+for (const [topicId, terms] of Object.entries({
+  water: ["barrage", "fathom"],
+  health: ["stone"],
+  crime: ["capture"],
+  economy: ["circulation"],
+  technology: ["shortcut"],
+  "materials-science": ["headspace"],
+})) {
+  const topic = readingTopicById.get(topicId);
+  assert.ok(topic, `${topicId} must remain an IELTS topic.`);
+  for (const term of terms) {
+    assert.ok(
+      topic.readingTerms.includes(term),
+      `${term} must remain in ${topicId}.`,
+    );
+  }
+}
 assert.equal(
   readingExampleTranslations.entries.length,
   importedReadingTerms.length,
@@ -273,9 +343,74 @@ for (const [term, expected] of Object.entries(
 }
 assert.equal(
   courseData.topics.length,
-  37,
-  "The existing topics and the general Reading topic must remain available.",
+  38,
+  "The existing topics, added time topic, and general Reading topic must remain available.",
 );
+const ieltsCourseDomain = loadTs(
+  join(__dirname, "../domain/ielts-topic-course.ts"),
+  { "./ielts-topic-course-data.json": courseData },
+);
+const expectedReadingLessonCounts = {
+  education: 5,
+  environment: 3,
+  technology: 6,
+  health: 10,
+  "society-work": 1,
+  society: 14,
+  work: 6,
+  economy: 8,
+  transport: 4,
+  housing: 3,
+  tourism: 1,
+  culture: 10,
+  media: 3,
+  government: 5,
+  crime: 3,
+  science: 11,
+  energy: 1,
+  agriculture: 8,
+  globalization: 1,
+  family: 1,
+  language: 6,
+  sports: 3,
+  history: 4,
+  equality: 1,
+  development: 1,
+  consumerism: 2,
+  architecture: 3,
+  biodiversity: 6,
+  water: 2,
+  psychology: 17,
+  biology: 8,
+  "earth-science": 4,
+  astronomy: 1,
+  "academic-methods": 12,
+  geography: 4,
+  "materials-science": 4,
+  "general-reading": 46,
+  "time-sequence": 1,
+};
+for (const [topicId, expectedCount] of Object.entries(
+  expectedReadingLessonCounts,
+)) {
+  const prefix = `${ieltsCourseDomain.IELTS_TOPIC_COURSE_ID}-${topicId}-reading-lesson-`;
+  const lessonIds = ieltsCourseDomain.IELTS_TOPIC_COURSE_LESSONS
+    .filter((lesson) => lesson.id.startsWith(prefix))
+    .map((lesson) => lesson.id);
+  assert.equal(
+    lessonIds.length,
+    expectedCount,
+    `${topicId} must keep its existing Reading progress IDs.`,
+  );
+  assert.deepEqual(
+    lessonIds,
+    Array.from(
+      { length: expectedCount },
+      (_, index) => `${prefix}${index + 1}`,
+    ),
+    `${topicId} Reading lesson IDs must remain sequential and stable.`,
+  );
+}
 assert.equal(
   hasSubjectPronounConflict(
     "She coached him through the interview.",

@@ -53,6 +53,7 @@ export const IELTS_TOPIC_COURSE_TITLE = "Từ vựng IELTS theo chủ đề";
 export const IELTS_TOPIC_COURSE_SPELLING_CONVENTION =
   data.spellingConvention;
 export const IELTS_TOPIC_COURSE_WORD_COUNT = data.totalWords;
+const PRESERVED_GENERAL_READING_LESSON_COUNT = 46;
 export const IELTS_TOPIC_COURSE_ENTRIES: Readonly<
   Record<string, IeltsTopicCourseEntry>
 > = data.entries;
@@ -160,7 +161,27 @@ function createQuestions(
   });
 }
 
-function splitLessonTerms(terms: readonly string[]): string[][] {
+function splitLessonTerms(
+  terms: readonly string[],
+  desiredLessonCount?: number,
+): string[][] {
+  if (desiredLessonCount !== undefined) {
+    if (terms.length < desiredLessonCount) {
+      throw new Error(
+        `Cannot preserve ${desiredLessonCount} lesson IDs with only ${terms.length} Reading terms.`,
+      );
+    }
+    const baseSize = Math.floor(terms.length / desiredLessonCount);
+    const remainder = terms.length % desiredLessonCount;
+    let offset = 0;
+    return Array.from({ length: desiredLessonCount }, (_, index) => {
+      const size = baseSize + (index < remainder ? 1 : 0);
+      const chunk = terms.slice(offset, offset + size);
+      offset += size;
+      return chunk;
+    });
+  }
+
   const chunks: string[][] = [];
   const sizes = [25, 28, 22, 30, 24, 26];
   let offset = 0;
@@ -214,16 +235,22 @@ function buildLessons(): IeltsTopicCourseLesson[] {
       });
     });
 
-    splitLessonTerms(topic.readingTerms).forEach((terms, index) => {
-      lessons.push({
-        id: `${IELTS_TOPIC_COURSE_ID}-${topic.id}-reading-lesson-${index + 1}`,
-        title: `Reading · Bài ${index + 1}`,
-        focus: topic.focus,
-        topicId: topic.id,
-        topicTitle: topic.title,
-        questions: createQuestions(terms, allTerms),
-      });
-    });
+    const desiredReadingLessonCount =
+      topic.id === "general-reading"
+        ? PRESERVED_GENERAL_READING_LESSON_COUNT
+        : undefined;
+    splitLessonTerms(topic.readingTerms, desiredReadingLessonCount).forEach(
+      (terms, index) => {
+        lessons.push({
+          id: `${IELTS_TOPIC_COURSE_ID}-${topic.id}-reading-lesson-${index + 1}`,
+          title: `Reading · Bài ${index + 1}`,
+          focus: topic.focus,
+          topicId: topic.id,
+          topicTitle: topic.title,
+          questions: createQuestions(terms, allTerms),
+        });
+      },
+    );
   }
 
   return lessons;

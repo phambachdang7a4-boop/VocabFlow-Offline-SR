@@ -248,6 +248,14 @@ const IELTS_READING_TOPIC = {
   focus: "Từ vựng học thuật và các từ thường gặp trong bài đọc IELTS.",
   prefixes: "",
 };
+const IELTS_READING_ADDITIONAL_TOPICS = [
+  {
+    id: "time-sequence",
+    title: "Thời gian và trình tự",
+    focus: "Mốc thời gian, trình tự, khoảng thời lượng và tần suất.",
+    prefixes: "",
+  },
+];
 const READING_IRREGULAR_FORMS = new Map(
   Object.entries({
     arose: "arise",
@@ -2416,7 +2424,11 @@ function main() {
         entry,
       ]),
     );
-    const readingTopicDefinitions = [...TOPICS, IELTS_READING_TOPIC];
+    const readingTopicDefinitions = [
+      ...TOPICS,
+      ...IELTS_READING_ADDITIONAL_TOPICS,
+      IELTS_READING_TOPIC,
+    ];
     const readingTopicIds = new Set(
       readingTopicDefinitions.map((topic) => topic.id),
     );
