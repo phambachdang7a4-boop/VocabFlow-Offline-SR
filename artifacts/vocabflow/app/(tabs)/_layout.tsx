@@ -4,6 +4,7 @@ import {
   Platform,
   StyleSheet,
   View,
+  useWindowDimensions,
   type ColorValue,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
@@ -25,6 +26,7 @@ const ICONS = {
 function ClassicTabLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const compact = useWindowDimensions().width < 360;
   const isWeb = Platform.OS === "web";
 
   const icon =
@@ -76,8 +78,8 @@ function ClassicTabLayout() {
         tabBarInactiveTintColor: colors.navigationInactive,
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
-          fontSize: 11,
-          lineHeight: 14,
+          fontSize: compact ? 10 : 11,
+          lineHeight: compact ? 12 : 14,
           marginTop: 1,
           marginBottom: 2,
           textAlign: "center",

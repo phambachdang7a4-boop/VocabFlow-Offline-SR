@@ -39,7 +39,17 @@ assert.match(
   /paddingBottom:\s*isWeb\s*\?\s*34\s*:\s*insets\.bottom/,
   "The tab bar preserves the platform bottom safe area.",
 );
-assert.match(layout, /lineHeight:\s*14/);
+assert.match(
+  layout,
+  /const compact = useWindowDimensions\(\)\.width < 360/,
+  "Compact phones use a dedicated tab-label layout.",
+);
+assert.match(
+  layout,
+  /fontSize:\s*compact \? 10 : 11/,
+  "Navigation labels shrink slightly on compact phones instead of truncating.",
+);
+assert.match(layout, /lineHeight:\s*compact \? 12 : 14/);
 assert.match(layout, /includeFontPadding:\s*false/);
 assert.match(layout, /textAlign:\s*"center"/);
 

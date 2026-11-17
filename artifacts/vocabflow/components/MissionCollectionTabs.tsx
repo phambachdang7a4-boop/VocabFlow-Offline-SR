@@ -1,5 +1,11 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { F, MaterialSheen } from "@/components/ui";
@@ -18,6 +24,7 @@ export function MissionCollectionTabs({
   active: MissionCollectionTab;
 }) {
   const c = useColors();
+  const compact = useWindowDimensions().width < 360;
 
   return (
     <View
@@ -70,6 +77,7 @@ export function MissionCollectionTabs({
             <Text
               style={[
                 styles.label,
+                compact ? styles.labelCompact : null,
                 {
                   color: selected ? c.vocabCardForeground : c.mutedForeground,
                 },
@@ -97,7 +105,13 @@ const styles = StyleSheet.create({
     minHeight: 42,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
   },
-  label: { fontFamily: F.s, fontSize: 14 },
+  label: {
+    fontFamily: F.s,
+    fontSize: 14,
+    textAlign: "center",
+    includeFontPadding: false,
+  },
+  labelCompact: { fontSize: 12, lineHeight: 16 },
 });

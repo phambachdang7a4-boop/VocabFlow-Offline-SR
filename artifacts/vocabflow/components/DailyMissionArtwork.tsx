@@ -22,7 +22,6 @@ export function DailyMissionArtwork({
       width={size}
       height={size}
       viewBox="0 0 80 80"
-      accessible={false}
     >
       {type === "time" ? (
         <>

@@ -100,6 +100,31 @@ const missionScreen = require("node:fs").readFileSync(
 );
 assert.match(
   missionScreen,
+  /const compactLayout = screenWidth < 360/,
+  "The mission cards use a compact layout below 360 pixels.",
+);
+assert.match(
+  missionScreen,
+  /const missionArtworkSize = compactLayout \? 48 : 64/,
+  "Mission art scales down on compact screens.",
+);
+assert.match(
+  missionScreen,
+  /const chestArtworkSize = compactLayout \? 44 : 56/,
+  "Chest art scales down on compact screens.",
+);
+assert.match(
+  missionScreen,
+  /testID="mission-scroll-view"/,
+  "The mission list remains a scrollable viewport.",
+);
+assert.match(
+  missionScreen,
+  /const scrollBottom = Platform\.OS === "web" \? Math\.max\(bottom, 120\) : bottom/,
+  "The web preview can scroll the last mission above its bottom navigation.",
+);
+assert.match(
+  missionScreen,
   /<DailyMissionArtwork\s+type=\{mission\.type\}\s+size=\{missionArtworkSize\}\s*\/>/,
   "The missions screen passes each mission's own type to its illustration.",
 );

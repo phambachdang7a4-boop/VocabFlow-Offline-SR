@@ -49,8 +49,10 @@ export default function BlankScreen() {
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const missionArtworkSize = screenWidth < 360 ? 56 : 64;
-  const chestArtworkSize = screenWidth < 360 ? 56 : 64;
+  const compactLayout = screenWidth < 360;
+  const missionArtworkSize = compactLayout ? 48 : 64;
+  const chestArtworkSize = compactLayout ? 44 : 56;
+  const scrollBottom = Platform.OS === "web" ? Math.max(bottom, 120) : bottom;
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,9 +102,10 @@ export default function BlankScreen() {
           <CollectionScreen />
         ) : (
           <ScrollView
+            testID="mission-scroll-view"
             contentContainerStyle={[
               styles.content,
-              { paddingTop: top + 12, paddingBottom: bottom },
+              { paddingTop: top + 12, paddingBottom: scrollBottom },
             ]}
             showsVerticalScrollIndicator={false}
           >
@@ -115,7 +118,13 @@ export default function BlankScreen() {
             <>
             <View style={styles.missionHeading}>
               <View style={styles.missionHeadingCopy}>
-                <Text style={[styles.missionPageTitle, { color: c.foreground }]}>
+                <Text
+                  style={[
+                    styles.missionPageTitle,
+                    compactLayout ? styles.missionPageTitleCompact : null,
+                    { color: c.foreground },
+                  ]}
+                >
                   Ba nhiệm vụ hôm nay
                 </Text>
                 <Text style={[styles.sectionHint, { color: c.mutedForeground }]}>
@@ -132,7 +141,11 @@ export default function BlankScreen() {
                 <Feather name="award" size={16} color={c.accent} />
                 <Text
                   testID="stone-balance"
-                  style={[styles.missionStoneText, { color: c.foreground }]}
+                  style={[
+                    styles.missionStoneText,
+                    compactLayout ? styles.missionStoneTextCompact : null,
+                    { color: c.foreground },
+                  ]}
                 >
                   {loading && !overview
                     ? "— Stone"
@@ -184,6 +197,7 @@ export default function BlankScreen() {
                     }`}
                     style={[
                       styles.missionCard,
+                      compactLayout ? styles.missionCardCompact : null,
                       {
                         backgroundColor: finished ? c.successSoft : c.card,
                         borderColor: finished ? c.success : c.border,
@@ -252,17 +266,9 @@ export default function BlankScreen() {
                         >
                           {mission.description}
                         </Text>
-                        <Text
-                          testID={`daily-mission-chest-${mission.id}`}
-                          style={[
-                            styles.missionChestLabel,
-                            { color: CHEST_RARITY_TEXT_COLORS[rewardRarity] },
-                          ]}
-                        >
-                          Rương {CHEST_RARITY_LABELS[rewardRarity]} khi hoàn
-                          thành
-                        </Text>
                       </View>
+                    </View>
+                    <View style={styles.missionRewardRow}>
                       <View
                         style={[
                           styles.rewardArtwork,
@@ -307,6 +313,16 @@ export default function BlankScreen() {
                           </View>
                         ) : null}
                       </View>
+                      <Text
+                        testID={`daily-mission-chest-${mission.id}`}
+                        style={[
+                          styles.missionChestLabel,
+                          { color: CHEST_RARITY_TEXT_COLORS[rewardRarity] },
+                        ]}
+                      >
+                        Rương {CHEST_RARITY_LABELS[rewardRarity]} khi hoàn
+                        thành
+                      </Text>
                     </View>
                     <View style={styles.progressRow}>
                       <View
@@ -475,6 +491,7 @@ const styles = StyleSheet.create({
   },
   missionHeadingCopy: { flex: 1, minWidth: 0, gap: 3 },
   missionPageTitle: { fontFamily: F.b, fontSize: 23 },
+  missionPageTitleCompact: { fontSize: 20, lineHeight: 26 },
   missionStoneBadge: {
     minHeight: 34,
     flexDirection: "row",
@@ -487,6 +504,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
   },
   missionStoneText: { fontFamily: F.b, fontSize: 12 },
+  missionStoneTextCompact: { fontSize: 11 },
   sectionHeading: { gap: 2, marginTop: 6, marginBottom: 2 },
   sectionTitle: { fontFamily: F.b, fontSize: 20 },
   sectionHint: { fontFamily: F.r, fontSize: 13 },
@@ -501,6 +519,7 @@ const styles = StyleSheet.create({
     minHeight: 172,
     marginBottom: 4,
   },
+  missionCardCompact: { padding: 10, gap: 9 },
   missionTop: { flexDirection: "row", alignItems: "center", gap: 8 },
   missionIcon: {
     flexShrink: 0,
@@ -535,6 +554,12 @@ const styles = StyleSheet.create({
   missionTitle: { fontFamily: F.b, fontSize: 17, lineHeight: 22 },
   missionDescription: { fontFamily: F.r, fontSize: 13, lineHeight: 18 },
   missionChestLabel: { fontFamily: F.s, fontSize: 12, lineHeight: 16 },
+  missionRewardRow: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   chestCard: {
     position: "relative",
     borderWidth: 1,
