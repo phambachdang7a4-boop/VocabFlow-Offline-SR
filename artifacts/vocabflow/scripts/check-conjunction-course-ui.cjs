@@ -24,6 +24,9 @@ const ieltsTopicDomain = loadTs(
     "./ielts-advanced-terms.json": require(
       "../domain/ielts-advanced-terms.json",
     ),
+    "./ielts-book-c1-c2-candidates.json": require(
+      "../domain/ielts-book-c1-c2-candidates.json",
+    ),
   },
 );
 const toeicTopicDomain = loadToeicTopicCourseDomain();

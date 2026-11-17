@@ -50,6 +50,13 @@ function batches<T>(items: T[], size: number): T[][] {
   return result;
 }
 
+function containsExactHeadword(term: string, example: string): boolean {
+  const escaped = term
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\s+/g, "\\s+");
+  return new RegExp(`\\b${escaped}\\b`, "i").test(example);
+}
+
 function parseResponse(content: string, expectedTerms: string[]): GeneratedEntry[] {
   const parsed = JSON.parse(content) as { entries?: unknown };
   if (!Array.isArray(parsed.entries)) {
@@ -72,7 +79,7 @@ function parseResponse(content: string, expectedTerms: string[]): GeneratedEntry
     ) {
       throw new Error("AI response had missing, duplicate, or invalid fields.");
     }
-    if (!entry.example.toLowerCase().includes(entry.term.toLowerCase())) {
+    if (!containsExactHeadword(entry.term, entry.example)) {
       throw new Error(`Example does not contain the requested headword: ${entry.term}`);
     }
     if (

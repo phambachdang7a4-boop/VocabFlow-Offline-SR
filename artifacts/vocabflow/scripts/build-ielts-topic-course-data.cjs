@@ -30,6 +30,10 @@ const IELTS_BOOK_IMPORT_CONTENT_PATH = join(
   __dirname,
   "../domain/ielts-book-c1-c2-ai-content.json",
 );
+const IELTS_BOOK_PHRASAL_EXAMPLE_FIXES_PATH = join(
+  __dirname,
+  "../domain/ielts-book-c1-c2-phrasal-example-fixes.json",
+);
 const PHRASAL_VERB_COURSE_DATA_PATH = join(
   __dirname,
   "../domain/phrasal-verb-course-data.json",
@@ -2437,6 +2441,9 @@ function main() {
   const phrasalVerbCourseData = JSON.parse(
     readFileSync(PHRASAL_VERB_COURSE_DATA_PATH, "utf8"),
   );
+  const bookPhrasalExampleFixFile = JSON.parse(
+    readFileSync(IELTS_BOOK_PHRASAL_EXAMPLE_FIXES_PATH, "utf8"),
+  );
   const expectedBookTerms = IELTS_BOOK_IMPORT_CANDIDATES.topics.flatMap(
     (topic) => topic.terms,
   );
@@ -2453,6 +2460,25 @@ function main() {
   const expectedGeneratedBookTerms = expectedBookTerms.filter(
     (term) => !reusablePhrasalTerms.has(term),
   );
+  const bookPhrasalExampleFixEntries =
+    bookPhrasalExampleFixFile.entries ?? [];
+  const bookPhrasalExampleFixes = Object.fromEntries(
+    bookPhrasalExampleFixEntries.map((entry) => [entry.term, entry]),
+  );
+  if (
+    bookPhrasalExampleFixEntries.length !== 66 ||
+    Object.keys(bookPhrasalExampleFixes).length !== 66 ||
+    bookPhrasalExampleFixEntries.some(
+      (entry) =>
+        !reusablePhrasalTerms.has(entry.term) ||
+        !containsExactHeadword(entry.term, entry.example ?? "") ||
+        !entry.exampleTranslation?.trim(),
+    )
+  ) {
+    throw new Error(
+      "Book-import phrasal examples must contain 66 unique, reusable headwords with exact forms and Vietnamese translations.",
+    );
+  }
   if (
     (bookImportContentFile.entries ?? []).length !==
       expectedGeneratedBookTerms.length ||
@@ -2602,15 +2628,28 @@ function main() {
       for (const candidate of topicCandidates(topic, dictionary, sortedTerms)) {
         if (usedTerms.has(candidate.term)) continue;
         usedTerms.add(candidate.term);
-        const aiEntry =
-          expansionContent[candidate.term] ??
-          bookImportContent[candidate.term] ??
-          (reusablePhrasalTerms.has(candidate.term)
+        const reusablePhrasalEntry =
+          reusablePhrasalTerms.has(candidate.term)
+            ? phrasalVerbCourseData.entries[candidate.term]
+            : null;
+        const phrasalExampleFix = bookPhrasalExampleFixes[candidate.term];
+        const repairedPhrasalEntry =
+          reusablePhrasalEntry && phrasalExampleFix
             ? {
-                ...phrasalVerbCourseData.entries[candidate.term],
-                pos:
-                  phrasalVerbCourseData.entries[candidate.term].partOfSpeech ??
-                  "V",
+                ...reusablePhrasalEntry,
+                example: phrasalExampleFix.example,
+                exampleTranslation: phrasalExampleFix.exampleTranslation,
+                pos: reusablePhrasalEntry.partOfSpeech ?? "V",
+              }
+            : null;
+        const aiEntry =
+          bookImportContent[candidate.term] ??
+          repairedPhrasalEntry ??
+          expansionContent[candidate.term] ??
+          (reusablePhrasalEntry
+            ? {
+                ...reusablePhrasalEntry,
+                pos: reusablePhrasalEntry.partOfSpeech ?? "V",
               }
             : null);
         words.push({

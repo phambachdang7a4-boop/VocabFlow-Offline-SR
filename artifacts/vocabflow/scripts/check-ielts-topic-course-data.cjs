@@ -4,6 +4,7 @@ const courseData = require("../domain/ielts-topic-course-data.json");
 const expansionContent = require("../domain/ielts-ai-expansion-content.json");
 const bookImportCandidates = require("../domain/ielts-book-c1-c2-candidates.json");
 const bookImportContent = require("../domain/ielts-book-c1-c2-ai-content.json");
+const bookPhrasalExampleFixes = require("../domain/ielts-book-c1-c2-phrasal-example-fixes.json");
 const phrasalVerbCourseData = require("../domain/phrasal-verb-course-data.json");
 const readingVocabularyMap = require("../domain/ielts-reading-vocabulary-topic-map.json");
 const readingExampleTranslations = require("../domain/ielts-reading-example-translations.json");
@@ -152,11 +153,22 @@ const reusableBookPhrasalTerms = new Set(
     );
   }),
 );
+const bookPhrasalExampleFixTerms = new Set(
+  bookPhrasalExampleFixes.entries.map((entry) => entry.term),
+);
 assert.equal(bookImportTerms.length, 464);
 assert.equal(new Set(bookImportTerms).size, 464);
 assert.equal(bookImportContentTerms.size, 365);
 assert.equal(bookImportContent.entries.length, 365);
 assert.equal(reusableBookPhrasalTerms.size, 99);
+assert.equal(bookPhrasalExampleFixes.entries.length, 66);
+assert.equal(bookPhrasalExampleFixTerms.size, 66);
+assert.ok(
+  [...bookPhrasalExampleFixTerms].every((term) =>
+    reusableBookPhrasalTerms.has(term),
+  ),
+  "All manually authored phrase examples must retain an existing course definition.",
+);
 assert.equal(
   [...allIeltsTerms].filter((term) => !bookImportTerms.includes(term)).length,
   7144,
@@ -351,12 +363,22 @@ const expectedReviewedTopicCounts = {
 for (const [topicId, expectedCount] of Object.entries(
   expectedReviewedTopicCounts,
 )) {
+  const importedCount = bookImportCandidates.topics.reduce(
+    (count, topic) => {
+      const courseTopicId =
+        topic.courseTopicId ??
+        IELTS_EXPANSION_TOPIC_ROUTES[topic.id] ??
+        topic.id;
+      return courseTopicId === topicId ? count + topic.terms.length : count;
+    },
+    0,
+  );
   const topic = courseData.topics.find(({ id }) => id === topicId);
   assert.ok(topic, `${topicId} must remain an IELTS lesson.`);
   assert.equal(
     topic.terms.length,
-    expectedCount,
-    `${topicId} must keep the reviewed lesson word count.`,
+    expectedCount + importedCount,
+    `${topicId} must retain its reviewed terms and include the imported book terms.`,
   );
 }
 const reviewedLearnerFacingCorrections = {
@@ -440,6 +462,7 @@ const ieltsCourseDomain = loadTs(
   {
     "./ielts-topic-course-data.json": courseData,
     "./ielts-advanced-terms.json": require("../domain/ielts-advanced-terms.json"),
+    "./ielts-book-c1-c2-candidates.json": bookImportCandidates,
   },
 );
 const expectedReadingLessonCounts = {

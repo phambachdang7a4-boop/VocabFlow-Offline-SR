@@ -31,6 +31,9 @@ const ieltsTopicCourse = loadTs(
     "./ielts-advanced-terms.json": require(
       "../domain/ielts-advanced-terms.json",
     ),
+    "./ielts-book-c1-c2-candidates.json": require(
+      "../domain/ielts-book-c1-c2-candidates.json",
+    ),
   },
 );
 const toeicTopicCourse = loadToeicTopicCourseDomain();
@@ -2386,7 +2389,6 @@ async function checkCourseContentAndProgress() {
     "Standard IELTS lessons keep their numbered topic labels.",
   );
   assert.ok(ieltsTerms.length > 6000);
-  assert.ok(ieltsAdvancedTerms.length > 0 && ieltsAdvancedTerms.length < 1000);
   assert.equal(ieltsTerms.length, 6369);
   assert.equal(ieltsAdvancedTerms.length, 1239);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);

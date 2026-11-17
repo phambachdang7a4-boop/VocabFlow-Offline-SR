@@ -165,8 +165,8 @@
     {
       "term": "transpire",
       "definition": "Về sau được biết hoặc trở nên rõ ràng rằng một sự việc đã xảy ra theo cách nào đó.",
-      "example": "It later transpired that participants had misunderstood the instructions, weakening the study’s conclusions.",
-      "exampleTranslation": "Về sau người ta mới biết rằng những người tham gia đã hiểu sai hướng dẫn, làm suy yếu các kết luận của nghiên cứu.",
+      "example": "What may transpire after the law takes effect remains uncertain to local researchers.",
+      "exampleTranslation": "Các nhà nghiên cứu địa phương vẫn chưa rõ điều gì có thể xảy ra sau khi luật có hiệu lực.",
       "pos": "V"
     },
     {
@@ -634,8 +634,8 @@
     {
       "term": "elapse",
       "definition": "Trôi qua, đặc biệt dùng để nói về một khoảng thời gian.",
-      "example": "The researchers recorded participants’ responses after fifteen minutes had elapsed.",
-      "exampleTranslation": "Các nhà nghiên cứu ghi lại phản hồi của người tham gia sau khi mười lăm phút đã trôi qua.",
+      "example": "At least fifteen minutes must elapse before researchers record the participants' final responses.",
+      "exampleTranslation": "Phải trôi qua ít nhất mười lăm phút trước khi các nhà nghiên cứu ghi lại câu trả lời cuối cùng của người tham gia.",
       "pos": "V"
     },
     {
@@ -759,10 +759,10 @@
     },
     {
       "term": "minute",
-      "definition": "phút, đơn vị thời gian bằng một phần sáu mươi của một giờ",
-      "example": "The interview lasted fifteen minutes, allowing researchers to collect responses from all participants.",
-      "exampleTranslation": "Cuộc phỏng vấn kéo dài mười lăm phút, cho phép các nhà nghiên cứu thu thập câu trả lời từ tất cả người tham gia.",
-      "pos": "N"
+      "definition": "Rất nhỏ hoặc khó nhận thấy; chỉ một mức độ không đáng kể.",
+      "example": "The researchers detected only minute changes in the participants' responses across four sessions.",
+      "exampleTranslation": "Các nhà nghiên cứu chỉ phát hiện những thay đổi rất nhỏ trong câu trả lời của người tham gia qua bốn buổi.",
+      "pos": "A"
     },
     {
       "term": "ration",
@@ -2062,8 +2062,8 @@
     {
       "term": "comprise",
       "definition": "Bao gồm hoặc được cấu thành từ các thành phần cụ thể.",
-      "example": "The committee comprises former prisoners, social workers, employers, and local government representatives.",
-      "exampleTranslation": "Ủy ban gồm các cựu tù nhân, nhân viên xã hội, người sử dụng lao động và đại diện chính quyền địa phương.",
+      "example": "The research sample may comprise volunteers from several regions with different educational backgrounds.",
+      "exampleTranslation": "Mẫu nghiên cứu có thể gồm những tình nguyện viên từ nhiều khu vực với nền tảng giáo dục khác nhau.",
       "pos": "V"
     },
     {
