@@ -1124,6 +1124,203 @@ function checkAnswerUniqueness({
   }
 }
 
+const expectedConjunctionExamplePairs = {
+  "as if": {
+    dictionary: [
+      "The child spoke to the author as if they had known each other for years.",
+      "Đứa trẻ nói chuyện với tác giả như thể hai người đã quen nhau nhiều năm.",
+    ],
+  },
+  "as long as": {
+    dictionary: [
+      "You may borrow my compass as long as you return it before sunset.",
+      "Bạn có thể mượn la bàn miễn là trả lại trước khi mặt trời lặn.",
+    ],
+  },
+  "as much as": {
+    dictionary: [
+      "As much as I like the idea, I cannot approve the budget without figures.",
+      "Dù rất thích ý tưởng đó, tôi không thể duyệt ngân sách khi chưa có số liệu.",
+    ],
+  },
+  "as soon as": {
+    dictionary: [
+      "Text me as soon as the plane lands.",
+      "Hãy nhắn cho tôi ngay khi máy bay hạ cánh.",
+    ],
+    course: [
+      "Text me as soon as you see the plane's landing lights; do not wait for it to reach the gate.",
+      "Hãy nhắn cho tôi ngay khi thấy đèn hạ cánh của máy bay; đừng đợi máy bay tới cổng.",
+    ],
+  },
+  "as far as": {
+    dictionary: [
+      "As far as the map shows, the footpath ends at the river.",
+      "Theo như bản đồ thể hiện, lối mòn kết thúc ở con sông.",
+    ],
+    course: [
+      "As far as I can tell from the map, the footpath ends at the river.",
+      "Theo như tôi có thể nhận định từ bản đồ, lối mòn kết thúc ở con sông.",
+    ],
+  },
+  "as though": {
+    dictionary: [
+      "The dog stared at the empty bowl as though it expected another meal.",
+      "Con chó nhìn chằm chằm vào chiếc bát trống như thể nó đang chờ thêm thức ăn.",
+    ],
+    course: [
+      "The dog stared at the empty bowl as though it were still full.",
+      "Con chó nhìn chằm chằm vào chiếc bát trống như thể bát vẫn còn đầy.",
+    ],
+  },
+  "by the time": {
+    dictionary: [
+      "The rescue team had been waiting at the village for two hours by the time the ambulance arrived.",
+      "Đến lúc xe cứu thương đến, đội cứu hộ đã chờ ở làng được hai tiếng.",
+    ],
+  },
+  "inasmuch as": {
+    dictionary: [
+      "Inasmuch as two signatures are missing, we cannot approve the form.",
+      "Vì còn thiếu hai chữ ký, chúng tôi chưa thể duyệt biểu mẫu.",
+    ],
+  },
+  "in order that": {
+    dictionary: [
+      "The guide repeated each step slowly in order that every visitor could follow.",
+      "Người hướng dẫn lặp lại từng bước chậm rãi để mọi khách tham quan có thể theo kịp.",
+    ],
+  },
+  "in case": {
+    dictionary: [
+      "Save the emergency number in your phone in case you need help.",
+      "Hãy lưu số khẩn cấp vào điện thoại phòng khi bạn cần trợ giúp.",
+    ],
+  },
+  "now that": {
+    dictionary: [
+      "Now that the repair is finished, the library can reopen.",
+      "Giờ việc sửa chữa đã xong, thư viện có thể mở cửa lại.",
+    ],
+    course: [
+      "Now that the final repair is complete, the library can reopen; the safety issue that forced it to close is gone.",
+      "Giờ việc sửa chữa cuối cùng đã xong, thư viện có thể mở cửa lại vì vấn đề an toàn khiến nơi này phải đóng cửa đã được xử lý.",
+    ],
+  },
+  "now when": {
+    dictionary: [
+      "Now when I hear the old school bell, I remember my first day.",
+      "Giờ đây, mỗi khi nghe tiếng chuông trường cũ, tôi lại nhớ ngày đầu tiên đi học.",
+    ],
+    course: [
+      "I used to ignore the old school bell, but now when I hear it, I remember my first day.",
+      "Trước đây tôi thường bỏ qua tiếng chuông trường cũ, nhưng giờ mỗi khi nghe thấy, tôi lại nhớ ngày đầu tiên đi học.",
+    ],
+  },
+  "even if": {
+    dictionary: [
+      "Even if it snows tonight, the airport will remain open.",
+      "Ngay cả khi tối nay có tuyết, sân bay vẫn sẽ mở cửa.",
+    ],
+    course: [
+      "The forecast is uncertain. Even if it snows tonight, the airport will remain open.",
+      "Dự báo chưa chắc chắn. Ngay cả khi tối nay có tuyết, sân bay vẫn mở cửa.",
+    ],
+  },
+  "even though": {
+    dictionary: [
+      "Even though the road was icy, the bus arrived on time.",
+      "Mặc dù đường đóng băng, xe buýt vẫn đến đúng giờ.",
+    ],
+    course: [
+      "Even though the road was icy, the bus still arrived on time.",
+      "Mặc dù mặt đường phủ băng, xe buýt vẫn đến đúng giờ.",
+    ],
+  },
+  "provided that": {
+    dictionary: [
+      "The lab will accept your sample provided that it is sealed before noon.",
+      "Phòng thí nghiệm sẽ nhận mẫu với điều kiện mẫu được niêm phong trước buổi trưa.",
+    ],
+  },
+  "if only": {
+    dictionary: [
+      "If only I had kept the receipt, I could have returned the headphones.",
+      "Giá mà tôi đã giữ hóa đơn thì tôi đã có thể trả lại tai nghe.",
+    ],
+    course: [
+      "If only I had kept the receipt! I could have returned these headphones yesterday.",
+      "Giá mà tôi đã giữ hóa đơn! Hôm qua tôi đã có thể trả lại chiếc tai nghe này.",
+    ],
+  },
+  "just as": {
+    dictionary: [
+      "Just as the referee blew the whistle to start the match, the striker kicked the ball.",
+      "Đúng lúc trọng tài thổi còi khai cuộc, tiền đạo sút bóng.",
+    ],
+    course: [
+      "The striker kicked the ball just as the referee blew the whistle to start the match.",
+      "Tiền đạo sút bóng đúng lúc trọng tài thổi còi khai cuộc.",
+    ],
+  },
+  "so that": {
+    dictionary: [
+      "Nora labeled every jar so that nobody would confuse the spices.",
+      "Nora dán nhãn lên từng lọ để không ai nhầm các loại gia vị.",
+    ],
+  },
+};
+
+function assertConjunctionExamplePairs(dictionaryEntries, courseEntries) {
+  const expectedTerms = Object.keys(expectedConjunctionExamplePairs).sort();
+  const actualDictionaryTerms = dictionaryEntries
+    .filter((entry) => entry.pos === "conj")
+    .map((entry) => entry.term)
+    .sort();
+  assert.deepEqual(
+    actualDictionaryTerms,
+    expectedTerms,
+    "Conjunction dictionary entries must cover every reviewed example term.",
+  );
+  assert.deepEqual(
+    [...courseEntries.keys()].sort(),
+    expectedTerms,
+    "Conjunction course entries must cover every reviewed example term.",
+  );
+
+  const dictionaryByTerm = new Map(
+    dictionaryEntries.map((entry) => [entry.term, entry]),
+  );
+  for (const term of expectedTerms) {
+    const reviewed = expectedConjunctionExamplePairs[term];
+    for (const [source, entry, expectedPair] of [
+      ["dictionary", dictionaryByTerm.get(term), reviewed.dictionary],
+      [
+        "course",
+        courseEntries.get(term),
+        reviewed.course ?? reviewed.dictionary,
+      ],
+    ]) {
+      assert.ok(
+        entry,
+        `Missing ${source} conjunction example pair for "${term}".`,
+      );
+      assert.ok(
+        entry.example?.toLowerCase().includes(term.toLowerCase()),
+        `The ${source} example for "${term}" must include its target term.`,
+      );
+      if (
+        entry.example !== expectedPair[0] ||
+        entry.exampleTranslation !== expectedPair[1]
+      ) {
+        throw new Error(
+          `Conjunction ${source} example pair mismatch for "${term}".`,
+        );
+      }
+    }
+  }
+}
+
 async function checkDictionaryOverlay() {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(`
@@ -1291,6 +1488,39 @@ async function checkCourseContentAndProgress() {
     course.CONJUNCTION_COURSE_LESSONS.flatMap((lesson) =>
       lesson.questions.map((question) => [question.term, question]),
     ),
+  );
+  assertConjunctionExamplePairs(
+    additions.LOCAL_DICTIONARY_ADDITIONS,
+    course.CONJUNCTION_COURSE_ENTRY_BY_TERM,
+  );
+  const mismatchedCourseExamples = new Map(
+    course.CONJUNCTION_COURSE_ENTRY_BY_TERM,
+  );
+  mismatchedCourseExamples.set("even if", {
+    ...mismatchedCourseExamples.get("even if"),
+    exampleTranslation: "Mặc dù tối nay có tuyết, sân bay vẫn sẽ mở cửa.",
+  });
+  assert.throws(
+    () =>
+      assertConjunctionExamplePairs(
+        additions.LOCAL_DICTIONARY_ADDITIONS,
+        mismatchedCourseExamples,
+      ),
+    /Conjunction course example pair mismatch for "even if"/,
+    "A translation that changes the target conjunction meaning fails clearly.",
+  );
+  const missingCourseExamples = new Map(
+    course.CONJUNCTION_COURSE_ENTRY_BY_TERM,
+  );
+  missingCourseExamples.delete("by the time");
+  assert.throws(
+    () =>
+      assertConjunctionExamplePairs(
+        additions.LOCAL_DICTIONARY_ADDITIONS,
+        missingCourseExamples,
+      ),
+    /Conjunction course entries must cover every reviewed example term/,
+    "A missing target conjunction pair fails clearly.",
   );
   for (const [term, distractor] of [
     ["as soon as", "by the time"],
