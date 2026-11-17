@@ -30,6 +30,7 @@ import {
 } from "@/domain/linking-adverb-course";
 import {
   SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
+  SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS,
   SENTENCE_STRUCTURE_PATTERN_ENTRIES,
   SENTENCE_STRUCTURE_PATTERN_LESSONS,
 } from "@/domain/sentence-structure-patterns";
@@ -732,6 +733,11 @@ export default function CoursesScreen() {
               question={currentQuestion}
               choices={lessonChoices[questionIndex] ?? currentQuestion.choices}
               entriesByTerm={activeCourse?.entriesByTerm ?? new Map()}
+              distractorExplanations={
+                activeCourse?.id === CONJUNCTION_COURSE_ID
+                  ? SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS
+                  : undefined
+              }
               questionIndex={questionIndex}
               selectedAnswer={selectedAnswer}
               correctCount={correctCount}
@@ -1275,6 +1281,7 @@ function QuestionView({
   question,
   choices,
   entriesByTerm,
+  distractorExplanations,
   questionIndex,
   selectedAnswer,
   correctCount,
@@ -1289,6 +1296,9 @@ function QuestionView({
   question: CourseQuestion;
   choices: readonly string[];
   entriesByTerm: ReadonlyMap<string, CourseAnswer>;
+  distractorExplanations?: Readonly<
+    Record<string, Readonly<Record<string, string>>>
+  >;
   questionIndex: number;
   selectedAnswer: string | null;
   correctCount: number;
@@ -1300,6 +1310,10 @@ function QuestionView({
   const { height: windowHeight } = useWindowDimensions();
   const answer = entriesByTerm.get(question.term);
   const isCorrect = selectedAnswer === question.term;
+  const distractorExplanation =
+    selectedAnswer && !isCorrect
+      ? distractorExplanations?.[question.term]?.[selectedAnswer]
+      : undefined;
   const progress = ((questionIndex + 1) / lesson.questions.length) * 100;
 
   return (
@@ -1568,9 +1582,29 @@ function QuestionView({
                   </Text>
                 ) : null}
                 {answer?.definition ? (
-                  <Text style={[styles.feedbackMeaning, { color: c.foreground }]}>
-                    {answer.definition}
-                  </Text>
+                  <>
+                    {isSentenceStructureCourse ? (
+                      <Text
+                        testID={`${testIdPrefix}-grammar-explanation-label`}
+                        style={[
+                          styles.feedbackTranslation,
+                          { color: c.primary },
+                        ]}
+                      >
+                        Vì sao cấu trúc này phù hợp
+                      </Text>
+                    ) : null}
+                    <Text
+                      testID={
+                        isSentenceStructureCourse
+                          ? `${testIdPrefix}-grammar-explanation`
+                          : undefined
+                      }
+                      style={[styles.feedbackMeaning, { color: c.foreground }]}
+                    >
+                      {answer.definition}
+                    </Text>
+                  </>
                 ) : null}
                 {answer?.example ? (
                   <Text
@@ -1635,9 +1669,40 @@ function QuestionView({
               {`Từ loại: ${answer.partOfSpeech}`}
             </Text>
           ) : null}
-          <Text style={[styles.feedbackMeaning, { color: c.foreground }]}>
+          {isSentenceStructureCourse ? (
+            <Text
+              testID={`${testIdPrefix}-grammar-explanation-label`}
+              style={[styles.feedbackTranslation, { color: c.primary }]}
+            >
+              Vì sao cấu trúc này phù hợp
+            </Text>
+          ) : null}
+          <Text
+            testID={
+              isSentenceStructureCourse
+                ? `${testIdPrefix}-grammar-explanation`
+                : undefined
+            }
+            style={[styles.feedbackMeaning, { color: c.foreground }]}
+          >
             {answer.definition}
           </Text>
+          {isSentenceStructureCourse && distractorExplanation ? (
+            <>
+              <Text
+                testID={`${testIdPrefix}-distractor-explanation-label`}
+                style={[styles.feedbackTranslation, { color: c.primary }]}
+              >
+                Vì sao lựa chọn của bạn chưa phù hợp
+              </Text>
+              <Text
+                testID={`${testIdPrefix}-distractor-explanation`}
+                style={[styles.feedbackMeaning, { color: c.foreground }]}
+              >
+                {distractorExplanation}
+              </Text>
+            </>
+          ) : null}
           <Text style={[styles.feedbackExample, { color: c.foreground }]}>
             {answer.example}
           </Text>

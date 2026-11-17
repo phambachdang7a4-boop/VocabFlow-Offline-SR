@@ -1296,6 +1296,17 @@ async function checkCourseContentAndProgress() {
     reviews: sentenceStructureAnswerUniquenessReviews,
     ambiguityFindings: sentenceStructureAmbiguityFindings,
   });
+  for (const question of patternQuestions) {
+    const learnerExplanations =
+      sentenceStructurePatternCourse
+        .SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS[question.term];
+    const review = sentenceStructureAnswerUniquenessReviews.get(question.term);
+    assert.deepEqual(
+      learnerExplanations,
+      review.distractors,
+      `${question.term} shows the same selected-distractor reason that was reviewed for answer uniqueness.`,
+    );
+  }
   const patternTerms = Object.keys(patternEntries);
   assert.deepEqual(
     patternLessons.map((lesson) => lesson.title),

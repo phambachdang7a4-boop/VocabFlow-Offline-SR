@@ -548,6 +548,25 @@ function mount(initialSavedWords = [], options = {}) {
   const structureQuestion =
     sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS[0]
       .questions[0];
+  for (const question of sentenceStructurePatternDomain
+    .SENTENCE_STRUCTURE_PATTERN_LESSONS.flatMap((lesson) => lesson.questions)) {
+    const explanations =
+      sentenceStructurePatternDomain
+        .SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS[question.term];
+    assert.ok(explanations, `${question.term} has learner-facing explanations.`);
+    assert.deepEqual(
+      Object.keys(explanations).sort(),
+      question.choices.filter((choice) => choice !== question.term).sort(),
+      `${question.term} explains every wrong choice and no other option.`,
+    );
+    assert.ok(
+      Object.values(explanations).every(
+        (explanation) =>
+          typeof explanation === "string" && explanation.trim().length > 0,
+      ),
+      `${question.term} has a nonempty explanation for every distractor.`,
+    );
+  }
   assert.ok(structureDialogueScreen.byId("sentence-structure-dialogue"));
   assert.equal(
     structureDialogueScreen.byId("sentence-structure-dialogue-corvi-avatar")
@@ -565,6 +584,53 @@ function mount(initialSavedWords = [], options = {}) {
     structureDialogueScreen.byId("conjunction-question-prompt").props.children,
     [structureQuestion.prompt],
     "The structure prompt remains unchanged inside the conversation.",
+  );
+  const structureDistractor = structureQuestion.choices.find(
+    (choice) => choice !== structureQuestion.term,
+  );
+  structureDialogueScreen
+    .byId(`conjunction-choice-${structureDistractor}`)
+    .props.onPress();
+  assert.equal(
+    textContent(
+      structureDialogueScreen.byId("conjunction-grammar-explanation"),
+    ),
+    sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_ENTRIES[
+      structureQuestion.term
+    ].definition,
+    "A wrong structure answer still explains why the correct pattern fits.",
+  );
+  assert.equal(
+    textContent(
+      structureDialogueScreen.byId("conjunction-distractor-explanation"),
+    ),
+    sentenceStructurePatternDomain
+      .SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS[
+      structureQuestion.term
+    ][structureDistractor],
+    "A wrong structure answer explains the selected distractor.",
+  );
+  structureDialogueScreen.byId("conjunction-next").props.onPress();
+  await structureDialogueScreen.settle();
+  const correctStructureQuestion =
+    sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS[0]
+      .questions[1];
+  structureDialogueScreen
+    .byId(`conjunction-choice-${correctStructureQuestion.term}`)
+    .props.onPress();
+  assert.equal(
+    structureDialogueScreen.byId("conjunction-correct-popup").props.visible,
+    true,
+    "Correct structure answers retain the success popup.",
+  );
+  assert.equal(
+    textContent(
+      structureDialogueScreen.byId("conjunction-grammar-explanation"),
+    ),
+    sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_ENTRIES[
+      correctStructureQuestion.term
+    ].definition,
+    "A correct structure answer explains why the selected pattern fits.",
   );
 
   let idiomSaveAttempts = 0;
