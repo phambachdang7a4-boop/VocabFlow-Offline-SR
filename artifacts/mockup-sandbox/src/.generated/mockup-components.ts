@@ -6,10 +6,10 @@ export const modules: ModuleMap = {
   "./components/mockups/vocabflow-missions/Current.tsx": () => import("../components/mockups/vocabflow-missions/Current.tsx"),
   "./components/mockups/vocabflow-missions/MissionArtworkRefresh.tsx": () => import("../components/mockups/vocabflow-missions/MissionArtworkRefresh.tsx"),
   "./components/mockups/vocabflow-missions/MissionRefresh.tsx": () => import("../components/mockups/vocabflow-missions/MissionRefresh.tsx"),
-  "./components/mockups/vocabflow-tabs/Current.tsx": () => import("../components/mockups/vocabflow-tabs/Current.tsx"),
-  "./components/mockups/vocabflow-tabs/Roomy.tsx": () => import("../components/mockups/vocabflow-tabs/Roomy.tsx"),
   "./components/mockups/vocabflow-review/Current.tsx": () => import("../components/mockups/vocabflow-review/Current.tsx"),
   "./components/mockups/vocabflow-review/Inline.tsx": () => import("../components/mockups/vocabflow-review/Inline.tsx"),
   "./components/mockups/vocabflow-review/ReviewCardExtracted.tsx": () => import("../components/mockups/vocabflow-review/ReviewCardExtracted.tsx"),
-  "./components/mockups/vocabflow-review/support.tsx": () => import("../components/mockups/vocabflow-review/support.tsx")
+  "./components/mockups/vocabflow-review/support.tsx": () => import("../components/mockups/vocabflow-review/support.tsx"),
+  "./components/mockups/vocabflow-tabs/Current.tsx": () => import("../components/mockups/vocabflow-tabs/Current.tsx"),
+  "./components/mockups/vocabflow-tabs/Roomy.tsx": () => import("../components/mockups/vocabflow-tabs/Roomy.tsx")
 };
