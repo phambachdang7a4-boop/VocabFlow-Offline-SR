@@ -7,6 +7,8 @@ const {
   RARE_HEADWORD_REVIEW,
   REQUIRED_COMMON_INFLECTIONS,
   REQUIRED_RELATED_HEADWORDS,
+  RETAINED_FORM_REASONS,
+  REVIEWED_REDUNDANT_VERB_INFLECTIONS,
   REDUNDANT_VERB_INFLECTION_REVIEW,
   IELTS_EXPANSION_CANDIDATES,
   IELTS_EXPANSION_TOPIC_ROUTES,
@@ -47,9 +49,44 @@ for (const term of REDUNDANT_VERB_INFLECTION_REVIEW) {
 }
 assert.equal(
   REDUNDANT_VERB_INFLECTION_REVIEW.size,
-  85,
+  94,
   "The manually reviewed redundant verb-form list should remain explicit.",
 );
+assert.deepEqual(
+  REQUIRED_COMMON_INFLECTIONS,
+  [
+    "learning",
+    "polluted",
+    "automated",
+    "traveling",
+    "advertising",
+    "governing",
+    "farming",
+  ],
+  "Only lexicalized forms with an independent learner-facing meaning should remain.",
+);
+assert.deepEqual(
+  REVIEWED_REDUNDANT_VERB_INFLECTIONS,
+  [
+    "educating",
+    "assessed",
+    "graduated",
+    "enrolled",
+    "recruited",
+    "taxed",
+    "transported",
+    "punished",
+    "researched",
+  ],
+  "The reviewed redundant verb forms must remain excluded from the durable course source.",
+);
+for (const [term, reason] of Object.entries(RETAINED_FORM_REASONS)) {
+  assert.ok(reason.trim(), `${term} must have a learner-facing reason to remain.`);
+  assert.ok(
+    courseData.entries[term],
+    `${term} must remain available because its meaning is independent of the base verb's tense.`,
+  );
+}
 const expansionTerms = IELTS_EXPANSION_CANDIDATES.topics.flatMap(
   (topic) => topic.terms,
 );
@@ -92,9 +129,28 @@ for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
 }
 assert.equal(
   courseData.totalWords,
-  1351,
-  "The cleaned IELTS course plus the reviewed expansion should contain 1,351 words.",
+  1342,
+  "The reviewed IELTS course plus the expansion should contain 1,342 words.",
 );
+const expectedReviewedTopicCounts = {
+  education: 41,
+  work: 42,
+  economy: 75,
+  transport: 53,
+  crime: 65,
+  science: 45,
+};
+for (const [topicId, expectedCount] of Object.entries(
+  expectedReviewedTopicCounts,
+)) {
+  const topic = courseData.topics.find(({ id }) => id === topicId);
+  assert.ok(topic, `${topicId} must remain an IELTS lesson.`);
+  assert.equal(
+    topic.terms.length,
+    expectedCount,
+    `${topicId} must keep the reviewed lesson word count.`,
+  );
+}
 const reviewedLearnerFacingCorrections = {
   elderly: {
     definition: "Cao tuổi; thuộc về người lớn tuổi.",
@@ -136,6 +192,21 @@ const reviewedLearnerFacingCorrections = {
     example: "Traveling can expose students to different cultures.",
     exampleTranslation:
       "Việc đi du lịch có thể giúp sinh viên tiếp xúc với những nền văn hóa khác nhau.",
+  },
+  polluted: {
+    definition: "Bị ô nhiễm; chứa chất gây ô nhiễm hoặc bị làm bẩn.",
+    example:
+      "Polluted rivers can threaten wildlife and the health of nearby communities.",
+    exampleTranslation:
+      "Những con sông bị ô nhiễm có thể đe dọa động vật hoang dã và sức khỏe của các cộng đồng lân cận.",
+  },
+  automated: {
+    definition:
+      "Được tự động hóa; vận hành bằng hệ thống hoặc thiết bị tự động.",
+    example:
+      "Automated systems can reduce errors in large manufacturing plants.",
+    exampleTranslation:
+      "Các hệ thống tự động có thể giảm lỗi trong những nhà máy sản xuất lớn.",
   },
 };
 for (const [term, expected] of Object.entries(
@@ -383,15 +454,21 @@ for (const term of REQUIRED_RELATED_HEADWORDS) {
 for (const term of REQUIRED_COMMON_INFLECTIONS) {
   assert.ok(
     courseData.entries[term],
-    `${term} is a useful common inflection and must remain in the course.`,
+    `${term} is a reviewed lexicalized form and must remain in the course.`,
   );
 
   const removedInflection = cloneCourseData();
   delete removedInflection.entries[term];
   assert.throws(
     () => validateCourseDataAgainstAuthoredOverrides(removedInflection),
-    new RegExp(`${term}: useful common inflection was removed`),
+    new RegExp(`${term}: reviewed lexicalized form was removed`),
     `${term} must not disappear during a future course rebuild.`,
+  );
+}
+for (const term of REVIEWED_REDUNDANT_VERB_INFLECTIONS) {
+  assert.ok(
+    REDUNDANT_VERB_INFLECTION_REVIEW.has(term),
+    `${term} must remain in the durable redundant-form exclusion list.`,
   );
 }
 
@@ -734,5 +811,5 @@ assert.throws(
 );
 
 console.log(
-  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} unrelated dictionary senses and ${Object.keys(RARE_HEADWORD_REVIEW).length} rare or obsolete headwords are excluded, ${REQUIRED_COMMON_INFLECTIONS.length} useful inflections remain, and authored corrections match the builder.`,
+  `IELTS course corrections verified: ${Object.keys(courseData.entries).length} entries, ${Object.keys(DICTIONARY_SENSE_REVIEW).length} unrelated dictionary senses and ${Object.keys(RARE_HEADWORD_REVIEW).length} rare or obsolete headwords are excluded, ${REQUIRED_COMMON_INFLECTIONS.length} independently useful forms remain, and authored corrections match the builder.`,
 );

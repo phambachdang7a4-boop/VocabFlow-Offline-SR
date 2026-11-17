@@ -432,9 +432,9 @@ const LEGACY_WORDS = new Set(["curriculum", "literacy", "tuition", "compulsory",
   "nutrition", "prevention", "sedentary", "obesity", "wellbeing", "employment",
   "inequality", "urbanization", "infrastructure", "unemployment"]);
 
-// These are only third-person-singular or -ing verb forms whose base verb is
-// already taught. Keep lexicalized nouns/adjectives such as marketing,
-// banking, painting, shopping, and developing in the course.
+// Forms that only repeat a base verb's tense or grammatical form do not get
+// their own IELTS vocabulary entry. Keep lexicalized nouns/adjectives such as
+// marketing, banking, painting, shopping, and developing in the course.
 const REDUNDANT_VERB_INFLECTION_REVIEW = new Set(
   `accenting affording assesses assessing banks biases branding brands budgeting
 campaigning championing cleans coaches coaching corrupting courting courts
@@ -444,7 +444,8 @@ games importing imports infecting interning inventing investing judges laboring 
 ministering motors paints plans powers presses preventing profiting progresses
 progressing punishes races rails recruiting renewing renews reporting researches
 researching sculpting ships soils studying supplying teaming teams tours trades trains
-transiting treating treats tutoring tutors unions votes wages wastes winds`
+transiting treating treats tutoring tutors unions votes wages wastes winds
+educating assessed graduated enrolled recruited taxed transported punished researched`
     .trim()
     .split(/\s+/),
 );
@@ -561,6 +562,18 @@ const COURSE_EXAMPLE_OVERRIDES = {
     example: "Traveling can expose students to different cultures.",
     exampleTranslation:
       "Việc đi du lịch có thể giúp sinh viên tiếp xúc với những nền văn hóa khác nhau.",
+  },
+  polluted: {
+    example:
+      "Polluted rivers can threaten wildlife and the health of nearby communities.",
+    exampleTranslation:
+      "Những con sông bị ô nhiễm có thể đe dọa động vật hoang dã và sức khỏe của các cộng đồng lân cận.",
+  },
+  automated: {
+    example:
+      "Automated systems can reduce errors in large manufacturing plants.",
+    exampleTranslation:
+      "Các hệ thống tự động có thể giảm lỗi trong những nhà máy sản xuất lớn.",
   },
   graduation: {
     example: "She celebrated her graduation after completing her degree.",
@@ -829,6 +842,10 @@ const COURSE_DEFINITION_OVERRIDES = {
   profession:
     "Nghề nghiệp; công việc đòi hỏi kiến thức hoặc kỹ năng chuyên môn.",
   traveling: "Việc đi du lịch; hoạt động di chuyển đến các địa điểm khác nhau.",
+  polluted:
+    "Bị ô nhiễm; chứa chất gây ô nhiễm hoặc bị làm bẩn.",
+  automated:
+    "Được tự động hóa; vận hành bằng hệ thống hoặc thiết bị tự động.",
   tutor: "Gia sư; người dạy kèm cho một cá nhân hoặc nhóm nhỏ.",
   classroom: "Lớp học; phòng học trong trường.",
   enroll: "Đăng ký hoặc ghi danh tham gia khóa học, trường học hay chương trình.",
@@ -1076,26 +1093,36 @@ const DICTIONARY_DEFINITION_REVIEW = {
   },
 };
 
-const REQUIRED_RELATED_HEADWORDS = ["plants", "assessed", "graduated", "modernise"];
+const REQUIRED_RELATED_HEADWORDS = ["plants", "schools", "modernise"];
 
-const REQUIRED_COMMON_INFLECTIONS = [
+const RETAINED_FORM_REASONS = {
+  learning:
+    "Standalone noun meaning acquired knowledge, distinct from the verb learn.",
+  polluted:
+    "Participial adjective for contaminated places or materials, common in environmental reading.",
+  automated:
+    "Participial adjective for processes or systems operated automatically, common in technology reading.",
+  traveling:
+    "Noun for the activity of traveling, with a meaning distinct from the verb travel.",
+  advertising:
+    "Noun for the industry or practice of promoting goods and services.",
+  governing:
+    "Adjective describing a body, rule, or idea that directs how something works.",
+  farming:
+    "Noun for the activity and practice of agriculture.",
+};
+
+const REQUIRED_COMMON_INFLECTIONS = Object.keys(RETAINED_FORM_REASONS);
+const REVIEWED_REDUNDANT_VERB_INFLECTIONS = [
   "educating",
-  "learning",
-  "schools",
   "assessed",
   "graduated",
   "enrolled",
-  "polluted",
-  "automated",
   "recruited",
   "taxed",
   "transported",
-  "traveling",
-  "advertising",
-  "governing",
   "punished",
   "researched",
-  "farming",
 ];
 
 const CURATED_TOPIC_ENTRIES = {
@@ -1644,7 +1671,10 @@ function validateCourseDataAgainstAuthoredOverrides(courseData) {
   }
   for (const term of REQUIRED_COMMON_INFLECTIONS) {
     if (!entries[term]) {
-      errors.push(`- ${term}: useful common inflection was removed`);
+      errors.push(`- ${term}: reviewed lexicalized form was removed`);
+    }
+    if (!RETAINED_FORM_REASONS[term]?.trim()) {
+      errors.push(`- ${term}: learner-facing retention reason is missing`);
     }
   }
 
@@ -2322,6 +2352,8 @@ module.exports = {
   DICTIONARY_DEFINITION_REVIEW,
   REQUIRED_RELATED_HEADWORDS,
   REQUIRED_COMMON_INFLECTIONS,
+  RETAINED_FORM_REASONS,
+  REVIEWED_REDUNDANT_VERB_INFLECTIONS,
   REDUNDANT_VERB_INFLECTION_REVIEW,
   IELTS_EXPANSION_CANDIDATES,
   IELTS_EXPANSION_TOPIC_ROUTES,
