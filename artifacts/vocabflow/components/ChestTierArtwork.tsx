@@ -1,5 +1,11 @@
 import React from "react";
-import { View } from "react-native";
+import {
+  Image,
+  Platform,
+  View,
+  type ImageStyle,
+  type ImageSourcePropType,
+} from "react-native";
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -9,6 +15,12 @@ import Animated, {
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import { useColors } from "@/hooks/useColors";
 import { type ChestRarity } from "@/domain/mission-chests";
+
+const CHEST_IMAGE_SOURCES: Partial<Record<ChestRarity, ImageSourcePropType>> = {
+  common: require("../assets/images/chest-copper.png"),
+  uncommon: require("../assets/images/chest-silver.png"),
+  rare: require("../assets/images/chest-gold.png"),
+};
 
 type ChestPalette = {
   body: string;
@@ -101,6 +113,26 @@ export function ChestTierArtwork({
       },
     ],
   }));
+  const chestImage = CHEST_IMAGE_SOURCES[rarity];
+
+  if (chestImage) {
+    const imageStyle = {
+      width: size,
+      height: size,
+      ...(Platform.OS === "web" ? { imageRendering: "pixelated" } : {}),
+    } as ImageStyle;
+
+    return (
+      <Animated.View style={[{ width: size, height: size }, lidStyle]}>
+        <Image
+          source={chestImage}
+          resizeMode="contain"
+          resizeMethod="scale"
+          style={imageStyle}
+        />
+      </Animated.View>
+    );
+  }
 
   return (
     <View style={{ width: size, height: size * 0.92, position: "relative" }}>

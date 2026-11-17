@@ -23,6 +23,10 @@ const { DailyMissionArtwork } = loadTs(
   join(__dirname, "../components/DailyMissionArtwork.tsx"),
   {
     react: React,
+    "react-native": {
+      Image: SvgElement("Image"),
+      Platform: { OS: "web" },
+    },
     "react-native-svg": {
       default: SvgElement("Svg"),
       Svg: SvgElement("Svg"),
@@ -39,6 +43,9 @@ const { DailyMissionArtwork } = loadTs(
         foreground: "outline",
       }),
     },
+    "../assets/images/icon-timer.png": "timer-image",
+    "../assets/images/icon-combo.png": "combo-image",
+    "../assets/images/icon-words.png": "words-image",
   },
 );
 let activeColors = colors.light;
@@ -46,7 +53,11 @@ const { ChestTierArtwork } = loadTs(
   join(__dirname, "../components/ChestTierArtwork.tsx"),
   {
     react: React,
-    "react-native": { View: SvgElement("View") },
+    "react-native": {
+      Image: SvgElement("Image"),
+      Platform: { OS: "web" },
+      View: SvgElement("View"),
+    },
     "react-native-reanimated": {
       __esModule: true,
       default: { View: SvgElement("AnimatedView") },
@@ -63,14 +74,13 @@ const { ChestTierArtwork } = loadTs(
       Text: SvgElement("SvgText"),
     },
     "@/hooks/useColors": { useColors: () => activeColors },
+    "../assets/images/chest-copper.png": "copper-chest-image",
+    "../assets/images/chest-silver.png": "silver-chest-image",
+    "../assets/images/chest-gold.png": "gold-chest-image",
   },
 );
 
 const expectedArtwork = {
-  review: {
-    type: "Rect",
-    props: { x: 12, y: 17, width: 52, height: 18 },
-  },
   "add-words": {
     type: "Path",
     props: { d: "M8 18h23q7 0 9 6 2-6 9-6h23v43H49q-7 0-9 6-2-6-9-6H8z" },
@@ -79,16 +89,13 @@ const expectedArtwork = {
     type: "Path",
     props: { d: "m40 15 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" },
   },
-  time: {
-    type: "Circle",
-    props: { cx: 40, cy: 43, r: 25 },
-  },
-  combo: {
-    type: "Path",
-    props: { d: "M12 56 46 12 41 37 69 21 34 70 39 46Z" },
-  },
 };
-const missionTypes = Object.keys(expectedArtwork);
+const missionImageTypes = {
+  time: "timer-image",
+  combo: "combo-image",
+  review: "words-image",
+};
+const missionTypes = ["review", "add-words", "grade", "time", "combo"];
 const collectElements = (node, result = []) => {
   if (Array.isArray(node)) {
     for (const child of node) collectElements(child, result);
@@ -117,23 +124,33 @@ const contrastRatio = (foreground, background) => {
 
 for (const missionType of missionTypes) {
   const tree = DailyMissionArtwork({ type: missionType, size: 62 });
-  assert.equal(
-    tree.type.default,
-    "Svg",
-    `${missionType} renders an SVG illustration.`,
-  );
-  assert.equal(tree.props.width, 62);
-  assert.equal(tree.props.height, 62);
-  assert.ok(
-    collectElements(tree).some(
-      (element) =>
-        element.type === expectedArtwork[missionType].type &&
-        Object.entries(expectedArtwork[missionType].props).every(
-          ([key, value]) => String(element.props[key]) === String(value),
-        ),
-    ),
-    `${missionType} renders its identifying illustration.`,
-  );
+  if (missionImageTypes[missionType]) {
+    assert.equal(tree.type, "Image", `${missionType} uses the supplied image.`);
+    assert.equal(tree.props.source, missionImageTypes[missionType]);
+    assert.equal(tree.props.resizeMode, "contain");
+    assert.equal(tree.props.resizeMethod, "scale");
+    assert.equal(tree.props.style.width, 62);
+    assert.equal(tree.props.style.height, 62);
+    assert.equal(tree.props.style.imageRendering, "pixelated");
+  } else {
+    assert.equal(
+      tree.type.default,
+      "Svg",
+      `${missionType} retains its existing SVG illustration.`,
+    );
+    assert.equal(tree.props.width, 62);
+    assert.equal(tree.props.height, 62);
+    assert.ok(
+      collectElements(tree).some(
+        (element) =>
+          element.type === expectedArtwork[missionType].type &&
+          Object.entries(expectedArtwork[missionType].props).every(
+            ([key, value]) => String(element.props[key]) === String(value),
+          ),
+      ),
+      `${missionType} retains its identifying illustration.`,
+    );
+  }
 }
 
 const missionScreen = require("node:fs").readFileSync(
@@ -147,13 +164,13 @@ assert.match(
 );
 assert.match(
   missionScreen,
-  /const missionArtworkSize = compactLayout \? 42 : 48/,
-  "Mission art scales down on compact screens.",
+  /const missionArtworkSize = 64/,
+  "The mission icon image is displayed at 64 dp.",
 );
 assert.match(
   missionScreen,
-  /const chestArtworkSize = compactLayout \? 48 : 54/,
-  "Chest art scales down on compact screens.",
+  /const chestArtworkSize = 64/,
+  "The chest image is displayed at 64 dp.",
 );
 assert.match(
   missionScreen,
@@ -233,6 +250,20 @@ assert.match(
   /rarity === "legendary" \? colors\.mutedForeground : palette\.outline/,
   "The darkest chest uses a theme-aware outline.",
 );
+for (const [rarity, source] of [
+  ["common", "copper-chest-image"],
+  ["uncommon", "silver-chest-image"],
+  ["rare", "gold-chest-image"],
+]) {
+  const artwork = ChestTierArtwork({ rarity, size: 64 });
+  assert.equal(artwork.props.children.type, "Image");
+  assert.equal(artwork.props.children.props.source, source);
+  assert.equal(artwork.props.children.props.resizeMode, "contain");
+  assert.equal(artwork.props.children.props.resizeMethod, "scale");
+  assert.equal(artwork.props.children.props.style.width, 64);
+  assert.equal(artwork.props.children.props.style.height, 64);
+  assert.equal(artwork.props.children.props.style.imageRendering, "pixelated");
+}
 
 for (const [themeName, theme] of Object.entries(colors)) {
   if (themeName === "radius") continue;

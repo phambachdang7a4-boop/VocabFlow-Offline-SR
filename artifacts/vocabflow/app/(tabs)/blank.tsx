@@ -49,8 +49,8 @@ export default function BlankScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const compactLayout = screenWidth < 360;
-  const missionArtworkSize = compactLayout ? 42 : 48;
-  const chestArtworkSize = compactLayout ? 48 : 54;
+  const missionArtworkSize = 64;
+  const chestArtworkSize = 64;
   const scrollBottom = Platform.OS === "web" ? Math.max(bottom, 120) : bottom;
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
@@ -169,14 +169,6 @@ export default function BlankScreen() {
               overview?.missions.map((mission) => {
                 const finished = mission.rewarded;
                 const rewardRarity = DAILY_MISSION_CHEST_RARITY[mission.level];
-                const rewardMark =
-                  rewardRarity === "common"
-                    ? "C"
-                    : rewardRarity === "uncommon"
-                      ? "S"
-                      : rewardRarity === "rare"
-                        ? "G"
-                        : undefined;
                 const rewardLabelColor = finished
                   ? c.successText
                   : c.background === "#1E2130"
@@ -319,16 +311,6 @@ export default function BlankScreen() {
                           size={chestArtworkSize}
                           sparkle={rewardRarity === "rare"}
                         />
-                        {rewardMark ? (
-                          <Text
-                            style={[
-                              styles.chestMark,
-                              { color: CHEST_RARITY_ICON_COLORS[rewardRarity] },
-                            ]}
-                          >
-                            {rewardMark}
-                          </Text>
-                        ) : null}
                         {finished ? (
                           <View
                             testID={`daily-mission-rewarded-${mission.id}`}
@@ -583,16 +565,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-  },
-  chestMark: {
-    position: "absolute",
-    top: 30,
-    left: 0,
-    right: 0,
-    textAlign: "center",
-    fontFamily: F.b,
-    fontSize: 8,
-    lineHeight: 9,
   },
   missionCopy: { flex: 1, minWidth: 0, gap: 2 },
   level: { fontFamily: F.s, fontSize: 10, letterSpacing: 1 },

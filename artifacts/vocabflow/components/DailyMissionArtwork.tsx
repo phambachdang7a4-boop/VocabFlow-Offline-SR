@@ -1,7 +1,21 @@
 import React from "react";
+import {
+  Image,
+  Platform,
+  type ImageStyle,
+  type ImageSourcePropType,
+} from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { useColors } from "@/hooks/useColors";
 import { type DailyMissionType } from "@/domain/daily-missions";
+
+const MISSION_IMAGE_SOURCES: Partial<
+  Record<DailyMissionType, ImageSourcePropType>
+> = {
+  time: require("../assets/images/icon-timer.png"),
+  combo: require("../assets/images/icon-combo.png"),
+  review: require("../assets/images/icon-words.png"),
+};
 
 export function DailyMissionArtwork({
   type,
@@ -16,6 +30,24 @@ export function DailyMissionArtwork({
   const gold = c.vocabCardAccent;
   const paper = c.vocabCardForeground;
   const outline = c.foreground;
+  const imageSource = MISSION_IMAGE_SOURCES[type];
+
+  if (imageSource) {
+    const imageStyle = {
+      width: size,
+      height: size,
+      ...(Platform.OS === "web" ? { imageRendering: "pixelated" } : {}),
+    } as ImageStyle;
+
+    return (
+      <Image
+        source={imageSource}
+        resizeMode="contain"
+        resizeMethod="scale"
+        style={imageStyle}
+      />
+    );
+  }
 
   return (
     <Svg
