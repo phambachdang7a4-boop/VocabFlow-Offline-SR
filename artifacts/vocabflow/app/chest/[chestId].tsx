@@ -290,7 +290,7 @@ export default function MissionChestScreen() {
             <Text
               style={[
                 styles.rarity,
-                { color: CHEST_RARITY_TEXT_COLORS[chest.rarity] },
+                { color: c.foreground },
               ]}
             >
               Phẩm chất {rarityDisplayLabel(chest.rarity)}

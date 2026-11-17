@@ -22,7 +22,6 @@ import {
 import {
   CHEST_RARITY_COLORS,
   CHEST_RARITY_ICON_COLORS,
-  CHEST_RARITY_TEXT_COLORS,
 } from "@/domain/mission-chests";
 import {
   MISSION_SHOP_PRODUCTS,
@@ -196,11 +195,7 @@ export function MissionShop() {
                     style={[
                       styles.offerTitle,
                       compactOffers ? styles.offerTitleCompact : null,
-                      {
-                        color: product.fragmentRarity
-                          ? CHEST_RARITY_TEXT_COLORS[product.fragmentRarity]
-                          : c.foreground,
-                      },
+                      { color: c.foreground },
                     ]}
                     numberOfLines={2}
                     adjustsFontSizeToFit

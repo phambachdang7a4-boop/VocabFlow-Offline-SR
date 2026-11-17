@@ -331,7 +331,8 @@ export default function CollectionScreen() {
           style={[
             styles.reveal,
             {
-              backgroundColor: CHEST_RARITY_COLORS[newCraft.rarity],
+              backgroundColor: c.card,
+              borderColor: CHEST_RARITY_COLORS[newCraft.rarity],
               shadowColor: c.shade,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.18,
@@ -352,14 +353,14 @@ export default function CollectionScreen() {
             <Feather
               name="award"
               size={24}
-              color={CHEST_RARITY_ICON_COLORS[newCraft.rarity]}
+              color={c.primary}
             />
           )}
           <View style={styles.revealText}>
             <Text
               style={[
                 styles.revealTitle,
-                { color: CHEST_RARITY_ICON_COLORS[newCraft.rarity] },
+                { color: c.foreground },
               ]}
             >
               Đã mở tượng mới!
@@ -367,7 +368,7 @@ export default function CollectionScreen() {
             <Text
               style={[
                 styles.revealSubtitle,
-                { color: CHEST_RARITY_ICON_COLORS[newCraft.rarity] },
+                { color: c.foreground },
               ]}
             >
               {newCraftArtwork?.title ?? "Tượng"} ·{" "}
@@ -383,7 +384,7 @@ export default function CollectionScreen() {
             <Feather
               name="x"
               size={20}
-              color={CHEST_RARITY_ICON_COLORS[newCraft.rarity]}
+              color={c.foreground}
             />
           </Pressable>
         </View>
@@ -463,7 +464,7 @@ export default function CollectionScreen() {
                 <Text
                   style={[
                     styles.rarityName,
-                    { color: CHEST_RARITY_TEXT_COLORS[rarity] },
+                    { color: c.foreground },
                   ]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
@@ -532,9 +533,7 @@ export default function CollectionScreen() {
                       color:
                         group.key === "bonus"
                           ? c.primary
-                          : CHEST_RARITY_TEXT_COLORS[
-                              group.key as ChestRarity
-                            ],
+                          : c.foreground,
                     },
                   ]}
                 >
@@ -629,7 +628,7 @@ export default function CollectionScreen() {
                       <Text
                         style={[
                           styles.artRarity,
-                          { color: CHEST_RARITY_TEXT_COLORS[statue.rarity] },
+                          { color: c.foreground },
                         ]}
                       >
                         {rarityDisplayLabel(statue.rarity)}
@@ -762,7 +761,7 @@ export default function CollectionScreen() {
               <Text
                 style={[
                   styles.detailRarity,
-                  { color: CHEST_RARITY_TEXT_COLORS[selectedStatue.rarity] },
+                  { color: c.foreground },
                 ]}
               >
                 {rarityDisplayLabel(selectedStatue.rarity)}
@@ -958,6 +957,7 @@ const styles = StyleSheet.create({
   reveal: {
     position: "relative",
     borderRadius: 16,
+    borderWidth: 1,
     padding: 14,
     flexDirection: "row",
     alignItems: "center",
