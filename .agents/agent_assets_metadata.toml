@@ -168,3 +168,17 @@ mtime_ms = 1794599618871
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/9b75e011-77f8-4b02-ae41-c50810981c56/f37960e2-c435-4b06-bfc4-7f0964d0bbda"
 storage_version_token = "1794599702581638"
 content_type = "image/png"
+
+[[outputs]]
+id = "JaRfa-HRdosGGnJSQeVVE"
+uri = "file://generated-artifacts/chest-platinum-corvi-preview.png"
+type = "image"
+title = "Rương Platinum và Corvi hiện tại"
+description = "Bản xem cạnh nhau được dựng từ artwork đang dùng trong màn Mở rương: Platinum là rương Epic, Corvi là quạ bên rương Hắc Diệu Thạch."
+logical_id = "ebedae7a-af2a-4331-8dab-4b7f4648f09a"
+content_hash = "sha256:f4618adb7d8e440243a46b9e5b5ec41ece6840d83b17605da683ddfc7fe3d368"
+size = 601805
+mtime_ms = 1794886937740
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/ebedae7a-af2a-4331-8dab-4b7f4648f09a/844857a9-f3e1-4065-a8be-6e54a9a14201"
+storage_version_token = "1794886976629544"
+content_type = "image/png"
