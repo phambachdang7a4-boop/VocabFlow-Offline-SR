@@ -2,6 +2,9 @@ const assert = require("node:assert/strict");
 const { join } = require("node:path");
 const courseData = require("../domain/ielts-topic-course-data.json");
 const expansionContent = require("../domain/ielts-ai-expansion-content.json");
+const bookImportCandidates = require("../domain/ielts-book-c1-c2-candidates.json");
+const bookImportContent = require("../domain/ielts-book-c1-c2-ai-content.json");
+const phrasalVerbCourseData = require("../domain/phrasal-verb-course-data.json");
 const readingVocabularyMap = require("../domain/ielts-reading-vocabulary-topic-map.json");
 const readingExampleTranslations = require("../domain/ielts-reading-example-translations.json");
 const { loadTs } = require("./test-support.cjs");
@@ -133,6 +136,70 @@ assert.ok(
   [...authoredExpansionTerms].every((term) => expansionTerms.includes(term)),
   "Authored expansion content must only contain selected course terms.",
 );
+const bookImportTerms = bookImportCandidates.topics.flatMap(
+  (topic) => topic.terms,
+);
+const bookImportContentTerms = new Set(
+  bookImportContent.entries.map((entry) => entry.term),
+);
+const reusableBookPhrasalTerms = new Set(
+  bookImportTerms.filter((term) => {
+    const entry = phrasalVerbCourseData.entries[term];
+    return Boolean(
+      entry?.definition?.trim() &&
+        entry?.example?.trim() &&
+        entry?.exampleTranslation?.trim(),
+    );
+  }),
+);
+assert.equal(bookImportTerms.length, 464);
+assert.equal(new Set(bookImportTerms).size, 464);
+assert.equal(bookImportContentTerms.size, 365);
+assert.equal(bookImportContent.entries.length, 365);
+assert.equal(reusableBookPhrasalTerms.size, 99);
+assert.equal(
+  [...allIeltsTerms].filter((term) => !bookImportTerms.includes(term)).length,
+  7144,
+  "Existing IELTS words must remain unchanged while book terms are added.",
+);
+assert.ok(
+  !bookImportTerms.includes("etc"),
+  "The non-vocabulary placeholder from the supplied list must stay excluded.",
+);
+assert.ok(
+  [...bookImportContentTerms].every(
+    (term) =>
+      bookImportTerms.includes(term) && !reusableBookPhrasalTerms.has(term),
+  ),
+  "Generated book content must include only new terms without reusable phrasal-verb entries.",
+);
+assert.ok(
+  [...reusableBookPhrasalTerms].every(
+    (term) => !bookImportContentTerms.has(term),
+  ),
+  "Reusable phrasal-verb examples must not be generated or stored twice.",
+);
+for (const topic of bookImportCandidates.topics) {
+  const courseTopicId = topic.courseTopicId ?? IELTS_EXPANSION_TOPIC_ROUTES[topic.id] ?? topic.id;
+  const generatedTopic = courseData.topics.find(
+    (courseTopic) => courseTopic.id === courseTopicId,
+  );
+  assert.ok(generatedTopic, `${courseTopicId} must remain an IELTS topic.`);
+  for (const term of topic.terms) {
+    assert.ok(
+      generatedTopic.terms.includes(term),
+      `${term} must remain in its imported IELTS topic.`,
+    );
+    assert.ok(
+      courseData.entries[term]?.example?.trim(),
+      `${term} must include an English example.`,
+    );
+    assert.ok(
+      courseData.entries[term]?.exampleTranslation?.trim(),
+      `${term} must include a Vietnamese example translation.`,
+    );
+  }
+}
 for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
   const courseTopicId = IELTS_EXPANSION_TOPIC_ROUTES[topic.id];
   const generatedTopic = courseData.topics.find(
@@ -161,8 +228,8 @@ for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
 }
 assert.equal(
   courseData.topics.reduce((count, topic) => count + topic.terms.length, 0),
-  1441,
-  "The IELTS lessons should retain all 1,441 selected topic terms.",
+  1905,
+  "The IELTS lessons should retain all 1,905 selected topic terms.",
 );
 assert.deepEqual(
   courseData.topics.flatMap((topic) =>

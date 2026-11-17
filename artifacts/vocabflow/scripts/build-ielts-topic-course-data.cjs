@@ -22,6 +22,18 @@ const IELTS_EXPANSION_CONTENT_PATH = join(
   __dirname,
   "../domain/ielts-ai-expansion-content.json",
 );
+const IELTS_BOOK_IMPORT_CANDIDATES_PATH = join(
+  __dirname,
+  "../domain/ielts-book-c1-c2-candidates.json",
+);
+const IELTS_BOOK_IMPORT_CONTENT_PATH = join(
+  __dirname,
+  "../domain/ielts-book-c1-c2-ai-content.json",
+);
+const PHRASAL_VERB_COURSE_DATA_PATH = join(
+  __dirname,
+  "../domain/phrasal-verb-course-data.json",
+);
 const IELTS_READING_TOPIC_MAP_PATH = join(
   __dirname,
   "../domain/ielts-reading-vocabulary-topic-map.json",
@@ -35,6 +47,9 @@ const REVIEWED_EXAMPLES = JSON.parse(
 );
 const IELTS_EXPANSION_CANDIDATES = JSON.parse(
   readFileSync(IELTS_EXPANSION_CANDIDATES_PATH, "utf8"),
+);
+const IELTS_BOOK_IMPORT_CANDIDATES = JSON.parse(
+  readFileSync(IELTS_BOOK_IMPORT_CANDIDATES_PATH, "utf8"),
 );
 
 const TOPICS = [
@@ -537,6 +552,16 @@ for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
   const courseTopic = TOPICS.find((candidate) => candidate.id === courseTopicId);
   if (!courseTopic) {
     throw new Error(`Missing course topic route for IELTS domain ${topic.id}.`);
+  }
+  courseTopic.terms ??= [];
+  courseTopic.terms.push(...topic.terms);
+}
+for (const topic of IELTS_BOOK_IMPORT_CANDIDATES.topics) {
+  const courseTopicId =
+    topic.courseTopicId ?? IELTS_EXPANSION_TOPIC_ROUTES[topic.id] ?? topic.id;
+  const courseTopic = TOPICS.find((candidate) => candidate.id === courseTopicId);
+  if (!courseTopic) {
+    throw new Error(`Missing course topic route for book terms: ${topic.id}.`);
   }
   courseTopic.terms ??= [];
   courseTopic.terms.push(...topic.terms);
@@ -2403,6 +2428,51 @@ function main() {
       `IELTS expansion content must contain exactly ${expectedExpansionTerms.length} unique reviewed entries.`,
     );
   }
+  const bookImportContentFile = JSON.parse(
+    readFileSync(IELTS_BOOK_IMPORT_CONTENT_PATH, "utf8"),
+  );
+  const bookImportContent = Object.fromEntries(
+    (bookImportContentFile.entries ?? []).map((entry) => [entry.term, entry]),
+  );
+  const phrasalVerbCourseData = JSON.parse(
+    readFileSync(PHRASAL_VERB_COURSE_DATA_PATH, "utf8"),
+  );
+  const expectedBookTerms = IELTS_BOOK_IMPORT_CANDIDATES.topics.flatMap(
+    (topic) => topic.terms,
+  );
+  const reusablePhrasalTerms = new Set(
+    expectedBookTerms.filter((term) => {
+      const entry = phrasalVerbCourseData.entries?.[term];
+      return Boolean(
+        entry?.definition?.trim() &&
+          entry?.example?.trim() &&
+          entry?.exampleTranslation?.trim(),
+      );
+    }),
+  );
+  const expectedGeneratedBookTerms = expectedBookTerms.filter(
+    (term) => !reusablePhrasalTerms.has(term),
+  );
+  if (
+    (bookImportContentFile.entries ?? []).length !==
+      expectedGeneratedBookTerms.length ||
+    Object.keys(bookImportContent).length !== expectedGeneratedBookTerms.length ||
+    new Set(expectedBookTerms).size !== expectedBookTerms.length ||
+    expectedGeneratedBookTerms.some((term) => !bookImportContent[term]) ||
+    Object.keys(bookImportContent).some(
+      (term) => !expectedGeneratedBookTerms.includes(term),
+    )
+  ) {
+    throw new Error(
+      `Book-import content must contain exactly ${expectedGeneratedBookTerms.length} unique new entries; reusable phrasal-verb entries are loaded from their existing course data.`,
+    );
+  }
+  for (const term of reusablePhrasalTerms) {
+    const entry = phrasalVerbCourseData.entries[term];
+    if (!entry?.definition?.trim() || !entry?.example?.trim() || !entry?.exampleTranslation?.trim()) {
+      throw new Error(`Reusable phrasal-verb content is incomplete for ${term}.`);
+    }
+  }
 
   const db = new DatabaseSync(DATABASE_PATH, { readOnly: true });
   try {
@@ -2532,7 +2602,17 @@ function main() {
       for (const candidate of topicCandidates(topic, dictionary, sortedTerms)) {
         if (usedTerms.has(candidate.term)) continue;
         usedTerms.add(candidate.term);
-        const aiEntry = expansionContent[candidate.term];
+        const aiEntry =
+          expansionContent[candidate.term] ??
+          bookImportContent[candidate.term] ??
+          (reusablePhrasalTerms.has(candidate.term)
+            ? {
+                ...phrasalVerbCourseData.entries[candidate.term],
+                pos:
+                  phrasalVerbCourseData.entries[candidate.term].partOfSpeech ??
+                  "V",
+              }
+            : null);
         words.push({
           ...candidate,
           entry: aiEntry
@@ -2663,7 +2743,7 @@ function main() {
       0,
     );
     const output = {
-      generatedFrom: "dictionary_en_vi.db",
+      generatedFrom: "dictionary_en_vi.db and user-provided book vocabulary lists",
       spellingConvention: IELTS_SPELLING_CONVENTION,
       totalWords,
       topics: topics.map((topic) => ({

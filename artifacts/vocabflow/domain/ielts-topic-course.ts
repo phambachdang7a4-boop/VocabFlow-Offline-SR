@@ -1,5 +1,6 @@
 import courseData from "./ielts-topic-course-data.json";
 import advancedTermsData from "./ielts-advanced-terms.json";
+import bookImportCandidatesData from "./ielts-book-c1-c2-candidates.json";
 
 export interface IeltsTopicCourseQuestion {
   term: string;
@@ -56,15 +57,36 @@ interface IeltsAdvancedTermsData {
   termsByTopic: Record<string, string[]>;
 }
 
+interface IeltsBookImportCandidatesData {
+  provenance: {
+    note: string;
+  };
+  topics: {
+    id: string;
+    courseTopicId?: string;
+    terms: string[];
+  }[];
+}
+
 const data = courseData as IeltsTopicCourseData;
 const advancedTerms = advancedTermsData as IeltsAdvancedTermsData;
+const bookImportCandidates =
+  bookImportCandidatesData as IeltsBookImportCandidatesData;
+const bookImportTerms = bookImportCandidates.topics.flatMap(
+  (topic) => topic.terms,
+);
+const bookImportIsReady = bookImportTerms.every(
+  (term) => Boolean(data.entries[term]),
+);
 
 export const IELTS_TOPIC_COURSE_ID = "ielts-topic-vocabulary-v1";
 export const IELTS_TOPIC_COURSE_TITLE = "IELTS";
 export const IELTS_ADVANCED_COURSE_ID = "ielts-advanced-vocabulary-v1";
 export const IELTS_ADVANCED_COURSE_TITLE = "IELTS Nâng cao";
 export const IELTS_ADVANCED_CLASSIFICATION_METHOD =
-  advancedTerms.classificationMethod;
+  bookImportIsReady
+    ? `${advancedTerms.classificationMethod} ${bookImportCandidates.provenance.note}`
+    : advancedTerms.classificationMethod;
 export const IELTS_TOPIC_COURSE_SPELLING_CONVENTION =
   data.spellingConvention;
 export const IELTS_COURSE_CHAPTERS = [
@@ -141,8 +163,21 @@ const legacyCoreTerms = new Set(
     (topic) => topic.legacyLesson?.questions.map((question) => question.term) ?? [],
   ),
 );
+const advancedTermsByTopic: Record<string, string[]> = Object.fromEntries(
+  Object.entries(advancedTerms.termsByTopic).map(([topicId, terms]) => [
+    topicId,
+    [...terms],
+  ]),
+);
+if (bookImportIsReady) {
+  for (const topic of bookImportCandidates.topics) {
+    const courseTopicId = topic.courseTopicId ?? topic.id;
+    advancedTermsByTopic[courseTopicId] ??= [];
+    advancedTermsByTopic[courseTopicId].push(...topic.terms);
+  }
+}
 const advancedTermSet = new Set(
-  Object.values(advancedTerms.termsByTopic)
+  Object.values(advancedTermsByTopic)
     .flat()
     .filter((term) => !legacyCoreTerms.has(term)),
 );
@@ -174,7 +209,7 @@ export const IELTS_ADVANCED_TOPIC_WORD_LIST = data.topics
   .map((topic) => ({
     id: topic.id,
     title: topic.title,
-    terms: (advancedTerms.termsByTopic[topic.id] ?? []).filter((term) =>
+    terms: (advancedTermsByTopic[topic.id] ?? []).filter((term) =>
       advancedTermSet.has(term),
     ),
   }))
@@ -472,7 +507,7 @@ function buildAdvancedLessons(): IeltsTopicCourseLesson[] {
   const lessons: IeltsTopicCourseLesson[] = [];
 
   for (const topic of data.topics) {
-    const terms = (advancedTerms.termsByTopic[topic.id] ?? []).filter((term) =>
+    const terms = (advancedTermsByTopic[topic.id] ?? []).filter((term) =>
       advancedTermSet.has(term),
     );
     splitLessonTerms(terms).forEach((lessonTerms) => {

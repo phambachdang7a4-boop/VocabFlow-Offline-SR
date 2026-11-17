@@ -2388,7 +2388,7 @@ async function checkCourseContentAndProgress() {
   assert.ok(ieltsTerms.length > 6000);
   assert.ok(ieltsAdvancedTerms.length > 0 && ieltsAdvancedTerms.length < 1000);
   assert.equal(ieltsTerms.length, 6369);
-  assert.equal(ieltsAdvancedTerms.length, 775);
+  assert.equal(ieltsAdvancedTerms.length, 1239);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(new Set(ieltsAdvancedTerms).size, ieltsAdvancedTerms.length);
   assert.equal(
@@ -2427,8 +2427,8 @@ async function checkCourseContentAndProgress() {
   );
   assert.equal(
     ieltsTerms.length + ieltsAdvancedTerms.length,
-    7144,
-    "The split keeps every existing term and adds the deduplicated vocabulary.",
+    7608,
+    "The split keeps existing terms and adds the deduplicated book vocabulary.",
   );
   assert.equal(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_WORD_COUNT,
