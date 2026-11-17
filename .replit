@@ -25,11 +25,3 @@ packages = ["unar", "unrar"]
 
 [objectStorage]
 defaultBucketID = "replit-objstore-cb294c0c-4491-4c26-9252-8dc15f702b14"
-
-[[ports]]
-localPort = 8080
-externalPort = 8080
-
-[[ports]]
-localPort = 8081
-externalPort = 80

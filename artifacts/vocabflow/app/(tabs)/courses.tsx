@@ -374,30 +374,33 @@ export default function CoursesScreen() {
   );
 
   const startLesson = async (lesson: CourseLesson) => {
-    const savedAttempt = lessonAttempts.find(
-      (attempt) => attempt.lessonId === lesson.id,
-    );
-    const validAttempt =
-      savedAttempt &&
-      savedAttempt.currentIndex < lesson.questions.length &&
-      savedAttempt.wrongQuestionIndices.every(
-        (index) => index < lesson.questions.length,
-      ) &&
-      (!savedAttempt.retrying ||
-        savedAttempt.retryIndex < savedAttempt.wrongQuestionIndices.length)
-        ? savedAttempt
-        : null;
-    const attempt: CourseLessonAttempt = validAttempt ?? {
-      lessonId: lesson.id,
-      currentIndex: 0,
-      correctCount: 0,
-      wrongQuestionIndices: [],
-      retryIndex: 0,
-      retrying: false,
-      updatedAt: new Date().toISOString(),
-    };
     setSaving(true);
     try {
+      const savedAttempt = (await getCourseLessonAttempts(lesson.id)).find(
+        (attempt) => attempt.lessonId === lesson.id,
+      );
+      const validAttempt =
+        savedAttempt &&
+        savedAttempt.currentIndex < lesson.questions.length &&
+        savedAttempt.wrongQuestionIndices.every(
+          (index) => index < lesson.questions.length,
+        ) &&
+        (!savedAttempt.retrying ||
+          (savedAttempt.retryIndex < savedAttempt.wrongQuestionIndices.length &&
+            savedAttempt.currentIndex ===
+              savedAttempt.wrongQuestionIndices[savedAttempt.retryIndex]))
+          ? savedAttempt
+          : null;
+      const attempt: CourseLessonAttempt = validAttempt ?? {
+        lessonId: lesson.id,
+        currentIndex: 0,
+        correctCount: 0,
+        wrongQuestionIndices: [],
+        retryIndex: 0,
+        retrying: false,
+        selectedAnswer: null,
+        updatedAt: new Date().toISOString(),
+      };
       const persistedAttempt = validAttempt
         ? validAttempt
         : await saveCourseLessonAttempt(attempt);
@@ -411,7 +414,13 @@ export default function CoursesScreen() {
       setRetryingMistakes(persistedAttempt.retrying);
       setRetryQuestionPosition(persistedAttempt.retryIndex);
       setLessonChoices(shuffleLessonChoices(lesson.questions));
-      setSelectedAnswer(null);
+      const resumedQuestion = lesson.questions[persistedAttempt.currentIndex];
+      setSelectedAnswer(
+        persistedAttempt.selectedAnswer &&
+          resumedQuestion?.choices.includes(persistedAttempt.selectedAnswer)
+          ? persistedAttempt.selectedAnswer
+          : null,
+      );
       setCorrectCount(persistedAttempt.correctCount);
       setFinishedLessonId(null);
       setSelectedCourseWordKeys([]);
@@ -536,6 +545,7 @@ export default function CoursesScreen() {
         wrongQuestionIndices: next.wrongQuestionIndices,
         retryIndex: next.retryIndex,
         retrying: next.retrying,
+        selectedAnswer: next.selectedAnswer,
       });
       setLessonAttempts((previous) => [
         ...previous.filter((item) => item.lessonId !== savedAttempt.lessonId),
@@ -559,6 +569,7 @@ export default function CoursesScreen() {
           wrongQuestionIndices,
           retryIndex: nextRetryPosition,
           retrying: true,
+          selectedAnswer: null,
           updatedAt: new Date().toISOString(),
         });
         setCorrectCount(updatedCorrectCount);
@@ -577,6 +588,7 @@ export default function CoursesScreen() {
           wrongQuestionIndices: updatedWrongIndices,
           retryIndex: 0,
           retrying: false,
+          selectedAnswer: null,
           updatedAt: new Date().toISOString(),
         });
         setCorrectCount(updatedCorrectCount);
@@ -595,6 +607,7 @@ export default function CoursesScreen() {
           wrongQuestionIndices: updatedWrongIndices,
           retryIndex: 0,
           retrying: true,
+          selectedAnswer: null,
           updatedAt: new Date().toISOString(),
         });
         setCorrectCount(updatedCorrectCount);
@@ -904,6 +917,21 @@ export default function CoursesScreen() {
               onSelect={(answer) => {
                 if (selectedAnswer !== null) return;
                 setSelectedAnswer(answer);
+                void saveCourseLessonAttempt({
+                  lessonId: activeLesson.id,
+                  currentIndex: questionIndex,
+                  correctCount,
+                  wrongQuestionIndices,
+                  retryIndex: retryQuestionPosition,
+                  retrying: retryingMistakes,
+                  selectedAnswer: answer,
+                }).catch((failure) =>
+                  setError(
+                    failure instanceof Error
+                      ? `Không thể lưu lựa chọn hiện tại. ${failure.message}`
+                      : "Không thể lưu lựa chọn hiện tại.",
+                  ),
+                );
                 void recordStoneInvestmentStudyDay("course").catch((failure) =>
                   setError(
                     failure instanceof Error

@@ -1289,11 +1289,15 @@ async function initialize(): Promise<SQLiteDatabase> {
     }
     if ((version?.user_version ?? 0) < 33) {
       await db.withTransactionAsync(async () => {
-        await db.execAsync(`
-          ALTER TABLE course_lesson_attempts
-            ADD COLUMN selected_answer TEXT;
-          PRAGMA user_version = 33;
-        `);
+        const attemptColumns = await db.getAllAsync<{ name: string }>(
+          "PRAGMA table_info(course_lesson_attempts)",
+        );
+        if (!attemptColumns.some((column) => column.name === "selected_answer")) {
+          await db.execAsync(
+            "ALTER TABLE course_lesson_attempts ADD COLUMN selected_answer TEXT",
+          );
+        }
+        await db.execAsync("PRAGMA user_version = 33");
       });
     }
     await repairKnownExtractionExample(db);
@@ -2767,7 +2771,7 @@ export type CourseLessonAttemptInput = Omit<CourseLessonAttempt, "updatedAt">;
 export function getCourseLessonAttempts(
   lessonPrefix: string,
 ): Promise<CourseLessonAttempt[]> {
-  if (!/^[a-z0-9-]{1,80}$/i.test(lessonPrefix))
+  if (!/^[a-z0-9-]{1,120}$/i.test(lessonPrefix))
     return Promise.reject(new Error("Mã khóa học không hợp lệ."));
   return serialize(async () => {
     const rows = await (await database()).getAllAsync<{

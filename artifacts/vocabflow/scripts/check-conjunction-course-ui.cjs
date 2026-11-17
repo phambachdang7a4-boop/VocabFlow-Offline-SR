@@ -348,6 +348,29 @@ function mount(initialSavedWords = [], options = {}) {
     "A fresh app instance restores the first unanswered question.",
   );
   assert.equal(interruptedAttempts[0].correctCount, 1);
+  const interruptedAnswer = interruptedCourseLesson.questions[1].choices.find(
+    (choice) => choice !== interruptedCourseLesson.questions[1].term,
+  );
+  resumedAfterRestart
+    .byId(`conjunction-choice-${interruptedAnswer}`)
+    .props.onPress();
+  await resumedAfterRestart.settle();
+  resumedAfterRestart.byId("conjunction-leave-lesson").props.onPress();
+  const selectedAnswerAfterRestart = mount([], {
+    lessonAttempts: interruptedAttempts,
+  });
+  await selectedAnswerAfterRestart.focus();
+  selectedAnswerAfterRestart
+    .byId("conjunction-course-card")
+    .props.onPress();
+  selectedAnswerAfterRestart
+    .byId("conjunction-resume-lesson-1")
+    .props.onPress();
+  await selectedAnswerAfterRestart.settle();
+  assert.ok(
+    selectedAnswerAfterRestart.byId("conjunction-answer-feedback"),
+    "A selected answer and its feedback survive leaving the app.",
+  );
   await screen.focus();
   assert.ok(screen.byId("idioms-course-card"));
   assert.ok(screen.byId("conjunction-course-card"));
@@ -445,12 +468,22 @@ function mount(initialSavedWords = [], options = {}) {
     [lesson.questions[0].prompt],
     "The lesson asks missed questions again once after the first pass.",
   );
+  const stillWrongOnRetry = lesson.questions[0].choices.find(
+    (choice) => choice !== lesson.questions[0].term,
+  );
   screen
-    .byId(`conjunction-choice-${lesson.questions[0].term}`)
+    .byId(`conjunction-choice-${stillWrongOnRetry}`)
     .props.onPress();
   screen.byId("conjunction-next").props.onPress();
   await screen.settle();
   assert.ok(screen.byId("conjunction-lesson-complete"));
+  assert.match(
+    textContent(screen.byId("conjunction-lesson-complete")),
+    new RegExp(
+      `Đúng ${lesson.questions.length - 1}/${lesson.questions.length} câu`,
+    ),
+    "A question missed again on its one retry is not asked a third time.",
+  );
   assert.equal(
     screen.byId("conjunction-lesson-complete").props.testID,
     "conjunction-lesson-complete",

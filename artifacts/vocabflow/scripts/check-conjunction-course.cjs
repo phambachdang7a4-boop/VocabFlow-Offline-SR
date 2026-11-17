@@ -2461,6 +2461,7 @@ async function checkCourseContentAndProgress() {
       wrongQuestionIndices: [0, 2],
       retryIndex: 0,
       retrying: false,
+      selectedAnswer: "wrong-choice",
     });
     assert.deepEqual(
       await repo.getCourseLessonCompletions(course.CONJUNCTION_COURSE_ID),
@@ -2476,6 +2477,7 @@ async function checkCourseContentAndProgress() {
           wrongQuestionIndices: [0, 2],
           retryIndex: 0,
           retrying: false,
+          selectedAnswer: "wrong-choice",
           updatedAt: (await repo.getCourseLessonAttempts(
             course.CONJUNCTION_COURSE_ID,
           ))[0].updatedAt,
