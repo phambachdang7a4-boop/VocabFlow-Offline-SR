@@ -19,6 +19,9 @@ const course = loadTs(
 const linkingAdverbCourse = loadTs(
   join(__dirname, "../domain/linking-adverb-course.ts"),
 );
+const sentenceStructurePatternCourse = loadTs(
+  join(__dirname, "../domain/sentence-structure-patterns.ts"),
+);
 const ieltsTopicCourse = loadTs(
   join(__dirname, "../domain/ielts-topic-course.ts"),
   {
@@ -275,6 +278,52 @@ async function checkCourseContentAndProgress() {
       `${term} does not compete with the similar answer ${distractor}.`,
     );
   }
+
+  const patternLessons =
+    sentenceStructurePatternCourse.SENTENCE_STRUCTURE_PATTERN_LESSONS;
+  const patternEntries =
+    sentenceStructurePatternCourse.SENTENCE_STRUCTURE_PATTERN_ENTRIES;
+  const patternQuestions = patternLessons.flatMap((lesson) => lesson.questions);
+  const patternTerms = Object.keys(patternEntries);
+  assert.deepEqual(
+    patternLessons.map((lesson) => lesson.title),
+    [
+      "Cặp liên từ và cấu trúc song hành",
+      "Điều kiện, nhượng bộ và kết quả",
+      "Đảo ngữ và câu nhấn mạnh",
+      "Mệnh đề rút gọn, thay thế và lược bỏ",
+    ],
+  );
+  assert.equal(patternTerms.length, 13);
+  assert.equal(patternQuestions.length, patternTerms.length);
+  assert.deepEqual(
+    [...patternQuestions.map((question) => question.term)].sort(),
+    [...patternTerms].sort(),
+    "Every added structure has one practice question.",
+  );
+  for (const lesson of patternLessons) {
+    assert.ok(lesson.questions.length > 0);
+    for (const question of lesson.questions) {
+      assert.ok(question.prompt.includes("_____"));
+      assert.equal(new Set(question.choices).size, 4);
+      assert.ok(question.choices.includes(question.term));
+      assert.ok(patternEntries[question.term]);
+    }
+  }
+  for (const [term, entry] of Object.entries(patternEntries)) {
+    assert.ok(term.includes(" "), `${term} is a multiword grammar pattern.`);
+    assert.ok(entry.definition.trim(), `${term} has a Vietnamese explanation.`);
+    assert.ok(entry.example.trim(), `${term} has an English example.`);
+    assert.ok(
+      entry.exampleTranslation.trim(),
+      `${term} has a Vietnamese example translation.`,
+    );
+  }
+  assert.equal(
+    new Set([...courseTerms, ...linkedQuestions.map((question) => question.term), ...patternTerms]).size,
+    courseTerms.length + linkedQuestions.length + patternTerms.length,
+    "Added patterns do not duplicate existing course items.",
+  );
 
   const ieltsTerms = ieltsTopicCourse.IELTS_TOPIC_WORD_LIST.flatMap(
     (topic) => topic.terms,

@@ -639,10 +639,11 @@ export function ReviewCard({
             <View style={styles.dialogueMessage}>
               <Image
                 testID="review-dialogue-corvi-avatar"
-                source={require("../assets/images/corvi-app-icon.png")}
+                source={require("../assets/images/corvi-dialogue-avatar.png")}
                 accessibilityLabel="Corvi"
                 style={[styles.dialogueAvatar, { borderColor: c.accent }]}
                 resizeMode="cover"
+                resizeMethod="scale"
               />
               <View
                 style={[
@@ -659,18 +660,28 @@ export function ReviewCard({
                 </Text>
               </View>
             </View>
-            <View
-              testID="review-dialogue-reply"
-              style={[
-                styles.dialogueBubble,
-                styles.dialogueReplyBubble,
-                { backgroundColor: c.card, borderColor: c.border },
-              ]}
-            >
-              <Text style={[styles.dialogueSpeaker, { color: c.primary }]}>
-                Bạn
-              </Text>
-              <View style={styles.sentenceFlow}>{inlinePrompt()}</View>
+            <View testID="review-dialogue-reply-row" style={styles.dialogueReplyRow}>
+              <View
+                testID="review-dialogue-reply"
+                style={[
+                  styles.dialogueBubble,
+                  styles.dialogueReplyBubble,
+                  { backgroundColor: c.card, borderColor: c.border },
+                ]}
+              >
+                <Text style={[styles.dialogueSpeaker, { color: c.primary }]}>
+                  Pan
+                </Text>
+                <View style={styles.sentenceFlow}>{inlinePrompt()}</View>
+              </View>
+              <Image
+                testID="review-dialogue-pan-avatar"
+                source={require("../assets/images/pan-dialogue-avatar.png")}
+                accessibilityLabel="Cừu Pan"
+                style={[styles.dialogueAvatar, styles.dialogueReplyAvatar]}
+                resizeMode="cover"
+                resizeMethod="scale"
+              />
             </View>
           </View>
         ) : sentenceAnswer || choiceAnswer ? (
@@ -1470,11 +1481,19 @@ const styles = StyleSheet.create({
     gap: 9,
   },
   dialogueAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 9,
     borderWidth: 2,
   },
+  dialogueReplyRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    gap: 9,
+  },
+  dialogueReplyAvatar: { borderColor: "transparent" },
   dialogueBubble: {
     flexShrink: 1,
     padding: 14,
@@ -1483,8 +1502,7 @@ const styles = StyleSheet.create({
   },
   dialogueCorviBubble: { flex: 1, borderBottomLeftRadius: 5 },
   dialogueReplyBubble: {
-    alignSelf: "flex-end",
-    maxWidth: "88%",
+    maxWidth: "82%",
     borderBottomRightRadius: 5,
   },
   dialogueSpeaker: { fontFamily: F.b, fontSize: 12, marginBottom: 4 },

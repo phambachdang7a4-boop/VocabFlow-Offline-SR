@@ -12,6 +12,9 @@ const courseDomain = loadTs(join(__dirname, "../domain/conjunction-course.ts"), 
 const linkingAdverbDomain = loadTs(
   join(__dirname, "../domain/linking-adverb-course.ts"),
 );
+const sentenceStructurePatternDomain = loadTs(
+  join(__dirname, "../domain/sentence-structure-patterns.ts"),
+);
 const ieltsTopicDomain = loadTs(
   join(__dirname, "../domain/ielts-topic-course.ts"),
   {
@@ -43,7 +46,8 @@ const phrasalVerbCourseDomain = loadTs(
 );
 const combinedLessonCount =
   courseDomain.CONJUNCTION_COURSE_LESSONS.length +
-  linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS.length;
+  linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS.length +
+  sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS.length;
 const courseWordSelectionDomain = loadTs(
   join(__dirname, "../domain/course-word-selection.ts"),
 );
@@ -139,6 +143,7 @@ function mount(initialSavedWords = [], options = {}) {
     },
     "@/domain/conjunction-course": courseDomain,
     "@/domain/linking-adverb-course": linkingAdverbDomain,
+    "@/domain/sentence-structure-patterns": sentenceStructurePatternDomain,
     "@/domain/ielts-topic-course": ieltsTopicDomain,
     "@/domain/toeic-topic-course": toeicTopicDomain,
     "@/domain/office-apps-course": officeAppsDomain,
@@ -150,8 +155,9 @@ function mount(initialSavedWords = [], options = {}) {
     "../../assets/courses/ielts.png": "ielts-course-artwork",
     "../../assets/courses/toeic.png": "toeic-course-artwork",
     "../../assets/courses/office-apps.png": "office-apps-course-artwork",
-    "../../assets/images/corvi-app-icon.png": "corvi-avatar-asset",
-    "../../assets/images/pan-avatar.png": "pan-avatar-asset",
+    "../../assets/images/corvi-dialogue-avatar.png": "corvi-dialogue-avatar-asset",
+    "../../assets/images/pan-dialogue-avatar.png": "pan-dialogue-avatar-asset",
+    "../../assets/images/baron-dialogue-avatar.png": "baron-dialogue-avatar-asset",
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
         completed.filter((lessonId) => lessonId.startsWith(courseId)),
@@ -245,6 +251,18 @@ function mount(initialSavedWords = [], options = {}) {
     { min: 0, max: combinedLessonCount, now: 1 },
     "Previously completed linking-adverb lessons remain in merged course progress.",
   );
+  const retainedPatternProgress = mount([], {
+    completedLessons: [
+      sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS[0].id,
+    ],
+  });
+  await retainedPatternProgress.focus();
+  assert.deepEqual(
+    retainedPatternProgress.byId("conjunction-course-progress").props
+      .accessibilityValue,
+    { min: 0, max: combinedLessonCount, now: 1 },
+    "New structure-pattern lesson progress is included in the merged course.",
+  );
 
   const screen = mount();
   const forcedShuffle = screen.shuffleLessonChoices(
@@ -299,6 +317,10 @@ function mount(initialSavedWords = [], options = {}) {
   assert.match(
     screen.byId("conjunction-course-card").props.accessibilityLabel,
     /^Cấu trúc câu & từ nối,/,
+  );
+  assert.match(
+    textContent(screen.byId("conjunction-course-card")),
+    /mẫu cấu trúc câu/,
   );
   assert.deepEqual(
     screen.byId("conjunction-course-progress").props.accessibilityValue,
@@ -410,17 +432,17 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId("idioms-question-prompt").props.children,
     [idiomQuestion.prompt],
   );
-  assert.equal(screen.byId("idioms-dialogue-corvi-avatar").props.source, "corvi-avatar-asset");
-  assert.equal(screen.byId("idioms-dialogue-pan-avatar").props.source, "pan-avatar-asset");
+  assert.equal(screen.byId("idioms-dialogue-corvi-avatar").props.source, "corvi-dialogue-avatar-asset");
+  assert.equal(screen.byId("idioms-dialogue-pan-avatar").props.source, "pan-dialogue-avatar-asset");
   assert.equal(
     screen.byId("idioms-dialogue-corvi-avatar").props.style[0].borderRadius,
-    20,
-    "Corvi uses a circular avatar.",
+    9,
+    "Corvi's framed portrait keeps its rounded-square shape.",
   );
   assert.equal(
     screen.byId("idioms-dialogue-pan-avatar").props.style[0].borderRadius,
-    20,
-    "Pan uses a circular avatar.",
+    9,
+    "Pan's framed portrait keeps its rounded-square shape.",
   );
   assert.ok(
     find(screen.byId("idioms-dialogue-reply"), (node) =>
@@ -512,6 +534,37 @@ function mount(initialSavedWords = [], options = {}) {
     screen.byId("conjunction-course-progress").props.accessibilityValue,
     { min: 0, max: combinedLessonCount, now: 2 },
     "Progress from both former courses contributes to the merged course.",
+  );
+  const structureDialogueScreen = mount();
+  await structureDialogueScreen.focus();
+  structureDialogueScreen.byId("conjunction-course-card").props.onPress();
+  const firstStructureLessonNumber =
+    courseDomain.CONJUNCTION_COURSE_LESSONS.length +
+    linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS.length +
+    1;
+  structureDialogueScreen
+    .byId(`conjunction-lesson-${firstStructureLessonNumber}`)
+    .props.onPress();
+  const structureQuestion =
+    sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS[0]
+      .questions[0];
+  assert.ok(structureDialogueScreen.byId("sentence-structure-dialogue"));
+  assert.equal(
+    structureDialogueScreen.byId("sentence-structure-dialogue-corvi-avatar")
+      .props.source,
+    "corvi-dialogue-avatar-asset",
+    "Corvi asks the structure question.",
+  );
+  assert.equal(
+    structureDialogueScreen.byId("sentence-structure-dialogue-baron-avatar")
+      .props.source,
+    "baron-dialogue-avatar-asset",
+    "Baron answers with the unchanged sentence prompt.",
+  );
+  assert.deepEqual(
+    structureDialogueScreen.byId("conjunction-question-prompt").props.children,
+    [structureQuestion.prompt],
+    "The structure prompt remains unchanged inside the conversation.",
   );
 
   let idiomSaveAttempts = 0;

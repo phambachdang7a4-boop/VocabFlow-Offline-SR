@@ -50,6 +50,13 @@ Cừu Pan là một nhân vật riêng của VocabFlow, không phải Corvi. Hì
 
 **How to apply:** Giữ hình ảnh và lời thoại của Pan tách biệt khỏi Corvi; dùng ngữ cảnh quét dọn khi thể hiện nhân vật này.
 
+## Nhân vật hội thoại
+Corvi là người hỏi; Pan hoặc Baron có thể trả lời. Trong Idioms và ôn tập idiom, Pan hồi đáp; trong khóa Cấu trúc câu & từ nối, Baron hồi đáp.
+
+**Why:** Người dùng chỉ định vai hội thoại cho ba chân dung: Corvi hỏi và Pan hoặc Baron trả lời.
+
+**How to apply:** Giữ nguyên nội dung câu hỏi và đáp án khi thay avatar hoặc bố cục thoại; dùng Pan cho idiom và Baron cho cấu trúc câu.
+
 ## Stone từ Combo
 Chỉ chuỗi có ít nhất 20 câu đúng liên tiếp mới nhận Stone; số Stone bằng độ dài chuỗi khi chuỗi kết thúc do trả lời sai hoặc kết thúc/thoát phiên. Chuỗi ngắn hơn 20 câu không nhận Stone. Mỗi chuỗi đủ điều kiện tính riêng, không giới hạn số lần nhận.
 

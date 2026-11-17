@@ -9,20 +9,25 @@ import React, {
 } from "react";
 import {
   readReviewPreferences,
-  writeReviewWordLimit,
+  writeReviewPreferences,
 } from "@/data/review-preferences";
 import {
+  DEFAULT_TIMEBOUND_REVIEW_MINUTES,
   DEFAULT_REVIEW_WORD_LIMIT,
+  isReviewTimeboundMinutes,
   isReviewWordLimit,
   type ReviewWordLimit,
+  type ReviewTimeboundMinutes,
 } from "@/domain/review-modes";
 
 type ReviewPreferencesValue = {
   wordLimit: ReviewWordLimit;
+  timeboundMinutes: ReviewTimeboundMinutes;
   ready: boolean;
   saving: boolean;
   error: string | null;
   setWordLimit: (value: ReviewWordLimit) => Promise<void>;
+  setTimeboundMinutes: (value: ReviewTimeboundMinutes) => Promise<void>;
   retryLoad: () => Promise<void>;
 };
 
@@ -37,6 +42,8 @@ export function ReviewPreferencesProvider({
   const [wordLimit, setWordLimitState] = useState<ReviewWordLimit>(
     DEFAULT_REVIEW_WORD_LIMIT,
   );
+  const [timeboundMinutes, setTimeboundMinutesState] =
+    useState<ReviewTimeboundMinutes>(DEFAULT_TIMEBOUND_REVIEW_MINUTES);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +56,7 @@ export function ReviewPreferencesProvider({
       const preferences = await readReviewPreferences();
       if (mounted.current) {
         setWordLimitState(preferences.wordLimit);
+        setTimeboundMinutesState(preferences.timeboundMinutes);
         setError(null);
       }
     } catch {
@@ -68,31 +76,74 @@ export function ReviewPreferencesProvider({
     };
   }, [retryLoad]);
 
+  const savePreferences = useCallback(
+    async (next: {
+      wordLimit: ReviewWordLimit;
+      timeboundMinutes: ReviewTimeboundMinutes;
+    }) => {
+      if (!mounted.current || savingRef.current) return;
+      if (!isReviewWordLimit(next.wordLimit)) {
+        setError("Số từ mỗi phiên ôn tập không hợp lệ.");
+        return;
+      }
+      if (!isReviewTimeboundMinutes(next.timeboundMinutes)) {
+        setError("Thời lượng Timebound không hợp lệ.");
+        return;
+      }
+      savingRef.current = true;
+      setSaving(true);
+      setError(null);
+      try {
+        await writeReviewPreferences(next);
+        if (mounted.current) {
+          setWordLimitState(next.wordLimit);
+          setTimeboundMinutesState(next.timeboundMinutes);
+        }
+      } catch {
+        if (mounted.current) {
+          setError("Không thể lưu cài đặt ôn tập. Lựa chọn cũ vẫn được giữ.");
+        }
+      } finally {
+        savingRef.current = false;
+        if (mounted.current) setSaving(false);
+      }
+    },
+    [],
+  );
+
   const setWordLimit = useCallback(async (next: ReviewWordLimit) => {
     if (!mounted.current || savingRef.current) return;
-    if (!isReviewWordLimit(next)) {
-      setError("Số từ mỗi phiên ôn tập không hợp lệ.");
-      return;
-    }
-    savingRef.current = true;
-    setSaving(true);
-    setError(null);
-    try {
-      await writeReviewWordLimit(next);
-      if (mounted.current) setWordLimitState(next);
-    } catch {
-      if (mounted.current) {
-        setError("Không thể lưu giới hạn ôn tập. Lựa chọn cũ vẫn được giữ.");
-      }
-    } finally {
-      savingRef.current = false;
-      if (mounted.current) setSaving(false);
-    }
-  }, []);
+    await savePreferences({ wordLimit: next, timeboundMinutes });
+  }, [savePreferences, timeboundMinutes]);
+  const setTimeboundMinutes = useCallback(
+    async (next: ReviewTimeboundMinutes) => {
+      if (!mounted.current || savingRef.current) return;
+      await savePreferences({ wordLimit, timeboundMinutes: next });
+    },
+    [savePreferences, wordLimit],
+  );
 
   const value = useMemo(
-    () => ({ wordLimit, ready, saving, error, setWordLimit, retryLoad }),
-    [wordLimit, ready, saving, error, setWordLimit, retryLoad],
+    () => ({
+      wordLimit,
+      timeboundMinutes,
+      ready,
+      saving,
+      error,
+      setWordLimit,
+      setTimeboundMinutes,
+      retryLoad,
+    }),
+    [
+      wordLimit,
+      timeboundMinutes,
+      ready,
+      saving,
+      error,
+      setWordLimit,
+      setTimeboundMinutes,
+      retryLoad,
+    ],
   );
 
   return (

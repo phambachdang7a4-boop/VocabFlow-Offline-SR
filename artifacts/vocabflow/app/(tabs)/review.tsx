@@ -78,8 +78,9 @@ import {
   limitReviewQueue,
   remainingTimeboundReviewMs,
   REVIEW_MODE_OPTIONS,
-  TIMEBOUND_REVIEW_DURATION_MS,
+  timeboundReviewDurationMs,
   type ReviewMode,
+  type ReviewTimeboundMinutes,
 } from "@/domain/review-modes";
 
 type Session = {
@@ -87,6 +88,7 @@ type Session = {
   sessionId: string;
   mode: "standard" | "idiom";
   reviewMode: ReviewMode;
+  timeboundDurationMinutes: ReviewTimeboundMinutes | null;
   queue: number[];
   processed: number[];
   answered: number[];
@@ -168,7 +170,10 @@ export default function ReviewScreen() {
     activeClockRef.current?.sessionId === session.sessionId
       ? remainingTimeboundReviewMs(
           activeReviewDuration(activeClockRef.current.clock, now),
-          TIMEBOUND_REVIEW_DURATION_MS,
+          timeboundReviewDurationMs(
+            session.timeboundDurationMinutes ??
+              reviewPreferences.timeboundMinutes,
+          ),
         )
       : null;
 
@@ -303,6 +308,10 @@ export default function ReviewScreen() {
         sessionId,
         mode,
         reviewMode,
+        timeboundDurationMinutes:
+          reviewMode === "timebound"
+            ? reviewPreferences.timeboundMinutes
+            : null,
         queue: queueWords.map((w) => w.id),
         processed: [],
         answered: [],
@@ -558,6 +567,14 @@ export default function ReviewScreen() {
   const selectedReviewModeOption =
     REVIEW_MODE_OPTIONS.find((option) => option.id === selectedReviewMode) ??
     REVIEW_MODE_OPTIONS[0];
+  const selectedReviewModeLabel =
+    selectedReviewModeOption.id === "timebound"
+      ? `Timebound · ${reviewPreferences.timeboundMinutes} phút`
+      : selectedReviewModeOption.label;
+  const selectedReviewModeDescription =
+    selectedReviewModeOption.id === "timebound"
+      ? `Tự tổng kết khi hết ${reviewPreferences.timeboundMinutes} phút.`
+      : selectedReviewModeOption.description;
   const standardSessionCount = Math.min(
     standardDueWords.length,
     reviewPreferences.wordLimit,
@@ -591,7 +608,7 @@ export default function ReviewScreen() {
           <Pressable
             testID="review-mode-dropdown"
             accessibilityRole="button"
-            accessibilityLabel={`Chế độ ôn tập: ${selectedReviewModeOption.label}`}
+            accessibilityLabel={`Chế độ ôn tập: ${selectedReviewModeLabel}`}
             accessibilityState={{ expanded: reviewModeDropdownOpen }}
             onPress={() => setReviewModeDropdownOpen((isOpen) => !isOpen)}
             disabled={!reviewPreferences.ready || starting}
@@ -616,7 +633,7 @@ export default function ReviewScreen() {
                 CHẾ ĐỘ ÔN TẬP
               </Text>
               <Text style={[styles.reviewModeLabel, { color: c.foreground }]}>
-                {selectedReviewModeOption.label}
+                {selectedReviewModeLabel}
               </Text>
               <Text
                 style={[
@@ -624,7 +641,7 @@ export default function ReviewScreen() {
                   { color: c.mutedForeground },
                 ]}
               >
-                {selectedReviewModeOption.description}
+                {selectedReviewModeDescription}
               </Text>
             </View>
             <Feather
@@ -643,6 +660,14 @@ export default function ReviewScreen() {
             >
               {REVIEW_MODE_OPTIONS.map((option) => {
                 const selected = option.id === selectedReviewMode;
+                const optionLabel =
+                  option.id === "timebound"
+                    ? `Timebound · ${reviewPreferences.timeboundMinutes} phút`
+                    : option.label;
+                const optionDescription =
+                  option.id === "timebound"
+                    ? `Tự tổng kết khi hết ${reviewPreferences.timeboundMinutes} phút.`
+                    : option.description;
                 return (
                   <Pressable
                     key={option.id}
@@ -671,7 +696,7 @@ export default function ReviewScreen() {
                           { color: selected ? c.primary : c.foreground },
                         ]}
                       >
-                        {option.label}
+                        {optionLabel}
                       </Text>
                       <Text
                         style={[
@@ -679,7 +704,7 @@ export default function ReviewScreen() {
                           { color: c.mutedForeground },
                         ]}
                       >
-                        {option.description}
+                        {optionDescription}
                       </Text>
                     </View>
                     {selected ? (

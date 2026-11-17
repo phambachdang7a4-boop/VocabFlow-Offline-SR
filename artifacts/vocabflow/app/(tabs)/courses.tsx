@@ -29,6 +29,11 @@ import {
   LINKING_ADVERB_COURSE_LESSONS,
 } from "@/domain/linking-adverb-course";
 import {
+  SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
+  SENTENCE_STRUCTURE_PATTERN_ENTRIES,
+  SENTENCE_STRUCTURE_PATTERN_LESSONS,
+} from "@/domain/sentence-structure-patterns";
+import {
   IELTS_TOPIC_COURSE_ENTRIES,
   IELTS_TOPIC_COURSE_ID,
   IELTS_TOPIC_COURSE_LESSONS,
@@ -203,16 +208,22 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: CONJUNCTION_COURSE_ID,
     title: CONJUNCTION_COURSE_TITLE,
     description:
-      `Tổng hợp ${CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(LINKING_ADVERB_COURSE_ENTRIES).length} cụm liên từ phụ thuộc và trạng từ liên kết, qua ví dụ về thời gian, điều kiện, nguyên nhân, kết quả, bổ sung và đối lập.`,
+      `Tổng hợp ${CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(LINKING_ADVERB_COURSE_ENTRIES).length + Object.keys(SENTENCE_STRUCTURE_PATTERN_ENTRIES).length} mục gồm liên từ, trạng từ liên kết và mẫu cấu trúc câu; học qua ví dụ và bài chọn đáp án.`,
     lessons: [
       ...CONJUNCTION_COURSE_LESSONS,
       ...LINKING_ADVERB_COURSE_LESSONS,
+      ...SENTENCE_STRUCTURE_PATTERN_LESSONS,
     ],
     entriesByTerm: new Map<string, CourseAnswer>([
       ...CONJUNCTION_COURSE_ENTRY_BY_TERM.entries(),
       ...Object.entries(LINKING_ADVERB_COURSE_ENTRIES),
+      ...Object.entries(SENTENCE_STRUCTURE_PATTERN_ENTRIES),
     ]),
-    progressPrefixes: [CONJUNCTION_COURSE_ID, LINKING_ADVERB_COURSE_ID],
+    progressPrefixes: [
+      CONJUNCTION_COURSE_ID,
+      LINKING_ADVERB_COURSE_ID,
+      SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
+    ],
     icon: "git-merge",
     catalogArtwork: require("../../assets/courses/sentence-structures.png"),
     testIdPrefix: "conjunction",
@@ -715,10 +726,11 @@ export default function CoursesScreen() {
           ) : (
             <QuestionView
               testIdPrefix={activeCourse?.testIdPrefix ?? "course"}
-                isIdiomCourse={activeCourse?.id === IDIOM_COURSE_ID}
+              isIdiomCourse={activeCourse?.id === IDIOM_COURSE_ID}
+              isSentenceStructureCourse={activeCourse?.id === CONJUNCTION_COURSE_ID}
               lesson={activeLesson}
               question={currentQuestion}
-                choices={lessonChoices[questionIndex] ?? currentQuestion.choices}
+              choices={lessonChoices[questionIndex] ?? currentQuestion.choices}
               entriesByTerm={activeCourse?.entriesByTerm ?? new Map()}
               questionIndex={questionIndex}
               selectedAnswer={selectedAnswer}
@@ -1258,6 +1270,7 @@ export default function CoursesScreen() {
 function QuestionView({
   testIdPrefix,
   isIdiomCourse,
+  isSentenceStructureCourse,
   lesson,
   question,
   choices,
@@ -1271,6 +1284,7 @@ function QuestionView({
 }: {
   testIdPrefix: string;
   isIdiomCourse: boolean;
+  isSentenceStructureCourse: boolean;
   lesson: CourseLesson;
   question: CourseQuestion;
   choices: readonly string[];
@@ -1309,17 +1323,20 @@ function QuestionView({
       <Text style={[styles.lessonFocus, { color: c.mutedForeground }]}>
         {lesson.title}
       </Text>
-      <Text style={[styles.questionTitle, { color: c.foreground }]}>
-        Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu
-      </Text>
+      {!isSentenceStructureCourse ? (
+        <Text style={[styles.questionTitle, { color: c.foreground }]}>
+          Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu
+        </Text>
+      ) : null}
       {isIdiomCourse ? (
         <View testID="idioms-dialogue" style={styles.idiomDialogue}>
           <View style={styles.idiomDialogueMessage}>
             <Image
               testID="idioms-dialogue-corvi-avatar"
-              source={require("../../assets/images/corvi-app-icon.png")}
+              source={require("../../assets/images/corvi-dialogue-avatar.png")}
               accessibilityLabel="Corvi"
               resizeMode="cover"
+              resizeMethod="scale"
               style={[styles.idiomDialogueAvatar, { borderColor: c.accent }]}
             />
             <View
@@ -1358,9 +1375,65 @@ function QuestionView({
             </View>
             <Image
               testID="idioms-dialogue-pan-avatar"
-              source={require("../../assets/images/pan-avatar.png")}
+              source={require("../../assets/images/pan-dialogue-avatar.png")}
               accessibilityLabel="Cừu Pan"
               resizeMode="cover"
+              resizeMethod="scale"
+              style={[styles.idiomDialogueAvatar, { borderColor: c.accent }]}
+            />
+          </View>
+        </View>
+      ) : isSentenceStructureCourse ? (
+        <View testID="sentence-structure-dialogue" style={styles.idiomDialogue}>
+          <View style={styles.idiomDialogueMessage}>
+            <Image
+              testID="sentence-structure-dialogue-corvi-avatar"
+              source={require("../../assets/images/corvi-dialogue-avatar.png")}
+              accessibilityLabel="Corvi"
+              resizeMode="cover"
+              resizeMethod="scale"
+              style={[styles.idiomDialogueAvatar, { borderColor: c.accent }]}
+            />
+            <View
+              style={[
+                styles.idiomDialogueBubble,
+                styles.idiomCorviBubble,
+                { backgroundColor: c.secondary, borderColor: c.border },
+              ]}
+            >
+              <Text style={[styles.idiomDialogueSpeaker, { color: c.primary }]}>
+                Corvi
+              </Text>
+              <Text style={[styles.idiomDialogueText, { color: c.secondaryForeground }]}>
+                Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu
+              </Text>
+            </View>
+          </View>
+          <View style={styles.idiomReplyRow}>
+            <View
+              testID="sentence-structure-dialogue-reply"
+              style={[
+                styles.idiomDialogueBubble,
+                styles.idiomReplyBubble,
+                { backgroundColor: c.card, borderColor: c.border },
+              ]}
+            >
+              <Text style={[styles.idiomDialogueSpeaker, { color: c.primary }]}>
+                Baron
+              </Text>
+              <Text
+                testID={`${testIdPrefix}-question-prompt`}
+                style={[styles.promptText, { color: c.foreground }]}
+              >
+                {question.prompt}
+              </Text>
+            </View>
+            <Image
+              testID="sentence-structure-dialogue-baron-avatar"
+              source={require("../../assets/images/baron-dialogue-avatar.png")}
+              accessibilityLabel="Baron"
+              resizeMode="cover"
+              resizeMethod="scale"
               style={[styles.idiomDialogueAvatar, { borderColor: c.accent }]}
             />
           </View>
@@ -1945,9 +2018,9 @@ const styles = StyleSheet.create({
     gap: 9,
   },
   idiomDialogueAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 9,
     borderWidth: 2,
   },
   idiomReplyRow: {

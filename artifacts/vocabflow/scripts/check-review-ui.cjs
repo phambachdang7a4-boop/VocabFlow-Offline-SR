@@ -76,11 +76,13 @@ function mount(file, properties = {}, initial = {}) {
   const context = { words: [], loading: false, error: null, reload: async () => {}, ...initial };
   const reviewPreferences = {
     wordLimit: initial.reviewWordLimit ?? 100,
+    timeboundMinutes: initial.reviewTimeboundMinutes ?? 10,
     ready: initial.reviewPreferencesReady ?? true,
     saving: false,
     error: initial.reviewPreferencesError ?? null,
     retryLoad: async () => {},
     setWordLimit: async () => {},
+    setTimeboundMinutes: async () => {},
   };
   const speechCalls = [];
   const shareCalls = [];
@@ -161,6 +163,8 @@ function mount(file, properties = {}, initial = {}) {
     '@/domain/review-result-details': reviewResultDetails,
     '@/domain/sound-cues': soundCues,
     '../assets/images/corvi-app-icon.png': 'corvi-avatar-asset',
+    '../assets/images/corvi-dialogue-avatar.png': 'corvi-dialogue-avatar-asset',
+    '../assets/images/pan-dialogue-avatar.png': 'pan-dialogue-avatar-asset',
     '@/components/KeyboardAwareScrollViewCompat': { KeyboardAwareScrollViewCompat: 'KeyboardAwareScrollViewCompat' },
     '@/components/ui': { Button: 'Button', ErrorBanner: 'ErrorBanner', Skeleton: 'Skeleton', F: {} },
     '@/components/ScreenHeader': { ScreenHeader: 'ScreenHeader', useBottomPad: () => 108 },
@@ -337,6 +341,34 @@ async function startReview(screen) {
       'Time expiry ends immediately without starting the mistake round.',
     );
     timedModeScreen.unmount();
+    const shortTimeboundScreen = mount('../app/(tabs)/review.tsx', {}, {
+      words: [word, { ...word, id: 2, term: 'check' }],
+      reviewTimeboundMinutes: 5,
+    });
+    shortTimeboundScreen.time(new Date(fakeNow).toISOString());
+    shortTimeboundScreen.byId('review-mode-dropdown').props.onPress();
+    shortTimeboundScreen.byId('review-mode-timebound').props.onPress();
+    assert.equal(
+      shortTimeboundScreen.byId('review-mode-dropdown').props.accessibilityLabel,
+      'Chế độ ôn tập: Timebound · 5 phút',
+      'The mode picker reflects the selected duration.',
+    );
+    await startReview(shortTimeboundScreen);
+    assert.equal(
+      shortTimeboundScreen.byId('review-timebound-countdown').props.children
+        .filter((child) => child?.type === 'Text')[0]
+        .props.children.join(''),
+      '05:00',
+      'A five-minute preference starts a five-minute session.',
+    );
+    fakeNow += 5 * 60 * 1000;
+    shortTimeboundScreen.time(new Date(fakeNow).toISOString());
+    await shortTimeboundScreen.settle();
+    assert.ok(
+      shortTimeboundScreen.byId('review-session-summary'),
+      'The chosen duration triggers automatic completion.',
+    );
+    shortTimeboundScreen.unmount();
   } finally {
     Date.now = originalDateNow;
   }
@@ -1042,14 +1074,16 @@ async function startReview(screen) {
   });
   assert.ok(idiomCard.byId('review-dialogue-question'));
   assert.ok(idiomCard.byId('review-dialogue-reply'));
-  assert.equal(idiomCard.byId('review-dialogue-corvi-avatar').props.source, 'corvi-avatar-asset',
+  assert.equal(idiomCard.byId('review-dialogue-corvi-avatar').props.source, 'corvi-dialogue-avatar-asset',
     'Show the bundled Corvi portrait as the speaker avatar.');
+  assert.equal(idiomCard.byId('review-dialogue-pan-avatar').props.source, 'pan-dialogue-avatar-asset',
+    'Show Pan as the dialogue responder.');
   assert.ok(find(idiomCard.byId('review-dialogue-question'), node =>
     node.type === 'Text' && String(node.props?.children ?? '') === 'Corvi'),
   'Label Corvi as the first speaker.');
   assert.ok(find(idiomCard.byId('review-dialogue-reply'), node =>
-    node.type === 'Text' && String(node.props?.children ?? '') === 'Bạn'),
-  'Render the learner as the second speaker.');
+    node.type === 'Text' && String(node.props?.children ?? '') === 'Pan'),
+  'Label Pan as the second speaker.');
   assert.ok(find(idiomCard.byId('review-dialogue-question'), node =>
     node.type === 'Text' && String(node.props?.children ?? '').includes('phá tan bầu không khí ngượng ngùng')),
   'The dialogue prompt states the Vietnamese meaning as a recall cue.');
@@ -1066,6 +1100,11 @@ async function startReview(screen) {
     exercise: exercises.createIdiomListeningExercise(savedIdiom),
   });
   assert.ok(idiomListeningCard.byId('review-dialogue-question'));
+  assert.equal(
+    idiomListeningCard.byId('review-dialogue-pan-avatar').props.source,
+    'pan-dialogue-avatar-asset',
+    'Pan remains the responder in listening review.',
+  );
   assert.ok(idiomListeningCard.byId('review-speak-word'),
     'The listening exercise exposes the existing pronunciation control.');
   assert.ok(find(idiomListeningCard.byId('review-dialogue-question'), node =>

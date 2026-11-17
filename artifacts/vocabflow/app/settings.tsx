@@ -30,7 +30,10 @@ import {
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
 import { useReviewPreferences } from "@/contexts/ReviewPreferencesContext";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
-import { REVIEW_WORD_LIMIT_OPTIONS } from "@/domain/review-modes";
+import {
+  TIMEBOUND_REVIEW_DURATION_OPTIONS,
+  REVIEW_WORD_LIMIT_OPTIONS,
+} from "@/domain/review-modes";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
@@ -1296,11 +1299,68 @@ Nội dung tệp:
               );
             })}
           </View>
+          <View style={styles.reviewLimitHeading}>
+            <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+              Thời lượng Timebound
+            </Text>
+            <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+              Chọn thời gian mỗi phiên · mặc định 10 phút.
+            </Text>
+          </View>
+          <View
+            testID="review-timebound-duration-settings"
+            style={styles.reviewLimitOptions}
+          >
+            {TIMEBOUND_REVIEW_DURATION_OPTIONS.map((minutes) => {
+              const selected =
+                reviewPreferences.timeboundMinutes === minutes;
+              return (
+                <Pressable
+                  key={minutes}
+                  testID={`review-timebound-duration-${minutes}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${minutes} phút mỗi phiên Timebound`}
+                  accessibilityState={{
+                    selected,
+                    disabled:
+                      !reviewPreferences.ready || reviewPreferences.saving,
+                  }}
+                  onPress={() => {
+                    void reviewPreferences.setTimeboundMinutes(minutes);
+                  }}
+                  disabled={
+                    !reviewPreferences.ready || reviewPreferences.saving
+                  }
+                  style={({ pressed }) => [
+                    styles.reviewLimitOption,
+                    {
+                      backgroundColor: selected ? c.primary : c.secondary,
+                      borderColor: selected ? c.primary : c.border,
+                      opacity: pressed ? 0.78 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.reviewLimitOptionText,
+                      {
+                        color: selected
+                          ? c.primaryForeground
+                          : c.foreground,
+                      },
+                    ]}
+                  >
+                    {minutes} phút
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
             {reviewPreferences.ready
               ? reviewPreferences.saving
                 ? "Đang lưu lựa chọn…"
-                : "Mặc định 100 từ · lưu trên thiết bị."
+                : `Đang chọn ${reviewPreferences.wordLimit} từ · ${reviewPreferences.timeboundMinutes} phút · lưu trên thiết bị.`
               : "Đang tải cài đặt ôn tập…"}
           </Text>
           {reviewPreferences.error ? (

@@ -1,18 +1,23 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  DEFAULT_TIMEBOUND_REVIEW_MINUTES,
   DEFAULT_REVIEW_WORD_LIMIT,
+  isReviewTimeboundMinutes,
   isReviewWordLimit,
   type ReviewWordLimit,
+  type ReviewTimeboundMinutes,
 } from "@/domain/review-modes";
 
 export const REVIEW_PREFERENCES_KEY = "vocabflow.review-preferences.v1";
 
 export type ReviewPreferences = {
   wordLimit: ReviewWordLimit;
+  timeboundMinutes: ReviewTimeboundMinutes;
 };
 
 export const DEFAULT_REVIEW_PREFERENCES: ReviewPreferences = {
   wordLimit: DEFAULT_REVIEW_WORD_LIMIT,
+  timeboundMinutes: DEFAULT_TIMEBOUND_REVIEW_MINUTES,
 };
 
 export async function readReviewPreferences(): Promise<ReviewPreferences> {
@@ -27,17 +32,29 @@ export async function readReviewPreferences(): Promise<ReviewPreferences> {
   ) {
     throw new Error("Cài đặt số từ mỗi phiên ôn tập không hợp lệ.");
   }
-  return { wordLimit: (parsed as ReviewPreferences).wordLimit };
+  const timeboundMinutes =
+    (parsed as Partial<ReviewPreferences>).timeboundMinutes ??
+    DEFAULT_TIMEBOUND_REVIEW_MINUTES;
+  if (!isReviewTimeboundMinutes(timeboundMinutes)) {
+    throw new Error("Cài đặt thời lượng Timebound không hợp lệ.");
+  }
+  return {
+    wordLimit: (parsed as ReviewPreferences).wordLimit,
+    timeboundMinutes,
+  };
 }
 
-export async function writeReviewWordLimit(
-  wordLimit: ReviewWordLimit,
+export async function writeReviewPreferences(
+  preferences: ReviewPreferences,
 ): Promise<void> {
-  if (!isReviewWordLimit(wordLimit)) {
+  if (!isReviewWordLimit(preferences.wordLimit)) {
     throw new Error("Số từ mỗi phiên ôn tập không hợp lệ.");
+  }
+  if (!isReviewTimeboundMinutes(preferences.timeboundMinutes)) {
+    throw new Error("Thời lượng Timebound không hợp lệ.");
   }
   await AsyncStorage.setItem(
     REVIEW_PREFERENCES_KEY,
-    JSON.stringify({ wordLimit }),
+    JSON.stringify(preferences),
   );
 }
