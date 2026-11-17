@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Animated, { SlideInLeft, SlideInRight } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  FadeOut,
+  SlideInLeft,
+  SlideInRight,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import {
   ActivityIndicator,
   Platform,
@@ -24,6 +34,7 @@ import { CorviChestArtwork } from "@/components/CorviChestArtwork";
 import { DailyMissionArtwork } from "@/components/DailyMissionArtwork";
 import CollectionScreen from "../collection";
 import {
+  acknowledgeCorviChestCelebration,
   getDailyMissionOverview,
   type DailyMissionOverview,
 } from "@/data/vocabulary";
@@ -59,6 +70,9 @@ export default function BlankScreen() {
   const scrollBottom = Platform.OS === "web" ? Math.max(bottom, 120) : bottom;
   const top = Platform.OS === "web" ? 67 : insets.top;
   const [overview, setOverview] = useState<DailyMissionOverview | null>(null);
+  const [corviCelebrationIndex, setCorviCelebrationIndex] = useState<
+    number | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +83,14 @@ export default function BlankScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setOverview(await getDailyMissionOverview());
+      const nextOverview = await getDailyMissionOverview();
+      setOverview(nextOverview);
+      if (nextOverview.corviChestCelebrationIndex !== null) {
+        setCorviCelebrationIndex(nextOverview.corviChestCelebrationIndex);
+        await acknowledgeCorviChestCelebration(
+          nextOverview.corviChestCelebrationIndex,
+        );
+      }
       setError(null);
     } catch {
       setError(
@@ -158,6 +179,13 @@ export default function BlankScreen() {
               </View>
             </View>
             <MissionCollectionTabs active="missions" />
+            {corviCelebrationIndex !== null ? (
+              <CorviChestCelebration
+                key={corviCelebrationIndex}
+                colors={c}
+                onDismiss={() => setCorviCelebrationIndex(null)}
+              />
+            ) : null}
             {error ? (
               <ErrorBanner message={error} onRetry={() => void load()} />
             ) : null}
@@ -485,6 +513,88 @@ export default function BlankScreen() {
   );
 }
 
+function CorviChestCelebration({
+  colors,
+  onDismiss,
+}: {
+  colors: ReturnType<typeof useColors>;
+  onDismiss: () => void;
+}) {
+  const chestScale = useSharedValue(0.7);
+  const chestRotation = useSharedValue(-12);
+  const lidProgress = useSharedValue(0);
+  const chestMotion = useAnimatedStyle(() => ({
+    transform: [
+      { scale: chestScale.value },
+      { rotate: `${chestRotation.value}deg` },
+    ],
+  }));
+
+  useEffect(() => {
+    chestScale.value = withSequence(
+      withTiming(0.7, { duration: 1 }),
+      withSpring(1.12),
+      withSpring(1),
+    );
+    chestRotation.value = withSequence(
+      withTiming(-12, { duration: 1 }),
+      withSpring(0),
+      withTiming(5, { duration: 100 }),
+      withSpring(0),
+    );
+    lidProgress.value = withSequence(
+      withTiming(0, { duration: 1 }),
+      withSpring(1, { damping: 11, stiffness: 150 }),
+    );
+  }, [chestRotation, chestScale, lidProgress]);
+
+  return (
+    <Animated.View
+      testID="corvi-chest-celebration"
+      accessibilityLiveRegion="polite"
+      entering={FadeInDown.duration(320)}
+      exiting={FadeOut.duration(180)}
+      style={[
+        styles.corviCelebrationCard,
+        { backgroundColor: colors.successSoft, borderColor: colors.success },
+      ]}
+    >
+      <Animated.View style={[styles.corviCelebrationChest, chestMotion]}>
+        <ChestTierArtwork
+          rarity="legendary"
+          size={66}
+          lidProgress={lidProgress}
+          sparkle
+        />
+      </Animated.View>
+      <View style={styles.corviCelebrationCopy}>
+        <Text
+          testID="corvi-chest-celebration-title"
+          style={[styles.corviCelebrationTitle, { color: colors.successText }]}
+        >
+          Rương Corvi đã mở!
+        </Text>
+        <Text
+          testID="corvi-chest-celebration-reward"
+          style={[styles.corviCelebrationReward, { color: colors.foreground }]}
+        >
+          +{CORVI_CHEST_STONE_REWARD.toLocaleString("vi-VN")} Stone
+        </Text>
+      </View>
+      <Pressable
+        testID="dismiss-corvi-chest-celebration"
+        accessibilityRole="button"
+        accessibilityLabel="Đóng thông báo rương Corvi"
+        onPress={onDismiss}
+        hitSlop={10}
+        style={styles.corviCelebrationDismiss}
+      >
+        <Feather name="x" size={18} color={colors.successText} />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 function ChestCard({
   chest,
   colors,
@@ -666,6 +776,33 @@ const styles = StyleSheet.create({
   corviProgressFill: { height: 9, borderRadius: 5 },
   corviProgressHint: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
   corviProgressLatest: { fontFamily: F.s, fontSize: 12, lineHeight: 16 },
+  corviCelebrationCard: {
+    position: "relative",
+    overflow: "hidden",
+    minHeight: 92,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  corviCelebrationChest: {
+    width: 68,
+    height: 68,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  corviCelebrationCopy: { flex: 1, minWidth: 0, gap: 5 },
+  corviCelebrationTitle: { fontFamily: F.b, fontSize: 16 },
+  corviCelebrationReward: { fontFamily: F.s, fontSize: 15 },
+  corviCelebrationDismiss: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   missionTop: {
     flex: 1,
     flexDirection: "row",

@@ -8,8 +8,12 @@ const {
   evaluateDailyMissions,
   isDailyReviewGradeQualified,
 } = loadTs(join(__dirname, "../domain/daily-missions.ts"));
-const { CHEST_RARITY_COLORS, CHEST_RARITY_LABELS, CHEST_RARITY_TEXT_COLORS } =
-  loadTs(join(__dirname, "../domain/mission-chests.ts"));
+const {
+  CHEST_RARITY_COLORS,
+  CHEST_RARITY_LABELS,
+  CHEST_RARITY_TEXT_COLORS,
+  corviChestMilestoneCrossed,
+} = loadTs(join(__dirname, "../domain/mission-chests.ts"));
 
 assert.deepEqual(
   [1, 2, 3].map(
@@ -36,6 +40,9 @@ assert.equal(
   3,
   "Each mission chest tier has a distinct metallic edge.",
 );
+assert.equal(corviChestMilestoneCrossed(14, 15), 1);
+assert.equal(corviChestMilestoneCrossed(15, 16), null);
+assert.equal(corviChestMilestoneCrossed(14, 14), null);
 const missionScreen = readFileSync(
   join(__dirname, "../app/(tabs)/blank.tsx"),
   "utf8",
@@ -57,6 +64,19 @@ assert.match(
   missionScreen,
   /<MissionCollectionTabs active="missions" \/>/,
   "The missions tab remains selected in the daily-missions panel.",
+);
+assert.match(
+  missionScreen,
+  /<CorviChestCelebration[\s\S]*?onDismiss=\{\(\) => setCorviCelebrationIndex\(null\)\}/,
+  "The celebration appears inline and can be dismissed without blocking missions.",
+);
+assert.match(missionScreen, /testID="corvi-chest-celebration"/);
+assert.match(missionScreen, /corviChestCelebrationIndex/);
+assert.match(missionScreen, /acknowledgeCorviChestCelebration/);
+assert.match(missionScreen, /Rương Corvi đã mở!/);
+assert.match(
+  missionScreen,
+  /\+\{CORVI_CHEST_STONE_REWARD\.toLocaleString\("vi-VN"\)\} Stone/,
 );
 assert.match(
   collectionScreen,

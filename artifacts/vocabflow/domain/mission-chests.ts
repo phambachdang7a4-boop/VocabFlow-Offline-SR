@@ -11,6 +11,27 @@ export const CORVI_CHEST_FRAGMENT_COST = 15;
 export const CORVI_CHEST_STONE_REWARD = 2000;
 export const MAX_TAP_CHEST_RARITY: ChestRarity = "epic";
 
+export function corviChestMilestoneCrossed(
+  previousFragments: number,
+  currentFragments: number,
+): number | null {
+  if (
+    !Number.isSafeInteger(previousFragments) ||
+    !Number.isSafeInteger(currentFragments) ||
+    previousFragments < 0 ||
+    currentFragments < previousFragments
+  ) {
+    return null;
+  }
+  const previousChestCount = Math.floor(
+    previousFragments / CORVI_CHEST_FRAGMENT_COST,
+  );
+  const currentChestCount = Math.floor(
+    currentFragments / CORVI_CHEST_FRAGMENT_COST,
+  );
+  return currentChestCount > previousChestCount ? currentChestCount : null;
+}
+
 export const CHEST_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Copper",
   uncommon: "Silver",

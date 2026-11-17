@@ -118,7 +118,7 @@ const timeHarness = createRepository(timeRoot, `${timeDay}T12:00:00`);
 const comboRoot = mkdtempSync(join(tmpdir(), "vocabflow-combo-mission-"));
 const comboHarness = createRepository(comboRoot, `${comboDay}T12:00:00`);
 const corviRoot = mkdtempSync(join(tmpdir(), "vocabflow-corvi-progress-"));
-const corviHarness = createRepository(corviRoot, `${corviDay}T12:00:00`);
+let corviHarness = createRepository(corviRoot, `${corviDay}T12:00:00`);
 const retryRoot = mkdtempSync(join(tmpdir(), "vocabflow-chest-retry-"));
 const retryHarness = createRepository(retryRoot, "2099-01-01T12:00:00");
 const migrationRoot = mkdtempSync(join(tmpdir(), "vocabflow-chest-reopen-"));
@@ -723,6 +723,11 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       missionChests.CORVI_CHEST_STONE_REWARD,
     );
     assert.equal(
+      corviOverview.corviChestCelebrationIndex,
+      1,
+      "The newly earned chest queues its celebration until the mission screen displays it.",
+    );
+    assert.equal(
       corviOverview.stoneBalance,
       missionChests.CORVI_CHEST_STONE_REWARD,
     );
@@ -752,6 +757,23 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     const repeatedCorviOverview =
       await corviHarness.repo.getDailyMissionOverview(corviDay);
     assert.equal(repeatedCorviOverview.corviChestsOpened, 1);
+    await corviHarness.repo.acknowledgeCorviChestCelebration(1);
+    const acknowledgedCorviOverview =
+      await corviHarness.repo.getDailyMissionOverview(corviDay);
+    assert.equal(
+      acknowledgedCorviOverview.corviChestCelebrationIndex,
+      null,
+      "Acknowledging the animation prevents it from replaying after reload.",
+    );
+    corviHarness.db.close();
+    corviHarness = createRepository(corviRoot, `${corviDay}T12:00:00`);
+    const reloadedCorviOverview =
+      await corviHarness.repo.getDailyMissionOverview(corviDay);
+    assert.equal(
+      reloadedCorviOverview.corviChestCelebrationIndex,
+      null,
+      "The acknowledged celebration remains consumed after reopening the database.",
+    );
     assert.equal(
       repeatedCorviOverview.stoneBalance,
       missionChests.CORVI_CHEST_STONE_REWARD,

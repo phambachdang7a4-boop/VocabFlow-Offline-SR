@@ -28,6 +28,7 @@ import {
 import {
   CORVI_CHEST_FRAGMENT_COST,
   CORVI_CHEST_STONE_REWARD,
+  corviChestMilestoneCrossed,
   MAX_TAP_CHEST_RARITY,
   chestFragmentReward,
   chestTotalStoneReward,
@@ -76,6 +77,8 @@ let connection: Promise<SQLiteDatabase> | undefined;
 let databaseScope: string | null = null;
 const syncListeners = new Set<() => void>();
 const syncAppliedListeners = new Set<() => void>();
+const CORVI_CHEST_CELEBRATION_PENDING_KEY =
+  "corvi_chest_celebration_pending";
 
 export interface DailyMissionOverview {
   day: string;
@@ -85,6 +88,7 @@ export interface DailyMissionOverview {
   corviFragments: number;
   corviChestsOpened: number;
   corviLatestStoneReward: number | null;
+  corviChestCelebrationIndex: number | null;
 }
 
 export interface MissionCollectionOverview {
@@ -1339,6 +1343,10 @@ async function grantDailyMissionChests(
 ): Promise<boolean> {
   const now = new Date().toISOString();
   let changed = await migrateUntouchedMissionChests(db, now);
+  const fragmentsBefore = await db.getFirstAsync<{ count: number | null }>(
+    "SELECT COUNT(*) AS count FROM corvi_fragment_awards",
+  );
+  let awardedFragmentLocally = false;
   const [activity, awards, chests] = await Promise.all([
     readDailyMissionActivity(db, day),
     db.getAllAsync<DailyMissionAward>(
@@ -1390,15 +1398,32 @@ async function grantDailyMissionChests(
         now,
       );
       changed ||= fragmentAward.changes === 1;
+      awardedFragmentLocally ||= fragmentAward.changes === 1;
     }
   }
-  changed ||= await grantCorviChestRewards(db, now);
+  let newlyOpenedChestIndex: number | null = null;
+  if (awardedFragmentLocally) {
+    const fragmentsAfter = await db.getFirstAsync<{ count: number | null }>(
+      "SELECT COUNT(*) AS count FROM corvi_fragment_awards",
+    );
+    newlyOpenedChestIndex = corviChestMilestoneCrossed(
+      fragmentsBefore?.count ?? 0,
+      fragmentsAfter?.count ?? 0,
+    );
+  }
+  const corviRewardsChanged = await grantCorviChestRewards(
+    db,
+    now,
+    newlyOpenedChestIndex,
+  );
+  changed ||= corviRewardsChanged;
   return changed;
 }
 
 async function grantCorviChestRewards(
   db: SQLiteDatabase,
   now: string,
+  celebrationIndex: number | null,
 ): Promise<boolean> {
   const fragmentCount = await db.getFirstAsync<{ count: number | null }>(
     "SELECT COUNT(*) AS count FROM corvi_fragment_awards",
@@ -1418,6 +1443,14 @@ async function grantCorviChestRewards(
       CORVI_CHEST_STONE_REWARD,
       now,
     );
+    if (reward.changes === 1 && chestIndex === celebrationIndex) {
+      await db.runAsync(
+        `INSERT INTO sync_state (key, value) VALUES (?, ?)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+        CORVI_CHEST_CELEBRATION_PENDING_KEY,
+        String(chestIndex),
+      );
+    }
     const statueCraft = await db.getFirstAsync<{ craftId: string }>(
       "SELECT craft_id AS craftId FROM collection_crafts WHERE craft_id = ?",
       `${COLLECTION_CYCLE_PREFIX}corvi-${chestId}`,
@@ -1436,10 +1469,14 @@ async function readCorviChestProgress(
 ): Promise<
   Pick<
     DailyMissionOverview,
-    "corviFragments" | "corviChestsOpened" | "corviLatestStoneReward"
+    | "corviFragments"
+    | "corviChestsOpened"
+    | "corviLatestStoneReward"
+    | "corviChestCelebrationIndex"
   >
 > {
-  const [fragmentCount, chestCount, latestReward] = await Promise.all([
+  const [fragmentCount, chestCount, latestReward, celebration] =
+    await Promise.all([
     db.getFirstAsync<{ count: number | null }>(
       "SELECT COUNT(*) AS count FROM corvi_fragment_awards",
     ),
@@ -1449,9 +1486,14 @@ async function readCorviChestProgress(
     db.getFirstAsync<{ stone: number }>(
       "SELECT stone FROM corvi_chest_rewards ORDER BY chest_index DESC LIMIT 1",
     ),
+    db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM sync_state WHERE key = ?",
+      CORVI_CHEST_CELEBRATION_PENDING_KEY,
+    ),
   ]);
   const totalFragments = fragmentCount?.count ?? 0;
   const openedCount = chestCount?.count ?? 0;
+  const celebrationIndex = Number(celebration?.value);
   return {
     corviFragments: Math.max(
       0,
@@ -1459,7 +1501,27 @@ async function readCorviChestProgress(
     ),
     corviChestsOpened: openedCount,
     corviLatestStoneReward: latestReward?.stone ?? null,
+    corviChestCelebrationIndex:
+      Number.isSafeInteger(celebrationIndex) && celebrationIndex > 0
+        ? celebrationIndex
+        : null,
   };
+}
+
+export function acknowledgeCorviChestCelebration(
+  chestIndex: number,
+): Promise<void> {
+  if (!Number.isSafeInteger(chestIndex) || chestIndex < 1) {
+    return Promise.resolve();
+  }
+  return serialize(async () => {
+    const db = await database();
+    await db.runAsync(
+      "DELETE FROM sync_state WHERE key = ? AND value = ?",
+      CORVI_CHEST_CELEBRATION_PENDING_KEY,
+      String(chestIndex),
+    );
+  });
 }
 
 async function migrateUntouchedMissionChests(
