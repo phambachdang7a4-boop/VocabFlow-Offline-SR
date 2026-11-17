@@ -1,0 +1,2560 @@
+{
+  "model": "gpt-5.6-luna",
+  "entries": [
+    {
+      "term": "baffle",
+      "definition": "Khiến ai đó bối rối hoặc không thể hiểu hay giải thích một điều gì.",
+      "example": "Unclear feedback can baffle participants and distort their judgments about personal performance.",
+      "exampleTranslation": "Phản hồi không rõ ràng có thể khiến người tham gia bối rối và làm sai lệch đánh giá của họ về năng lực cá nhân.",
+      "pos": "V"
+    },
+    {
+      "term": "contemplate",
+      "definition": "Suy ngẫm hoặc cân nhắc kỹ về một vấn đề hay khả năng nào đó.",
+      "example": "Participants were asked to contemplate how social pressure influences their everyday decisions.",
+      "exampleTranslation": "Những người tham gia được yêu cầu suy ngẫm về cách áp lực xã hội ảnh hưởng đến các quyết định hằng ngày của họ.",
+      "pos": "V"
+    },
+    {
+      "term": "deliberate",
+      "definition": "Được cân nhắc kỹ lưỡng và thực hiện có chủ ý, không phải tình cờ.",
+      "example": "The researchers made a deliberate effort to separate genuine preferences from social expectations.",
+      "exampleTranslation": "Các nhà nghiên cứu đã cố ý nỗ lực phân biệt sở thích thực sự với những kỳ vọng xã hội.",
+      "pos": "A"
+    },
+    {
+      "term": "dubious",
+      "definition": "Đáng ngờ hoặc không chắc chắn, khiến người ta khó tin tưởng hay chấp nhận.",
+      "example": "Because the sample was small, the apparent relationship between stress and memory remained dubious.",
+      "exampleTranslation": "Vì mẫu nghiên cứu nhỏ, mối quan hệ có vẻ tồn tại giữa căng thẳng và trí nhớ vẫn còn đáng ngờ.",
+      "pos": "A"
+    },
+    {
+      "term": "guesswork",
+      "definition": "Việc đưa ra phán đoán hoặc kết luận chủ yếu dựa trên phỏng đoán thay vì bằng chứng.",
+      "example": "Without reliable evidence, identifying the cause of anxiety becomes largely guesswork.",
+      "exampleTranslation": "Nếu không có bằng chứng đáng tin cậy, việc xác định nguyên nhân của sự lo âu phần lớn trở thành phỏng đoán.",
+      "pos": "N"
+    },
+    {
+      "term": "ponder",
+      "definition": "Suy nghĩ cẩn thận và cân nhắc sâu sắc về một vấn đề.",
+      "example": "Participants were given time to ponder the emotional consequences of the proposed decision.",
+      "exampleTranslation": "Những người tham gia được dành thời gian để cân nhắc các hệ quả cảm xúc của quyết định được đề xuất.",
+      "pos": "V"
+    },
+    {
+      "term": "prejudiced",
+      "definition": "Có hoặc thể hiện thành kiến, thường đánh giá người khác một cách thiếu công bằng.",
+      "example": "Prejudiced observers may interpret identical behaviours differently because of unconscious assumptions.",
+      "exampleTranslation": "Những người quan sát có thành kiến có thể diễn giải những hành vi giống hệt nhau theo cách khác nhau do các giả định vô thức.",
+      "pos": "A"
+    },
+    {
+      "term": "presume",
+      "definition": "Cho rằng điều gì đó là đúng dựa trên khả năng hoặc bằng chứng hiện có, dù chưa chắc chắn.",
+      "example": "Researchers should not presume that silence indicates agreement in culturally diverse groups.",
+      "exampleTranslation": "Các nhà nghiên cứu không nên cho rằng im lặng thể hiện sự đồng ý trong những nhóm đa dạng về văn hóa.",
+      "pos": "V"
+    },
+    {
+      "term": "query",
+      "definition": "câu hỏi hoặc yêu cầu thông tin, đặc biệt trong một cuộc khảo sát hay nghiên cứu",
+      "example": "The study used a brief query to assess participants’ beliefs about personal control.",
+      "exampleTranslation": "Nghiên cứu sử dụng một câu hỏi ngắn để đánh giá niềm tin của những người tham gia về khả năng kiểm soát bản thân.",
+      "pos": "N"
+    },
+    {
+      "term": "ascribe",
+      "definition": "quy hoặc gán một nguyên nhân, đặc điểm hay kết quả cho ai hoặc điều gì",
+      "example": "Participants often ascribe failure to external circumstances rather than to limited effort.",
+      "exampleTranslation": "Những người tham gia thường quy thất bại cho hoàn cảnh bên ngoài thay vì cho sự nỗ lực hạn chế.",
+      "pos": "V"
+    },
+    {
+      "term": "cause",
+      "definition": "nguyên nhân tạo ra một sự việc, trạng thái hoặc hành vi",
+      "example": "Identifying the cause of anxiety can help researchers distinguish triggers from underlying vulnerabilities.",
+      "exampleTranslation": "Việc xác định nguyên nhân của sự lo âu có thể giúp các nhà nghiên cứu phân biệt yếu tố kích hoạt với những điểm dễ tổn thương tiềm ẩn.",
+      "pos": "N"
+    },
+    {
+      "term": "curse",
+      "definition": "điều gây khổ sở hoặc ảnh hưởng tiêu cực kéo dài đối với một người",
+      "example": "For some patients, chronic self-doubt becomes a curse that reinforces avoidance.",
+      "exampleTranslation": "Đối với một số bệnh nhân, sự nghi ngờ bản thân dai dẳng trở thành một gánh nặng củng cố hành vi né tránh.",
+      "pos": "N"
+    },
+    {
+      "term": "fluctuate",
+      "definition": "thay đổi không ổn định, thường xuyên tăng giảm theo thời gian hoặc hoàn cảnh",
+      "example": "Mood levels may fluctuate in response to sleep quality, social interaction, and perceived stress.",
+      "exampleTranslation": "Mức độ tâm trạng có thể dao động tùy theo chất lượng giấc ngủ, tương tác xã hội và căng thẳng được cảm nhận.",
+      "pos": "V"
+    },
+    {
+      "term": "gamble",
+      "definition": "liều lĩnh hành động hoặc quyết định khi có nguy cơ chịu tổn thất lớn",
+      "example": "Some individuals gamble with their wellbeing when immediate rewards outweigh perceived long-term risks.",
+      "exampleTranslation": "Một số người liều lĩnh đánh đổi sức khỏe của mình khi phần thưởng trước mắt có vẻ lớn hơn những rủi ro dài hạn được nhận thức.",
+      "pos": "V"
+    },
+    {
+      "term": "haphazard",
+      "definition": "thiếu kế hoạch hoặc trật tự, diễn ra một cách ngẫu nhiên và không có hệ thống",
+      "example": "Haphazard decision-making often reflects cognitive overload rather than stable personal preferences.",
+      "exampleTranslation": "Việc ra quyết định thiếu hệ thống thường phản ánh tình trạng quá tải nhận thức hơn là những sở thích cá nhân ổn định.",
+      "pos": "A"
+    },
+    {
+      "term": "inadvertent",
+      "definition": "xảy ra hoặc được thực hiện mà không cố ý, thường do sơ suất hoặc thiếu chú ý",
+      "example": "An inadvertent comment may influence participants’ responses during a sensitive psychological interview.",
+      "exampleTranslation": "Một lời nhận xét vô ý có thể ảnh hưởng đến câu trả lời của những người tham gia trong một cuộc phỏng vấn tâm lý nhạy cảm.",
+      "pos": "A"
+    },
+    {
+      "term": "jinxed",
+      "definition": "Bị cho là mang lại điều không may hoặc bị vận rủi ám ảnh.",
+      "example": "Participants avoided the supposedly jinxed button, even when researchers explained it was harmless.",
+      "exampleTranslation": "Những người tham gia tránh nút bấm bị cho là xui xẻo, ngay cả khi các nhà nghiên cứu giải thích rằng nó vô hại.",
+      "pos": "A"
+    },
+    {
+      "term": "lucky charm",
+      "definition": "Vật được tin là mang lại may mắn hoặc giúp xua đuổi điều không may.",
+      "example": "For some participants, a lucky charm reduced anxiety before challenging memory tests.",
+      "exampleTranslation": "Đối với một số người tham gia, một vật may mắn làm giảm lo âu trước các bài kiểm tra trí nhớ khó.",
+      "pos": "N"
+    },
+    {
+      "term": "mishap",
+      "definition": "Sự cố hoặc tai nạn nhỏ, thường gây bất tiện nhưng không nghiêm trọng.",
+      "example": "The minor mishap disrupted the experiment but did not affect participants’ final responses.",
+      "exampleTranslation": "Sự cố nhỏ đã làm gián đoạn thí nghiệm nhưng không ảnh hưởng đến câu trả lời cuối cùng của những người tham gia.",
+      "pos": "N"
+    },
+    {
+      "term": "odds",
+      "definition": "Khả năng hoặc xác suất tương đối để một sự việc xảy ra hoặc thành công.",
+      "example": "People often overestimate their odds of success after recalling a few lucky outcomes.",
+      "exampleTranslation": "Mọi người thường đánh giá quá cao khả năng thành công của mình sau khi nhớ lại một vài kết quả may mắn.",
+      "pos": "N"
+    },
+    {
+      "term": "pot luck",
+      "definition": "Sự việc hoặc kết quả phụ thuộc vào may rủi, không được sắp xếp hay lựa chọn trước.",
+      "example": "Without a schedule, assigning tasks by pot luck can create perceptions of unfairness.",
+      "exampleTranslation": "Nếu không có lịch trình, việc phân công nhiệm vụ theo may rủi có thể tạo ra cảm giác bất công.",
+      "pos": "N"
+    },
+    {
+      "term": "startle",
+      "definition": "Làm ai đó giật mình hoặc hoảng hốt vì một kích thích bất ngờ.",
+      "example": "Sudden movements can startle observers and temporarily disrupt their attention.",
+      "exampleTranslation": "Những chuyển động đột ngột có thể làm người quan sát giật mình và tạm thời làm gián đoạn sự chú ý của họ.",
+      "pos": "V"
+    },
+    {
+      "term": "superstitious",
+      "definition": "Tin vào những niềm tin hoặc tập tục phi lý liên quan đến may rủi và điềm báo.",
+      "example": "Superstitious beliefs may influence decisions even when people recognize their irrationality.",
+      "exampleTranslation": "Những niềm tin mê tín có thể ảnh hưởng đến quyết định ngay cả khi mọi người nhận ra tính phi lý của chúng.",
+      "pos": "A"
+    },
+    {
+      "term": "transpire",
+      "definition": "Về sau được biết hoặc trở nên rõ ràng rằng một sự việc đã xảy ra theo cách nào đó.",
+      "example": "It later transpired that participants had misunderstood the instructions, weakening the study’s conclusions.",
+      "exampleTranslation": "Về sau người ta mới biết rằng những người tham gia đã hiểu sai hướng dẫn, làm suy yếu các kết luận của nghiên cứu.",
+      "pos": "V"
+    },
+    {
+      "term": "agonise",
+      "definition": "Lo lắng, khắc khoải hoặc vật lộn đau đớn về một vấn đề khó khăn.",
+      "example": "Researchers agonise over how social pressure shapes adolescents’ decisions and emotional responses.",
+      "exampleTranslation": "Các nhà nghiên cứu trăn trở về cách áp lực xã hội định hình quyết định và phản ứng cảm xúc của thanh thiếu niên.",
+      "pos": "V"
+    },
+    {
+      "term": "apathy",
+      "definition": "Trạng thái thờ ơ, thiếu quan tâm hoặc thiếu động lực đối với sự việc xung quanh.",
+      "example": "Persistent apathy can prevent patients from participating actively in their own recovery.",
+      "exampleTranslation": "Sự thờ ơ kéo dài có thể khiến bệnh nhân không tích cực tham gia vào quá trình hồi phục của chính họ.",
+      "pos": "N"
+    },
+    {
+      "term": "chuckle",
+      "definition": "Tiếng cười khẽ, thường thể hiện sự thích thú hoặc hài lòng.",
+      "example": "The participant gave a quiet chuckle when recalling the experiment’s unexpected outcome.",
+      "exampleTranslation": "Người tham gia khẽ cười khi nhớ lại kết quả bất ngờ của thí nghiệm.",
+      "pos": "N"
+    },
+    {
+      "term": "contentment",
+      "definition": "Trạng thái hài lòng và mãn nguyện với hoàn cảnh hiện tại.",
+      "example": "Contentment often increases when people develop realistic expectations about their daily lives.",
+      "exampleTranslation": "Sự mãn nguyện thường tăng lên khi con người hình thành những kỳ vọng thực tế về cuộc sống hằng ngày.",
+      "pos": "N"
+    },
+    {
+      "term": "dignity",
+      "definition": "Phẩm giá và lòng tự trọng vốn có, thể hiện qua cách một người được đối xử hoặc hành xử.",
+      "example": "Maintaining dignity is essential when psychological treatment involves highly personal information.",
+      "exampleTranslation": "Việc duy trì phẩm giá là điều thiết yếu khi điều trị tâm lý liên quan đến thông tin rất riêng tư.",
+      "pos": "N"
+    },
+    {
+      "term": "disgust",
+      "definition": "Làm cho ai cảm thấy ghê tởm, kinh tởm hoặc vô cùng chán ghét.",
+      "example": "Cruel treatment can disgust observers when suffering is publicly ignored.",
+      "exampleTranslation": "Sự đối xử tàn nhẫn có thể khiến người chứng kiến ghê tởm khi nỗi đau bị công khai phớt lờ.",
+      "pos": "V"
+    },
+    {
+      "term": "disillusioned",
+      "definition": "Vỡ mộng và thất vọng vì nhận ra rằng người hoặc điều mình tin tưởng không như kỳ vọng.",
+      "example": "Many volunteers felt disillusioned after promised reforms failed to improve services.",
+      "exampleTranslation": "Nhiều tình nguyện viên cảm thấy vỡ mộng sau khi những cải cách được hứa hẹn không cải thiện dịch vụ.",
+      "pos": "A"
+    },
+    {
+      "term": "fed up",
+      "definition": "Cảm thấy chán ngán hoặc không thể chịu đựng thêm một tình trạng khó chịu nào đó.",
+      "example": "Residents became fed up with repeated delays in essential public transport services.",
+      "exampleTranslation": "Cư dân trở nên chán ngán vì những lần trì hoãn liên tiếp trong các dịch vụ giao thông công cộng thiết yếu.",
+      "pos": "other"
+    },
+    {
+      "term": "giggle",
+      "definition": "Cười khúc khích, thường do thích thú, bối rối hoặc hồi hộp.",
+      "example": "Children may giggle when unfamiliar adults ask them direct questions.",
+      "exampleTranslation": "Trẻ em có thể cười khúc khích khi người lớn không quen hỏi chúng những câu hỏi trực tiếp.",
+      "pos": "V"
+    },
+    {
+      "term": "gloat",
+      "definition": "Hả hê hoặc khoái chí trước thất bại hay bất hạnh của người khác.",
+      "example": "Some individuals gloat over rivals’ failures because comparison strengthens their self-esteem.",
+      "exampleTranslation": "Một số người hả hê trước thất bại của đối thủ vì sự so sánh củng cố lòng tự trọng của họ.",
+      "pos": "V"
+    },
+    {
+      "term": "glum",
+      "definition": "Ủ rũ, buồn bã và thiếu hứng thú hoặc hy vọng.",
+      "example": "Participants appeared glum after learning that the experiment had produced inconclusive results.",
+      "exampleTranslation": "Những người tham gia có vẻ ủ rũ sau khi biết thí nghiệm cho kết quả không có tính kết luận.",
+      "pos": "A"
+    },
+    {
+      "term": "grimace",
+      "definition": "Nhăn mặt để biểu lộ đau đớn, khó chịu hoặc cảm xúc tiêu cực.",
+      "example": "Patients often grimace when researchers ask them to recall distressing experiences.",
+      "exampleTranslation": "Bệnh nhân thường nhăn mặt khi các nhà nghiên cứu yêu cầu họ nhớ lại những trải nghiệm đau buồn.",
+      "pos": "V"
+    },
+    {
+      "term": "impatient",
+      "definition": "Thiếu kiên nhẫn, dễ sốt ruột khi phải chờ đợi hoặc chịu đựng sự chậm trễ.",
+      "example": "Impatient participants were more likely to abandon the task before completing it.",
+      "exampleTranslation": "Những người tham gia thiếu kiên nhẫn có nhiều khả năng bỏ nhiệm vụ trước khi hoàn thành.",
+      "pos": "A"
+    },
+    {
+      "term": "inertia",
+      "definition": "Tính trì trệ khiến một người khó bắt đầu hành động hoặc thay đổi thói quen.",
+      "example": "Psychological inertia can prevent people from adopting healthier daily routines.",
+      "exampleTranslation": "Tính trì trệ tâm lý có thể ngăn mọi người hình thành những thói quen hằng ngày lành mạnh hơn.",
+      "pos": "N"
+    },
+    {
+      "term": "manners",
+      "definition": "Những quy tắc ứng xử lịch sự được xã hội hoặc một nhóm chấp nhận.",
+      "example": "Children usually learn manners by observing and imitating adults in their community.",
+      "exampleTranslation": "Trẻ em thường học phép lịch sự bằng cách quan sát và bắt chước người lớn trong cộng đồng của chúng.",
+      "pos": "N"
+    },
+    {
+      "term": "manoeuvre",
+      "definition": "Hành động hoặc chiến thuật được thực hiện khéo léo để đạt mục tiêu, đôi khi nhằm gây ảnh hưởng đến người khác.",
+      "example": "The negotiation manoeuvre allowed the manager to reduce conflict without appearing weak.",
+      "exampleTranslation": "Chiến thuật đàm phán đó cho phép người quản lý giảm xung đột mà không tỏ ra yếu thế.",
+      "pos": "N"
+    },
+    {
+      "term": "moan",
+      "definition": "Than vãn hoặc rên rỉ để bộc lộ sự đau đớn, khó chịu hay không hài lòng.",
+      "example": "Participants may moan about difficult tasks when stress reduces their willingness to persist.",
+      "exampleTranslation": "Người tham gia có thể than vãn về những nhiệm vụ khó khi căng thẳng làm giảm sự sẵn lòng kiên trì của họ.",
+      "pos": "V"
+    },
+    {
+      "term": "mock",
+      "definition": "Chế giễu hoặc bắt chước ai đó một cách khinh miệt, thường gây tổn thương cảm xúc.",
+      "example": "Children may mock unfamiliar accents when they have not learned cultural empathy.",
+      "exampleTranslation": "Trẻ em có thể chế giễu những giọng nói xa lạ khi chúng chưa học được sự đồng cảm văn hóa.",
+      "pos": "V"
+    },
+    {
+      "term": "peep",
+      "definition": "Một cái nhìn lén hoặc thoáng qua, thường được thực hiện qua khe hẹp hay từ nơi kín đáo.",
+      "example": "A brief peep through the doorway revealed the child's anxious facial expression.",
+      "exampleTranslation": "Một cái nhìn thoáng qua qua ô cửa cho thấy nét mặt lo lắng của đứa trẻ.",
+      "pos": "N"
+    },
+    {
+      "term": "rejoice",
+      "definition": "Cảm thấy hoặc thể hiện niềm vui lớn trước một sự kiện hay kết quả tích cực.",
+      "example": "Families often rejoice when long-term treatment produces measurable improvements in wellbeing.",
+      "exampleTranslation": "Các gia đình thường vui mừng khi việc điều trị dài hạn tạo ra những cải thiện rõ rệt về sức khỏe tinh thần.",
+      "pos": "V"
+    },
+    {
+      "term": "resent",
+      "definition": "Cảm thấy oán giận hoặc bực bội vì bị đối xử bất công hay bị tước mất điều gì.",
+      "example": "Employees may resent constant monitoring because it suggests that managers distrust them.",
+      "exampleTranslation": "Nhân viên có thể bực bội trước việc bị giám sát liên tục vì điều đó cho thấy các quản lý không tin tưởng họ.",
+      "pos": "V"
+    },
+    {
+      "term": "resolute",
+      "definition": "Kiên quyết và không dễ bị lay chuyển trong việc theo đuổi một mục tiêu.",
+      "example": "Resolute patients are more likely to continue rehabilitation despite slow initial progress.",
+      "exampleTranslation": "Những bệnh nhân kiên quyết có nhiều khả năng tiếp tục phục hồi chức năng dù tiến bộ ban đầu chậm.",
+      "pos": "A"
+    },
+    {
+      "term": "smirk",
+      "definition": "Cười nhếch mép, thường thể hiện sự tự mãn, khinh miệt hoặc thích thú kín đáo.",
+      "example": "Some participants smirk when recalling situations in which they outperformed their rivals.",
+      "exampleTranslation": "Một số người tham gia cười nhếch mép khi nhớ lại những tình huống họ vượt trội hơn đối thủ.",
+      "pos": "V"
+    },
+    {
+      "term": "adore",
+      "definition": "Hết sức yêu thích hoặc yêu quý một người, vật hay hoạt động nào đó.",
+      "example": "Young children may adore familiar stories because repetition provides emotional security.",
+      "exampleTranslation": "Trẻ nhỏ có thể rất yêu thích những câu chuyện quen thuộc vì sự lặp lại đem lại cảm giác an toàn về mặt cảm xúc.",
+      "pos": "V"
+    },
+    {
+      "term": "arbitrary",
+      "definition": "được quyết định tùy ý, không dựa trên nguyên tắc hoặc lý do rõ ràng",
+      "example": "Researchers found that arbitrary rewards reduced participants' trust in the decision-making process.",
+      "exampleTranslation": "Các nhà nghiên cứu phát hiện rằng những phần thưởng được trao tùy ý làm giảm niềm tin của người tham gia vào quá trình ra quyết định.",
+      "pos": "A"
+    },
+    {
+      "term": "dedicated",
+      "definition": "tận tâm và hết lòng với một người, mục tiêu hoặc nhiệm vụ",
+      "example": "Dedicated caregivers often recognize subtle emotional changes before formal assessments detect them.",
+      "exampleTranslation": "Những người chăm sóc tận tâm thường nhận ra các thay đổi cảm xúc tinh tế trước khi các đánh giá chính thức phát hiện ra chúng.",
+      "pos": "A"
+    },
+    {
+      "term": "envy",
+      "definition": "cảm giác không vui hoặc bất mãn vì người khác có điều mình mong muốn",
+      "example": "Social envy can motivate people to compare their achievements with those of peers.",
+      "exampleTranslation": "Sự đố kỵ trong xã hội có thể thúc đẩy con người so sánh thành tích của mình với thành tích của bạn bè đồng trang lứa.",
+      "pos": "N"
+    },
+    {
+      "term": "inclined",
+      "definition": "có khuynh hướng hoặc thiên về một hành động, ý kiến hay cách phản ứng nào đó",
+      "example": "Adolescents inclined toward risk-taking may underestimate long-term consequences during emotional decision-making.",
+      "exampleTranslation": "Thanh thiếu niên có khuynh hướng chấp nhận rủi ro có thể đánh giá thấp những hậu quả lâu dài khi đưa ra quyết định theo cảm xúc.",
+      "pos": "A"
+    },
+    {
+      "term": "liking",
+      "definition": "sự yêu thích hoặc thiện cảm đối với một người, vật hay hoạt động",
+      "example": "A child's liking for predictable routines can reduce anxiety in unfamiliar environments.",
+      "exampleTranslation": "Sự yêu thích các thói quen có thể đoán trước của trẻ có thể làm giảm lo âu trong những môi trường xa lạ.",
+      "pos": "N"
+    },
+    {
+      "term": "mediocre",
+      "definition": "chỉ ở mức trung bình, không nổi bật hoặc không đạt chất lượng cao",
+      "example": "Mediocre academic performance does not necessarily indicate low ability or weak motivation.",
+      "exampleTranslation": "Kết quả học tập tầm thường không nhất thiết cho thấy năng lực thấp hoặc động lực yếu.",
+      "pos": "A"
+    },
+    {
+      "term": "motive",
+      "definition": "lý do hoặc động lực thúc đẩy một người thực hiện một hành động",
+      "example": "Identifying the motive behind cooperation helps psychologists distinguish empathy from strategic behaviour.",
+      "exampleTranslation": "Việc xác định động cơ đằng sau sự hợp tác giúp các nhà tâm lý học phân biệt sự đồng cảm với hành vi có tính chiến lược.",
+      "pos": "N"
+    },
+    {
+      "term": "obsessed",
+      "definition": "bị ám ảnh hoặc quá bận tâm đến một người, ý tưởng hay hoạt động",
+      "example": "People obsessed with online approval may interpret neutral feedback as personal rejection.",
+      "exampleTranslation": "Những người bị ám ảnh bởi sự công nhận trên mạng có thể diễn giải phản hồi trung lập như sự từ chối cá nhân.",
+      "pos": "A"
+    },
+    {
+      "term": "optional",
+      "definition": "Không bắt buộc; được phép lựa chọn có tham gia hoặc thực hiện hay không.",
+      "example": "Participation in the survey was optional, allowing participants to withdraw without explaining their decision.",
+      "exampleTranslation": "Việc tham gia khảo sát là không bắt buộc, cho phép người tham gia rút lui mà không cần giải thích quyết định của mình.",
+      "pos": "A"
+    },
+    {
+      "term": "sacrifice",
+      "definition": "Sự hy sinh hoặc từ bỏ một lợi ích để đạt được mục tiêu khác.",
+      "example": "Participants may sacrifice immediate comfort to pursue goals that offer greater long-term psychological benefits.",
+      "exampleTranslation": "Người tham gia có thể hy sinh sự thoải mái trước mắt để theo đuổi những mục tiêu mang lại lợi ích tâm lý lớn hơn về lâu dài.",
+      "pos": "N"
+    },
+    {
+      "term": "strive",
+      "definition": "Cố gắng hoặc phấn đấu mạnh mẽ để đạt được một mục tiêu.",
+      "example": "Many learners strive to regulate their emotions more effectively during stressful situations.",
+      "exampleTranslation": "Nhiều người học cố gắng điều chỉnh cảm xúc hiệu quả hơn trong những tình huống căng thẳng.",
+      "pos": "V"
+    },
+    {
+      "term": "tempting",
+      "definition": "Có sức hấp dẫn và dễ khiến người ta muốn làm hoặc chọn một điều gì đó.",
+      "example": "The tempting promise of immediate rewards can weaken people’s motivation to pursue distant goals.",
+      "exampleTranslation": "Lời hứa hấp dẫn về những phần thưởng tức thời có thể làm suy yếu động lực theo đuổi các mục tiêu xa hơn của con người.",
+      "pos": "A"
+    },
+    {
+      "term": "yearn",
+      "definition": "Khao khát hoặc mong mỏi mãnh liệt một điều khó đạt được hoặc không còn hiện hữu.",
+      "example": "Individuals who feel isolated may yearn for meaningful social connections and emotional support.",
+      "exampleTranslation": "Những người cảm thấy cô lập có thể khao khát những mối liên hệ xã hội có ý nghĩa và sự hỗ trợ về cảm xúc.",
+      "pos": "V"
+    },
+    {
+      "term": "allege",
+      "definition": "Khẳng định rằng điều gì đó đã xảy ra hoặc đúng, thường khi chưa có bằng chứng đầy đủ.",
+      "example": "Several participants allege that social pressure influenced their responses during the experiment.",
+      "exampleTranslation": "Một số người tham gia khẳng định rằng áp lực xã hội đã ảnh hưởng đến câu trả lời của họ trong thí nghiệm.",
+      "pos": "V"
+    },
+    {
+      "term": "ambiguous",
+      "definition": "Không rõ ràng hoặc có thể được hiểu theo nhiều cách khác nhau.",
+      "example": "Ambiguous instructions can cause participants to interpret the same task in different ways.",
+      "exampleTranslation": "Những hướng dẫn mơ hồ có thể khiến người tham gia hiểu cùng một nhiệm vụ theo những cách khác nhau.",
+      "pos": "A"
+    },
+    {
+      "term": "blunt",
+      "definition": "Thẳng thừng và trực tiếp trong cách diễn đạt, đôi khi thiếu sự tế nhị.",
+      "example": "Although blunt, the researcher’s wording clearly identified weaknesses in the proposed explanation.",
+      "exampleTranslation": "Mặc dù thẳng thừng, cách diễn đạt của nhà nghiên cứu đã chỉ rõ những điểm yếu trong lời giải thích được đề xuất.",
+      "pos": "A"
+    },
+    {
+      "term": "boast",
+      "definition": "Lời nói hoặc tuyên bố thể hiện sự khoe khoang, thường phóng đại thành tích hay khả năng.",
+      "example": "The speaker's boast about universal comprehension was challenged by evidence from multilingual classrooms.",
+      "exampleTranslation": "Lời khoe khoang của diễn giả về khả năng hiểu biết toàn diện đã bị bằng chứng từ các lớp học đa ngôn ngữ phản bác.",
+      "pos": "N"
+    },
+    {
+      "term": "clarification",
+      "definition": "Sự giải thích hoặc làm rõ để một ý tưởng, thuật ngữ hay thông tin trở nên dễ hiểu hơn.",
+      "example": "The article includes a clarification of the term “register” used.",
+      "exampleTranslation": "Bài viết có phần làm rõ thuật ngữ “register” được sử dụng.",
+      "pos": "N"
+    },
+    {
+      "term": "confide",
+      "definition": "Chia sẻ riêng tư những suy nghĩ hoặc cảm xúc với người mà mình tin tưởng.",
+      "example": "Some learners confide in teachers when unfamiliar grammatical patterns cause persistent anxiety.",
+      "exampleTranslation": "Một số người học giãi bày với giáo viên khi những cấu trúc ngữ pháp xa lạ gây ra sự lo âu dai dẳng.",
+      "pos": "V"
+    },
+    {
+      "term": "denounce",
+      "definition": "Công khai lên án hoặc phản đối mạnh mẽ một quan điểm, hành động hay chính sách.",
+      "example": "Several linguists denounce prescriptive rules that exclude speakers of regional varieties.",
+      "exampleTranslation": "Một số nhà ngôn ngữ học lên án các quy tắc mang tính áp đặt vì loại trừ những người nói các biến thể vùng miền.",
+      "pos": "V"
+    },
+    {
+      "term": "disclose",
+      "definition": "Tiết lộ hoặc công khai thông tin trước đây chưa được cho biết.",
+      "example": "Researchers must disclose how interview data were collected before interpreting participants’ responses.",
+      "exampleTranslation": "Các nhà nghiên cứu phải công khai cách dữ liệu phỏng vấn được thu thập trước khi diễn giải câu trả lời của người tham gia.",
+      "pos": "V"
+    },
+    {
+      "term": "flatter",
+      "definition": "Tâng bốc hoặc khen ngợi quá mức để làm ai đó hài lòng hoặc tự mãn.",
+      "example": "Such compliments may flatter respondents and encourage them to overestimate their language abilities.",
+      "exampleTranslation": "Những lời khen như vậy có thể khiến người trả lời tự mãn và khuyến khích họ đánh giá quá cao năng lực ngôn ngữ của mình.",
+      "pos": "V"
+    },
+    {
+      "term": "gist",
+      "definition": "Ý chính hoặc nội dung cốt lõi của một bài nói, bài viết hay vấn đề.",
+      "example": "Although technical terms were unfamiliar, students understood the gist of the lecture.",
+      "exampleTranslation": "Mặc dù các thuật ngữ chuyên môn còn xa lạ, sinh viên vẫn hiểu được ý chính của bài giảng.",
+      "pos": "N"
+    },
+    {
+      "term": "illegible",
+      "definition": "Khó đọc hoặc không thể đọc được, thường do chữ viết không rõ ràng.",
+      "example": "Several handwritten annotations were illegible, preventing researchers from verifying the original interpretation.",
+      "exampleTranslation": "Một số chú thích viết tay không thể đọc được, khiến các nhà nghiên cứu không thể xác minh cách diễn giải ban đầu.",
+      "pos": "A"
+    },
+    {
+      "term": "mumble",
+      "definition": "Nói nhỏ và không rõ lời, thường vì ngại ngùng, thiếu tự tin hoặc khó chịu.",
+      "example": "Participants began to mumble when the interviewer asked them to explain unfamiliar grammatical forms.",
+      "exampleTranslation": "Những người tham gia bắt đầu nói lầm bầm khi người phỏng vấn yêu cầu họ giải thích các dạng ngữ pháp xa lạ.",
+      "pos": "V"
+    },
+    {
+      "term": "murmur",
+      "definition": "Nói hoặc phát ra âm thanh nhỏ, thấp và khó nghe; lời nói thì thầm hoặc rì rầm.",
+      "example": "A low murmur from the audience signalled uncertainty about the lecturer's interpretation.",
+      "exampleTranslation": "Tiếng rì rầm nhỏ từ khán giả cho thấy họ không chắc chắn về cách diễn giải của giảng viên.",
+      "pos": "N"
+    },
+    {
+      "term": "petition",
+      "definition": "Văn bản chính thức có chữ ký của nhiều người nhằm đưa ra yêu cầu hoặc kiến nghị.",
+      "example": "The petition used carefully framed language to demand greater access to public education.",
+      "exampleTranslation": "Bản kiến nghị sử dụng ngôn từ được lựa chọn cẩn thận để yêu cầu mở rộng cơ hội tiếp cận giáo dục công.",
+      "pos": "N"
+    },
+    {
+      "term": "placard",
+      "definition": "Tấm bảng hoặc biển có chữ, thường được giơ lên để truyền đạt thông điệp công khai.",
+      "example": "Each placard displayed a concise slogan, allowing researchers to analyse public political discourse.",
+      "exampleTranslation": "Mỗi tấm biển đều trưng một khẩu hiệu súc tích, giúp các nhà nghiên cứu phân tích diễn ngôn chính trị công chúng.",
+      "pos": "N"
+    },
+    {
+      "term": "quibble",
+      "definition": "Tranh luận hoặc phản đối về những chi tiết nhỏ, thường để tránh giải quyết vấn đề chính.",
+      "example": "Researchers should not quibble over terminology when the underlying evidence is clear.",
+      "exampleTranslation": "Các nhà nghiên cứu không nên tranh cãi vụn vặt về thuật ngữ khi bằng chứng nền tảng đã rõ ràng.",
+      "pos": "V"
+    },
+    {
+      "term": "rant",
+      "definition": "Lời nói hoặc bài phát biểu dài, giận dữ và cường điệu, thường thiếu lập luận chặt chẽ.",
+      "example": "The editorial was a rant rather than a reasoned analysis of language policy.",
+      "exampleTranslation": "Bài xã luận đó là một lời chỉ trích giận dữ hơn là một phân tích có lý lẽ về chính sách ngôn ngữ.",
+      "pos": "N"
+    },
+    {
+      "term": "rave",
+      "definition": "Nói hoặc viết đầy nhiệt tình để ca ngợi một người, tác phẩm hoặc ý tưởng.",
+      "example": "Critics continued to rave about the novel's innovative use of regional dialect.",
+      "exampleTranslation": "Các nhà phê bình tiếp tục hết lời ca ngợi cách sử dụng phương ngữ vùng miền đầy sáng tạo của cuốn tiểu thuyết.",
+      "pos": "V"
+    },
+    {
+      "term": "slang",
+      "definition": "Từ ngữ và cách diễn đạt không trang trọng, thường được một nhóm xã hội hoặc nghề nghiệp sử dụng.",
+      "example": "The study examines how workplace slang strengthens solidarity among members of specialised teams.",
+      "exampleTranslation": "Nghiên cứu xem xét cách tiếng lóng nơi làm việc củng cố tinh thần đoàn kết giữa các thành viên của những nhóm chuyên môn.",
+      "pos": "N"
+    },
+    {
+      "term": "stumble",
+      "definition": "Sự nói vấp hoặc lỗi diễn đạt nhất thời khi nói.",
+      "example": "A brief stumble in speech can reveal difficulty retrieving a recently learned word.",
+      "exampleTranslation": "Một lần nói vấp ngắn có thể cho thấy khó khăn trong việc nhớ lại một từ mới học gần đây.",
+      "pos": "N"
+    },
+    {
+      "term": "stutter",
+      "definition": "Nói lắp, tức là lặp lại hoặc kéo dài âm tiết khi nói.",
+      "example": "A stutter may become more noticeable when speakers experience anxiety during formal interviews.",
+      "exampleTranslation": "Tật nói lắp có thể trở nên rõ rệt hơn khi người nói lo lắng trong các cuộc phỏng vấn trang trọng.",
+      "pos": "V"
+    },
+    {
+      "term": "tip",
+      "definition": "Phần đầu hoặc điểm tận cùng của một bộ phận, chẳng hạn như đầu lưỡi.",
+      "example": "The tip of the tongue helps speakers produce certain consonants accurately.",
+      "exampleTranslation": "Đầu lưỡi giúp người nói phát âm chính xác một số phụ âm nhất định.",
+      "pos": "N"
+    },
+    {
+      "term": "ask out",
+      "definition": "Mời ai đó đi chơi hoặc hẹn hò.",
+      "example": "In some cultures, people rarely ask out strangers directly.",
+      "exampleTranslation": "Ở một số nền văn hóa, người ta hiếm khi trực tiếp mời người lạ đi hẹn hò.",
+      "pos": "V"
+    },
+    {
+      "term": "read up",
+      "definition": "Đọc và tìm hiểu kỹ về một chủ đề.",
+      "example": "Before collecting data, researchers should read up on established interview methods.",
+      "exampleTranslation": "Trước khi thu thập dữ liệu, các nhà nghiên cứu nên đọc và tìm hiểu kỹ về những phương pháp phỏng vấn đã được thiết lập.",
+      "pos": "V"
+    },
+    {
+      "term": "talk over",
+      "definition": "Thảo luận kỹ một vấn đề hoặc một ý kiến.",
+      "example": "Researchers must talk over conflicting interpretations before finalising their qualitative analysis.",
+      "exampleTranslation": "Các nhà nghiên cứu phải thảo luận những cách diễn giải trái ngược trước khi hoàn tất phân tích định tính.",
+      "pos": "V"
+    },
+    {
+      "term": "talk round",
+      "definition": "Nói vòng vo để né tránh hoặc không trực tiếp giải quyết một vấn đề.",
+      "example": "Some respondents talk round sensitive questions rather than answering them directly.",
+      "exampleTranslation": "Một số người trả lời nói vòng vo về các câu hỏi nhạy cảm thay vì trả lời trực tiếp.",
+      "pos": "V"
+    },
+    {
+      "term": "anachronism",
+      "definition": "Sự áp đặt một khái niệm, vật hoặc đặc điểm của thời hiện đại vào một thời kỳ lịch sử không phù hợp.",
+      "example": "Applying modern clinical categories to ancient texts can create anachronism in historical research.",
+      "exampleTranslation": "Việc áp dụng các phạm trù lâm sàng hiện đại vào văn bản cổ có thể tạo ra sự sai niên đại trong nghiên cứu lịch sử.",
+      "pos": "N"
+    },
+    {
+      "term": "antique",
+      "definition": "Cổ xưa; thuộc về một thời kỳ xa xưa, thường có giá trị lịch sử.",
+      "example": "The archive contains antique instruments that researchers now examine as historical evidence.",
+      "exampleTranslation": "Kho lưu trữ chứa những dụng cụ cổ xưa mà các nhà nghiên cứu hiện xem xét như bằng chứng lịch sử.",
+      "pos": "A"
+    },
+    {
+      "term": "chronological",
+      "definition": "Theo thứ tự thời gian hoặc niên đại.",
+      "example": "The researchers arranged the interview transcripts in chronological order before analysing recurring themes.",
+      "exampleTranslation": "Các nhà nghiên cứu sắp xếp bản ghi phỏng vấn theo thứ tự thời gian trước khi phân tích những chủ đề lặp lại.",
+      "pos": "A"
+    },
+    {
+      "term": "elapse",
+      "definition": "Trôi qua, đặc biệt dùng để nói về một khoảng thời gian.",
+      "example": "The researchers recorded participants’ responses after fifteen minutes had elapsed.",
+      "exampleTranslation": "Các nhà nghiên cứu ghi lại phản hồi của người tham gia sau khi mười lăm phút đã trôi qua.",
+      "pos": "V"
+    },
+    {
+      "term": "era",
+      "definition": "Một thời kỳ lịch sử được xác định bởi những đặc điểm hoặc sự kiện nổi bật.",
+      "example": "The dataset illustrates how employment patterns changed during the digital era.",
+      "exampleTranslation": "Bộ dữ liệu minh họa cách các mô hình việc làm thay đổi trong thời đại kỹ thuật số.",
+      "pos": "N"
+    },
+    {
+      "term": "eternal",
+      "definition": "Tồn tại mãi mãi, không thay đổi hoặc không chấm dứt.",
+      "example": "The study rejects the assumption that social patterns remain eternal across different historical contexts.",
+      "exampleTranslation": "Nghiên cứu bác bỏ giả định rằng các mô hình xã hội vẫn tồn tại vĩnh viễn trong những bối cảnh lịch sử khác nhau.",
+      "pos": "A"
+    },
+    {
+      "term": "expire",
+      "definition": "Hết thời hạn hoặc mất hiệu lực.",
+      "example": "Researchers verified whether permits would expire before the longitudinal study concluded.",
+      "exampleTranslation": "Các nhà nghiên cứu xác minh liệu giấy phép có hết hiệu lực trước khi nghiên cứu theo chiều dọc kết thúc hay không.",
+      "pos": "V"
+    },
+    {
+      "term": "instantaneous",
+      "definition": "Xảy ra hoặc được ghi nhận gần như ngay lập tức.",
+      "example": "The sensor recorded instantaneous changes in temperature during the controlled experiment.",
+      "exampleTranslation": "Cảm biến ghi nhận những thay đổi tức thời về nhiệt độ trong thí nghiệm có kiểm soát.",
+      "pos": "A"
+    },
+    {
+      "term": "interim",
+      "definition": "Tạm thời hoặc được sử dụng trong thời gian chờ kết quả hay quyết định cuối cùng.",
+      "example": "The committee published an interim report while further survey data were being analysed.",
+      "exampleTranslation": "Ủy ban công bố một báo cáo tạm thời trong khi dữ liệu khảo sát bổ sung đang được phân tích.",
+      "pos": "A"
+    },
+    {
+      "term": "long-standing",
+      "definition": "Đã tồn tại hoặc được duy trì trong thời gian dài.",
+      "example": "Long-standing community partnerships improved recruitment and strengthened confidence in the survey findings.",
+      "exampleTranslation": "Các mối quan hệ đối tác lâu dài với cộng đồng đã cải thiện việc tuyển người tham gia và củng cố niềm tin vào các phát hiện khảo sát.",
+      "pos": "A"
+    },
+    {
+      "term": "obsolete",
+      "definition": "Lỗi thời, không còn được sử dụng hoặc không còn phù hợp với mục đích hiện tại.",
+      "example": "Researchers replaced obsolete paper questionnaires with secure digital forms.",
+      "exampleTranslation": "Các nhà nghiên cứu đã thay thế những bảng hỏi giấy lỗi thời bằng các biểu mẫu kỹ thuật số bảo mật.",
+      "pos": "A"
+    },
+    {
+      "term": "punctual",
+      "definition": "Đúng giờ hoặc đúng thời hạn đã được quy định.",
+      "example": "The team valued punctual submission of data from every participating laboratory.",
+      "exampleTranslation": "Nhóm nghiên cứu coi trọng việc mọi phòng thí nghiệm tham gia nộp dữ liệu đúng hạn.",
+      "pos": "A"
+    },
+    {
+      "term": "simultaneous",
+      "definition": "Xảy ra hoặc được thực hiện đồng thời, vào cùng một thời điểm.",
+      "example": "Simultaneous interviews across regions reduced the influence of seasonal differences.",
+      "exampleTranslation": "Các cuộc phỏng vấn đồng thời ở nhiều khu vực đã làm giảm ảnh hưởng của những khác biệt theo mùa.",
+      "pos": "A"
+    },
+    {
+      "term": "stint",
+      "definition": "Một khoảng thời gian làm một công việc hoặc đảm nhiệm một nhiệm vụ.",
+      "example": "The researcher completed a two-year stint collecting qualitative data in rural schools.",
+      "exampleTranslation": "Nhà nghiên cứu đã hoàn thành hai năm thu thập dữ liệu định tính tại các trường học nông thôn.",
+      "pos": "N"
+    },
+    {
+      "term": "timely",
+      "definition": "Được thực hiện hoặc xảy ra đúng lúc, không bị chậm trễ.",
+      "example": "Timely feedback enabled participants to correct inaccurate information before analysis.",
+      "exampleTranslation": "Phản hồi kịp thời cho phép những người tham gia sửa thông tin không chính xác trước khi phân tích.",
+      "pos": "A"
+    },
+    {
+      "term": "area",
+      "definition": "Một lĩnh vực hoặc phạm vi nghiên cứu cụ thể.",
+      "example": "This area of research examines how sampling methods affect public opinion estimates.",
+      "exampleTranslation": "Lĩnh vực nghiên cứu này xem xét các phương pháp lấy mẫu ảnh hưởng thế nào đến những ước tính về dư luận.",
+      "pos": "N"
+    },
+    {
+      "term": "batch",
+      "definition": "Một nhóm dữ liệu hoặc mẫu được thu thập hay xử lý cùng nhau.",
+      "example": "Each batch of samples was labelled before technicians began the laboratory analysis.",
+      "exampleTranslation": "Mỗi lô mẫu được dán nhãn trước khi các kỹ thuật viên bắt đầu phân tích trong phòng thí nghiệm.",
+      "pos": "N"
+    },
+    {
+      "term": "equidistant",
+      "definition": "cách đều; ở cùng một khoảng cách với hai hoặc nhiều điểm khác",
+      "example": "The sampling sites were equidistant, reducing the influence of travel time on participation rates.",
+      "exampleTranslation": "Các địa điểm lấy mẫu cách đều nhau, làm giảm ảnh hưởng của thời gian di chuyển đến tỷ lệ tham gia.",
+      "pos": "A"
+    },
+    {
+      "term": "finite",
+      "definition": "có giới hạn hoặc số lượng hữu hạn",
+      "example": "Because the sample was finite, researchers surveyed every household rather than estimating from a subset.",
+      "exampleTranslation": "Vì mẫu có số lượng hữu hạn, các nhà nghiên cứu khảo sát mọi hộ gia đình thay vì ước tính từ một nhóm con.",
+      "pos": "A"
+    },
+    {
+      "term": "imbalance",
+      "definition": "sự mất cân bằng hoặc phân bố không đồng đều giữa các nhóm hay yếu tố",
+      "example": "A marked gender imbalance in the sample could distort estimates of attitudes toward workplace policies.",
+      "exampleTranslation": "Sự mất cân bằng giới tính rõ rệt trong mẫu có thể làm sai lệch các ước tính về thái độ đối với chính sách nơi làm việc.",
+      "pos": "N"
+    },
+    {
+      "term": "meagre",
+      "definition": "ít ỏi, không đủ về số lượng hoặc kém về chất lượng",
+      "example": "The study drew cautious conclusions because its meagre dataset contained observations from only twelve participants.",
+      "exampleTranslation": "Nghiên cứu đưa ra các kết luận thận trọng vì bộ dữ liệu ít ỏi chỉ gồm quan sát từ mười hai người tham gia.",
+      "pos": "A"
+    },
+    {
+      "term": "minute",
+      "definition": "phút, đơn vị thời gian bằng một phần sáu mươi của một giờ",
+      "example": "The interview lasted fifteen minutes, allowing researchers to collect responses from all participants.",
+      "exampleTranslation": "Cuộc phỏng vấn kéo dài mười lăm phút, cho phép các nhà nghiên cứu thu thập câu trả lời từ tất cả người tham gia.",
+      "pos": "N"
+    },
+    {
+      "term": "ration",
+      "definition": "phân chia hoặc hạn chế một nguồn lực theo khẩu phần có định mức",
+      "example": "Researchers had to ration field supplies when the survey extended beyond its planned schedule.",
+      "exampleTranslation": "Các nhà nghiên cứu phải phân chia vật tư thực địa theo khẩu phần khi cuộc khảo sát kéo dài quá lịch dự kiến.",
+      "pos": "V"
+    },
+    {
+      "term": "sum",
+      "definition": "tổng số, tức kết quả thu được khi cộng các số hoặc đại lượng",
+      "example": "The sum of the recorded responses matched the total calculated by the statistical software.",
+      "exampleTranslation": "Tổng số các câu trả lời được ghi nhận khớp với kết quả do phần mềm thống kê tính toán.",
+      "pos": "N"
+    },
+    {
+      "term": "uneven",
+      "definition": "không đồng đều hoặc phân bố không cân bằng",
+      "example": "Uneven participation across regions reduced the comparability of the survey's results.",
+      "exampleTranslation": "Mức độ tham gia không đồng đều giữa các khu vực làm giảm khả năng so sánh các kết quả khảo sát.",
+      "pos": "A"
+    },
+    {
+      "term": "better",
+      "definition": "Tốt hơn hoặc chính xác hơn; dùng để so sánh mức độ cải thiện của kết quả nghiên cứu.",
+      "example": "Using a larger sample produced better estimates of the population's average response.",
+      "exampleTranslation": "Việc sử dụng mẫu lớn hơn tạo ra các ước tính chính xác hơn về phản hồi trung bình của tổng thể.",
+      "pos": "A"
+    },
+    {
+      "term": "cheapen",
+      "definition": "Làm giảm giá trị, chất lượng hoặc độ tin cậy của một nghiên cứu hay phương pháp.",
+      "example": "Reducing the sample size may cheapen the study by weakening its statistical reliability.",
+      "exampleTranslation": "Việc giảm kích thước mẫu có thể làm giảm giá trị của nghiên cứu do làm suy yếu độ tin cậy thống kê.",
+      "pos": "V"
+    },
+    {
+      "term": "defective",
+      "definition": "Có lỗi hoặc thiếu sót khiến dữ liệu, công cụ hay kết quả không đáng tin cậy.",
+      "example": "The researchers excluded defective questionnaires because several items contained contradictory responses.",
+      "exampleTranslation": "Các nhà nghiên cứu loại bỏ những bảng hỏi có lỗi vì một số mục chứa các câu trả lời mâu thuẫn.",
+      "pos": "A"
+    },
+    {
+      "term": "detrimental",
+      "definition": "Có hại hoặc gây ảnh hưởng bất lợi đến chất lượng, độ chính xác hay kết quả nghiên cứu.",
+      "example": "Nonresponse bias can be detrimental to the validity of survey conclusions.",
+      "exampleTranslation": "Thiên lệch do không phản hồi có thể gây hại cho tính giá trị của các kết luận khảo sát.",
+      "pos": "A"
+    },
+    {
+      "term": "exacerbate",
+      "definition": "Làm cho một vấn đề, sai số hoặc tình trạng trở nên nghiêm trọng hơn.",
+      "example": "Poorly worded questions may exacerbate measurement error in a quantitative survey.",
+      "exampleTranslation": "Những câu hỏi được diễn đạt kém có thể làm trầm trọng thêm sai số đo lường trong một cuộc khảo sát định lượng.",
+      "pos": "V"
+    },
+    {
+      "term": "exquisite",
+      "definition": "Cực kỳ tinh tế, nhạy bén và chính xác trong việc nhận biết những khác biệt nhỏ.",
+      "example": "The interview protocol required exquisite sensitivity to participants' cultural and emotional cues.",
+      "exampleTranslation": "Quy trình phỏng vấn đòi hỏi sự nhạy bén tinh tế trước các dấu hiệu văn hóa và cảm xúc của người tham gia.",
+      "pos": "A"
+    },
+    {
+      "term": "first-rate",
+      "definition": "Thuộc loại xuất sắc, có chất lượng hoặc tiêu chuẩn rất cao.",
+      "example": "A first-rate research design controls confounding variables without unnecessarily restricting participant diversity.",
+      "exampleTranslation": "Một thiết kế nghiên cứu xuất sắc kiểm soát các biến gây nhiễu mà không hạn chế sự đa dạng của người tham gia một cách không cần thiết.",
+      "pos": "A"
+    },
+    {
+      "term": "inadequate",
+      "definition": "Không đủ hoặc không phù hợp để đáp ứng yêu cầu của một nghiên cứu hay mục đích cụ thể.",
+      "example": "An inadequate sample size can produce unstable estimates and misleading statistical conclusions.",
+      "exampleTranslation": "Kích thước mẫu không đủ có thể tạo ra các ước tính không ổn định và những kết luận thống kê sai lệch.",
+      "pos": "A"
+    },
+    {
+      "term": "outclass",
+      "definition": "vượt trội hơn hẳn về chất lượng, hiệu quả hoặc năng lực",
+      "example": "Randomized trials outclass observational studies when estimating the causal effects of an intervention.",
+      "exampleTranslation": "Các thử nghiệm ngẫu nhiên vượt trội hơn các nghiên cứu quan sát khi ước tính tác động nhân quả của một biện pháp can thiệp.",
+      "pos": "V"
+    },
+    {
+      "term": "redeeming feature",
+      "definition": "đặc điểm tốt giúp bù đắp cho những hạn chế hoặc khuyết điểm khác",
+      "example": "The study's only redeeming feature is its transparent description of participant recruitment.",
+      "exampleTranslation": "Đặc điểm đáng ghi nhận duy nhất của nghiên cứu là phần mô tả minh bạch về việc tuyển người tham gia.",
+      "pos": "N"
+    },
+    {
+      "term": "rotten",
+      "definition": "kém chất lượng, không đáng tin cậy hoặc không có giá trị sử dụng",
+      "example": "The researchers excluded rotten data produced by a malfunctioning measurement device.",
+      "exampleTranslation": "Các nhà nghiên cứu đã loại bỏ dữ liệu không đáng tin cậy do một thiết bị đo bị hỏng tạo ra.",
+      "pos": "A"
+    },
+    {
+      "term": "rusty",
+      "definition": "không còn thành thạo vì lâu không sử dụng, đặc biệt về kỹ năng hoặc kiến thức",
+      "example": "Researchers with rusty statistical skills may misinterpret confidence intervals and report misleading conclusions.",
+      "exampleTranslation": "Các nhà nghiên cứu có kỹ năng thống kê mai một có thể hiểu sai khoảng tin cậy và đưa ra những kết luận gây hiểu lầm.",
+      "pos": "A"
+    },
+    {
+      "term": "satisfactory",
+      "definition": "đạt mức đủ tốt hoặc đáp ứng yêu cầu đề ra",
+      "example": "The sample size was satisfactory for detecting the predicted difference between treatment groups.",
+      "exampleTranslation": "Cỡ mẫu đủ đáp ứng yêu cầu để phát hiện sự khác biệt được dự đoán giữa các nhóm điều trị.",
+      "pos": "A"
+    },
+    {
+      "term": "shambles",
+      "definition": "tình trạng cực kỳ lộn xộn, thiếu tổ chức hoặc khó kiểm soát",
+      "example": "After the laboratory move, the archived survey records were in shambles.",
+      "exampleTranslation": "Sau khi phòng thí nghiệm chuyển địa điểm, các hồ sơ khảo sát được lưu trữ trở nên cực kỳ lộn xộn.",
+      "pos": "N"
+    },
+    {
+      "term": "shoddy",
+      "definition": "được thực hiện cẩu thả, kém chất lượng và không đáng tin cậy",
+      "example": "Shoddy sampling procedures can introduce systematic bias into otherwise careful quantitative research.",
+      "exampleTranslation": "Các quy trình lấy mẫu cẩu thả có thể đưa sai lệch hệ thống vào một nghiên cứu định lượng vốn được thực hiện cẩn thận.",
+      "pos": "A"
+    },
+    {
+      "term": "sound",
+      "definition": "vững chắc, hợp lý và đáng tin cậy, đặc biệt về phương pháp hoặc lập luận",
+      "example": "The authors used a sound method to compare outcomes across demographic groups.",
+      "exampleTranslation": "Các tác giả đã sử dụng một phương pháp vững chắc để so sánh kết quả giữa các nhóm nhân khẩu học.",
+      "pos": "A"
+    },
+    {
+      "term": "worsen",
+      "definition": "Làm cho một vấn đề hoặc tình trạng trở nên tồi tệ hơn; trở nên tồi tệ hơn.",
+      "example": "Poorly designed questions can worsen response bias in online surveys.",
+      "exampleTranslation": "Các câu hỏi được thiết kế kém có thể làm trầm trọng thêm thiên lệch trả lời trong các khảo sát trực tuyến.",
+      "pos": "V"
+    },
+    {
+      "term": "wreck",
+      "definition": "Tình trạng hoặc vật bị phá hỏng nghiêm trọng, không còn hoạt động hay sử dụng bình thường.",
+      "example": "The database was a wreck after repeated formatting errors corrupted its records.",
+      "exampleTranslation": "Cơ sở dữ liệu đã bị hỏng nặng sau khi các lỗi định dạng lặp lại làm hỏng những bản ghi của nó.",
+      "pos": "N"
+    },
+    {
+      "term": "blend in",
+      "definition": "Hòa vào môi trường xung quanh và không gây chú ý hoặc khác biệt rõ rệt.",
+      "example": "To avoid observer effects, researchers should blend in during fieldwork.",
+      "exampleTranslation": "Để tránh các ảnh hưởng của người quan sát, các nhà nghiên cứu nên hòa mình vào môi trường trong quá trình thực địa.",
+      "pos": "V"
+    },
+    {
+      "term": "break up",
+      "definition": "Chia một tổng thể, chẳng hạn mẫu nghiên cứu, thành các phần hoặc nhóm nhỏ hơn.",
+      "example": "Researchers may break up the sample into age groups for comparison.",
+      "exampleTranslation": "Các nhà nghiên cứu có thể chia mẫu thành các nhóm tuổi để so sánh.",
+      "pos": "V"
+    },
+    {
+      "term": "cancel out",
+      "definition": "Triệt tiêu hoặc bù trừ tác động của nhau, khiến kết quả tổng thể giảm hoặc mất đi.",
+      "example": "Opposing measurement errors may cancel out when averaged across repeated trials.",
+      "exampleTranslation": "Các sai số đo lường đối nghịch có thể triệt tiêu khi được lấy trung bình qua những lần thử lặp lại.",
+      "pos": "V"
+    },
+    {
+      "term": "centre around",
+      "definition": "Tập trung chủ yếu vào một chủ đề, vấn đề hoặc đối tượng.",
+      "example": "The interview schedule will centre around participants’ daily experiences.",
+      "exampleTranslation": "Lịch phỏng vấn sẽ tập trung vào những trải nghiệm hằng ngày của người tham gia.",
+      "pos": "V"
+    },
+    {
+      "term": "change around",
+      "definition": "Thay đổi hoặc sắp xếp lại vị trí, thứ tự hay cách tổ chức của một thứ.",
+      "example": "Researchers can change around question order to test whether sequencing affects responses.",
+      "exampleTranslation": "Các nhà nghiên cứu có thể thay đổi thứ tự câu hỏi để kiểm tra liệu trình tự có ảnh hưởng đến câu trả lời hay không.",
+      "pos": "V"
+    },
+    {
+      "term": "change into",
+      "definition": "Biến đổi hoặc chuyển từ dạng, trạng thái này sang dạng hoặc trạng thái khác.",
+      "example": "With preprocessing, qualitative responses can change into comparable numerical categories.",
+      "exampleTranslation": "Sau khi tiền xử lý, các câu trả lời định tính có thể chuyển thành những nhóm số liệu có thể so sánh được.",
+      "pos": "V"
+    },
+    {
+      "term": "check out",
+      "definition": "kiểm tra hoặc xem xét kỹ thông tin, dữ liệu hay kết quả",
+      "example": "Researchers should check out unusual responses before excluding them.",
+      "exampleTranslation": "Các nhà nghiên cứu nên kiểm tra những phản hồi bất thường trước khi loại bỏ chúng.",
+      "pos": "V"
+    },
+    {
+      "term": "clock up",
+      "definition": "tích lũy hoặc đạt được một số lượng, thời gian hay kết quả nhất định",
+      "example": "The survey can clock up 3,000 valid responses within six weeks.",
+      "exampleTranslation": "Cuộc khảo sát có thể đạt được 3.000 phản hồi hợp lệ trong vòng sáu tuần.",
+      "pos": "V"
+    },
+    {
+      "term": "club together",
+      "definition": "gộp chung nguồn lực hoặc tiền bạc để cùng thực hiện một mục tiêu",
+      "example": "Researchers club together resources to analyse samples from remote communities.",
+      "exampleTranslation": "Các nhà nghiên cứu gộp chung nguồn lực để phân tích mẫu từ những cộng đồng xa xôi.",
+      "pos": "V"
+    },
+    {
+      "term": "cordon off",
+      "definition": "rào hoặc phong tỏa một khu vực để ngăn người khác tiếp cận",
+      "example": "Field teams cordon off contaminated plots before collecting soil samples.",
+      "exampleTranslation": "Các nhóm thực địa phong tỏa những khu đất bị nhiễm bẩn trước khi thu thập mẫu đất.",
+      "pos": "V"
+    },
+    {
+      "term": "crack down",
+      "definition": "tăng cường các biện pháp nghiêm khắc để ngăn chặn hành vi sai trái",
+      "example": "Regulators crack down on laboratories that falsify experimental results.",
+      "exampleTranslation": "Các cơ quan quản lý siết chặt việc xử lý những phòng thí nghiệm làm sai lệch kết quả thí nghiệm.",
+      "pos": "V"
+    },
+    {
+      "term": "crease up",
+      "definition": "bật cười không kiểm soát, thường vì thấy điều gì đó hài hước",
+      "example": "Several interview participants crease up when recalling the experiment's unexpected outcome.",
+      "exampleTranslation": "Một số người tham gia phỏng vấn bật cười khi nhớ lại kết quả bất ngờ của thí nghiệm.",
+      "pos": "V"
+    },
+    {
+      "term": "creep up",
+      "definition": "tăng dần một cách từ từ, thường khó nhận thấy",
+      "example": "Measurement errors can creep up when instruments are poorly calibrated.",
+      "exampleTranslation": "Sai số đo lường có thể tăng dần khi các thiết bị được hiệu chuẩn kém.",
+      "pos": "V"
+    },
+    {
+      "term": "crop up",
+      "definition": "bất ngờ xuất hiện, thường là vấn đề hoặc khó khăn",
+      "example": "Unexpected sampling problems may crop up during longitudinal fieldwork.",
+      "exampleTranslation": "Những vấn đề lấy mẫu bất ngờ có thể xuất hiện trong quá trình nghiên cứu thực địa dài hạn.",
+      "pos": "V"
+    },
+    {
+      "term": "do away",
+      "definition": "loại bỏ hoặc chấm dứt một điều gì đó, thường dùng trong cụm “do away with”",
+      "example": "Researchers should do away with redundant survey items before analysing the final dataset.",
+      "exampleTranslation": "Các nhà nghiên cứu nên loại bỏ những mục khảo sát dư thừa trước khi phân tích bộ dữ liệu cuối cùng.",
+      "pos": "V"
+    },
+    {
+      "term": "end up",
+      "definition": "cuối cùng trở thành hoặc làm điều gì đó, thường ngoài dự kiến",
+      "example": "Without careful sampling, a quantitative study may end up producing misleading estimates.",
+      "exampleTranslation": "Nếu không lấy mẫu cẩn thận, một nghiên cứu định lượng cuối cùng có thể tạo ra những ước tính sai lệch.",
+      "pos": "V"
+    },
+    {
+      "term": "face up",
+      "definition": "đối mặt và thừa nhận một vấn đề khó khăn, thường dùng trong cụm “face up to”",
+      "example": "Researchers must face up to missing data before interpreting relationships among variables.",
+      "exampleTranslation": "Các nhà nghiên cứu phải đối mặt với dữ liệu bị thiếu trước khi diễn giải mối quan hệ giữa các biến số.",
+      "pos": "V"
+    },
+    {
+      "term": "fade away",
+      "definition": "dần yếu đi, mờ đi hoặc biến mất",
+      "example": "If follow-up measurements are delayed, treatment effects may fade away in the observed sample.",
+      "exampleTranslation": "Nếu các phép đo theo dõi bị trì hoãn, tác động của phương pháp điều trị có thể dần biến mất trong mẫu được quan sát.",
+      "pos": "V"
+    },
+    {
+      "term": "figure out",
+      "definition": "tìm ra hoặc hiểu được câu trả lời cho một vấn đề",
+      "example": "The analysts used qualitative interviews to figure out why respondents abandoned the questionnaire.",
+      "exampleTranslation": "Các nhà phân tích sử dụng các cuộc phỏng vấn định tính để tìm ra lý do người trả lời bỏ dở bảng câu hỏi.",
+      "pos": "V"
+    },
+    {
+      "term": "fix up",
+      "definition": "sắp xếp hoặc thu xếp một cuộc hẹn",
+      "example": "The coordinator will fix up interviews with selected participants after screening the survey responses.",
+      "exampleTranslation": "Điều phối viên sẽ sắp xếp các cuộc phỏng vấn với những người tham gia được chọn sau khi sàng lọc các câu trả lời khảo sát.",
+      "pos": "V"
+    },
+    {
+      "term": "get in",
+      "definition": "thu thập hoặc nhận được thông tin, câu trả lời hay tài liệu",
+      "example": "The team used reminders to get in completed questionnaires from participants.",
+      "exampleTranslation": "Nhóm nghiên cứu sử dụng lời nhắc để thu lại các bảng câu hỏi đã hoàn thành từ những người tham gia.",
+      "pos": "V"
+    },
+    {
+      "term": "get off",
+      "definition": "xuống khỏi xe buýt, tàu hoặc phương tiện giao thông khác",
+      "example": "Field researchers get off at designated stations before walking to remote survey sites.",
+      "exampleTranslation": "Các nhà nghiên cứu thực địa xuống tại những ga được chỉ định trước khi đi bộ đến các địa điểm khảo sát xa xôi.",
+      "pos": "V"
+    },
+    {
+      "term": "get over",
+      "definition": "Vượt qua hoặc khắc phục một trở ngại trong quá trình nghiên cứu.",
+      "example": "Researchers must get over sampling bias before interpreting differences between the two survey groups.",
+      "exampleTranslation": "Các nhà nghiên cứu phải khắc phục sai lệch trong việc lấy mẫu trước khi diễn giải sự khác biệt giữa hai nhóm khảo sát.",
+      "pos": "V"
+    },
+    {
+      "term": "get through",
+      "definition": "Hoàn thành một giai đoạn hoặc nhiệm vụ khó khăn trong nghiên cứu.",
+      "example": "The research team used weekly milestones to get through the lengthy data-cleaning stage.",
+      "exampleTranslation": "Nhóm nghiên cứu sử dụng các mốc hằng tuần để hoàn thành giai đoạn làm sạch dữ liệu kéo dài.",
+      "pos": "V"
+    },
+    {
+      "term": "laze around",
+      "definition": "Dành thời gian nhàn rỗi mà không làm việc hoặc hoạt động tích cực.",
+      "example": "Some participants may laze around instead of completing the observation protocol.",
+      "exampleTranslation": "Một số người tham gia có thể nhàn rỗi thay vì hoàn thành quy trình quan sát.",
+      "pos": "V"
+    },
+    {
+      "term": "lie ahead",
+      "definition": "Nằm ở phía trước hoặc sẽ xảy ra trong tương lai.",
+      "example": "The pilot study identified several challenges that lie ahead for the full investigation.",
+      "exampleTranslation": "Nghiên cứu thí điểm đã xác định một số thách thức đang chờ đợi cuộc điều tra đầy đủ.",
+      "pos": "V"
+    },
+    {
+      "term": "liven up",
+      "definition": "Làm cho một hoạt động hoặc tình huống trở nên sinh động, thú vị hơn.",
+      "example": "Interactive tasks can liven up qualitative interviews and encourage participants to provide richer responses.",
+      "exampleTranslation": "Các nhiệm vụ tương tác có thể làm cho những cuộc phỏng vấn định tính sinh động hơn và khuyến khích người tham gia đưa ra câu trả lời phong phú hơn.",
+      "pos": "V"
+    },
+    {
+      "term": "lock up",
+      "definition": "Khóa và cất giữ một vật ở nơi an toàn.",
+      "example": "Laboratory staff lock up biological samples in a temperature-controlled facility after each experiment.",
+      "exampleTranslation": "Nhân viên phòng thí nghiệm khóa và cất giữ các mẫu sinh học trong cơ sở kiểm soát nhiệt độ sau mỗi thí nghiệm.",
+      "pos": "V"
+    },
+    {
+      "term": "make up",
+      "definition": "Cấu thành hoặc tạo nên một tổng thể, chẳng hạn như một mẫu nghiên cứu.",
+      "example": "The three subgroups make up the study sample, although their sizes differ considerably.",
+      "exampleTranslation": "Ba nhóm nhỏ cấu thành mẫu nghiên cứu, mặc dù quy mô của chúng khác nhau đáng kể.",
+      "pos": "V"
+    },
+    {
+      "term": "meet up",
+      "definition": "Gặp nhau, thường theo lịch, để trao đổi hoặc thực hiện một hoạt động chung.",
+      "example": "Field researchers meet up weekly to compare observations and resolve discrepancies in their notes.",
+      "exampleTranslation": "Các nhà nghiên cứu thực địa gặp nhau hằng tuần để so sánh quan sát và giải quyết những điểm khác biệt trong ghi chép.",
+      "pos": "V"
+    },
+    {
+      "term": "open up",
+      "definition": "làm cho dữ liệu hoặc tài liệu trở nên dễ tiếp cận để phân tích hoặc kiểm chứng",
+      "example": "Researchers open up interview transcripts to independent reviewers for thematic analysis.",
+      "exampleTranslation": "Các nhà nghiên cứu cho phép những người đánh giá độc lập tiếp cận bản ghi phỏng vấn để phân tích theo chủ đề.",
+      "pos": "V"
+    },
+    {
+      "term": "piece together",
+      "definition": "ghép nối các mảnh thông tin riêng lẻ để hình thành một bức tranh hoặc kết luận hoàn chỉnh",
+      "example": "Researchers piece together migration patterns from surveys, interviews, and archival records.",
+      "exampleTranslation": "Các nhà nghiên cứu ghép nối các mô hình di cư từ khảo sát, phỏng vấn và hồ sơ lưu trữ.",
+      "pos": "V"
+    },
+    {
+      "term": "prop up",
+      "definition": "hỗ trợ hoặc củng cố một cách nhân tạo một lập luận, kết quả hoặc giả định yếu",
+      "example": "Researchers should not prop up weak conclusions with selective evidence.",
+      "exampleTranslation": "Các nhà nghiên cứu không nên củng cố những kết luận yếu bằng bằng chứng được chọn lọc.",
+      "pos": "V"
+    },
+    {
+      "term": "push around",
+      "definition": "đối xử áp đặt hoặc gây sức ép không công bằng với người tham gia nghiên cứu",
+      "example": "Do not push around participants during interviews or pressure them to answer.",
+      "exampleTranslation": "Không được áp đặt lên người tham gia trong các cuộc phỏng vấn hoặc gây áp lực buộc họ trả lời.",
+      "pos": "V"
+    },
+    {
+      "term": "put down",
+      "definition": "ghi lại thông tin, quan sát hoặc kết quả bằng văn bản",
+      "example": "Fieldworkers put down observations immediately to reduce inaccuracies in later analysis.",
+      "exampleTranslation": "Nhân viên thực địa ghi lại các quan sát ngay lập tức để giảm sai sót trong phân tích sau đó.",
+      "pos": "V"
+    },
+    {
+      "term": "put together",
+      "definition": "tập hợp và kết hợp các phần riêng lẻ thành một chỉnh thể có hệ thống",
+      "example": "The research team put together a questionnaire covering demographic and behavioural variables.",
+      "exampleTranslation": "Nhóm nghiên cứu đã biên soạn một bảng hỏi bao quát các biến nhân khẩu học và hành vi.",
+      "pos": "V"
+    },
+    {
+      "term": "puzzle out",
+      "definition": "suy luận để tìm ra lời giải hoặc ý nghĩa từ thông tin khó hiểu",
+      "example": "Analysts puzzle out the causes of inconsistent results by comparing sampling procedures.",
+      "exampleTranslation": "Các nhà phân tích suy luận nguyên nhân của những kết quả không nhất quán bằng cách so sánh các quy trình lấy mẫu.",
+      "pos": "V"
+    },
+    {
+      "term": "seek out",
+      "definition": "chủ động tìm kiếm người, dữ liệu hoặc nguồn thông tin phù hợp",
+      "example": "Researchers seek out diverse participants to improve the study's representativeness.",
+      "exampleTranslation": "Các nhà nghiên cứu chủ động tìm kiếm những người tham gia đa dạng để cải thiện tính đại diện của nghiên cứu.",
+      "pos": "V"
+    },
+    {
+      "term": "set down",
+      "definition": "ghi lại hoặc viết ra thông tin, quan sát hay kết quả một cách có hệ thống",
+      "example": "Researchers set down each observation immediately to reduce recall bias.",
+      "exampleTranslation": "Các nhà nghiên cứu ghi lại từng quan sát ngay lập tức để giảm sai lệch do hồi tưởng.",
+      "pos": "V"
+    },
+    {
+      "term": "shrivel up",
+      "definition": "khô héo và teo lại, thường do mất nước hoặc điều kiện môi trường bất lợi",
+      "example": "Under prolonged drought, plant samples can shrivel up before measurements are completed.",
+      "exampleTranslation": "Trong thời gian hạn hán kéo dài, các mẫu thực vật có thể khô héo và teo lại trước khi hoàn tất việc đo lường.",
+      "pos": "V"
+    },
+    {
+      "term": "smarten up",
+      "definition": "cải thiện hoặc làm cho một quy trình trở nên hiệu quả, ngăn nắp hơn",
+      "example": "Researchers should smarten up their coding procedures before comparing qualitative results.",
+      "exampleTranslation": "Các nhà nghiên cứu nên cải thiện quy trình mã hóa trước khi so sánh các kết quả định tính.",
+      "pos": "V"
+    },
+    {
+      "term": "snow under",
+      "definition": "làm cho ai đó quá tải vì có quá nhiều công việc hoặc dữ liệu cần xử lý",
+      "example": "Large surveys can snow under analysts when poorly designed databases generate thousands of incomplete responses.",
+      "exampleTranslation": "Các cuộc khảo sát lớn có thể khiến các nhà phân tích quá tải khi cơ sở dữ liệu được thiết kế kém tạo ra hàng nghìn câu trả lời chưa hoàn chỉnh.",
+      "pos": "V"
+    },
+    {
+      "term": "spread out",
+      "definition": "phân bố hoặc rải ra trên một khu vực hay phạm vi rộng hơn",
+      "example": "Researchers spread out sampling points across the region to reduce geographic bias.",
+      "exampleTranslation": "Các nhà nghiên cứu phân bố các điểm lấy mẫu khắp khu vực để giảm sai lệch địa lý.",
+      "pos": "V"
+    },
+    {
+      "term": "stand up",
+      "definition": "vẫn vững chắc, hợp lý hoặc có giá trị khi được kiểm tra kỹ lưỡng",
+      "example": "The proposed explanation must stand up to scrutiny from independent reviewers.",
+      "exampleTranslation": "Lời giải thích được đề xuất phải withstand sự xem xét kỹ lưỡng của các nhà phản biện độc lập.",
+      "pos": "V"
+    },
+    {
+      "term": "stop off",
+      "definition": "dừng lại trong thời gian ngắn tại một địa điểm giữa hành trình",
+      "example": "Field researchers stop off at rural clinics to collect additional survey responses.",
+      "exampleTranslation": "Các nhà nghiên cứu thực địa dừng lại tại các phòng khám nông thôn để thu thập thêm câu trả lời khảo sát.",
+      "pos": "V"
+    },
+    {
+      "term": "store up",
+      "definition": "tích trữ hoặc lưu giữ thông tin, dữ liệu để sử dụng về sau",
+      "example": "Researchers store up raw measurements before conducting the final analysis.",
+      "exampleTranslation": "Các nhà nghiên cứu lưu giữ các phép đo thô trước khi tiến hành phân tích cuối cùng.",
+      "pos": "V"
+    },
+    {
+      "term": "swot up",
+      "definition": "học và nghiên cứu kỹ lưỡng một chủ đề, thường để chuẩn bị cho một nhiệm vụ hoặc kỳ thi",
+      "example": "Before analysing the survey, researchers swot up on established qualitative methods.",
+      "exampleTranslation": "Trước khi phân tích khảo sát, các nhà nghiên cứu học kỹ về những phương pháp định tính đã được thiết lập.",
+      "pos": "V"
+    },
+    {
+      "term": "take apart",
+      "definition": "phân tích hoặc tách một vấn đề, hệ thống hay dữ liệu thành các phần riêng biệt",
+      "example": "The researchers take apart each variable to identify its influence on the outcome.",
+      "exampleTranslation": "Các nhà nghiên cứu phân tích từng biến số để xác định ảnh hưởng của nó đến kết quả.",
+      "pos": "V"
+    },
+    {
+      "term": "take off",
+      "definition": "phát triển nhanh chóng và bắt đầu đạt được nhiều thành công",
+      "example": "The research project began to take off after additional funding supported a larger sample.",
+      "exampleTranslation": "Dự án nghiên cứu bắt đầu phát triển nhanh chóng sau khi khoản tài trợ bổ sung hỗ trợ một mẫu lớn hơn.",
+      "pos": "V"
+    },
+    {
+      "term": "take out",
+      "definition": "loại bỏ một phần tử, yếu tố hoặc dữ liệu khỏi một tập hợp",
+      "example": "Analysts take out incomplete responses before calculating the survey results.",
+      "exampleTranslation": "Các nhà phân tích loại bỏ những câu trả lời không đầy đủ trước khi tính toán kết quả khảo sát.",
+      "pos": "V"
+    },
+    {
+      "term": "take over",
+      "definition": "tiếp quản một công việc, nhiệm vụ hoặc vị trí do người khác đảm nhiệm trước đó",
+      "example": "A senior statistician will take over the analysis when the lead researcher leaves.",
+      "exampleTranslation": "Một nhà thống kê cấp cao sẽ tiếp quản việc phân tích khi trưởng nhóm nghiên cứu rời đi.",
+      "pos": "V"
+    },
+    {
+      "term": "test out",
+      "definition": "thử nghiệm một phương pháp, thiết bị hoặc giả thuyết để đánh giá hiệu quả của nó",
+      "example": "The team will test out the questionnaire with a small pilot sample.",
+      "exampleTranslation": "Nhóm sẽ thử nghiệm bảng câu hỏi với một mẫu thí điểm nhỏ.",
+      "pos": "V"
+    },
+    {
+      "term": "tip up",
+      "definition": "nghiêng hoặc dựng một vật lên để phần bên trong rơi hoặc chảy ra",
+      "example": "Technicians tip up the sample container to transfer its contents safely.",
+      "exampleTranslation": "Các kỹ thuật viên nghiêng hộp đựng mẫu để chuyển phần bên trong một cách an toàn.",
+      "pos": "V"
+    },
+    {
+      "term": "weigh down",
+      "definition": "gây trở ngại hoặc làm giảm hiệu quả, chất lượng của một hoạt động hay kết quả",
+      "example": "Missing responses can weigh down the reliability of quantitative conclusions.",
+      "exampleTranslation": "Các câu trả lời bị thiếu có thể làm giảm độ tin cậy của những kết luận định lượng.",
+      "pos": "V"
+    },
+    {
+      "term": "amend",
+      "definition": "sửa đổi hoặc bổ sung để một lập luận, văn bản hay quan điểm trở nên chính xác và hoàn thiện hơn",
+      "example": "Philosophers may amend an ethical theory when new evidence exposes weaknesses in its original principles.",
+      "exampleTranslation": "Các triết gia có thể sửa đổi một học thuyết đạo đức khi bằng chứng mới cho thấy những điểm yếu trong các nguyên tắc ban đầu của nó.",
+      "pos": "V"
+    },
+    {
+      "term": "last",
+      "definition": "cuối cùng hoặc xảy ra ở giai đoạn sau cùng",
+      "example": "The last stage of the argument examines whether reason alone can justify moral obligations.",
+      "exampleTranslation": "Giai đoạn cuối cùng của lập luận xem xét liệu chỉ riêng lý tính có thể biện minh cho các nghĩa vụ đạo đức hay không.",
+      "pos": "A"
+    },
+    {
+      "term": "remain",
+      "definition": "tiếp tục tồn tại hoặc vẫn giữ nguyên trạng thái dù có sự thay đổi hay tác động",
+      "example": "Despite criticism, the central principle may remain defensible if its assumptions are made explicit.",
+      "exampleTranslation": "Mặc dù bị chỉ trích, nguyên tắc cốt lõi vẫn có thể được bảo vệ nếu các giả định của nó được nêu rõ.",
+      "pos": "V"
+    },
+    {
+      "term": "revise",
+      "definition": "xem xét và sửa đổi một lập luận, quan điểm hoặc văn bản để cải thiện tính chính xác",
+      "example": "Researchers must revise the argument when its conclusions depend on an unsupported assumption.",
+      "exampleTranslation": "Các nhà nghiên cứu phải xem xét và sửa đổi lập luận khi các kết luận của nó phụ thuộc vào một giả định không có cơ sở.",
+      "pos": "V"
+    },
+    {
+      "term": "status quo",
+      "definition": "tình trạng hoặc các điều kiện hiện tại đang được duy trì",
+      "example": "Some philosophers challenge the status quo by questioning assumptions accepted as socially natural.",
+      "exampleTranslation": "Một số triết gia thách thức hiện trạng bằng cách chất vấn những giả định được xã hội chấp nhận như thể chúng vốn tự nhiên.",
+      "pos": "other"
+    },
+    {
+      "term": "ascend",
+      "definition": "đi hoặc di chuyển lên cao hơn, đặc biệt trên một con dốc hoặc địa hình cao",
+      "example": "As hikers ascend, vegetation becomes sparser and temperatures generally fall.",
+      "exampleTranslation": "Khi những người đi bộ leo lên cao, thảm thực vật trở nên thưa thớt hơn và nhiệt độ nhìn chung giảm xuống.",
+      "pos": "V"
+    },
+    {
+      "term": "clamber",
+      "definition": "leo trèo khó khăn bằng cách dùng cả tay và chân",
+      "example": "Visitors must clamber over unstable rocks to reach the isolated coastal viewpoint.",
+      "exampleTranslation": "Du khách phải trèo qua những tảng đá không ổn định để đến điểm ngắm cảnh ven biển biệt lập.",
+      "pos": "V"
+    },
+    {
+      "term": "clench",
+      "definition": "siết hoặc nắm chặt một vật bằng lực mạnh",
+      "example": "Climbers clench the safety rope when loose stones slide down the ravine.",
+      "exampleTranslation": "Những người leo núi siết chặt dây an toàn khi các viên đá rời trượt xuống khe núi.",
+      "pos": "V"
+    },
+    {
+      "term": "clutch",
+      "definition": "sự nắm hoặc giữ chặt",
+      "example": "A secure clutch on the rock face helped the climber cross the ravine.",
+      "exampleTranslation": "Việc bám chắc vào vách đá giúp người leo núi vượt qua khe núi.",
+      "pos": "N"
+    },
+    {
+      "term": "crawl",
+      "definition": "bò hoặc trườn sát mặt đất",
+      "example": "Researchers had to crawl through a narrow passage beneath the limestone plateau.",
+      "exampleTranslation": "Các nhà nghiên cứu phải bò qua một lối hẹp bên dưới cao nguyên đá vôi.",
+      "pos": "V"
+    },
+    {
+      "term": "creep",
+      "definition": "sự dịch chuyển rất chậm của đất hoặc vật liệu trên sườn dốc",
+      "example": "Soil creep slowly transports sediment down the valley slope after heavy rainfall.",
+      "exampleTranslation": "Sự trườn của đất từ từ vận chuyển trầm tích xuống sườn thung lũng sau mưa lớn.",
+      "pos": "N"
+    },
+    {
+      "term": "dash",
+      "definition": "tiếng hoặc lực nước đập, vỗ vào bờ hay vách đá",
+      "example": "The dash of waves against the cliff gradually enlarged a coastal cave.",
+      "exampleTranslation": "Sức sóng đập vào vách đá dần dần làm hang ven biển rộng thêm.",
+      "pos": "N"
+    },
+    {
+      "term": "emigrate",
+      "definition": "rời quê hương để định cư lâu dài ở một quốc gia khác",
+      "example": "Many families emigrate from drought-prone regions to seek more reliable livelihoods.",
+      "exampleTranslation": "Nhiều gia đình di cư khỏi những vùng thường xuyên hạn hán để tìm kế sinh nhai ổn định hơn.",
+      "pos": "V"
+    },
+    {
+      "term": "glide",
+      "definition": "lướt đi nhẹ nhàng, thường không gây tiếng động hoặc không cần nhiều lực",
+      "example": "In strong winds, albatrosses glide over the ocean for hundreds of kilometres.",
+      "exampleTranslation": "Trong gió mạnh, chim hải âu lướt trên đại dương hàng trăm kilômét.",
+      "pos": "V"
+    },
+    {
+      "term": "hop",
+      "definition": "chặng đường bay ngắn giữa hai địa điểm",
+      "example": "The mapping expedition included a short hop between two remote islands.",
+      "exampleTranslation": "Chuyến khảo sát lập bản đồ bao gồm một chặng bay ngắn giữa hai hòn đảo xa xôi.",
+      "pos": "N"
+    },
+    {
+      "term": "jog",
+      "definition": "đoạn lệch hoặc khúc gấp bất thường trong đường bờ hay ranh giới",
+      "example": "A pronounced jog in the coastline creates a sheltered bay for small boats.",
+      "exampleTranslation": "Một đoạn lệch rõ rệt của đường bờ tạo ra vịnh kín gió cho thuyền nhỏ.",
+      "pos": "N"
+    },
+    {
+      "term": "march",
+      "definition": "vùng biên giới hoặc khu vực giáp ranh, thường có ý nghĩa quân sự hoặc chính trị",
+      "example": "Medieval maps often marked the eastern march as a sparsely populated frontier zone.",
+      "exampleTranslation": "Các bản đồ thời Trung cổ thường đánh dấu vùng biên giới phía đông là một khu vực biên cương thưa dân.",
+      "pos": "N"
+    },
+    {
+      "term": "point",
+      "definition": "mũi đất nhô ra biển hoặc hồ",
+      "example": "The peninsula ends in a rocky point that shelters the harbour from prevailing winds.",
+      "exampleTranslation": "Bán đảo kết thúc bằng một mũi đất đá giúp che chắn cảng khỏi những cơn gió thịnh hành.",
+      "pos": "N"
+    },
+    {
+      "term": "punch",
+      "definition": "sức mạnh hoặc hiệu quả nổi bật của một đặc điểm hay tác động",
+      "example": "The proposed seawall lacks the punch needed to withstand increasingly powerful storm waves.",
+      "exampleTranslation": "Kè chắn sóng được đề xuất thiếu sức mạnh cần thiết để chống chịu những đợt sóng bão ngày càng dữ dội.",
+      "pos": "N"
+    },
+    {
+      "term": "refugee",
+      "definition": "người phải rời nơi ở để tránh chiến tranh, đàn áp hoặc hiểm họa nghiêm trọng",
+      "example": "The coastal settlement expanded rapidly after thousands of refugee families arrived from the drought-stricken interior.",
+      "exampleTranslation": "Khu định cư ven biển phát triển nhanh chóng sau khi hàng nghìn gia đình tị nạn đến từ vùng nội địa bị hạn hán.",
+      "pos": "N"
+    },
+    {
+      "term": "skid",
+      "definition": "sự trượt bánh hoặc trượt khỏi hướng di chuyển, đặc biệt của phương tiện",
+      "example": "A sudden skid on the icy mountain road forced the survey vehicle to stop.",
+      "exampleTranslation": "Một cú trượt bất ngờ trên con đường núi phủ băng buộc xe khảo sát phải dừng lại.",
+      "pos": "N"
+    },
+    {
+      "term": "skip",
+      "definition": "thùng lớn dùng để vận chuyển đất đá hoặc vật liệu trong mỏ",
+      "example": "Workers used a skip to transport excavated rock from the mine's deepest level.",
+      "exampleTranslation": "Công nhân sử dụng một thùng nâng để vận chuyển đá đào lên từ tầng sâu nhất của mỏ.",
+      "pos": "N"
+    },
+    {
+      "term": "slip",
+      "definition": "sự trượt lở của đất hoặc đá trên sườn dốc",
+      "example": "Heavy rainfall triggered a destructive slip on the unstable hillside above the village.",
+      "exampleTranslation": "Mưa lớn gây ra một vụ trượt lở nghiêm trọng trên sườn đồi không ổn định phía trên ngôi làng.",
+      "pos": "N"
+    },
+    {
+      "term": "built-up",
+      "definition": "có nhiều nhà cửa và công trình xây dựng san sát",
+      "example": "Satellite images show a continuous built-up area replacing former wetlands along the estuary.",
+      "exampleTranslation": "Ảnh vệ tinh cho thấy một khu vực xây dựng liên tục đang thay thế các vùng đất ngập nước trước đây dọc cửa sông.",
+      "pos": "A"
+    },
+    {
+      "term": "bypass",
+      "definition": "Đường tránh được xây để chuyển hướng giao thông khỏi một khu vực hoặc tuyến đường chính.",
+      "example": "The new bypass diverts heavy traffic away from the historic town centre.",
+      "exampleTranslation": "Đường tránh mới chuyển hướng xe cộ hạng nặng khỏi trung tâm thị trấn lịch sử.",
+      "pos": "N"
+    },
+    {
+      "term": "demolish",
+      "definition": "Phá hủy hoàn toàn một công trình, thường bằng máy móc hoặc chất nổ.",
+      "example": "Coastal authorities may demolish unsafe buildings threatened by severe erosion.",
+      "exampleTranslation": "Các cơ quan chức năng ven biển có thể phá hủy những tòa nhà không an toàn bị xói mòn nghiêm trọng đe dọa.",
+      "pos": "V"
+    },
+    {
+      "term": "district",
+      "definition": "Một khu vực hành chính hoặc một phần cụ thể của thành phố hay quốc gia.",
+      "example": "The northern district contains several wetlands and a rapidly expanding suburb.",
+      "exampleTranslation": "Khu vực phía bắc có một số vùng đất ngập nước và một vùng ngoại ô đang mở rộng nhanh chóng.",
+      "pos": "N"
+    },
+    {
+      "term": "evict",
+      "definition": "Buộc ai đó rời khỏi nhà hoặc đất đai, thường theo thủ tục pháp lý.",
+      "example": "Authorities may evict residents from homes located in a planned reservoir.",
+      "exampleTranslation": "Chính quyền có thể buộc cư dân rời khỏi những ngôi nhà nằm trong khu vực được quy hoạch làm hồ chứa.",
+      "pos": "V"
+    },
+    {
+      "term": "high-rise",
+      "definition": "Cao tầng, dùng để mô tả tòa nhà có nhiều tầng.",
+      "example": "Several high-rise buildings now dominate the coastal city’s northern skyline.",
+      "exampleTranslation": "Một số tòa nhà cao tầng hiện chiếm ưu thế trong đường chân trời phía bắc của thành phố ven biển.",
+      "pos": "A"
+    },
+    {
+      "term": "inner city",
+      "definition": "Khu vực trung tâm của một thành phố, thường có mật độ dân cư và hoạt động kinh tế cao.",
+      "example": "Investment in the inner city has improved housing and public transport.",
+      "exampleTranslation": "Đầu tư vào khu vực trung tâm thành phố đã cải thiện nhà ở và giao thông công cộng.",
+      "pos": "N"
+    },
+    {
+      "term": "populated",
+      "definition": "Có nhiều người sinh sống hoặc cư trú.",
+      "example": "The densely populated delta faces increasing pressure on freshwater supplies.",
+      "exampleTranslation": "Vùng châu thổ đông dân cư đang chịu áp lực ngày càng tăng đối với nguồn nước ngọt.",
+      "pos": "A"
+    },
+    {
+      "term": "skyline",
+      "definition": "Đường nét hoặc hình dạng tổng thể của các tòa nhà, núi hay vật thể in lên bầu trời.",
+      "example": "New towers have altered the city’s skyline significantly over the past decade.",
+      "exampleTranslation": "Những tòa tháp mới đã làm thay đổi đáng kể đường chân trời của thành phố trong thập kỷ qua.",
+      "pos": "N"
+    },
+    {
+      "term": "skyscraper",
+      "definition": "Tòa nhà chọc trời, tức tòa nhà hiện đại rất cao trong đô thị.",
+      "example": "The coastal city built a skyscraper on reclaimed land, transforming its previously low skyline.",
+      "exampleTranslation": "Thành phố ven biển đã xây một tòa nhà chọc trời trên vùng đất lấn biển, làm thay đổi đường chân trời vốn thấp của nó.",
+      "pos": "N"
+    },
+    {
+      "term": "surroundings",
+      "definition": "Khu vực và môi trường ở xung quanh một địa điểm.",
+      "example": "Researchers mapped the village and its surroundings to assess flood risk.",
+      "exampleTranslation": "Các nhà nghiên cứu đã lập bản đồ ngôi làng và khu vực xung quanh để đánh giá nguy cơ lũ lụt.",
+      "pos": "N"
+    },
+    {
+      "term": "brittle",
+      "definition": "Giòn, dễ nứt hoặc gãy khi chịu lực hay tác động.",
+      "example": "The brittle composite fractured when engineers subjected it to repeated thermal cycling.",
+      "exampleTranslation": "Vật liệu composite giòn đã bị nứt gãy khi các kỹ sư cho nó trải qua nhiều chu kỳ nhiệt.",
+      "pos": "A"
+    },
+    {
+      "term": "crumb",
+      "definition": "Mảnh hoặc vụn nhỏ của một vật liệu.",
+      "example": "Recycled rubber crumb was mixed with asphalt to improve pavement flexibility.",
+      "exampleTranslation": "Vụn cao su tái chế được trộn với nhựa đường để cải thiện độ linh hoạt của mặt đường.",
+      "pos": "N"
+    },
+    {
+      "term": "dilute",
+      "definition": "Pha loãng một chất bằng cách thêm dung môi, thường là nước.",
+      "example": "Technicians dilute the acid carefully before measuring its conductivity.",
+      "exampleTranslation": "Các kỹ thuật viên cẩn thận pha loãng axit trước khi đo độ dẫn điện của nó.",
+      "pos": "V"
+    },
+    {
+      "term": "friction",
+      "definition": "Lực ma sát phát sinh khi hai bề mặt tiếp xúc và chuyển động tương đối.",
+      "example": "Friction between the moving surfaces generated heat and gradually wore down the coating.",
+      "exampleTranslation": "Ma sát giữa các bề mặt chuyển động tạo ra nhiệt và dần làm mòn lớp phủ.",
+      "pos": "N"
+    },
+    {
+      "term": "grind",
+      "definition": "Nghiền hoặc xay một chất thành các hạt hay bột nhỏ.",
+      "example": "Manufacturers grind the mineral into a fine powder before chemical processing.",
+      "exampleTranslation": "Các nhà sản xuất nghiền khoáng chất thành bột mịn trước khi xử lý hóa học.",
+      "pos": "V"
+    },
+    {
+      "term": "opaque",
+      "definition": "Mờ đục, không cho ánh sáng nhìn thấy truyền qua.",
+      "example": "The opaque coating blocked visible light but allowed limited infrared radiation to pass.",
+      "exampleTranslation": "Lớp phủ mờ đục chặn ánh sáng nhìn thấy nhưng cho một lượng hạn chế bức xạ hồng ngoại đi qua.",
+      "pos": "A"
+    },
+    {
+      "term": "pat",
+      "definition": "vỗ hoặc ấn nhẹ để làm phẳng hay tạo hình vật liệu",
+      "example": "Technicians pat the layered mixture into a mould before controlled heating begins.",
+      "exampleTranslation": "Các kỹ thuật viên ấn nhẹ hỗn hợp nhiều lớp vào khuôn trước khi bắt đầu gia nhiệt có kiểm soát.",
+      "pos": "V"
+    },
+    {
+      "term": "polish",
+      "definition": "đánh bóng hoặc làm nhẵn bề mặt vật liệu",
+      "example": "Researchers polish metal samples before examining their microstructures under an optical microscope.",
+      "exampleTranslation": "Các nhà nghiên cứu đánh bóng các mẫu kim loại trước khi kiểm tra cấu trúc vi mô của chúng dưới kính hiển vi quang học.",
+      "pos": "V"
+    },
+    {
+      "term": "scrub",
+      "definition": "chà mạnh để loại bỏ chất bẩn hoặc cặn bám trên bề mặt",
+      "example": "Engineers scrub the composite surface to remove residues before measuring its tensile strength.",
+      "exampleTranslation": "Các kỹ sư chà bề mặt vật liệu composite để loại bỏ cặn trước khi đo độ bền kéo của nó.",
+      "pos": "V"
+    },
+    {
+      "term": "smash",
+      "definition": "sự va đập hoặc vỡ mạnh, thường tạo ra tiếng động lớn",
+      "example": "The impact produced a loud smash as the brittle ceramic fractured during testing.",
+      "exampleTranslation": "Cú va chạm tạo ra tiếng vỡ lớn khi vật liệu gốm giòn bị nứt vỡ trong quá trình thử nghiệm.",
+      "pos": "N"
+    },
+    {
+      "term": "squash",
+      "definition": "ép hoặc nén mạnh khiến vật liệu bị biến dạng",
+      "example": "Engineers squash polymer samples to assess their resistance to permanent deformation.",
+      "exampleTranslation": "Các kỹ sư nén các mẫu polymer để đánh giá khả năng chống biến dạng vĩnh viễn của chúng.",
+      "pos": "V"
+    },
+    {
+      "term": "texture",
+      "definition": "đặc điểm bề mặt của vật liệu, đặc biệt là cảm giác hoặc cấu trúc khi chạm vào",
+      "example": "Microscopy revealed a rough texture caused by uneven crystallization within the alloy.",
+      "exampleTranslation": "Kính hiển vi cho thấy một bề mặt thô ráp do sự kết tinh không đồng đều bên trong hợp kim.",
+      "pos": "N"
+    },
+    {
+      "term": "caption",
+      "definition": "lời chú thích đi kèm hình ảnh, giải thích nội dung hoặc bối cảnh của hình ảnh đó",
+      "example": "The exhibition catalogue includes a caption explaining the sculpture's materials and cultural significance.",
+      "exampleTranslation": "Danh mục triển lãm có một chú thích giải thích vật liệu và ý nghĩa văn hóa của tác phẩm điêu khắc.",
+      "pos": "N"
+    },
+    {
+      "term": "columnist",
+      "definition": "người thường xuyên viết một chuyên mục hoặc bài bình luận cho báo chí",
+      "example": "The columnist analysed how public murals reflected changing attitudes toward industrial heritage.",
+      "exampleTranslation": "Nhà bình luận phân tích cách các bức tranh tường công cộng phản ánh những quan điểm đang thay đổi về di sản công nghiệp.",
+      "pos": "N"
+    },
+    {
+      "term": "correspondent",
+      "definition": "Phóng viên hoặc nhà báo được giao đưa tin thường xuyên từ một địa điểm hay lĩnh vực cụ thể.",
+      "example": "The museum's correspondent reported on the exhibition opening for a national newspaper.",
+      "exampleTranslation": "Phóng viên của bảo tàng đã đưa tin về lễ khai mạc triển lãm cho một tờ báo quốc gia.",
+      "pos": "N"
+    },
+    {
+      "term": "footnote",
+      "definition": "Cước chú ở cuối trang, dùng để giải thích hoặc cung cấp nguồn cho một thông tin trong văn bản.",
+      "example": "The historian added a footnote to clarify the painting's uncertain date.",
+      "exampleTranslation": "Nhà sử học đã thêm một cước chú để làm rõ niên đại chưa chắc chắn của bức tranh.",
+      "pos": "N"
+    },
+    {
+      "term": "ghostwriter",
+      "definition": "Người bí mật viết tác phẩm hoặc văn bản thay cho người khác, thường không được ghi tên.",
+      "example": "The celebrated actor hired a ghostwriter to produce her autobiography.",
+      "exampleTranslation": "Nữ diễn viên nổi tiếng đã thuê một người viết thuê để thực hiện cuốn tự truyện của mình.",
+      "pos": "N"
+    },
+    {
+      "term": "handbook",
+      "definition": "Sách hướng dẫn ngắn gọn, cung cấp thông tin thực hành hoặc kiến thức cơ bản về một lĩnh vực.",
+      "example": "The handbook introduces major artistic movements and their defining characteristics.",
+      "exampleTranslation": "Cuốn sổ tay giới thiệu những phong trào nghệ thuật lớn và các đặc điểm xác định của chúng.",
+      "pos": "N"
+    },
+    {
+      "term": "manifesto",
+      "definition": "Bản tuyên ngôn trình bày công khai các nguyên tắc, mục tiêu hoặc quan điểm của một cá nhân hay phong trào.",
+      "example": "The artists published a manifesto rejecting traditional approaches to visual composition.",
+      "exampleTranslation": "Các nghệ sĩ đã công bố một bản tuyên ngôn bác bỏ những cách tiếp cận truyền thống đối với bố cục thị giác.",
+      "pos": "N"
+    },
+    {
+      "term": "pamphlet",
+      "definition": "Tập sách nhỏ, thường đề cập ngắn gọn đến một chủ đề hoặc vấn đề cụ thể.",
+      "example": "The gallery distributed a pamphlet explaining the exhibition's historical background.",
+      "exampleTranslation": "Phòng trưng bày đã phát một tập sách nhỏ giải thích bối cảnh lịch sử của triển lãm.",
+      "pos": "N"
+    },
+    {
+      "term": "prerecorded",
+      "definition": "Được thu âm hoặc ghi hình trước, thay vì được phát trực tiếp tại thời điểm trình chiếu.",
+      "example": "The archive includes prerecorded interviews with pioneering poets from the region.",
+      "exampleTranslation": "Kho lưu trữ bao gồm các cuộc phỏng vấn được ghi âm trước với những nhà thơ tiên phong trong khu vực.",
+      "pos": "A"
+    },
+    {
+      "term": "reviewer",
+      "definition": "Người viết bài đánh giá và phê bình sách, phim, tác phẩm nghệ thuật hoặc sản phẩm văn hóa.",
+      "example": "The reviewer praised the novel's complex structure but questioned its conclusion.",
+      "exampleTranslation": "Nhà phê bình khen ngợi kết cấu phức tạp của cuốn tiểu thuyết nhưng nghi ngờ phần kết của nó.",
+      "pos": "N"
+    },
+    {
+      "term": "spine",
+      "definition": "Gáy sách, phần dọc giữ và nối các trang sách.",
+      "example": "The exhibition catalogue explains how the book's spine reflects its historical design.",
+      "exampleTranslation": "Cuốn danh mục triển lãm giải thích cách gáy sách phản ánh thiết kế lịch sử của nó.",
+      "pos": "N"
+    },
+    {
+      "term": "subtitles",
+      "definition": "Phụ đề, phần văn bản hiển thị lời thoại hoặc nội dung lời nói trên màn hình.",
+      "example": "Vietnamese subtitles enabled international audiences to understand the documentary's technical arguments.",
+      "exampleTranslation": "Phụ đề tiếng Việt giúp khán giả quốc tế hiểu những lập luận chuyên môn của bộ phim tài liệu.",
+      "pos": "N"
+    },
+    {
+      "term": "tabloid",
+      "definition": "Báo khổ nhỏ, thường đăng các tin ngắn và nội dung giật gân.",
+      "example": "The study examines how a tabloid simplifies complex environmental research for readers.",
+      "exampleTranslation": "Nghiên cứu xem xét cách một tờ báo khổ nhỏ đơn giản hóa nghiên cứu môi trường phức tạp cho độc giả.",
+      "pos": "N"
+    },
+    {
+      "term": "trailer",
+      "definition": "Đoạn phim quảng bá ngắn giới thiệu một bộ phim hoặc chương trình sắp phát hành.",
+      "example": "The museum released a trailer to promote its exhibition on ancient sculpture.",
+      "exampleTranslation": "Bảo tàng phát hành một đoạn phim quảng bá để giới thiệu triển lãm về điêu khắc cổ đại.",
+      "pos": "N"
+    },
+    {
+      "term": "audition",
+      "definition": "Buổi thử giọng hoặc thử vai để tuyển chọn người biểu diễn.",
+      "example": "The theatre held an audition to select performers for its historical drama.",
+      "exampleTranslation": "Nhà hát tổ chức một buổi thử vai để tuyển chọn diễn viên cho vở kịch lịch sử.",
+      "pos": "N"
+    },
+    {
+      "term": "bestseller",
+      "definition": "Tác phẩm, đặc biệt là sách, bán được số lượng rất lớn.",
+      "example": "The novel became a bestseller after critics praised its portrayal of migration.",
+      "exampleTranslation": "Cuốn tiểu thuyết trở thành sách bán chạy sau khi các nhà phê bình khen ngợi cách tác phẩm khắc họa vấn đề di cư.",
+      "pos": "N"
+    },
+    {
+      "term": "collector's item",
+      "definition": "Vật phẩm được xem là đáng sưu tầm, thường vì tính hiếm hoặc giá trị đặc biệt.",
+      "example": "The signed first edition is now a collector's item in literary auctions.",
+      "exampleTranslation": "Ấn bản đầu tiên có chữ ký hiện là một vật phẩm sưu tầm trong các cuộc đấu giá văn học.",
+      "pos": "N"
+    },
+    {
+      "term": "fine art",
+      "definition": "Mỹ thuật, các loại hình nghệ thuật chủ yếu nhằm thể hiện giá trị thẩm mỹ và sáng tạo.",
+      "example": "The university course distinguishes fine art from commercial design and applied crafts.",
+      "exampleTranslation": "Khóa học đại học phân biệt mỹ thuật với thiết kế thương mại và các ngành thủ công ứng dụng.",
+      "pos": "N"
+    },
+    {
+      "term": "lines",
+      "definition": "những câu thơ hoặc lời thoại được thể hiện trong một tác phẩm văn học, sân khấu hay âm nhạc",
+      "example": "The exhibition compares lines from several poems about migration and cultural identity.",
+      "exampleTranslation": "Triển lãm so sánh những câu thơ từ một số bài thơ về di cư và bản sắc văn hóa.",
+      "pos": "N"
+    },
+    {
+      "term": "lyrics",
+      "definition": "lời của một bài hát, đặc biệt là phần ngôn từ được phổ nhạc",
+      "example": "The researcher analysed the lyrics to identify recurring themes of social inequality.",
+      "exampleTranslation": "Nhà nghiên cứu phân tích lời bài hát để xác định những chủ đề lặp lại về bất bình đẳng xã hội.",
+      "pos": "N"
+    },
+    {
+      "term": "recital",
+      "definition": "buổi biểu diễn độc tấu hoặc trình diễn riêng của một nghệ sĩ",
+      "example": "The pianist gave a recital featuring works by composers from three continents.",
+      "exampleTranslation": "Nghệ sĩ piano đã tổ chức một buổi độc tấu gồm các tác phẩm của những nhà soạn nhạc từ ba châu lục.",
+      "pos": "N"
+    },
+    {
+      "term": "retrospective",
+      "definition": "cuộc triển lãm nhìn lại toàn bộ hoặc một giai đoạn trong sự nghiệp của nghệ sĩ",
+      "example": "The museum's retrospective traces the painter's changing style over four decades.",
+      "exampleTranslation": "Triển lãm hồi tưởng của bảo tàng theo dõi sự thay đổi phong cách của họa sĩ trong bốn thập kỷ.",
+      "pos": "N"
+    },
+    {
+      "term": "work of art",
+      "definition": "tác phẩm nghệ thuật được tạo ra bằng kỹ năng và trí tưởng tượng",
+      "example": "The sculpture is widely regarded as an important work of art.",
+      "exampleTranslation": "Tác phẩm điêu khắc này được xem rộng rãi là một tác phẩm nghệ thuật quan trọng.",
+      "pos": "N"
+    },
+    {
+      "term": "worthless",
+      "definition": "không có giá trị hoặc không có giá trị nghệ thuật đáng kể",
+      "example": "The critic dismissed the painting as worthless because it lacked originality and technique.",
+      "exampleTranslation": "Nhà phê bình bác bỏ bức tranh là vô giá trị vì nó thiếu tính độc đáo và kỹ thuật.",
+      "pos": "A"
+    },
+    {
+      "term": "absorbing",
+      "definition": "rất cuốn hút, khiến người xem hoặc người đọc tập trung và say mê",
+      "example": "The documentary provides an absorbing account of the region's musical traditions.",
+      "exampleTranslation": "Bộ phim tài liệu đưa ra một bài tường thuật cuốn hút về các truyền thống âm nhạc của khu vực.",
+      "pos": "A"
+    },
+    {
+      "term": "casual",
+      "definition": "mang tính tự nhiên, không trang trọng hoặc không được sắp đặt kỹ lưỡng",
+      "example": "The gallery displays casual sketches that reveal the artist's daily observations.",
+      "exampleTranslation": "Phòng trưng bày giới thiệu những bản phác thảo tự nhiên, cho thấy những quan sát hằng ngày của nghệ sĩ.",
+      "pos": "A"
+    },
+    {
+      "term": "exhilarating",
+      "definition": "Mang lại cảm giác phấn khích, hào hứng và tràn đầy năng lượng.",
+      "example": "The exhibition's exhilarating blend of colour and movement challenged conventional ideas about portraiture.",
+      "exampleTranslation": "Sự kết hợp đầy phấn khích giữa màu sắc và chuyển động của triển lãm đã thách thức những quan niệm truyền thống về nghệ thuật chân dung.",
+      "pos": "A"
+    },
+    {
+      "term": "fatigue",
+      "definition": "Sự mệt mỏi hoặc suy giảm hứng thú do tiếp xúc, hoạt động kéo dài.",
+      "example": "Repeated exposure to similar melodies can cause audience fatigue and reduce appreciation of experimental music.",
+      "exampleTranslation": "Việc thường xuyên tiếp xúc với những giai điệu tương tự có thể gây ra sự mệt mỏi ở khán giả và làm giảm sự yêu thích đối với âm nhạc thử nghiệm.",
+      "pos": "N"
+    },
+    {
+      "term": "indulge",
+      "definition": "Cho phép bản thân hoặc người khác thoả sức làm điều mình thích, thường là để thưởng thức hoặc khám phá.",
+      "example": "The museum allows visitors to indulge their curiosity through interactive displays and archival recordings.",
+      "exampleTranslation": "Bảo tàng cho phép khách tham quan thoả sức khám phá sự tò mò của mình thông qua các khu trưng bày tương tác và bản ghi âm lưu trữ.",
+      "pos": "V"
+    },
+    {
+      "term": "respite",
+      "definition": "Khoảng thời gian nghỉ ngơi hoặc tạm thoát khỏi hoạt động, áp lực hay sự ồn ào.",
+      "example": "The quiet courtyard provides a welcome respite from the gallery's crowded main halls.",
+      "exampleTranslation": "Sân trong yên tĩnh mang lại khoảng nghỉ ngơi dễ chịu khỏi những sảnh chính đông đúc của phòng trưng bày.",
+      "pos": "N"
+    },
+    {
+      "term": "solitude",
+      "definition": "Trạng thái ở một mình, thường trong không gian yên tĩnh, vắng vẻ.",
+      "example": "Many poets sought solitude in rural landscapes to develop distinctive voices and reflective themes.",
+      "exampleTranslation": "Nhiều nhà thơ tìm kiếm sự tĩnh lặng ở những vùng nông thôn để phát triển tiếng nói riêng biệt và các chủ đề giàu tính suy ngẫm.",
+      "pos": "N"
+    },
+    {
+      "term": "tedious",
+      "definition": "Chán ngắt và thiếu hấp dẫn vì kéo dài, lặp lại hoặc đơn điệu.",
+      "example": "Although technically precise, the documentary becomes tedious when it repeats established interpretations without new evidence.",
+      "exampleTranslation": "Mặc dù chính xác về mặt kỹ thuật, bộ phim tài liệu trở nên tẻ nhạt khi lặp lại những cách diễn giải đã có mà không đưa ra bằng chứng mới.",
+      "pos": "A"
+    },
+    {
+      "term": "trivial",
+      "definition": "Tầm thường, không đáng kể hoặc không đủ quan trọng để được chú ý nghiêm túc.",
+      "example": "The critic rejected the view that popular art addresses only trivial subjects.",
+      "exampleTranslation": "Nhà phê bình bác bỏ quan điểm cho rằng nghệ thuật đại chúng chỉ đề cập đến những chủ đề tầm thường.",
+      "pos": "A"
+    },
+    {
+      "term": "unwind",
+      "definition": "Thư giãn và giảm căng thẳng sau một hoạt động hoặc khoảng thời gian mệt mỏi.",
+      "example": "Visitors often use the museum garden to unwind after studying demanding historical exhibitions.",
+      "exampleTranslation": "Khách tham quan thường sử dụng khu vườn của bảo tàng để thư giãn sau khi xem những triển lãm lịch sử đòi hỏi nhiều tập trung.",
+      "pos": "V"
+    },
+    {
+      "term": "broadband",
+      "definition": "Dịch vụ hoặc kết nối Internet tốc độ cao sử dụng băng thông rộng để truyền dữ liệu.",
+      "example": "Affordable broadband enables rural communities to access online education and essential public services.",
+      "exampleTranslation": "Băng thông rộng với chi phí phải chăng giúp các cộng đồng nông thôn tiếp cận giáo dục trực tuyến và các dịch vụ công thiết yếu.",
+      "pos": "N"
+    },
+    {
+      "term": "consumer electronics",
+      "definition": "Các thiết bị điện tử được sản xuất để phục vụ nhu cầu sử dụng của người tiêu dùng.",
+      "example": "Rapid innovation has reduced the average lifespan of consumer electronics.",
+      "exampleTranslation": "Đổi mới nhanh chóng đã làm giảm thời gian sử dụng trung bình của các thiết bị điện tử tiêu dùng.",
+      "pos": "N"
+    },
+    {
+      "term": "offline",
+      "definition": "Không kết nối với Internet hoặc không hoạt động thông qua mạng trực tuyến.",
+      "example": "The application allows users to access maps offline in remote regions.",
+      "exampleTranslation": "Ứng dụng cho phép người dùng truy cập bản đồ ngoại tuyến tại các khu vực hẻo lánh.",
+      "pos": "A"
+    },
+    {
+      "term": "upload",
+      "definition": "Đưa dữ liệu hoặc tệp từ thiết bị cá nhân lên một hệ thống hoặc máy chủ trực tuyến.",
+      "example": "Researchers upload anonymised survey data to a secure university server.",
+      "exampleTranslation": "Các nhà nghiên cứu tải dữ liệu khảo sát đã ẩn danh lên một máy chủ an toàn của trường đại học.",
+      "pos": "V"
+    },
+    {
+      "term": "damages",
+      "definition": "Gây thiệt hại hoặc làm suy giảm một đối tượng, hoạt động hay lợi ích nào đó.",
+      "example": "Excessive taxation damages consumer confidence and slows investment in small enterprises.",
+      "exampleTranslation": "Việc đánh thuế quá mức làm suy giảm niềm tin của người tiêu dùng và làm chậm đầu tư vào các doanh nghiệp nhỏ.",
+      "pos": "V"
+    },
+    {
+      "term": "debt",
+      "definition": "Khoản tiền hoặc nghĩa vụ tài chính mà một cá nhân, tổ chức hay chính phủ phải trả.",
+      "example": "High household debt can restrict spending and weaken economic recovery.",
+      "exampleTranslation": "Nợ hộ gia đình cao có thể hạn chế chi tiêu và làm suy yếu quá trình phục hồi kinh tế.",
+      "pos": "N"
+    },
+    {
+      "term": "deduct",
+      "definition": "Trừ một khoản tiền khỏi tổng số, đặc biệt khi tính thu nhập, chi phí hoặc thuế.",
+      "example": "Employers deduct pension contributions from workers' monthly salaries.",
+      "exampleTranslation": "Người sử dụng lao động khấu trừ các khoản đóng góp lương hưu từ tiền lương hằng tháng của người lao động.",
+      "pos": "V"
+    },
+    {
+      "term": "direct debit",
+      "definition": "Phương thức thanh toán cho phép một tổ chức tự động rút tiền từ tài khoản ngân hàng của khách hàng.",
+      "example": "Many households use direct debit to pay recurring utility bills.",
+      "exampleTranslation": "Nhiều hộ gia đình sử dụng hình thức ghi nợ trực tiếp để thanh toán các hóa đơn tiện ích định kỳ.",
+      "pos": "N"
+    },
+    {
+      "term": "dividend",
+      "definition": "Cổ tức; khoản lợi nhuận được công ty chia cho các cổ đông.",
+      "example": "The company increased its dividend after reporting stronger profits and improved cash flow.",
+      "exampleTranslation": "Công ty đã tăng cổ tức sau khi báo cáo lợi nhuận cao hơn và dòng tiền được cải thiện.",
+      "pos": "N"
+    },
+    {
+      "term": "down payment",
+      "definition": "Khoản tiền trả trước khi mua hàng hóa hoặc tài sản, đặc biệt là nhà đất.",
+      "example": "A larger down payment can reduce the mortgage required to purchase a commercial property.",
+      "exampleTranslation": "Khoản tiền trả trước lớn hơn có thể làm giảm khoản thế chấp cần thiết để mua một bất động sản thương mại.",
+      "pos": "N"
+    },
+    {
+      "term": "lump sum",
+      "definition": "Một khoản tiền được trả hoặc nhận một lần, thay vì chia thành nhiều khoản nhỏ.",
+      "example": "Workers may receive a lump sum instead of regular payments under the revised compensation scheme.",
+      "exampleTranslation": "Người lao động có thể nhận một khoản tiền trả một lần thay vì các khoản thanh toán định kỳ theo chương trình bồi thường được sửa đổi.",
+      "pos": "N"
+    },
+    {
+      "term": "overdraft",
+      "definition": "Khoản tiền rút vượt quá số dư tài khoản ngân hàng được cho phép.",
+      "example": "The bank charged interest when the firm used an overdraft to cover temporary shortages.",
+      "exampleTranslation": "Ngân hàng tính lãi khi doanh nghiệp sử dụng khoản thấu chi để bù đắp tình trạng thiếu hụt tạm thời.",
+      "pos": "N"
+    },
+    {
+      "term": "pension",
+      "definition": "Khoản tiền được trả định kỳ cho người đã nghỉ hưu hoặc đủ điều kiện hưởng trợ cấp hưu trí.",
+      "example": "Rising life expectancy is placing additional pressure on public pension systems.",
+      "exampleTranslation": "Tuổi thọ ngày càng tăng đang gây thêm áp lực lên các hệ thống lương hưu công cộng.",
+      "pos": "N"
+    },
+    {
+      "term": "pay out",
+      "definition": "Chi trả một khoản tiền, đặc biệt là tiền bảo hiểm, tiền thắng hoặc tiền lương.",
+      "example": "Insurance companies may pay out compensation when documented losses meet the policy conditions.",
+      "exampleTranslation": "Các công ty bảo hiểm có thể chi trả tiền bồi thường khi những tổn thất được chứng minh đáp ứng các điều kiện của hợp đồng.",
+      "pos": "V"
+    },
+    {
+      "term": "bully",
+      "definition": "Kẻ bắt nạt hoặc dùng quyền lực để đe dọa, ép buộc người khác.",
+      "example": "A powerful state may bully smaller neighbours by threatening trade restrictions or diplomatic isolation.",
+      "exampleTranslation": "Một quốc gia hùng mạnh có thể bắt nạt các nước láng giềng nhỏ hơn bằng cách đe dọa hạn chế thương mại hoặc cô lập ngoại giao.",
+      "pos": "N"
+    },
+    {
+      "term": "consent",
+      "definition": "Sự đồng ý hoặc chấp thuận, thường được đưa ra một cách chính thức.",
+      "example": "The government sought public consent before introducing major changes to electoral law.",
+      "exampleTranslation": "Chính phủ tìm kiếm sự đồng thuận của công chúng trước khi đưa ra những thay đổi lớn đối với luật bầu cử.",
+      "pos": "N"
+    },
+    {
+      "term": "dictator",
+      "definition": "kẻ độc tài, người nắm quyền lực tuyệt đối và thường cai trị mà không chịu sự kiểm soát dân chủ",
+      "example": "The dictator dissolved parliament and restricted elections to preserve his control over the state.",
+      "exampleTranslation": "Nhà độc tài giải tán quốc hội và hạn chế bầu cử để duy trì quyền kiểm soát nhà nước.",
+      "pos": "N"
+    },
+    {
+      "term": "entitled",
+      "definition": "có quyền được hưởng hoặc thực hiện điều gì theo luật pháp hoặc quy định",
+      "example": "All citizens are entitled to participate in elections without discrimination based on gender or ethnicity.",
+      "exampleTranslation": "Mọi công dân đều có quyền tham gia bầu cử mà không bị phân biệt đối xử vì giới tính hoặc dân tộc.",
+      "pos": "A"
+    },
+    {
+      "term": "exempt",
+      "definition": "được miễn một nghĩa vụ, khoản thuế hoặc quy định nào đó",
+      "example": "Small community organisations are exempt from certain registration fees under the revised administrative regulations.",
+      "exampleTranslation": "Các tổ chức cộng đồng nhỏ được miễn một số khoản phí đăng ký theo những quy định hành chính sửa đổi.",
+      "pos": "A"
+    },
+    {
+      "term": "intimidate",
+      "definition": "đe dọa hoặc gây sợ hãi nhằm khiến ai đó không dám hành động hay lên tiếng",
+      "example": "Authorities must not intimidate journalists who investigate corruption within public institutions.",
+      "exampleTranslation": "Các cơ quan chức năng không được đe dọa những nhà báo điều tra tham nhũng trong các tổ chức công.",
+      "pos": "V"
+    },
+    {
+      "term": "reign",
+      "definition": "thời gian một vị vua hoặc nữ hoàng cai trị; triều đại",
+      "example": "During her reign, the monarch introduced reforms that strengthened local representation in government.",
+      "exampleTranslation": "Trong thời gian trị vì của mình, nữ hoàng đã đưa ra các cải cách nhằm củng cố sự đại diện địa phương trong chính quyền.",
+      "pos": "N"
+    },
+    {
+      "term": "submit",
+      "definition": "nộp hoặc đệ trình tài liệu, đề xuất hay báo cáo cho cơ quan có thẩm quyền",
+      "example": "Political parties must submit their campaign-finance reports to the electoral commission annually.",
+      "exampleTranslation": "Các đảng phái chính trị phải nộp báo cáo tài chính tranh cử cho ủy ban bầu cử hằng năm.",
+      "pos": "V"
+    },
+    {
+      "term": "summon",
+      "definition": "triệu tập hoặc yêu cầu ai đó đến, thường để cung cấp thông tin hoặc giải trình",
+      "example": "The committee may summon senior officials to explain delays in implementing the new policy.",
+      "exampleTranslation": "Ủy ban có thể triệu tập các quan chức cấp cao để giải thích những chậm trễ trong việc thực hiện chính sách mới.",
+      "pos": "V"
+    },
+    {
+      "term": "advocate",
+      "definition": "ủng hộ hoặc công khai chủ trương một ý tưởng, chính sách hay quyền lợi",
+      "example": "Community organisations advocate greater civic participation in decisions affecting local residents.",
+      "exampleTranslation": "Các tổ chức cộng đồng ủng hộ sự tham gia dân sự lớn hơn vào những quyết định ảnh hưởng đến cư dân địa phương.",
+      "pos": "V"
+    },
+    {
+      "term": "class",
+      "definition": "Giai tầng xã hội, được xác định phần nào bởi địa vị kinh tế và xã hội.",
+      "example": "Researchers found that social class strongly influenced access to higher education and civic participation.",
+      "exampleTranslation": "Các nhà nghiên cứu nhận thấy giai tầng xã hội ảnh hưởng đáng kể đến khả năng tiếp cận giáo dục đại học và sự tham gia công dân.",
+      "pos": "N"
+    },
+    {
+      "term": "convict",
+      "definition": "Người bị kết án tù hoặc đang chấp hành án tù.",
+      "example": "The programme helped each convict develop skills needed for employment after release.",
+      "exampleTranslation": "Chương trình giúp mỗi người tù phát triển những kỹ năng cần thiết để tìm việc sau khi được thả.",
+      "pos": "N"
+    },
+    {
+      "term": "prison reform",
+      "definition": "Cải cách hệ thống nhà tù nhằm cải thiện điều kiện giam giữ và hỗ trợ việc tái hòa nhập xã hội.",
+      "example": "Effective prison reform can reduce reoffending by improving education, healthcare, and family contact.",
+      "exampleTranslation": "Cải cách nhà tù hiệu quả có thể giảm tình trạng tái phạm bằng cách cải thiện giáo dục, chăm sóc y tế và sự liên lạc với gia đình.",
+      "pos": "N"
+    },
+    {
+      "term": "privileged",
+      "definition": "Có những lợi thế hoặc quyền đặc biệt mà nhiều người khác không được hưởng.",
+      "example": "Privileged students often receive social advantages that remain unavailable to their less wealthy peers.",
+      "exampleTranslation": "Học sinh có đặc quyền thường nhận được những lợi thế xã hội mà các bạn có hoàn cảnh kém khá giả hơn không được hưởng.",
+      "pos": "A"
+    },
+    {
+      "term": "prosecute",
+      "definition": "Khởi tố và đưa một người hoặc tổ chức ra tòa vì bị cáo buộc vi phạm pháp luật.",
+      "example": "Authorities may prosecute employers who systematically exclude disabled people from meaningful work.",
+      "exampleTranslation": "Các cơ quan chức năng có thể khởi tố những người sử dụng lao động thường xuyên loại người khuyết tật khỏi những công việc có ý nghĩa.",
+      "pos": "V"
+    },
+    {
+      "term": "coherent",
+      "definition": "Mạch lạc, hợp lý và liên kết chặt chẽ giữa các phần hoặc ý tưởng.",
+      "example": "A coherent policy should connect rehabilitation, community support, and long-term employment opportunities.",
+      "exampleTranslation": "Một chính sách mạch lạc nên liên kết việc phục hồi, hỗ trợ cộng đồng và các cơ hội việc làm lâu dài.",
+      "pos": "A"
+    },
+    {
+      "term": "comprise",
+      "definition": "Bao gồm hoặc được cấu thành từ các thành phần cụ thể.",
+      "example": "The committee comprises former prisoners, social workers, employers, and local government representatives.",
+      "exampleTranslation": "Ủy ban gồm các cựu tù nhân, nhân viên xã hội, người sử dụng lao động và đại diện chính quyền địa phương.",
+      "pos": "V"
+    },
+    {
+      "term": "contrasting",
+      "definition": "Khác biệt rõ rệt hoặc đối lập với nhau.",
+      "example": "Contrasting experiences of inclusion reveal how institutions can either empower or marginalise citizens.",
+      "exampleTranslation": "Những trải nghiệm trái ngược về sự hòa nhập cho thấy các thể chế có thể trao quyền hoặc gạt công dân ra bên lề như thế nào.",
+      "pos": "A"
+    },
+    {
+      "term": "divorce",
+      "definition": "Sự ly hôn; sự chấm dứt hợp pháp của một cuộc hôn nhân.",
+      "example": "High divorce rates can reshape household structures and influence children's access to social support.",
+      "exampleTranslation": "Tỷ lệ ly hôn cao có thể định hình lại cơ cấu hộ gia đình và ảnh hưởng đến khả năng tiếp cận hỗ trợ xã hội của trẻ em.",
+      "pos": "N"
+    },
+    {
+      "term": "identify with",
+      "definition": "Cảm thấy đồng cảm, gần gũi hoặc có sự gắn kết với một người hay một nhóm.",
+      "example": "Young migrants may identify with local cultural groups while maintaining ties to their communities of origin.",
+      "exampleTranslation": "Những người di cư trẻ có thể cảm thấy gắn kết với các nhóm văn hóa địa phương trong khi vẫn duy trì mối liên hệ với cộng đồng nơi họ xuất thân.",
+      "pos": "V"
+    },
+    {
+      "term": "joint",
+      "definition": "Chung; được thực hiện hoặc tiến hành bởi hai hay nhiều bên cùng nhau.",
+      "example": "Regular joint activities can strengthen trust among residents from different backgrounds.",
+      "exampleTranslation": "Các hoạt động chung thường xuyên có thể củng cố lòng tin giữa những cư dân có xuất thân khác nhau.",
+      "pos": "A"
+    },
+    {
+      "term": "related",
+      "definition": "Có liên quan hoặc có mối quan hệ với một người, sự vật hay vấn đề khác.",
+      "example": "The survey examined health outcomes related to social isolation among older adults.",
+      "exampleTranslation": "Cuộc khảo sát xem xét các kết quả sức khỏe liên quan đến sự cô lập xã hội ở người cao tuổi.",
+      "pos": "A"
+    },
+    {
+      "term": "acquaintance",
+      "definition": "Sự quen biết; người mà ta biết nhưng chưa đủ thân thiết để gọi là bạn.",
+      "example": "Limited acquaintance with digital services can exclude older adults from online civic participation.",
+      "exampleTranslation": "Sự ít quen thuộc với các dịch vụ số có thể khiến người cao tuổi bị loại khỏi hoạt động công dân trực tuyến.",
+      "pos": "N"
+    },
+    {
+      "term": "companion",
+      "definition": "Người đồng hành hoặc người ở bên để bầu bạn và hỗ trợ.",
+      "example": "A trained companion can reduce loneliness among older adults living independently.",
+      "exampleTranslation": "Một người đồng hành được đào tạo có thể làm giảm sự cô đơn ở những người cao tuổi sống độc lập.",
+      "pos": "N"
+    },
+    {
+      "term": "dependant",
+      "definition": "Người sống phụ thuộc vào người khác, đặc biệt về tài chính hoặc sự chăm sóc.",
+      "example": "A household dependant may require financial support when the primary earner loses employment.",
+      "exampleTranslation": "Một người phụ thuộc trong gia đình có thể cần hỗ trợ tài chính khi người kiếm thu nhập chính mất việc.",
+      "pos": "N"
+    },
+    {
+      "term": "empathise",
+      "definition": "Đồng cảm bằng cách hiểu và cảm nhận được hoàn cảnh hoặc cảm xúc của người khác.",
+      "example": "Teachers who empathise with displaced students can create more inclusive learning environments.",
+      "exampleTranslation": "Những giáo viên đồng cảm với học sinh phải di dời có thể tạo ra môi trường học tập hòa nhập hơn.",
+      "pos": "V"
+    },
+    {
+      "term": "guardian",
+      "definition": "Người bảo vệ hoặc người được pháp luật chỉ định để chăm sóc và đại diện cho người chưa thành niên.",
+      "example": "A legal guardian helped the young participant access education and manage inherited property.",
+      "exampleTranslation": "Một người giám hộ hợp pháp đã giúp người tham gia trẻ tuổi tiếp cận giáo dục và quản lý tài sản thừa kế.",
+      "pos": "N"
+    },
+    {
+      "term": "stepmother",
+      "definition": "Người phụ nữ là vợ của cha nhưng không phải mẹ ruột của một người con.",
+      "example": "The survey examined how a supportive stepmother influenced adolescents' social participation.",
+      "exampleTranslation": "Cuộc khảo sát xem xét một người mẹ kế biết hỗ trợ đã ảnh hưởng như thế nào đến sự tham gia xã hội của thanh thiếu niên.",
+      "pos": "N"
+    },
+    {
+      "term": "son",
+      "definition": "Con trai của một người hoặc một cặp vợ chồng.",
+      "example": "In many societies, a son is still expected to support elderly parents.",
+      "exampleTranslation": "Trong nhiều xã hội, con trai vẫn được kỳ vọng sẽ phụng dưỡng cha mẹ cao tuổi.",
+      "pos": "N"
+    },
+    {
+      "term": "successor",
+      "definition": "Người tiếp nhận vị trí, chức vụ hoặc vai trò của người tiền nhiệm.",
+      "example": "The appointed successor introduced policies that expanded employee participation in organisational decisions.",
+      "exampleTranslation": "Người kế nhiệm được bổ nhiệm đã đưa ra các chính sách mở rộng sự tham gia của nhân viên vào các quyết định của tổ chức.",
+      "pos": "N"
+    },
+    {
+      "term": "sympathise",
+      "definition": "Cảm thông với hoàn cảnh của ai đó hoặc đồng tình, ủng hộ quan điểm của họ.",
+      "example": "Many citizens sympathise with migrants facing barriers to education and civic participation.",
+      "exampleTranslation": "Nhiều công dân cảm thông với những người di cư đang đối mặt với rào cản trong giáo dục và sự tham gia công dân.",
+      "pos": "V"
+    },
+    {
+      "term": "fossil fuels",
+      "definition": "Các loại nhiên liệu như than đá, dầu mỏ và khí tự nhiên hình thành từ sinh vật cổ đại.",
+      "example": "Dependence on fossil fuels declines when renewable energy becomes affordable.",
+      "exampleTranslation": "Sự phụ thuộc vào nhiên liệu hóa thạch giảm khi năng lượng tái tạo trở nên có giá phải chăng.",
+      "pos": "N"
+    },
+    {
+      "term": "global warming",
+      "definition": "Sự gia tăng lâu dài của nhiệt độ trung bình trên Trái Đất, chủ yếu do khí nhà kính.",
+      "example": "Researchers link global warming to rising temperatures, melting ice, and increasingly severe heatwaves.",
+      "exampleTranslation": "Các nhà nghiên cứu liên hệ sự nóng lên toàn cầu với nhiệt độ tăng, băng tan và các đợt nắng nóng ngày càng nghiêm trọng.",
+      "pos": "N"
+    },
+    {
+      "term": "greenery",
+      "definition": "Cây cối và thảm thực vật, đặc biệt ở một khu vực hoặc không gian cụ thể.",
+      "example": "Urban greenery can reduce surface temperatures and encourage residents to use public spaces.",
+      "exampleTranslation": "Cây xanh đô thị có thể làm giảm nhiệt độ bề mặt và khuyến khích cư dân sử dụng các không gian công cộng.",
+      "pos": "N"
+    },
+    {
+      "term": "hurricane",
+      "definition": "Một cơn bão nhiệt đới dữ dội, có sức gió rất mạnh và thường gây thiệt hại lớn.",
+      "example": "Researchers assessed how hurricane damage altered sediment movement throughout the watershed.",
+      "exampleTranslation": "Các nhà nghiên cứu đánh giá thiệt hại do bão đã làm thay đổi sự di chuyển của trầm tích trong toàn bộ lưu vực như thế nào.",
+      "pos": "N"
+    },
+    {
+      "term": "natural disaster",
+      "definition": "Thảm họa do các hiện tượng tự nhiên gây ra, chẳng hạn như động đất, lũ lụt hoặc bão.",
+      "example": "A natural disaster can expose weaknesses in regional emergency planning.",
+      "exampleTranslation": "Một thảm họa tự nhiên có thể làm bộc lộ những điểm yếu trong công tác lập kế hoạch ứng phó khẩn cấp của khu vực.",
+      "pos": "N"
+    },
+    {
+      "term": "conscientious",
+      "definition": "Tận tâm, có trách nhiệm và cẩn thận trong việc thực hiện nhiệm vụ.",
+      "example": "Conscientious students document their sources carefully when preparing reports on environmental change.",
+      "exampleTranslation": "Những sinh viên tận tâm ghi chép nguồn tài liệu cẩn thận khi chuẩn bị các báo cáo về biến đổi môi trường.",
+      "pos": "A"
+    },
+    {
+      "term": "distance learning",
+      "definition": "Hình thức học tập trong đó giáo viên và người học không cần có mặt cùng một địa điểm.",
+      "example": "Distance learning allows students in remote areas to access specialized academic courses.",
+      "exampleTranslation": "Học từ xa cho phép sinh viên ở các vùng hẻo lánh tiếp cận những khóa học chuyên ngành.",
+      "pos": "N"
+    },
+    {
+      "term": "inattentive",
+      "definition": "Không tập trung hoặc không chú ý đầy đủ đến điều đang được nói hoặc thực hiện.",
+      "example": "Inattentive readers may overlook qualifications that limit the study's conclusions.",
+      "exampleTranslation": "Những độc giả thiếu tập trung có thể bỏ qua các điều kiện giới hạn kết luận của nghiên cứu.",
+      "pos": "A"
+    },
+    {
+      "term": "mock exam",
+      "definition": "Bài thi thử được thiết kế để mô phỏng một kỳ thi chính thức.",
+      "example": "A mock exam helps students identify weaknesses before formal assessment.",
+      "exampleTranslation": "Một bài thi thử giúp sinh viên xác định điểm yếu trước kỳ đánh giá chính thức.",
+      "pos": "N"
+    },
+    {
+      "term": "self-study",
+      "definition": "Việc tự học mà không phụ thuộc hoàn toàn vào sự hướng dẫn trực tiếp của giáo viên.",
+      "example": "Regular self-study helps learners consolidate difficult concepts independently between scheduled classes.",
+      "exampleTranslation": "Việc tự học thường xuyên giúp người học tự củng cố các khái niệm khó giữa những buổi học theo lịch.",
+      "pos": "N"
+    },
+    {
+      "term": "special needs",
+      "definition": "Những nhu cầu hỗ trợ riêng biệt của người học do khuyết tật hoặc các khó khăn đặc thù.",
+      "example": "Universities should provide accessible materials for students with special needs.",
+      "exampleTranslation": "Các trường đại học nên cung cấp tài liệu dễ tiếp cận cho sinh viên có nhu cầu đặc biệt.",
+      "pos": "N"
+    },
+    {
+      "term": "tutorial",
+      "definition": "Buổi hướng dẫn học tập, thường diễn ra theo nhóm nhỏ để giải thích và thảo luận nội dung học thuật.",
+      "example": "The laboratory tutorial helped students interpret complex data from the experiment.",
+      "exampleTranslation": "Buổi hướng dẫn trong phòng thí nghiệm đã giúp sinh viên diễn giải dữ liệu phức tạp từ thí nghiệm.",
+      "pos": "N"
+    },
+    {
+      "term": "agony",
+      "definition": "Cơn đau đớn dữ dội về thể xác hoặc tinh thần.",
+      "example": "Patients with severe burns may experience agony despite receiving strong pain medication.",
+      "exampleTranslation": "Những bệnh nhân bị bỏng nặng có thể trải qua cơn đau đớn dữ dội dù đã được dùng thuốc giảm đau mạnh.",
+      "pos": "N"
+    },
+    {
+      "term": "antidote",
+      "definition": "Thuốc hoặc chất dùng để trung hòa hay giải độc một chất độc.",
+      "example": "Researchers tested an antidote that could neutralize the toxin before it damaged vital organs.",
+      "exampleTranslation": "Các nhà nghiên cứu đã thử nghiệm một loại thuốc giải độc có thể trung hòa chất độc trước khi nó làm tổn thương các cơ quan quan trọng.",
+      "pos": "N"
+    },
+    {
+      "term": "inoculate",
+      "definition": "Tiêm hoặc đưa vắc-xin vào cơ thể để tạo khả năng miễn dịch đối với bệnh.",
+      "example": "Health workers inoculate infants against measles to reduce outbreaks in vulnerable communities.",
+      "exampleTranslation": "Nhân viên y tế tiêm vắc-xin phòng bệnh sởi cho trẻ sơ sinh để giảm các đợt bùng phát trong những cộng đồng dễ bị tổn thương.",
+      "pos": "V"
+    },
+    {
+      "term": "irritation",
+      "definition": "Tình trạng da, mắt hoặc mô bị kích thích, gây ngứa, rát hoặc khó chịu.",
+      "example": "Prolonged exposure to smoke can cause eye irritation and impair visual comfort.",
+      "exampleTranslation": "Việc tiếp xúc lâu với khói có thể gây kích ứng mắt và làm giảm sự dễ chịu khi nhìn.",
+      "pos": "N"
+    },
+    {
+      "term": "nursing home",
+      "definition": "Cơ sở chăm sóc và hỗ trợ sinh hoạt cho người cao tuổi hoặc người cần chăm sóc y tế dài hạn.",
+      "example": "A nursing home provided round-the-clock care for residents with complex medical needs.",
+      "exampleTranslation": "Một cơ sở dưỡng lão đã cung cấp dịch vụ chăm sóc suốt ngày đêm cho những cư dân có nhu cầu y tế phức tạp.",
+      "pos": "N"
+    },
+    {
+      "term": "sick leave",
+      "definition": "Thời gian nghỉ làm được cho phép vì bị bệnh hoặc cần hồi phục sức khỏe.",
+      "example": "Employees may request sick leave when illness prevents them from performing their duties safely.",
+      "exampleTranslation": "Nhân viên có thể xin nghỉ ốm khi bệnh tật khiến họ không thể thực hiện nhiệm vụ một cách an toàn.",
+      "pos": "N"
+    },
+    {
+      "term": "side effect",
+      "definition": "Tác dụng không mong muốn xảy ra ngoài tác dụng chính của thuốc hoặc phương pháp điều trị.",
+      "example": "Doctors explained that drowsiness was a common side effect of the medication.",
+      "exampleTranslation": "Các bác sĩ giải thích rằng buồn ngủ là một tác dụng phụ phổ biến của loại thuốc này.",
+      "pos": "N"
+    },
+    {
+      "term": "ward",
+      "definition": "Khu hoặc phòng trong bệnh viện, nơi chăm sóc và điều trị một nhóm bệnh nhân.",
+      "example": "The pediatric ward introduced stricter hygiene procedures during the seasonal influenza outbreak.",
+      "exampleTranslation": "Khoa nhi đã áp dụng các quy trình vệ sinh nghiêm ngặt hơn trong đợt bùng phát cúm theo mùa.",
+      "pos": "N"
+    },
+    {
+      "term": "break down",
+      "definition": "Phân giải một chất hoặc hợp chất thành các thành phần đơn giản hơn.",
+      "example": "Enzymes in the digestive system break down complex nutrients into forms the body can absorb.",
+      "exampleTranslation": "Các enzyme trong hệ tiêu hóa phân giải những chất dinh dưỡng phức tạp thành dạng cơ thể có thể hấp thụ.",
+      "pos": "V"
+    },
+    {
+      "term": "ward off",
+      "definition": "Ngăn chặn hoặc đẩy lùi một căn bệnh, mối nguy hay tác động có hại.",
+      "example": "Regular handwashing can ward off infections by reducing the transfer of harmful microorganisms.",
+      "exampleTranslation": "Rửa tay thường xuyên có thể ngăn ngừa nhiễm trùng bằng cách giảm sự truyền vi sinh vật có hại.",
+      "pos": "V"
+    },
+    {
+      "term": "wear out",
+      "definition": "Khiến một bộ phận hoặc thiết bị bị mòn, hỏng do sử dụng nhiều hoặc lâu ngày.",
+      "example": "Heavy use can wear out artificial joints, eventually requiring replacement surgery.",
+      "exampleTranslation": "Việc sử dụng nhiều có thể làm mòn các khớp nhân tạo, cuối cùng đòi hỏi phẫu thuật thay thế.",
+      "pos": "V"
+    },
+    {
+      "term": "carriage",
+      "definition": "Toa hành khách trên tàu hỏa.",
+      "example": "Passengers in the rear carriage reported less noise during the overnight mountain journey.",
+      "exampleTranslation": "Hành khách ở toa phía sau cho biết có ít tiếng ồn hơn trong chuyến đi qua núi vào ban đêm.",
+      "pos": "N"
+    },
+    {
+      "term": "charter",
+      "definition": "Việc thuê toàn bộ máy bay, tàu hoặc phương tiện cho một chuyến đi cụ thể.",
+      "example": "A charter flight enabled the researchers to reach the remote island before winter.",
+      "exampleTranslation": "Một chuyến bay thuê riêng giúp các nhà nghiên cứu đến hòn đảo xa xôi trước mùa đông.",
+      "pos": "N"
+    },
+    {
+      "term": "commute",
+      "definition": "Đi lại thường xuyên, đặc biệt giữa nhà và nơi làm việc hoặc học tập.",
+      "example": "Many residents commute by train, reducing traffic congestion and daily carbon emissions.",
+      "exampleTranslation": "Nhiều cư dân đi lại bằng tàu hỏa, nhờ đó giảm ùn tắc giao thông và lượng khí thải carbon hằng ngày.",
+      "pos": "V"
+    },
+    {
+      "term": "hiker",
+      "definition": "Người đi bộ đường dài, thường trên các tuyến đường mòn ở vùng tự nhiên.",
+      "example": "Each hiker carried sufficient water because the mountain trail lacked reliable sources.",
+      "exampleTranslation": "Mỗi người đi bộ đường dài mang đủ nước vì tuyến đường mòn trên núi không có nguồn nước đáng tin cậy.",
+      "pos": "N"
+    },
+    {
+      "term": "hitchhiker",
+      "definition": "Người đi nhờ xe bằng cách vẫy xin quá giang từ các phương tiện khác.",
+      "example": "The hitchhiker reached the coastal village after accepting rides from three passing vehicles.",
+      "exampleTranslation": "Người đi nhờ xe đã đến ngôi làng ven biển sau khi được ba phương tiện đang đi qua cho quá giang.",
+      "pos": "N"
+    },
+    {
+      "term": "jet lag",
+      "definition": "Tình trạng mệt mỏi và rối loạn nhịp sinh học sau khi đi qua nhiều múi giờ.",
+      "example": "Jet lag can reduce travelers' concentration during the first few days after crossing several time zones.",
+      "exampleTranslation": "Tình trạng lệch múi giờ có thể làm giảm khả năng tập trung của du khách trong vài ngày đầu sau khi đi qua nhiều múi giờ.",
+      "pos": "N"
+    },
+    {
+      "term": "legroom",
+      "definition": "Khoảng không gian dành cho chân, đặc biệt giữa ghế ngồi và hàng ghế phía trước.",
+      "example": "Extra legroom is often available in emergency-exit rows on commercial aircraft.",
+      "exampleTranslation": "Các hàng ghế cạnh lối thoát hiểm trên máy bay thương mại thường có thêm chỗ để chân.",
+      "pos": "N"
+    },
+    {
+      "term": "passerby",
+      "definition": "Người tình cờ đi ngang qua một địa điểm.",
+      "example": "A passerby directed the lost tourists toward the nearest railway station.",
+      "exampleTranslation": "Một người đi đường đã chỉ cho những du khách bị lạc hướng đến ga đường sắt gần nhất.",
+      "pos": "N"
+    },
+    {
+      "term": "pier",
+      "definition": "Cầu tàu hoặc bến nhô ra mặt nước, nơi tàu thuyền có thể cập hoặc du khách đi dạo.",
+      "example": "The stone pier extends into the bay, allowing small boats to load passengers safely.",
+      "exampleTranslation": "Cầu tàu bằng đá vươn ra vịnh, cho phép các thuyền nhỏ đón hành khách an toàn.",
+      "pos": "N"
+    },
+    {
+      "term": "quay",
+      "definition": "Bến cảng hoặc khu vực lát bờ nơi tàu thuyền cập và hàng hóa được bốc dỡ.",
+      "example": "Tourists waited along the quay while fishing boats unloaded their morning catch.",
+      "exampleTranslation": "Du khách chờ dọc bến cảng trong khi các thuyền đánh cá dỡ sản phẩm đánh bắt buổi sáng.",
+      "pos": "N"
+    },
+    {
+      "term": "return fare",
+      "definition": "Giá vé khứ hồi, bao gồm cả lượt đi và lượt về.",
+      "example": "The return fare was cheaper than purchasing two single tickets separately.",
+      "exampleTranslation": "Giá vé khứ hồi rẻ hơn so với việc mua riêng hai vé một chiều.",
+      "pos": "N"
+    },
+    {
+      "term": "round trip",
+      "definition": "Chuyến đi khứ hồi từ một địa điểm đến nơi khác rồi quay trở lại.",
+      "example": "A round trip between the two islands takes approximately three hours by ferry.",
+      "exampleTranslation": "Một chuyến đi khứ hồi giữa hai hòn đảo mất khoảng ba giờ bằng phà.",
+      "pos": "N"
+    },
+    {
+      "term": "steward",
+      "definition": "nhân viên phục vụ hành khách trên máy bay hoặc tàu thủy",
+      "example": "The airline steward explained the emergency procedures before the aircraft left the runway.",
+      "exampleTranslation": "Nhân viên phục vụ của hãng hàng không giải thích các quy trình khẩn cấp trước khi máy bay rời đường băng.",
+      "pos": "N"
+    },
+    {
+      "term": "come across",
+      "definition": "tình cờ bắt gặp hoặc tìm thấy ai đó hay điều gì đó",
+      "example": "Tourists may come across a village absent from the official tourist map.",
+      "exampleTranslation": "Du khách có thể tình cờ bắt gặp một ngôi làng không có trên bản đồ du lịch chính thức.",
+      "pos": "V"
+    },
+    {
+      "term": "come round",
+      "definition": "tỉnh lại sau khi ngất hoặc mất ý thức",
+      "example": "After fainting during the hike, the visitor soon began to come round.",
+      "exampleTranslation": "Sau khi ngất trong chuyến đi bộ đường dài, du khách nhanh chóng tỉnh lại.",
+      "pos": "V"
+    },
+    {
+      "term": "go back",
+      "definition": "quay trở lại một địa điểm hoặc nơi nào đó",
+      "example": "Many visitors go back to the island because its beaches remain relatively undeveloped.",
+      "exampleTranslation": "Nhiều du khách quay lại hòn đảo vì những bãi biển ở đó vẫn tương đối hoang sơ.",
+      "pos": "V"
+    },
+    {
+      "term": "fall behind",
+      "definition": "tụt lại phía sau so với người hoặc nhóm khác",
+      "example": "Hikers who ignore the route markers may fall behind the main group.",
+      "exampleTranslation": "Những người đi bộ đường dài phớt lờ các dấu chỉ đường có thể tụt lại phía sau nhóm chính.",
+      "pos": "V"
+    },
+    {
+      "term": "move in",
+      "definition": "chuyển đến sống tại một nơi mới",
+      "example": "Some seasonal workers move in near the resort before the summer rush begins.",
+      "exampleTranslation": "Một số lao động thời vụ chuyển đến sống gần khu nghỉ dưỡng trước khi mùa cao điểm mùa hè bắt đầu.",
+      "pos": "V"
+    },
+    {
+      "term": "move on",
+      "definition": "tiếp tục di chuyển hoặc chuyển sang địa điểm khác",
+      "example": "After photographing the ruins, guides ask visitors to move on to the museum.",
+      "exampleTranslation": "Sau khi chụp ảnh những tàn tích, hướng dẫn viên yêu cầu du khách tiếp tục di chuyển đến bảo tàng.",
+      "pos": "V"
+    },
+    {
+      "term": "move out",
+      "definition": "rời khỏi nơi đang sống hoặc làm việc",
+      "example": "Residents must move out of the coastal village before the evacuation begins.",
+      "exampleTranslation": "Cư dân phải rời khỏi ngôi làng ven biển trước khi cuộc sơ tán bắt đầu.",
+      "pos": "V"
+    },
+    {
+      "term": "move over",
+      "definition": "di chuyển sang một bên để nhường chỗ hoặc tạo lối đi",
+      "example": "Tourists were asked to move over so emergency staff could reach the injured hiker.",
+      "exampleTranslation": "Du khách được yêu cầu di chuyển sang một bên để nhân viên cấp cứu có thể tiếp cận người đi bộ đường dài bị thương.",
+      "pos": "V"
+    },
+    {
+      "term": "slip away",
+      "definition": "trôi qua hoặc mất đi dần, thường trước khi kịp nhận ra hay tận dụng",
+      "example": "Without careful planning, valuable hours can slip away during a long-distance journey.",
+      "exampleTranslation": "Nếu không lập kế hoạch cẩn thận, những giờ phút quý giá có thể trôi qua trong một hành trình dài.",
+      "pos": "V"
+    },
+    {
+      "term": "slip up",
+      "definition": "mắc lỗi hoặc sơ suất, đặc biệt trong một nhiệm vụ cần sự chính xác",
+      "example": "Even experienced guides can slip up when checking permits at a crowded border.",
+      "exampleTranslation": "Ngay cả những hướng dẫn viên giàu kinh nghiệm cũng có thể mắc lỗi khi kiểm tra giấy phép tại một cửa khẩu đông đúc.",
+      "pos": "V"
+    },
+    {
+      "term": "civil service",
+      "definition": "hệ thống cơ quan nhà nước và đội ngũ nhân viên thực hiện công việc hành chính công",
+      "example": "A career in the civil service often offers stable employment but limited salary flexibility.",
+      "exampleTranslation": "Một sự nghiệp trong ngành công vụ thường đem lại việc làm ổn định nhưng ít linh hoạt về tiền lương.",
+      "pos": "N"
+    },
+    {
+      "term": "headhunt",
+      "definition": "chủ động tìm kiếm và tuyển mộ những chuyên viên giỏi cho một vị trí",
+      "example": "International firms often headhunt engineers with rare expertise in renewable-energy systems.",
+      "exampleTranslation": "Các công ty quốc tế thường chủ động tuyển mộ những kỹ sư có chuyên môn hiếm trong các hệ thống năng lượng tái tạo.",
+      "pos": "V"
+    },
+    {
+      "term": "leave",
+      "definition": "sự cho phép nghỉ làm trong một khoảng thời gian nhất định",
+      "example": "Employees must request leave several weeks before undertaking extended overseas travel.",
+      "exampleTranslation": "Nhân viên phải xin nghỉ phép vài tuần trước khi thực hiện chuyến đi nước ngoài dài ngày.",
+      "pos": "N"
+    },
+    {
+      "term": "private sector",
+      "definition": "khu vực kinh tế gồm các doanh nghiệp thuộc sở hữu và quản lý tư nhân",
+      "example": "The private sector provides many technology jobs, although employment conditions vary considerably.",
+      "exampleTranslation": "Khu vực tư nhân cung cấp nhiều việc làm trong ngành công nghệ, mặc dù điều kiện việc làm thay đổi đáng kể.",
+      "pos": "N"
+    },
+    {
+      "term": "prospects",
+      "definition": "triển vọng hoặc cơ hội thành công, phát triển trong tương lai",
+      "example": "Further training can improve graduates' prospects in an increasingly competitive labour market.",
+      "exampleTranslation": "Việc đào tạo thêm có thể cải thiện triển vọng của sinh viên tốt nghiệp trong thị trường lao động ngày càng cạnh tranh.",
+      "pos": "N"
+    },
+    {
+      "term": "public sector",
+      "definition": "Khu vực kinh tế và các tổ chức do nhà nước sở hữu hoặc quản lý.",
+      "example": "Many graduates seek public sector employment because it offers stable careers and structured promotion.",
+      "exampleTranslation": "Nhiều sinh viên tốt nghiệp tìm việc trong khu vực công vì nơi này mang lại sự nghiệp ổn định và cơ hội thăng tiến có hệ thống.",
+      "pos": "N"
+    },
+    {
+      "term": "sack",
+      "definition": "Sa thải ai đó khỏi công việc, thường vì người đó làm việc kém hoặc vi phạm quy định.",
+      "example": "The company may sack employees who repeatedly ignore essential safety procedures.",
+      "exampleTranslation": "Công ty có thể sa thải những nhân viên liên tục phớt lờ các quy trình an toàn thiết yếu.",
+      "pos": "V"
+    },
+    {
+      "term": "keep up",
+      "definition": "Duy trì một hoạt động, tốc độ hoặc mức độ mà không bị giảm sút.",
+      "example": "Workers must keep up with technological changes to remain competitive in modern industries.",
+      "exampleTranslation": "Người lao động phải theo kịp những thay đổi công nghệ để duy trì khả năng cạnh tranh trong các ngành công nghiệp hiện đại.",
+      "pos": "V"
+    },
+    {
+      "term": "set up",
+      "definition": "Thành lập hoặc bắt đầu vận hành một doanh nghiệp, tổ chức hay hệ thống.",
+      "example": "Several engineers set up a renewable-energy company after identifying a gap in the market.",
+      "exampleTranslation": "Một số kỹ sư đã thành lập một công ty năng lượng tái tạo sau khi nhận thấy một khoảng trống trên thị trường.",
+      "pos": "V"
+    },
+    {
+      "term": "take on",
+      "definition": "Tuyển dụng ai đó hoặc nhận thêm một nhiệm vụ, trách nhiệm hay công việc.",
+      "example": "The expanding laboratory plans to take on five research assistants next year.",
+      "exampleTranslation": "Phòng thí nghiệm đang mở rộng dự định tuyển thêm năm trợ lý nghiên cứu vào năm tới.",
+      "pos": "V"
+    }
+  ]
+}
