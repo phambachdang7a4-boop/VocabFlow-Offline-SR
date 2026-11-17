@@ -292,9 +292,10 @@ async function checkCourseContentAndProgress() {
       "Điều kiện, nhượng bộ và kết quả",
       "Đảo ngữ và câu nhấn mạnh",
       "Mệnh đề rút gọn, thay thế và lược bỏ",
+      "Giới từ trong cụm thường gặp",
     ],
   );
-  assert.equal(patternTerms.length, 13);
+  assert.equal(patternTerms.length, 23);
   assert.equal(patternQuestions.length, patternTerms.length);
   assert.deepEqual(
     [...patternQuestions.map((question) => question.term)].sort(),
@@ -317,6 +318,39 @@ async function checkCourseContentAndProgress() {
     assert.ok(
       entry.exampleTranslation.trim(),
       `${term} has a Vietnamese example translation.`,
+    );
+  }
+  const prepositionTerms = [
+    "in advance",
+    "at risk of",
+    "on behalf of",
+    "rely on",
+    "apologize for",
+    "be responsible for",
+    "be familiar with",
+    "access to",
+    "prevent someone from",
+    "take part in",
+  ];
+  const prepositionLesson = patternLessons.find((lesson) =>
+    lesson.id.endsWith("-preposition-patterns"),
+  );
+  assert.equal(
+    sentenceStructurePatternCourse.SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
+    "sentence-structure-patterns-v1",
+    "Adding patterns preserves the existing course ID.",
+  );
+  assert.ok(prepositionLesson);
+  assert.deepEqual(
+    prepositionLesson.questions.map((question) => question.term),
+    prepositionTerms,
+  );
+  for (const question of prepositionLesson.questions) {
+    assert.equal(new Set(question.choices).size, 4);
+    assert.ok(question.choices.includes(question.term));
+    assert.ok(
+      question.prompt.includes("_____"),
+      `${question.term} has a fill-in question.`,
     );
   }
   assert.equal(

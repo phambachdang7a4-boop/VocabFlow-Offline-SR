@@ -208,7 +208,7 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
     id: CONJUNCTION_COURSE_ID,
     title: CONJUNCTION_COURSE_TITLE,
     description:
-      `Tổng hợp ${CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(LINKING_ADVERB_COURSE_ENTRIES).length + Object.keys(SENTENCE_STRUCTURE_PATTERN_ENTRIES).length} mục gồm liên từ, trạng từ liên kết và mẫu cấu trúc câu; học qua ví dụ và bài chọn đáp án.`,
+      `Tổng hợp ${CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(LINKING_ADVERB_COURSE_ENTRIES).length + Object.keys(SENTENCE_STRUCTURE_PATTERN_ENTRIES).length} mục gồm liên từ, trạng từ liên kết, mẫu giới từ và các mẫu cấu trúc câu; học qua ví dụ và bài chọn đáp án.`,
     lessons: [
       ...CONJUNCTION_COURSE_LESSONS,
       ...LINKING_ADVERB_COURSE_LESSONS,

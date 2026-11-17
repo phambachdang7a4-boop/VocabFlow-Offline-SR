@@ -182,6 +182,104 @@ export const SENTENCE_STRUCTURE_PATTERN_LESSONS: readonly SentenceStructurePatte
         },
       ],
     },
+    {
+      id: `${SENTENCE_STRUCTURE_PATTERN_COURSE_ID}-preposition-patterns`,
+      title: "Giới từ trong cụm thường gặp",
+      focus:
+        "Nhận diện cụm giới từ thông dụng và giới từ đi kèm động từ, tính từ, danh từ.",
+      questions: [
+        {
+          term: "in advance",
+          prompt:
+            "To secure a seat, please register _____ rather than waiting until the day of the event.",
+          choices: ["in advance", "at advance", "on advance", "by advance"],
+        },
+        {
+          term: "at risk of",
+          prompt:
+            "Without urgent repairs, the old bridge will be _____ collapse.",
+          choices: ["at risk of", "in risk of", "on risk of", "at risk to"],
+        },
+        {
+          term: "on behalf of",
+          prompt:
+            "I am writing _____ the residents' committee to thank the volunteers.",
+          choices: [
+            "on behalf of",
+            "at behalf of",
+            "by behalf of",
+            "on behalf to",
+          ],
+        },
+        {
+          term: "rely on",
+          prompt:
+            "During the field study, the researchers had to _____ local guides for accurate directions.",
+          choices: ["rely on", "rely to", "rely for", "rely with"],
+        },
+        {
+          term: "apologize for",
+          prompt:
+            "The supplier chose to _____ the delay and offer a full refund.",
+          choices: [
+            "apologize for",
+            "apologize of",
+            "apologize with",
+            "apologize from",
+          ],
+        },
+        {
+          term: "be responsible for",
+          prompt:
+            "As project lead, Mai will _____ checking each citation before publication.",
+          choices: [
+            "be responsible for",
+            "be responsible of",
+            "be responsible with",
+            "be responsible from",
+          ],
+        },
+        {
+          term: "be familiar with",
+          prompt:
+            "Please read the guide so you can _____ the new application process.",
+          choices: [
+            "be familiar with",
+            "be familiar on",
+            "be familiar from",
+            "be familiar over",
+          ],
+        },
+        {
+          term: "access to",
+          prompt:
+            "Every student should have _____ reliable internet during the course.",
+          choices: ["access to", "access for", "access with", "access on"],
+        },
+        {
+          term: "prevent someone from",
+          prompt:
+            "A clear warning can _____ using the equipment incorrectly.",
+          choices: [
+            "prevent someone from",
+            "prevent someone to",
+            "prevent someone of",
+            "prevent someone with",
+          ],
+        },
+        {
+          term: "take part in",
+          prompt:
+            "Several local schools will _____ the regional science fair.",
+          choices: [
+            "take part in",
+            "take part at",
+            "take part of",
+            "take part by",
+          ],
+        },
+      ],
+    },
   ];
 
 export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
@@ -290,5 +388,85 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
       "I prefer the blue one to the red ones because the blue jacket is in better condition.",
     exampleTranslation:
       "Tôi thích chiếc màu xanh hơn những chiếc màu đỏ vì chiếc áo khoác xanh còn tốt hơn.",
+  },
+  "in advance": {
+    definition:
+      "Cụm trạng ngữ nghĩa là “trước” hoặc “trước thời điểm cần thiết”, thường dùng khi chuẩn bị, đặt chỗ hoặc thông báo sớm.",
+    example:
+      "To secure a seat, please register in advance rather than waiting until the day of the event.",
+    exampleTranslation:
+      "Để giữ chỗ, vui lòng đăng ký trước thay vì chờ đến ngày diễn ra sự kiện.",
+  },
+  "at risk of": {
+    definition:
+      "Cụm at risk of + danh từ hoặc V-ing diễn tả nguy cơ gặp phải điều không mong muốn.",
+    example:
+      "Without urgent repairs, the old bridge is at risk of collapse.",
+    exampleTranslation:
+      "Nếu không được sửa chữa khẩn cấp, cây cầu cũ có nguy cơ sập.",
+  },
+  "on behalf of": {
+    definition:
+      "Cụm giới từ nghĩa là “thay mặt cho”, dùng khi phát biểu hoặc hành động đại diện cho một người hay nhóm.",
+    example:
+      "I am writing on behalf of the residents' committee to thank the volunteers.",
+    exampleTranslation:
+      "Tôi viết thư thay mặt ban đại diện cư dân để cảm ơn các tình nguyện viên.",
+  },
+  "rely on": {
+    definition:
+      "Rely on + người/vật nghĩa là dựa vào hoặc tin cậy ai, điều gì; giới từ on đi cùng động từ rely.",
+    example:
+      "During the field study, the researchers had to rely on local guides for accurate directions.",
+    exampleTranslation:
+      "Trong chuyến khảo sát thực địa, các nhà nghiên cứu phải dựa vào hướng dẫn viên địa phương để có chỉ đường chính xác.",
+  },
+  "apologize for": {
+    definition:
+      "Apologize for + danh từ hoặc V-ing dùng để xin lỗi về điều gì hay hành động nào; apologize to + người nhận lời xin lỗi.",
+    example:
+      "The supplier chose to apologize for the delay and offer a full refund.",
+    exampleTranslation:
+      "Nhà cung cấp quyết định xin lỗi vì sự chậm trễ và đề nghị hoàn tiền đầy đủ.",
+  },
+  "be responsible for": {
+    definition:
+      "Be responsible for + danh từ hoặc V-ing nghĩa là chịu trách nhiệm về việc gì hoặc phụ trách làm việc đó.",
+    example:
+      "As project lead, Mai is responsible for checking each citation before publication.",
+    exampleTranslation:
+      "Với vai trò trưởng dự án, Mai chịu trách nhiệm kiểm tra từng trích dẫn trước khi xuất bản.",
+  },
+  "be familiar with": {
+    definition:
+      "Be familiar with + người/vật/quy trình nghĩa là quen thuộc hoặc hiểu biết về đối tượng đó.",
+    example:
+      "Please read the guide so you can become familiar with the new application process.",
+    exampleTranslation:
+      "Vui lòng đọc hướng dẫn để làm quen với quy trình nộp đơn mới.",
+  },
+  "access to": {
+    definition:
+      "Access to + danh từ nghĩa là quyền hoặc khả năng tiếp cận, sử dụng thứ gì; danh từ access thường đi với giới từ to.",
+    example:
+      "Every student should have access to reliable internet during the course.",
+    exampleTranslation:
+      "Mọi học viên đều nên có quyền tiếp cận Internet ổn định trong suốt khóa học.",
+  },
+  "prevent someone from": {
+    definition:
+      "Prevent someone from + V-ing nghĩa là ngăn ai làm việc gì; sau from dùng danh động từ, không dùng to + động từ.",
+    example:
+      "A clear warning can prevent someone from using the equipment incorrectly.",
+    exampleTranslation:
+      "Một cảnh báo rõ ràng có thể ngăn ai đó sử dụng thiết bị sai cách.",
+  },
+  "take part in": {
+    definition:
+      "Take part in + hoạt động/sự kiện nghĩa là tham gia; giới từ in đi cùng cụm động từ take part.",
+    example:
+      "Several local schools will take part in the regional science fair.",
+    exampleTranslation:
+      "Một số trường địa phương sẽ tham gia hội chợ khoa học cấp vùng.",
   },
 };
