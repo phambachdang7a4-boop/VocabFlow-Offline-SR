@@ -280,6 +280,137 @@ export const SENTENCE_STRUCTURE_PATTERN_LESSONS: readonly SentenceStructurePatte
         },
       ],
     },
+    {
+      id: `${SENTENCE_STRUCTURE_PATTERN_COURSE_ID}-in-on-at`,
+      title: "Phân biệt in, on và at",
+      focus:
+        "Chọn in, on hoặc at theo khoảng thời gian, ngày cụ thể, không gian, bề mặt, địa điểm và cụm cố định.",
+      questions: [
+        {
+          term: "in September",
+          prompt:
+            "The new term begins _____, at the start of the autumn semester.",
+          choices: [
+            "in September",
+            "on September",
+            "at September",
+            "in the September",
+          ],
+        },
+        {
+          term: "on 2 June",
+          prompt:
+            "The conference opens _____, the second day of the month.",
+          choices: [
+            "on 2 June",
+            "in 2 June",
+            "at 2 June",
+            "on the 2 June",
+          ],
+        },
+        {
+          term: "at 8:30 a.m.",
+          prompt:
+            "The guided tour starts _____, so please arrive ten minutes early.",
+          choices: [
+            "at 8:30 a.m.",
+            "in 8:30 a.m.",
+            "on 8:30 a.m.",
+            "on the 8:30 a.m.",
+          ],
+        },
+        {
+          term: "in the morning",
+          prompt:
+            "The bakery is open _____, from sunrise until just before noon.",
+          choices: [
+            "in the morning",
+            "on the morning",
+            "at the morning",
+            "in morning",
+          ],
+        },
+        {
+          term: "at night",
+          prompt:
+            "Unlike during the day, the park closes to visitors _____.",
+          choices: ["at night", "in night", "on night", "at the night"],
+        },
+        {
+          term: "in a small drawer",
+          prompt:
+            "The spare key is kept _____ in the kitchen, not left out in the open.",
+          choices: [
+            "in a small drawer",
+            "on a small drawer",
+            "at a small drawer",
+            "over a small drawer",
+          ],
+        },
+        {
+          term: "on the desk",
+          prompt:
+            "Leave the signed form _____, resting on its surface rather than inside it.",
+          choices: [
+            "on the desk",
+            "in the desk",
+            "at the desk",
+            "under the desk",
+          ],
+        },
+        {
+          term: "at the main entrance",
+          prompt:
+            "I'll wait for you _____, outside the building; then we can go inside together.",
+          choices: [
+            "at the main entrance",
+            "in the main entrance",
+            "on the main entrance",
+            "through the main entrance",
+          ],
+        },
+        {
+          term: "in Singapore",
+          prompt:
+            "They have lived _____ since 2020, though they grew up in Canada.",
+          choices: [
+            "in Singapore",
+            "on Singapore",
+            "at Singapore",
+            "through Singapore",
+          ],
+        },
+        {
+          term: "believe in",
+          prompt:
+            "Many people _____ the value of learning a little every day.",
+          choices: ["believe in", "believe on", "believe at", "believe for"],
+        },
+        {
+          term: "focus on",
+          prompt:
+            "The report should _____ the causes of the delay, not assign blame.",
+          choices: ["focus on", "focus in", "focus at", "focus for"],
+        },
+        {
+          term: "good at",
+          prompt:
+            "My sister is _____ solving logic puzzles, even under pressure.",
+          choices: ["good at", "good in", "good on", "good for"],
+        },
+        {
+          term: "interested in",
+          prompt:
+            "Tariq is _____ marine biology and reads about it every evening.",
+          choices: [
+            "interested in",
+            "interested on",
+            "interested at",
+            "interested for",
+          ],
+        },
+      ],
+    },
   ];
 
 export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
@@ -468,5 +599,96 @@ export const SENTENCE_STRUCTURE_PATTERN_ENTRIES: Readonly<
       "Several local schools will take part in the regional science fair.",
     exampleTranslation:
       "Một số trường địa phương sẽ tham gia hội chợ khoa học cấp vùng.",
+  },
+  "in September": {
+    definition:
+      "Dùng in với tháng, năm, mùa và những khoảng thời gian dài hơn một ngày: in September, in 2026, in winter. Hãy nghĩ đến một khoảng thời gian bao quanh sự việc.",
+    example: "The new term begins in September.",
+    exampleTranslation:
+      "Học kỳ mới bắt đầu vào tháng Chín.",
+  },
+  "on 2 June": {
+    definition:
+      "Dùng on với ngày trong tuần và ngày tháng cụ thể: on Monday, on 2 June. Ngày cụ thể được xem như một mốc trên lịch.",
+    example: "The conference opens on 2 June.",
+    exampleTranslation:
+      "Hội nghị khai mạc vào ngày 2 tháng Sáu.",
+  },
+  "at 8:30 a.m.": {
+    definition:
+      "Dùng at với giờ cụ thể và một số mốc thời gian chính xác: at 8:30 a.m., at noon, at midnight. Tuy nhiên, cách nói thông dụng là at night.",
+    example: "The guided tour starts at 8:30 a.m.",
+    exampleTranslation:
+      "Chuyến tham quan có hướng dẫn bắt đầu lúc 8 giờ 30 sáng.",
+  },
+  "in the morning": {
+    definition:
+      "Dùng in the với các khoảng trong ngày: in the morning, in the afternoon, in the evening. Đây là các khoảng thời gian, khác với at night.",
+    example: "The bakery is open in the morning.",
+    exampleTranslation:
+      "Tiệm bánh mở cửa vào buổi sáng.",
+  },
+  "at night": {
+    definition:
+      "Dùng at night để nói chung về ban đêm; đây là cách dùng cố định khác với in the morning, in the afternoon và in the evening.",
+    example: "The park closes to visitors at night.",
+    exampleTranslation:
+      "Công viên đóng cửa với khách tham quan vào ban đêm.",
+  },
+  "in a small drawer": {
+    definition:
+      "Dùng in khi vật nằm bên trong một không gian có ranh giới, như phòng, hộp hoặc ngăn kéo. Với địa điểm rộng như thành phố và quốc gia, in cũng là lựa chọn phổ biến.",
+    example: "The spare key is kept in a small drawer in the kitchen.",
+    exampleTranslation:
+      "Chìa khóa dự phòng được cất trong một ngăn kéo nhỏ ở nhà bếp.",
+  },
+  "on the desk": {
+    definition:
+      "Dùng on khi vật tiếp xúc hoặc được đặt trên một bề mặt; bề mặt có thể nằm ngang như bàn hoặc thẳng đứng như tường.",
+    example: "Leave the signed form on the desk.",
+    exampleTranslation:
+      "Hãy để tờ đơn đã ký trên bàn.",
+  },
+  "at the main entrance": {
+    definition:
+      "Dùng at để xem một nơi như điểm đến hoặc điểm hẹn cụ thể, chẳng hạn at the entrance, at the bus stop. Khác với in (bên trong không gian) và on (trên bề mặt).",
+    example: "I'll wait for you at the main entrance.",
+    exampleTranslation:
+      "Tôi sẽ đợi bạn ở lối vào.",
+  },
+  "in Singapore": {
+    definition:
+      "Dùng in với thành phố, quốc gia và khu vực rộng để nói một việc xảy ra trong phạm vi địa lý đó.",
+    example: "They have lived in Singapore since 2020.",
+    exampleTranslation:
+      "Họ đã sống ở Singapore từ năm 2020.",
+  },
+  "believe in": {
+    definition:
+      "Believe in + người, ý tưởng hoặc giá trị nghĩa là tin vào hoặc tin rằng điều đó có giá trị; in là giới từ cố định của cụm này.",
+    example: "Many people believe in the value of learning a little every day.",
+    exampleTranslation:
+      "Nhiều người tin vào giá trị của việc học một chút mỗi ngày.",
+  },
+  "focus on": {
+    definition:
+      "Focus on + chủ đề hoặc việc cần làm nghĩa là tập trung vào điều đó; on là giới từ đi với focus trong nghĩa này.",
+    example: "The report should focus on the causes of the delay.",
+    exampleTranslation:
+      "Bản báo cáo nên tập trung vào những nguyên nhân gây chậm trễ.",
+  },
+  "good at": {
+    definition:
+      "Good at + danh từ hoặc V-ing diễn tả làm tốt hoặc có năng khiếu ở lĩnh vực, hoạt động đó.",
+    example: "My sister is good at solving logic puzzles.",
+    exampleTranslation:
+      "Chị tôi giỏi giải các câu đố logic.",
+  },
+  "interested in": {
+    definition:
+      "Interested in + danh từ hoặc V-ing nghĩa là quan tâm hoặc hứng thú với điều gì; tính từ interested thường đi với in.",
+    example: "Tariq is interested in marine biology.",
+    exampleTranslation:
+      "Tariq quan tâm đến ngành sinh học biển.",
   },
 };

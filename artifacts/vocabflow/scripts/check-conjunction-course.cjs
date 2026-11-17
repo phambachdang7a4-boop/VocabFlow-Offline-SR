@@ -293,9 +293,10 @@ async function checkCourseContentAndProgress() {
       "Đảo ngữ và câu nhấn mạnh",
       "Mệnh đề rút gọn, thay thế và lược bỏ",
       "Giới từ trong cụm thường gặp",
+      "Phân biệt in, on và at",
     ],
   );
-  assert.equal(patternTerms.length, 23);
+  assert.equal(patternTerms.length, 36);
   assert.equal(patternQuestions.length, patternTerms.length);
   assert.deepEqual(
     [...patternQuestions.map((question) => question.term)].sort(),
@@ -351,6 +352,41 @@ async function checkCourseContentAndProgress() {
     assert.ok(
       question.prompt.includes("_____"),
       `${question.term} has a fill-in question.`,
+    );
+  }
+  const inOnAtLesson = patternLessons.find((lesson) =>
+    lesson.id.endsWith("-in-on-at"),
+  );
+  const inOnAtTerms = [
+    "in September",
+    "on 2 June",
+    "at 8:30 a.m.",
+    "in the morning",
+    "at night",
+    "in a small drawer",
+    "on the desk",
+    "at the main entrance",
+    "in Singapore",
+    "believe in",
+    "focus on",
+    "good at",
+    "interested in",
+  ];
+  assert.ok(inOnAtLesson);
+  assert.match(inOnAtLesson.focus, /\bin, on hoặc at\b/);
+  assert.deepEqual(
+    inOnAtLesson.questions.map((question) => question.term),
+    inOnAtTerms,
+  );
+  for (const question of inOnAtLesson.questions) {
+    assert.equal(new Set(question.choices).size, 4);
+    assert.ok(question.choices.includes(question.term));
+    assert.ok(question.prompt.includes("_____"));
+    assert.ok(
+      patternEntries[question.term].example.toLowerCase().includes(
+        question.term.toLowerCase(),
+      ),
+      `${question.term} appears in its English example.`,
     );
   }
   assert.equal(
