@@ -37,6 +37,460 @@ const { applyLocalDictionaryAdditions } = loadTs(
   { "../domain/dictionary-local-additions": additions },
 );
 
+const sentenceStructureAnswerUniquenessReviews = new Map([
+  [
+    "either … or",
+    {
+      answer: "either … or",
+      distractors: {
+        "neither … nor": "The sentence requires one of two options, not neither option.",
+        "not only … but also": "This asserts both options, which conflicts with “not both.”",
+        "whether … or": "This introduces alternatives for consideration but does not express the required choice.",
+      },
+    },
+  ],
+  [
+    "neither … nor",
+    {
+      answer: "neither … nor",
+      distractors: {
+        "both … and": "The prompt says the plan lacked both listed features.",
+        "either … or": "This presents a choice instead of denying both features.",
+        "not only … but also": "This asserts that both features were present, the opposite of the prompt.",
+      },
+    },
+  ],
+  [
+    "not only … but also",
+    {
+      answer: "not only … but also",
+      distractors: {
+        "either … or": "The prompt explicitly says both advantages apply.",
+        "neither … nor": "This denies both advantages instead of emphasizing them.",
+        "whether … or": "This frames alternatives rather than asserting both advantages.",
+      },
+    },
+  ],
+  [
+    "no matter how",
+    {
+      answer: "no matter how",
+      distractors: {
+        "as long as": "This sets a condition and cannot form “as long as carefully the team checked.”",
+        "provided that": "This sets a condition and cannot precede the adverb “carefully” in this structure.",
+        "even though": "This cannot form the required “even though carefully” clause.",
+      },
+    },
+  ],
+  [
+    "so … that",
+    {
+      answer: "so … that",
+      distractors: {
+        "such … that": "“Such” needs a noun phrase here, as in “such a vast archive.”",
+        "too … to": "This cannot connect the adjective “vast” to the finite clause after the second blank.",
+        "as … as": "This requires a comparison, not the result clause “the researchers needed several weeks.”",
+      },
+    },
+  ],
+  [
+    "the more … the more",
+    {
+      answer: "the more … the more",
+      distractors: {
+        "as … as": "This comparison does not form the paired-correlative structure in the sentence.",
+        "so … that": "This requires a result clause rather than two changing quantities.",
+        "not only … but also": "This requires two parallel features, not a comparative relationship.",
+      },
+    },
+  ],
+  [
+    "not only did",
+    {
+      answer: "not only did",
+      distractors: {
+        "not only does": "The sentence locates the result in last year's pilot, so present-tense “does” conflicts with the time frame.",
+        "not only has": "“Has the revised schedule reduce” is not grammatical; perfect inversion needs “reduced.”",
+        "not only was": "“Was the revised schedule reduce” is not grammatical; “was” cannot support this base-form verb.",
+      },
+    },
+  ],
+  [
+    "no sooner … than",
+    {
+      answer: "no sooner … than",
+      distractors: {
+        "hardly … than": "The standard paired form is “hardly … when/before,” not “hardly … than.”",
+        "not until … than": "“Not until” does not pair with “than” to express this immediate sequence.",
+        "as soon as … than": "“As soon as” does not take “than” as its paired connector.",
+      },
+    },
+  ],
+  [
+    "it was … that",
+    {
+      answer: "it was … that",
+      distractors: {
+        "there was … which": "This existential construction does not cleft the object as required by “a simple water filter.”",
+        "it had … when": "This does not form an object-focused cleft and “when” cannot introduce the object.",
+        "there were … where": "This does not form an object-focused cleft and “where” cannot introduce the object.",
+      },
+    },
+  ],
+  [
+    "having completed",
+    {
+      answer: "having completed",
+      distractors: {
+        "completed having": "The auxiliary and participle are in the wrong order.",
+        "to have complete": "The perfect infinitive requires the past participle “completed,” not “complete.”",
+        "having been complete": "“Complete” is an adjective here; this form does not express the engineer finishing the inspection.",
+      },
+    },
+  ],
+  [
+    "so do I",
+    {
+      answer: "so do I",
+      distractors: {
+        "neither do I": "This disagrees with the positive statement “I enjoy reading.”",
+        "so have I": "The original uses present simple “enjoy,” not the present perfect.",
+        "neither I do": "This has incorrect word order for an agreeing response.",
+      },
+    },
+  ],
+  [
+    "neither have I",
+    {
+      answer: "neither have I",
+      distractors: {
+        "so have I": "This agrees with a positive statement, but the speaker says “haven't.”",
+        "neither I have": "This has incorrect word order for the agreeing negative response.",
+        "I haven't neither": "This uses a nonstandard double negative rather than the required response pattern.",
+      },
+    },
+  ],
+  [
+    "one / ones",
+    {
+      answer: "one / ones",
+      distractors: {
+        "it / them": "These pronouns refer to specific objects and do not replace the repeated count nouns in the adjective phrases.",
+        "this / those": "These demonstratives do not serve as the stated singular/plural noun substitutes.",
+        "some / any": "These are quantifiers and do not complete “the smaller” and “the cheaper” as noun substitutes.",
+      },
+    },
+  ],
+  [
+    "in advance",
+    {
+      answer: "in advance",
+      distractors: {
+        "at advance": "The time expression takes “in,” not “at.”",
+        "on advance": "The time expression takes “in,” not “on.”",
+        "by advance": "“By advance” is not the standard expression for registering ahead of time.",
+      },
+    },
+  ],
+  [
+    "at risk of",
+    {
+      answer: "at risk of",
+      distractors: {
+        "in risk of": "The fixed expression is “at risk,” not “in risk.”",
+        "on risk of": "The fixed expression is “at risk,” not “on risk.”",
+        "at risk to": "The risk is followed by “of” before the potential event.",
+      },
+    },
+  ],
+  [
+    "on behalf of",
+    {
+      answer: "on behalf of",
+      distractors: {
+        "at behalf of": "The fixed expression is “on behalf of,” not “at behalf of.”",
+        "by behalf of": "The fixed expression is “on behalf of,” not “by behalf of.”",
+        "on behalf to": "The represented group is introduced by “of,” not “to.”",
+      },
+    },
+  ],
+  [
+    "rely on",
+    {
+      answer: "rely on",
+      distractors: {
+        "rely to": "The verb “rely” takes “on,” not “to,” for the source of support.",
+        "rely for": "“For” does not introduce the people providing the directions after “rely.”",
+        "rely with": "The verb “rely” takes “on” before the guides being trusted.",
+      },
+    },
+  ],
+  [
+    "apologize for",
+    {
+      answer: "apologize for",
+      distractors: {
+        "apologize of": "The thing being apologized for is introduced by “for.”",
+        "apologize with": "“With” does not introduce the delay as the reason for the apology.",
+        "apologize from": "“From” does not introduce the event being apologized for.",
+      },
+    },
+  ],
+  [
+    "be responsible for",
+    {
+      answer: "be responsible for",
+      distractors: {
+        "be responsible of": "The adjective takes “for” before a duty or action.",
+        "be responsible with": "“With” does not introduce the project lead's assigned duty.",
+        "be responsible from": "“From” does not introduce a responsibility.",
+      },
+    },
+  ],
+  [
+    "be familiar with",
+    {
+      answer: "be familiar with",
+      distractors: {
+        "be familiar on": "The adjective takes “with” before a process someone knows.",
+        "be familiar from": "“From” does not introduce the subject someone knows.",
+        "be familiar over": "“Over” does not introduce the subject someone knows.",
+      },
+    },
+  ],
+  [
+    "access to",
+    {
+      answer: "access to",
+      distractors: {
+        "access for": "The noun “access” takes “to” before the resource available.",
+        "access with": "“With” does not introduce the resource available to students.",
+        "access on": "The noun “access” takes “to,” not “on,” before the resource.",
+      },
+    },
+  ],
+  [
+    "prevent someone from",
+    {
+      answer: "prevent someone from",
+      distractors: {
+        "prevent someone to": "The verb pattern is “prevent someone from doing,” not an infinitive with “to.”",
+        "prevent someone of": "The verb pattern requires “from” before the action.",
+        "prevent someone with": "“With” does not introduce the action being prevented.",
+      },
+    },
+  ],
+  [
+    "take part in",
+    {
+      answer: "take part in",
+      distractors: {
+        "take part at": "The fixed expression is “take part in” an event.",
+        "take part of": "“Part of” means a portion of something and does not mean participate in it.",
+        "take part by": "“By” does not introduce the event someone participates in.",
+      },
+    },
+  ],
+  [
+    "in September",
+    {
+      answer: "in September",
+      distractors: {
+        "on September": "A month without a specific date takes “in.”",
+        "at September": "A month without a specific date takes “in.”",
+        "in the September": "Month names used this way do not take “the.”",
+      },
+    },
+  ],
+  [
+    "on 2 June",
+    {
+      answer: "on 2 June",
+      distractors: {
+        "in 2 June": "A specific calendar date takes “on,” not “in.”",
+        "at 2 June": "A specific calendar date takes “on,” not “at.”",
+        "on the 2 June": "The date is conventionally written “on 2 June” without “the.”",
+      },
+    },
+  ],
+  [
+    "at 8:30 a.m.",
+    {
+      answer: "at 8:30 a.m.",
+      distractors: {
+        "in 8:30 a.m.": "A specific clock time takes “at.”",
+        "on 8:30 a.m.": "A specific clock time takes “at,” not “on.”",
+        "on the 8:30 a.m.": "A clock time takes “at”; “on the 8:30 a.m.” is not a grammatical time phrase.",
+      },
+    },
+  ],
+  [
+    "in the morning",
+    {
+      answer: "in the morning",
+      distractors: {
+        "on the morning": "The general period of a day takes “in” in this expression.",
+        "at the morning": "The general period of a day takes “in” in this expression.",
+        "in morning": "This general time expression requires the article “the.”",
+      },
+    },
+  ],
+  [
+    "at night",
+    {
+      answer: "at night",
+      distractors: {
+        "in night": "The standard general time expression is “at night.”",
+        "on night": "The standard general time expression is “at night.”",
+        "at the night": "The general time expression normally omits “the.”",
+      },
+    },
+  ],
+  [
+    "in a small drawer",
+    {
+      answer: "in a small drawer",
+      distractors: {
+        "on a small drawer": "The key is inside the drawer, not on its surface.",
+        "at a small drawer": "“At” identifies a point or location, not containment inside a drawer.",
+        "over a small drawer": "“Over” places the key above the drawer rather than inside it.",
+      },
+    },
+  ],
+  [
+    "on the desk",
+    {
+      answer: "on the desk",
+      distractors: {
+        "in the desk": "The prompt specifies the top surface, not inside the desk.",
+        "at the desk": "This means at the desk location, not resting on its top surface.",
+        "under the desk": "This places the form below the desk, contrary to the prompt.",
+      },
+    },
+  ],
+  [
+    "at the main entrance",
+    {
+      answer: "at the main entrance",
+      distractors: {
+        "in the main entrance": "The speaker waits outside the building, not inside an entrance area.",
+        "on the main entrance": "“On” would place the person on the entrance structure, not at the location.",
+        "through the main entrance": "“Through” describes movement via the entrance, not waiting outside it.",
+      },
+    },
+  ],
+  [
+    "in Singapore",
+    {
+      answer: "in Singapore",
+      distractors: {
+        "on Singapore": "A city or country is expressed with “in.”",
+        "at Singapore": "A city or country is expressed with “in,” not “at.”",
+        "through Singapore": "“Through” describes movement across a place, not living there.",
+      },
+    },
+  ],
+  [
+    "believe in",
+    {
+      answer: "believe in",
+      distractors: {
+        "believe on": "The fixed expression meaning have faith in a principle is “believe in.”",
+        "believe at": "“At” does not introduce the principle someone accepts as valuable.",
+        "believe for": "“For” does not introduce the object of belief in this meaning.",
+      },
+    },
+  ],
+  [
+    "focus on",
+    {
+      answer: "focus on",
+      distractors: {
+        "focus in": "The verb takes “on” before the subject receiving attention.",
+        "focus at": "“At” does not introduce the topic receiving attention.",
+        "focus for": "“For” does not introduce the topic receiving attention.",
+      },
+    },
+  ],
+  [
+    "good at",
+    {
+      answer: "good at",
+      distractors: {
+        "good in": "The usual pattern for ability at an activity is “good at.”",
+        "good on": "“On” does not introduce an activity someone performs well.",
+        "good for": "“Good for” means beneficial or suitable, not skilled at an activity.",
+      },
+    },
+  ],
+  [
+    "interested in",
+    {
+      answer: "interested in",
+      distractors: {
+        "interested on": "The adjective takes “in” before a subject of interest.",
+        "interested at": "“At” does not introduce the subject someone wants to learn about.",
+        "interested for": "The adjective takes “in” before the subject of interest.",
+      },
+    },
+  ],
+]);
+
+// Add a { term, alternative } entry when an audit finds a second plausible answer.
+// The check below intentionally fails until the question is rewritten or the
+// competing choice is removed.
+const sentenceStructureAmbiguityFindings = [];
+
+function checkSentenceStructureAnswerUniqueness(questions) {
+  assert.equal(
+    sentenceStructureAmbiguityFindings.length,
+    0,
+    `Sentence-structure questions have multiple plausible answers: ${sentenceStructureAmbiguityFindings
+      .map(({ term, alternative }) => `${term}: ${alternative}`)
+      .join("; ")}. Rewrite the prompt or remove the competing choice.`,
+  );
+  const questionsByTerm = new Map(
+    questions.map((question) => [question.term, question]),
+  );
+  assert.equal(
+    sentenceStructureAnswerUniquenessReviews.size,
+    questionsByTerm.size,
+    "Every sentence-structure grammar question must have a uniqueness review.",
+  );
+  for (const question of questions) {
+    const review = sentenceStructureAnswerUniquenessReviews.get(question.term);
+    assert.ok(
+      review,
+      `${question.term} is missing its answer-uniqueness review.`,
+    );
+    assert.equal(
+      review.answer,
+      question.term,
+      `${question.term} must be reviewed against its keyed answer.`,
+    );
+    const distractorChoices = question.choices.filter(
+      (choice) => choice !== question.term,
+    );
+    assert.deepEqual(
+      Object.keys(review.distractors).sort(),
+      [...distractorChoices].sort(),
+      `${question.term} must review every distractor and no other choice.`,
+    );
+    for (const [choice, reason] of Object.entries(review.distractors)) {
+      assert.ok(
+        typeof reason === "string" && reason.trim().length >= 20,
+        `${question.term}: explain why “${choice}” cannot also be correct.`,
+      );
+    }
+  }
+  for (const term of sentenceStructureAnswerUniquenessReviews.keys()) {
+    assert.ok(
+      questionsByTerm.has(term),
+      `${term} has a uniqueness review but no grammar question.`,
+    );
+  }
+}
+
 async function checkDictionaryOverlay() {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec(`
@@ -314,6 +768,7 @@ async function checkCourseContentAndProgress() {
   const patternEntries =
     sentenceStructurePatternCourse.SENTENCE_STRUCTURE_PATTERN_ENTRIES;
   const patternQuestions = patternLessons.flatMap((lesson) => lesson.questions);
+  checkSentenceStructureAnswerUniqueness(patternQuestions);
   const patternTerms = Object.keys(patternEntries);
   assert.deepEqual(
     patternLessons.map((lesson) => lesson.title),

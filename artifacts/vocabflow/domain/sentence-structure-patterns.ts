@@ -108,7 +108,7 @@ export const SENTENCE_STRUCTURE_PATTERN_LESSONS: readonly SentenceStructurePatte
         {
           term: "not only did",
           prompt:
-            "_____ the revised schedule reduce delays, but it also lowered operating costs.",
+            "In last year's pilot, _____ the revised schedule reduce delays, but it also lowered operating costs.",
           choices: [
             "not only did",
             "not only does",
