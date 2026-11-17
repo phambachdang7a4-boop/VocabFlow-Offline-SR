@@ -76,6 +76,14 @@ import {
   PHRASAL_VERB_COURSE_WORD_COUNT,
 } from "@/domain/phrasal-verb-course";
 import {
+  BASIC_VOCABULARY_COURSE_ENTRIES,
+  BASIC_VOCABULARY_COURSE_ID,
+  BASIC_VOCABULARY_COURSE_LESSONS,
+  BASIC_VOCABULARY_COURSE_TITLE,
+  BASIC_VOCABULARY_COURSE_TOPIC_COUNT,
+  BASIC_VOCABULARY_COURSE_WORD_COUNT,
+} from "@/domain/basic-vocabulary-course";
+import {
   getCourseLessonAttempts,
   getCourseLessonCompletions,
   markCourseLessonCompleted,
@@ -187,6 +195,19 @@ type CourseCatalogItem = {
 };
 
 const COURSE_CATALOG: readonly CourseCatalogItem[] = [
+  {
+    id: BASIC_VOCABULARY_COURSE_ID,
+    title: BASIC_VOCABULARY_COURSE_TITLE,
+    description:
+      `Học ${BASIC_VOCABULARY_COURSE_WORD_COUNT} từ A1–A2 qua ${BASIC_VOCABULARY_COURSE_LESSONS.length} bài ngắn, luyện chọn từ theo nghĩa tiếng Việt.`,
+    lessons: BASIC_VOCABULARY_COURSE_LESSONS,
+    entriesByTerm: new Map(Object.entries(BASIC_VOCABULARY_COURSE_ENTRIES)),
+    icon: "book-open",
+    catalogArtwork: require("../../assets/navigation/courses.png"),
+    testIdPrefix: "basic-vocabulary",
+    wordCount: BASIC_VOCABULARY_COURSE_WORD_COUNT,
+    topicCount: BASIC_VOCABULARY_COURSE_TOPIC_COUNT,
+  },
   {
     id: IDIOM_COURSE_ID,
     title: IDIOM_COURSE_TITLE,
@@ -973,6 +994,9 @@ export default function CoursesScreen() {
             <QuestionView
               testIdPrefix={activeCourse?.testIdPrefix ?? "course"}
               isIdiomCourse={activeCourse?.id === IDIOM_COURSE_ID}
+              isBasicVocabularyCourse={
+                activeCourse?.id === BASIC_VOCABULARY_COURSE_ID
+              }
               isSentenceStructureCourse={activeCourse?.id === CONJUNCTION_COURSE_ID}
               lesson={activeLesson}
               question={currentQuestion}
@@ -1589,6 +1613,7 @@ export default function CoursesScreen() {
 function QuestionView({
   testIdPrefix,
   isIdiomCourse,
+  isBasicVocabularyCourse,
   isSentenceStructureCourse,
   lesson,
   question,
@@ -1608,6 +1633,7 @@ function QuestionView({
 }: {
   testIdPrefix: string;
   isIdiomCourse: boolean;
+  isBasicVocabularyCourse: boolean;
   isSentenceStructureCourse: boolean;
   lesson: CourseLesson;
   question: CourseQuestion;
@@ -1674,8 +1700,17 @@ function QuestionView({
         {lesson.title}
       </Text>
       {!isSentenceStructureCourse ? (
-        <Text style={[styles.questionTitle, { color: c.foreground }]}>
-          Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu
+        <Text
+          testID={
+            isBasicVocabularyCourse
+              ? `${testIdPrefix}-question-instruction`
+              : undefined
+          }
+          style={[styles.questionTitle, { color: c.foreground }]}
+        >
+          {isBasicVocabularyCourse
+            ? "Chọn từ tiếng Anh tương ứng với nghĩa tiếng Việt"
+            : "Chọn từ hoặc cụm phù hợp nhất để hoàn thành câu"}
         </Text>
       ) : null}
       {isIdiomCourse ? (
@@ -2035,9 +2070,11 @@ function QuestionView({
               </Text>
             </>
           ) : null}
-          <Text style={[styles.feedbackExample, { color: c.foreground }]}>
-            {answer.example}
-          </Text>
+          {answer.example ? (
+            <Text style={[styles.feedbackExample, { color: c.foreground }]}>
+              {answer.example}
+            </Text>
+          ) : null}
           {answer.spellingNote ? (
             <Text
               testID={`${testIdPrefix}-spelling-note`}

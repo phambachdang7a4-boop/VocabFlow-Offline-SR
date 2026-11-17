@@ -1,4 +1,5 @@
 import { CONJUNCTION_COURSE_ID } from "./conjunction-course";
+import { BASIC_VOCABULARY_COURSE_ID } from "./basic-vocabulary-course";
 import { IDIOM_COURSE_ID } from "./idiom-course";
 import { IELTS_TOPIC_COURSE_ID } from "./ielts-topic-course";
 import { OFFICE_APPS_COURSE_ID } from "./office-apps-course";
@@ -6,6 +7,7 @@ import { PHRASAL_VERB_COURSE_ID } from "./phrasal-verb-course";
 import { TOEIC_TOPIC_COURSE_ID } from "./toeic-topic-course";
 
 export type LearningGoalId =
+  | "basic-vocabulary"
   | "ielts-reading"
   | "toeic"
   | "phrasal-verbs"
@@ -22,6 +24,13 @@ export type LearningGoalOption = {
 };
 
 export const LEARNING_GOAL_OPTIONS: readonly LearningGoalOption[] = [
+  {
+    id: "basic-vocabulary",
+    title: "Từ vựng cơ bản",
+    description: "300 từ thông dụng trình độ A1–A2",
+    courseId: BASIC_VOCABULARY_COURSE_ID,
+    icon: "book-open",
+  },
   {
     id: "ielts-reading",
     title: "IELTS Reading",

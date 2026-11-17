@@ -25,6 +25,7 @@
     "check:review-session": "node scripts/check-review-session.cjs",
     "check:review-modes": "node scripts/check-review-modes.cjs",
     "check:learning-goal": "node scripts/check-learning-goal.cjs",
+    "check:basic-vocabulary-course": "node scripts/check-basic-vocabulary-course.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
     "check:course-word-selection": "node scripts/check-course-word-selection.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",

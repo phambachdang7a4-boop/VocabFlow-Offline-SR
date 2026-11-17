@@ -5,6 +5,9 @@ const { loadTs } = require("./test-support.cjs");
 
 const courseIds = {
   "./conjunction-course": { CONJUNCTION_COURSE_ID: "sentence-structure" },
+  "./basic-vocabulary-course": {
+    BASIC_VOCABULARY_COURSE_ID: "basic-vocabulary-a1-a2-v1",
+  },
   "./idiom-course": { IDIOM_COURSE_ID: "idioms" },
   "./ielts-topic-course": { IELTS_TOPIC_COURSE_ID: "ielts" },
   "./office-apps-course": { OFFICE_APPS_COURSE_ID: "office-apps" },
@@ -12,11 +15,15 @@ const courseIds = {
   "./toeic-topic-course": { TOEIC_TOPIC_COURSE_ID: "toeic" },
 };
 const goals = loadTs(join(__dirname, "../domain/learning-goals.ts"), courseIds);
-assert.equal(goals.LEARNING_GOAL_OPTIONS.length, 6);
+assert.equal(goals.LEARNING_GOAL_OPTIONS.length, 7);
 assert.equal(
   new Set(goals.LEARNING_GOAL_OPTIONS.map((goal) => goal.id)).size,
   goals.LEARNING_GOAL_OPTIONS.length,
   "Every goal has a unique persistent id.",
+);
+assert.equal(
+  goals.getLearningGoalOption("basic-vocabulary").courseId,
+  "basic-vocabulary-a1-a2-v1",
 );
 assert.equal(
   goals.getLearningGoalOption("ielts-reading").courseId,

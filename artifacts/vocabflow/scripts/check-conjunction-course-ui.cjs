@@ -44,6 +44,9 @@ const phrasalVerbCourseDomain = loadTs(
     ),
   },
 );
+const basicVocabularyCourseDomain = loadTs(
+  join(__dirname, "../domain/basic-vocabulary-course.ts"),
+);
 const combinedLessonCount =
   courseDomain.CONJUNCTION_COURSE_LESSONS.length +
   linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS.length +
@@ -125,6 +128,7 @@ function mount(initialSavedWords = [], options = {}) {
     },
     useCallback: (callback) => callback,
     useMemo: (factory) => factory(),
+    useEffect: () => undefined,
   };
   const loaded = loadTs(join(__dirname, "../app/(tabs)/courses.tsx"), {
     react: { ...react, default: react },
@@ -142,7 +146,9 @@ function mount(initialSavedWords = [], options = {}) {
       F: { b: "bold", r: "regular", s: "semibold" },
       MaterialSheen: "MaterialSheen",
     },
+    "@/components/LearningGoalCard": "LearningGoalCard",
     "@/domain/conjunction-course": courseDomain,
+    "@/domain/basic-vocabulary-course": basicVocabularyCourseDomain,
     "@/domain/linking-adverb-course": linkingAdverbDomain,
     "@/domain/sentence-structure-patterns": sentenceStructurePatternDomain,
     "@/domain/ielts-topic-course": ieltsTopicDomain,
@@ -150,12 +156,21 @@ function mount(initialSavedWords = [], options = {}) {
     "@/domain/office-apps-course": officeAppsDomain,
     "@/domain/idiom-course": idiomCourseDomain,
     "@/domain/phrasal-verb-course": phrasalVerbCourseDomain,
+    "@/domain/learning-goals": {
+      getLearningGoalOption: () => undefined,
+      LEARNING_GOAL_OPTIONS: [],
+    },
+    "@/data/learning-goal": {
+      readLearningGoal: async () => null,
+      writeLearningGoal: async () => undefined,
+    },
     "../../assets/courses/idioms.png": "idioms-course-artwork",
     "../../assets/courses/phrasal-verbs.png": "phrasal-verbs-course-artwork",
     "../../assets/courses/sentence-structures.png": "sentence-structures-course-artwork",
     "../../assets/courses/ielts.png": "ielts-course-artwork",
     "../../assets/courses/toeic.png": "toeic-course-artwork",
     "../../assets/courses/office-apps.png": "office-apps-course-artwork",
+    "../../assets/navigation/courses.png": "basic-vocabulary-course-artwork",
     "../../assets/images/corvi-dialogue-avatar.png": "corvi-dialogue-avatar-asset",
     "../../assets/images/pan-dialogue-avatar.png": "pan-dialogue-avatar-asset",
     "../../assets/images/baron-dialogue-avatar.png": "baron-dialogue-avatar-asset",
@@ -1233,6 +1248,50 @@ function mount(initialSavedWords = [], options = {}) {
     missingIpaScreen.byId("office-apps-bulk-add-confirmation").props.visible,
     true,
     "The learner can install IPA data and retry without losing the dialog.",
+  );
+
+  const basicVocabularyScreen = mount();
+  await basicVocabularyScreen.focus();
+  assert.ok(
+    basicVocabularyScreen.byId("basic-vocabulary-course-card"),
+    "The basic vocabulary course is available in the catalog.",
+  );
+  basicVocabularyScreen
+    .byId("basic-vocabulary-course-card")
+    .props.onPress();
+  await basicVocabularyScreen.settle();
+  basicVocabularyScreen.byId("basic-vocabulary-lesson-1").props.onPress();
+  await basicVocabularyScreen.settle();
+  const basicQuestion =
+    basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_LESSONS[0].questions[0];
+  assert.equal(
+    textContent(
+      basicVocabularyScreen.byId(
+        "basic-vocabulary-question-instruction",
+      ),
+    ),
+    "Chọn từ tiếng Anh tương ứng với nghĩa tiếng Việt",
+  );
+  assert.equal(
+    textContent(basicVocabularyScreen.byId("basic-vocabulary-question-prompt")),
+    basicQuestion.prompt,
+  );
+  const wrongBasicChoice = basicQuestion.choices.find(
+    (choice) => choice !== basicQuestion.term,
+  );
+  basicVocabularyScreen
+    .byId(`basic-vocabulary-choice-${wrongBasicChoice}`)
+    .props.onPress();
+  await basicVocabularyScreen.settle();
+  assert.ok(
+    textContent(
+      basicVocabularyScreen.byId("basic-vocabulary-answer-feedback"),
+    ).includes(
+      basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_ENTRIES[
+        basicQuestion.term
+      ].definition,
+    ),
+    "Incorrect answers reveal the right Vietnamese meaning without an empty example.",
   );
   console.log("All course catalog and lesson flows passed.");
 })().catch((error) => {
