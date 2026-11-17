@@ -110,6 +110,22 @@ const payload = {
       completedAt: "2026-11-08T10:00:00.000Z",
     },
   ],
+  corviFragmentAwards: Array.from({ length: 15 }, (_, index) => {
+    const day = `2026-11-${String(index + 1).padStart(2, "0")}`;
+    return {
+      day,
+      missionId: "review-1",
+      awardedAt: `${day}T10:00:00.000Z`,
+    };
+  }),
+  corviChestRewards: [
+    {
+      chestId: "corvi-progress-1",
+      chestIndex: 1,
+      stone: 2000,
+      createdAt: "2026-11-15T10:00:00.000Z",
+    },
+  ],
   missionChests: [
     {
       chestId: "mission-2026-11-08-lesson-1",

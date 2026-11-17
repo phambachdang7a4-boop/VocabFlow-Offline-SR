@@ -83,7 +83,7 @@ assert.match(
 );
 assert.match(
   missionScreen,
-  /Nếu chốt ở bậc này: \{currentStone\} Stone · Còn \{attemptsLeft\}/,
+  /`Nếu chốt ở bậc này: \$\{currentStone\} Stone · Còn \$\{attemptsLeft\}\/\$\{attemptLimit\}/,
   "The unopened chest card explains its current payout and remaining attempts.",
 );
 

@@ -17,6 +17,22 @@ const candidateDays = [
   "2026-11-13",
   "2026-11-14",
 ];
+const zeroMissionStats = {
+  reviewedCount: 0,
+  addedWordCount: 0,
+  reviewSessions: [],
+  reviewDurationMs: 0,
+};
+const corviDay = Array.from({ length: 365 }, (_, index) =>
+  new Date(Date.UTC(2099, 0, index + 1)).toISOString().slice(0, 10),
+).find((candidate) =>
+  missionDomain
+    .evaluateDailyMissions(candidate, zeroMissionStats, [])
+    .some((mission) => mission.type === "grade"),
+);
+const corviGradeMission = missionDomain
+  .evaluateDailyMissions(corviDay, zeroMissionStats, [])
+  .find((mission) => mission.type === "grade");
 const day = candidateDays.find((candidate) =>
   missionDomain
     .evaluateDailyMissions(
@@ -101,6 +117,8 @@ const timeRoot = mkdtempSync(join(tmpdir(), "vocabflow-time-mission-"));
 const timeHarness = createRepository(timeRoot, `${timeDay}T12:00:00`);
 const comboRoot = mkdtempSync(join(tmpdir(), "vocabflow-combo-mission-"));
 const comboHarness = createRepository(comboRoot, `${comboDay}T12:00:00`);
+const corviRoot = mkdtempSync(join(tmpdir(), "vocabflow-corvi-progress-"));
+const corviHarness = createRepository(corviRoot, `${corviDay}T12:00:00`);
 const retryRoot = mkdtempSync(join(tmpdir(), "vocabflow-chest-retry-"));
 const retryHarness = createRepository(retryRoot, "2099-01-01T12:00:00");
 const migrationRoot = mkdtempSync(join(tmpdir(), "vocabflow-chest-reopen-"));
@@ -596,80 +614,147 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
         );
       duplicateTestIndex += 1;
     }
-    const duplicateBalanceBefore =
-      await harness.repo.getMissionCollectionOverview();
-    let duplicateChestId;
-    for (let index = 0; index < 100_000; index += 1) {
-      const candidate = `duplicate-corvi-compensation-${index}`;
-      if (missionChests.hasSuperUpgradeChance(candidate)) continue;
-      const firstUpgrade = missionChests.resolveChestUpgrade(
-        candidate,
-        1,
-        "rare",
-        5,
-        false,
+    let cappedChestId;
+    let cappedAttempts = 0;
+    let cappedSuperUpgrade = false;
+    const cappedStartingRarity =
+      missionChests.startingRarityForMission("review-3");
+    for (let index = 0; index < 100_000 && !cappedChestId; index += 1) {
+      const candidate = `storage-platinum-cap-${index}`;
+      const superUpgrade = missionChests.hasSuperUpgradeChance(candidate);
+      const attemptLimit = missionChests.maxChestUpgradeAttempts(
+        7,
+        superUpgrade,
       );
-      const secondUpgrade = firstUpgrade.success
-        ? missionChests.resolveChestUpgrade(
-            candidate,
-            2,
-            firstUpgrade.rarity,
-            5,
-            false,
-          )
-        : null;
-      if (
-        firstUpgrade.success &&
-        firstUpgrade.rarity === "epic" &&
-        secondUpgrade?.success &&
-        secondUpgrade.rarity === "legendary"
-      ) {
-        duplicateChestId = candidate;
-        break;
+      let rarity = cappedStartingRarity;
+      for (let attempt = 1; attempt <= attemptLimit; attempt += 1) {
+        const upgrade = missionChests.resolveChestUpgrade(
+          candidate,
+          attempt,
+          rarity,
+          7,
+          superUpgrade,
+        );
+        if (upgrade.success) rarity = upgrade.rarity;
+        if (rarity === "epic") {
+          cappedChestId = candidate;
+          cappedAttempts = attempt;
+          cappedSuperUpgrade = superUpgrade;
+          break;
+        }
       }
     }
-    assert.ok(duplicateChestId, "A test chest can reach Corvi.");
+    assert.ok(cappedChestId, "A valid Platinum chest can be created.");
     harness.db
       .prepare(
         `INSERT INTO mission_chests
           (chest_id, mission_day, mission_id, base_stone, upgrade_attempts,
             rarity, rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
-         VALUES (?, '2099-12-29', 'review-3', 5, 0, 'rare', 5, 0, 0,
+         VALUES (?, '2099-12-29', 'review-3', 3, ?, 'epic', 7, ?, 0,
             NULL, '2099-12-29T12:00:00.000Z', '2099-12-29T12:00:00.000Z')`,
       )
-      .run(duplicateChestId);
-    await harness.repo.attemptMissionChestUpgrade(duplicateChestId);
-    const duplicateResult =
-      await harness.repo.attemptMissionChestUpgrade(duplicateChestId);
-    assert.ok(duplicateResult.awardedStatue);
+      .run(cappedChestId, cappedAttempts, cappedSuperUpgrade ? 1 : 0);
+    const cappedResult =
+      await harness.repo.attemptMissionChestUpgrade(cappedChestId);
     assert.equal(
-      duplicateResult.compensatedPieces,
-      20,
-      "A repeated Corvi statue grants 20 fragments.",
+      cappedResult.chest.rarity,
+      "epic",
+      "A Platinum chest cannot be upgraded into Corvi.",
     );
-    const duplicateCraftRow = harness.db
-      .prepare(
-        `SELECT rarity, piece_cost AS pieceCost FROM collection_crafts
-         WHERE craft_id = ?`,
-      )
-      .get(`cycle2-corvi-${duplicateChestId}`);
-    assert.equal(duplicateCraftRow.pieceCost, -20);
+    assert.equal(cappedResult.chest.upgradeAttempts, cappedAttempts);
+    assert.equal(cappedResult.chest.opened, true);
+    assert.equal(cappedResult.awardedStatue, null);
+
+    await corviHarness.repo.getDailyMissionOverview(corviDay);
+    const awardMissionIds = [
+      "review-1",
+      "review-2",
+      "review-3",
+      "add-words-1",
+      "add-words-2",
+      "add-words-3",
+      "lesson-1",
+      "lesson-2",
+      "lesson-3",
+      "grade-1",
+      "grade-2",
+      "grade-3",
+      "time-1",
+      "time-2",
+      "time-3",
+      "combo-1",
+      "combo-2",
+      "combo-3",
+    ]
+      .filter((missionId) => missionId !== corviGradeMission.id)
+      .slice(0, missionChests.CORVI_CHEST_FRAGMENT_COST - 1);
+    for (const missionId of awardMissionIds) {
+      corviHarness.db
+        .prepare(
+          `INSERT INTO corvi_fragment_awards
+            (mission_day, mission_id, awarded_at)
+           VALUES (?, ?, ?)`,
+        )
+        .run(corviDay, missionId, `${corviDay}T11:00:00.000Z`);
+    }
+    const corviRequiredGrade = gradeByLevel[corviGradeMission.level];
+    for (let index = 0; index < corviGradeMission.target; index += 1) {
+      await corviHarness.repo.recordReviewSessionResult({
+        sessionId: `corvi-qualified-session-${index}`,
+        startedAt: Date.parse(`${corviDay}T12:00:00`),
+        activeDurationMs: 0,
+        maxCombo: 0,
+        reviewedCount: 30,
+        correctCount: correctCountByGrade[corviRequiredGrade],
+        grade: corviRequiredGrade,
+        completed: true,
+      });
+    }
+    const corviOverview =
+      await corviHarness.repo.getDailyMissionOverview(corviDay);
+    assert.equal(corviOverview.corviFragments, 0);
     assert.equal(
-      (await harness.repo.getMissionCollectionOverview()).fragments[
-        duplicateCraftRow.rarity
-      ],
-      duplicateBalanceBefore.fragments[duplicateCraftRow.rarity] +
-        duplicateResult.awardedFragments[duplicateCraftRow.rarity] +
-        20,
-      "A duplicate Corvi reward adds 20 fragments beyond the chest's own drop.",
+      corviOverview.corviChestsOpened,
+      1,
+      "The fifteenth mission fragment opens one Corvi chest automatically.",
     );
-    assert.deepEqual(
-      await harness.repo.getMissionCorviStatueReward(duplicateChestId),
-      {
-        artwork: duplicateResult.awardedStatue,
-        compensationPieces: 20,
-      },
-      "Duplicate compensation remains visible when the chest is reopened.",
+    assert.equal(
+      corviOverview.corviLatestStoneReward,
+      missionChests.CORVI_CHEST_STONE_REWARD,
+    );
+    assert.equal(
+      corviOverview.stoneBalance,
+      missionChests.CORVI_CHEST_STONE_REWARD,
+    );
+    assert.equal(
+      corviHarness.db
+        .prepare("SELECT COUNT(*) AS count FROM corvi_fragment_awards")
+        .get().count,
+      missionChests.CORVI_CHEST_FRAGMENT_COST,
+      "Completing a new mission awards exactly one Corvi fragment.",
+    );
+    assert.equal(
+      corviHarness.db
+        .prepare("SELECT COUNT(*) AS count FROM corvi_chest_rewards")
+        .get().count,
+      1,
+      "The automatic Corvi payout is recorded once.",
+    );
+    assert.equal(
+      corviHarness.db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM collection_crafts WHERE craft_id = 'cycle2-corvi-corvi-progress-1'",
+        )
+        .get().count,
+      1,
+      "The Corvi chest grants its collection statue.",
+    );
+    const repeatedCorviOverview =
+      await corviHarness.repo.getDailyMissionOverview(corviDay);
+    assert.equal(repeatedCorviOverview.corviChestsOpened, 1);
+    assert.equal(
+      repeatedCorviOverview.stoneBalance,
+      missionChests.CORVI_CHEST_STONE_REWARD,
     );
 
     const secondOverview = await harness.repo.getDailyMissionOverview(day);
@@ -921,6 +1006,8 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     rmSync(timeRoot, { recursive: true, force: true });
     comboHarness.db.close();
     rmSync(comboRoot, { recursive: true, force: true });
+    corviHarness?.db?.close();
+    rmSync(corviRoot, { recursive: true, force: true });
     retryHarness?.db?.close();
     rmSync(retryRoot, { recursive: true, force: true });
     migrationAfterUpdate?.db.close();
