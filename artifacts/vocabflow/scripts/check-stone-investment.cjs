@@ -465,6 +465,13 @@ assert.match(shopScreen, /setInventoryRevision/);
 assert.match(investmentScreen, /onInventoryChange\?\./);
 assert.match(investmentScreen, /Bỏ lỡ một ngày ôn hoặc học sẽ tính là thất bại/);
 assert.match(investmentScreen, /Kỳ 14 ngày nhận lãi gấp 3 kỳ 7 ngày/);
+assert.match(investmentScreen, /testID="stone-investment-summary"/);
+assert.match(investmentScreen, /stone-investment-locked-total/);
+assert.match(investmentScreen, /stone-investment-settled-net/);
+assert.match(investmentScreen, /stone-investment-filter-\$\{filter\.id\}/);
+assert.match(investmentScreen, /stone-investment-progress-\$\{investment\.investmentId\}/);
+assert.match(investmentScreen, /Hôm nay:[\s\S]*?đã ghi nhận/);
+assert.match(investmentScreen, /Đủ kỳ: nhận/);
 
 checkStorage()
   .then(() => console.log("Stone investment rules, study tracking, and settlement passed."))

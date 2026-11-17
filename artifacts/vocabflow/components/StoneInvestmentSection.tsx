@@ -34,6 +34,17 @@ import {
 
 const PLANS: StoneInvestmentPlan[] = ["safe", "balanced", "risky"];
 const DURATIONS: StoneInvestmentDuration[] = [7, 14];
+type InvestmentStatusFilter = "all" | "active" | "succeeded" | "failed";
+
+const INVESTMENT_FILTERS: Array<{
+  id: InvestmentStatusFilter;
+  label: string;
+}> = [
+  { id: "all", label: "Tất cả" },
+  { id: "active", label: "Đang chạy" },
+  { id: "succeeded", label: "Thành công" },
+  { id: "failed", label: "Thất bại" },
+];
 
 export function StoneInvestmentSection({
   inventoryRevision = 0,
@@ -56,6 +67,8 @@ export function StoneInvestmentSection({
   const [claimingCollateral, setClaimingCollateral] = useState<string | null>(
     null,
   );
+  const [investmentFilter, setInvestmentFilter] =
+    useState<InvestmentStatusFilter>("all");
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -99,6 +112,49 @@ export function StoneInvestmentSection({
     () => new Set(overview?.studyDays.map((day) => day.day) ?? []),
     [overview?.studyDays],
   );
+  const investments = overview?.investments ?? [];
+  const investmentCounts = useMemo(
+    () => ({
+      all: investments.length,
+      active: investments.filter((item) => item.status === "active").length,
+      succeeded: investments.filter((item) => item.status === "succeeded")
+        .length,
+      failed: investments.filter((item) => item.status === "failed").length,
+    }),
+    [investments],
+  );
+  const lockedStone = useMemo(
+    () =>
+      investments
+        .filter((item) => item.status === "active")
+        .reduce((total, item) => total + item.principal, 0),
+    [investments],
+  );
+  const settledNetResult = useMemo(
+    () =>
+      investments
+        .filter((item) => item.status !== "active")
+        .reduce(
+          (total, item) =>
+            total + (item.settlementAmount ?? item.principal) - item.principal,
+          0,
+        ),
+    [investments],
+  );
+  const visibleInvestments = useMemo(
+    () =>
+      investments
+        .filter(
+          (item) =>
+            investmentFilter === "all" || item.status === investmentFilter,
+        )
+        .sort((left, right) => {
+          if (left.status === "active" && right.status !== "active") return -1;
+          if (right.status === "active" && left.status !== "active") return 1;
+          return right.createdAt.localeCompare(left.createdAt);
+        }),
+    [investmentFilter, investments],
+  );
 
   const startInvestment = async (useLowInsurance: boolean) => {
     if (!enoughStone) {
@@ -114,6 +170,7 @@ export function StoneInvestmentSection({
       });
       setPrincipalText("");
       setCapitalInvite(null);
+      setInvestmentFilter("active");
       await load();
       onInventoryChange?.();
     } catch (failure) {
@@ -449,14 +506,118 @@ export function StoneInvestmentSection({
       </Text>
 
       <View style={styles.sectionHeading}>
-        <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-          Các khoản đầu tư
+        <Text
+          testID="stone-investment-history-title"
+          style={[styles.sectionTitle, { color: c.foreground }]}
+        >
+          Theo dõi hợp đồng
+        </Text>
+        <Text style={[styles.hint, { color: c.mutedForeground }]}>
+          Tiến độ từng ngày, vốn đang khóa và lãi/lỗ đã chốt.
         </Text>
       </View>
+      {overview ? (
+        <View
+          testID="stone-investment-summary"
+          style={[
+            styles.summaryCard,
+            { backgroundColor: c.card, borderColor: c.border },
+          ]}
+        >
+          <View style={styles.summaryMetric}>
+            <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>
+              Stone đang khóa
+            </Text>
+            <Text
+              testID="stone-investment-locked-total"
+              style={[styles.summaryValue, { color: c.foreground }]}
+            >
+              {lockedStone.toLocaleString("vi-VN")}
+            </Text>
+            <Text style={[styles.summaryMeta, { color: c.mutedForeground }]}>
+              {investmentCounts.active} hợp đồng đang chạy
+            </Text>
+          </View>
+          <View style={[styles.summaryDivider, { backgroundColor: c.border }]} />
+          <View style={styles.summaryMetric}>
+            <Text style={[styles.summaryLabel, { color: c.mutedForeground }]}>
+              Lãi/lỗ đã chốt
+            </Text>
+            <Text
+              testID="stone-investment-settled-net"
+              style={[
+                styles.summaryValue,
+                {
+                  color:
+                    settledNetResult > 0
+                      ? c.successText
+                      : settledNetResult < 0
+                        ? c.destructive
+                        : c.foreground,
+                },
+              ]}
+            >
+              {settledNetResult > 0
+                ? `+${settledNetResult.toLocaleString("vi-VN")}`
+                : settledNetResult.toLocaleString("vi-VN")}{" "}
+              Stone
+            </Text>
+            <Text style={[styles.summaryMeta, { color: c.mutedForeground }]}>
+              {investmentCounts.succeeded + investmentCounts.failed} hợp đồng đã chốt
+            </Text>
+          </View>
+        </View>
+      ) : null}
+      {overview ? (
+        <View style={styles.filterRow}>
+          {INVESTMENT_FILTERS.map((filter) => {
+            const selected = investmentFilter === filter.id;
+            return (
+              <Pressable
+                key={filter.id}
+                testID={`stone-investment-filter-${filter.id}`}
+                accessibilityRole="button"
+                accessibilityLabel={`${filter.label}, ${investmentCounts[filter.id]} hợp đồng`}
+                accessibilityState={{ selected }}
+                onPress={() => setInvestmentFilter(filter.id)}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: selected ? c.primary : c.card,
+                    borderColor: selected ? c.primary : c.border,
+                  },
+                ]}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.filterLabel,
+                    {
+                      color: selected ? c.buttonForeground : c.foreground,
+                    },
+                  ]}
+                >
+                  {filter.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.filterCount,
+                    {
+                      color: selected ? c.buttonForeground : c.mutedForeground,
+                    },
+                  ]}
+                >
+                  {investmentCounts[filter.id]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {loading && !overview ? (
         <ActivityIndicator color={c.primary} />
-      ) : overview?.investments.length ? (
-        overview.investments.map((investment) => {
+      ) : overview && visibleInvestments.length ? (
+        visibleInvestments.map((investment) => {
           const requiredDays = studyDaysRequired(
             investment.startDay,
             investment.durationDays,
@@ -471,6 +632,25 @@ export function StoneInvestmentSection({
                   investment.settlementAmount,
                   investment.principal,
                 );
+          const todayIsInPeriod =
+            overview.today >= investment.startDay &&
+            overview.today <= investment.endDay;
+          const todayRecorded = studyDays.has(overview.today);
+          const remainingDays = requiredDays.filter(
+            (day) => day > overview.today,
+          ).length;
+          const progressPercent = Math.round(
+            (completedCount / investment.durationDays) * 100,
+          );
+          const missedDay = requiredDays.find(
+            (day) => day < overview.today && !studyDays.has(day),
+          );
+          const projectedSettlement = investmentSuccessSettlement(
+            investment.plan,
+            investment.principal,
+            investment.durationDays,
+            investment.capitalInvite,
+          );
           return (
             <View
               key={investment.investmentId}
@@ -511,8 +691,43 @@ export function StoneInvestmentSection({
               </Text>
               {investment.status === "active" ? (
                 <>
+                  <View style={styles.investmentProgressRow}>
+                    <Text
+                      style={[styles.hint, { color: c.mutedForeground }]}
+                    >
+                      Đã ghi nhận {completedCount}/{investment.durationDays} ngày
+                    </Text>
+                    <Text
+                      style={[styles.progressPercent, { color: c.primary }]}
+                    >
+                      {progressPercent}%
+                    </Text>
+                  </View>
+                  <View
+                    testID={`stone-investment-progress-${investment.investmentId}`}
+                    style={[
+                      styles.investmentProgressTrack,
+                      { backgroundColor: c.muted },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.investmentProgressFill,
+                        {
+                          width: `${progressPercent}%`,
+                          backgroundColor: c.success,
+                        },
+                      ]}
+                    />
+                  </View>
                   <Text style={[styles.hint, { color: c.mutedForeground }]}>
-                    Đã ghi nhận {completedCount}/{investment.durationDays} ngày
+                    Hôm nay:{" "}
+                    {todayRecorded
+                      ? "đã ghi nhận"
+                      : todayIsInPeriod
+                        ? "chưa ghi nhận"
+                        : `bắt đầu ${investment.startDay}`}
+                    {todayIsInPeriod ? ` · Còn ${remainingDays} ngày sau hôm nay` : ""}
                   </Text>
                   <View style={styles.dayDots}>
                     {requiredDays.map((day) => {
@@ -537,9 +752,19 @@ export function StoneInvestmentSection({
                       );
                     })}
                   </View>
+                  <Text style={[styles.settlementHint, { color: c.primary }]}>
+                    Đủ kỳ: nhận{" "}
+                    {projectedSettlement.toLocaleString("vi-VN")} Stone
+                  </Text>
                 </>
               ) : (
                 <>
+                  <Text style={[styles.hint, { color: c.mutedForeground }]}>
+                    Vốn {investment.principal.toLocaleString("vi-VN")} Stone →
+                    nhận{" "}
+                    {(investment.settlementAmount ?? 0).toLocaleString("vi-VN")}{" "}
+                    Stone
+                  </Text>
                   <Text
                     style={[
                       styles.hint,
@@ -557,6 +782,15 @@ export function StoneInvestmentSection({
                         : `Lãi ${result.toLocaleString("vi-VN")} Stone`
                       : `Lỗ ${Math.abs(result ?? 0).toLocaleString("vi-VN")} Stone`}
                   </Text>
+                  {investment.status === "failed" ? (
+                    <Text style={[styles.hint, { color: c.destructive }]}>
+                      {investment.forceMajeureHit
+                        ? "Thất bại do bất khả kháng."
+                        : missedDay
+                          ? `Bỏ lỡ ngày học/ôn ${missedDay}.`
+                          : "Không hoàn thành yêu cầu học mỗi ngày."}
+                    </Text>
+                  ) : null}
                   {investment.status === "failed" &&
                   investment.plan === "risky" &&
                   (!investment.lowInsuranceUsed ||
@@ -595,11 +829,6 @@ export function StoneInvestmentSection({
                       Đã dùng Bảo Hiểm cấp thấp
                     </Text>
                   ) : null}
-                  {investment.forceMajeureHit ? (
-                    <Text style={[styles.hint, { color: c.destructive }]}>
-                      Sự cố bất khả kháng đã xảy ra
-                    </Text>
-                  ) : null}
                   {investment.collateralUsed ? (
                     <Text style={[styles.hint, { color: c.mutedForeground }]}>
                       Đã tiêu hao Tài Sản Thế Chấp
@@ -612,7 +841,13 @@ export function StoneInvestmentSection({
         })
       ) : (
         <Text style={[styles.hint, { color: c.mutedForeground }]}>
-          Chưa có khoản đầu tư nào.
+          {investmentFilter === "all"
+            ? "Chưa có khoản đầu tư nào."
+            : investmentFilter === "active"
+              ? "Không có hợp đồng đang chạy."
+              : investmentFilter === "succeeded"
+                ? "Chưa có hợp đồng thành công."
+                : "Chưa có hợp đồng thất bại."}
         </Text>
       )}
     </View>
@@ -685,6 +920,34 @@ const styles = StyleSheet.create({
   },
   startButtonText: { fontFamily: F.b, fontSize: 14 },
   footer: { fontFamily: F.r, fontSize: 11, lineHeight: 16 },
+  summaryCard: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 10,
+  },
+  summaryMetric: { flex: 1, minWidth: 0, gap: 3 },
+  summaryDivider: { width: 1, marginVertical: 2 },
+  summaryLabel: { fontFamily: F.s, fontSize: 10 },
+  summaryValue: { fontFamily: F.b, fontSize: 15 },
+  summaryMeta: { fontFamily: F.r, fontSize: 10, lineHeight: 14 },
+  filterRow: { flexDirection: "row", gap: 6 },
+  filterChip: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 11,
+    paddingHorizontal: 3,
+    paddingVertical: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 1,
+  },
+  filterLabel: { fontFamily: F.s, fontSize: 9, textAlign: "center" },
+  filterCount: { fontFamily: F.b, fontSize: 11 },
   investmentCard: { gap: 7, borderWidth: 1, borderRadius: 14, padding: 12 },
   investmentTitleRow: {
     flexDirection: "row",
@@ -693,6 +956,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   status: { fontFamily: F.s, fontSize: 11 },
+  investmentProgressRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  progressPercent: { fontFamily: F.b, fontSize: 11 },
+  investmentProgressTrack: {
+    height: 7,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  investmentProgressFill: { height: 7, borderRadius: 4 },
+  settlementHint: { fontFamily: F.s, fontSize: 11, lineHeight: 16 },
   dayDots: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
   dayDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1 },
 });
