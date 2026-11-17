@@ -70,6 +70,53 @@ export async function applyLocalDictionaryAdditions(
       if (existingSense?.exactExampleId != null) continue;
 
       if (wordAlreadyExists && !entry.allowAdditionalSenses) {
+        const priorLocalSense = await db.getFirstAsync<{
+          wordDefinitionId: number;
+        }>(
+          `SELECT wd.id AS wordDefinitionId
+           FROM word_definitions wd
+           JOIN definitions d ON d.id = wd.definition_id
+           WHERE wd.word_id = ? AND wd.example = ?
+             AND d.pos IS ? AND d.sub_pos IS ?
+           LIMIT 1`,
+          wordId,
+          entry.example,
+          entry.pos,
+          entry.subPos,
+        );
+        if (priorLocalSense) {
+          let definitionId = await db.getFirstAsync<{ id: number }>(
+            `SELECT id FROM definitions
+             WHERE definition = ? AND pos IS ? AND sub_pos IS ?
+             LIMIT 1`,
+            entry.definition,
+            entry.pos,
+            entry.subPos,
+          ).then((row) => row?.id);
+          if (definitionId === undefined) {
+            definitionId = (
+              await db.runAsync(
+                `INSERT INTO definitions
+                  (definition, pos, sub_pos, definition_lang)
+                 VALUES (?, ?, ?, 'vi')`,
+                entry.definition,
+                entry.pos,
+                entry.subPos,
+              )
+            ).lastInsertRowId;
+          }
+          const update = await db.runAsync(
+            "UPDATE word_definitions SET definition_id = ? WHERE id = ?",
+            definitionId,
+            priorLocalSense.wordDefinitionId,
+          );
+          if (update.changes !== 1) {
+            throw new Error(
+              `Không thể cập nhật nghĩa từ điển cho "${entry.term}".`,
+            );
+          }
+          continue;
+        }
         throw new Error(
           `Từ điển đã có mục "${entry.term}" với nội dung khác.`,
         );

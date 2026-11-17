@@ -143,41 +143,41 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
 
 const CONJUNCTION_COMPARISON_NOTES: Readonly<Record<string, string>> = {
   "as if":
-    "Gần nghĩa với as though; thường thay được khi nói về vẻ ngoài hoặc tình huống tưởng tượng. As if thông dụng hơn; cả hai không mang nghĩa điều kiện.",
+    "Gần nghĩa với as though; thường thay được khi nói “như thể”. As if thông dụng hơn; cả hai mô tả vẻ ngoài hoặc tình huống được hình dung, không tự nêu điều kiện.",
   "as long as":
-    "Gần nghĩa với provided that khi nêu điều kiện; provided that trang trọng hơn. As long as còn có thể chỉ khoảng thời gian kéo dài.",
+    "Gần nghĩa với provided that khi nêu điều kiện; provided that thường trang trọng hoặc chính thức hơn. As long as còn có thể chỉ khoảng thời gian kéo dài.",
   "as much as":
-    "Ở đầu mệnh đề, cụm này nhượng bộ và gần nghĩa với although. Trong cấu trúc chỉ số lượng, as much as lại có nghĩa “nhiều bằng”.",
+    "Ở đầu mệnh đề, cụm này nhượng bộ, gần nghĩa với although (“mặc dù/dù ... đến đâu”). Trong cấu trúc chỉ số lượng, as much as lại có nghĩa “nhiều bằng”.",
   "as soon as":
-    "Nhấn mạnh việc sau xảy ra ngay khi mốc vừa đến. Khác by the time (đến mốc thì việc khác đã xảy ra/hoàn tất) và just as (hai việc đồng thời).",
+    "Nhấn mạnh việc ở mệnh đề chính xảy ra ngay sau khi mốc vừa đến. Khác by the time (đến mốc thì việc khác đã xảy ra, hoàn tất hoặc đang kéo dài) và just as (hai việc cùng lúc hoặc gần như cùng lúc).",
   "as far as":
-    "Trong as far as I know/can tell, cụm này giới hạn thông tin. Khác just as (“đúng như/đúng lúc”) và as long as (“miễn là”).",
+    "Trong as far as I know/can tell, cụm này giới hạn nhận định theo thông tin hoặc hiểu biết hiện có. Khác just as (“đúng lúc/đúng như”) và as long as (“miễn là”).",
   "as though":
-    "Gần nghĩa với as if; thường thay được khi nói “như thể”. As though đôi khi trang trọng hoặc văn viết hơn; không mang nghĩa điều kiện.",
+    "Gần nghĩa với as if; thường thay được khi nói “như thể”. As though đôi khi trang trọng hoặc thiên về văn viết hơn; cả hai mô tả vẻ ngoài hoặc tình huống được hình dung, không tự nêu điều kiện.",
   "by the time":
-    "Nêu mốc mà khi tới đó việc khác đã xảy ra hoặc hoàn tất; thường đi với thì hoàn thành. Khác as soon as (“ngay khi”).",
+    "Nêu mốc mà khi tới đó việc khác đã xảy ra, hoàn tất hoặc đang kéo dài; thường đi với thì hoàn thành. Khác as soon as (“ngay sau khi”) và just as (“cùng lúc”).",
   "inasmuch as":
-    "Gần nghĩa với because/since khi nêu lý do, nhưng trang trọng hơn; đôi khi có nghĩa “trong phạm vi mà”. Không đồng nghĩa provided that (điều kiện).",
+    "Gần nghĩa với because/since khi nêu lý do, nhưng trang trọng hơn; đôi khi có nghĩa “xét theo mức độ/trong phạm vi mà”. Không đồng nghĩa provided that (đặt điều kiện).",
   "in order that":
-    "Gần nghĩa với so that khi nêu mục đích; in order that trang trọng và nhấn mạnh mục đích hơn, thường đi với can/could/may/might.",
+    "Gần nghĩa với so that khi nêu mục đích; in order that thường trang trọng và nhấn mạnh mục đích hơn, hay đi với can/could/may/might. So that thông dụng hơn và còn có thể nêu kết quả.",
   "in case":
-    "Nêu việc chuẩn bị trước để phòng một khả năng xảy ra; khác if, vốn nêu điều kiện để hành động xảy ra.",
+    "Nêu việc chuẩn bị trước để phòng một khả năng xảy ra; khác if, vốn đặt điều kiện để hành động hoặc kết quả xảy ra.",
   "now that":
-    "Gần nghĩa với since/because khi tình huống mới tạo ra lý do. Khác now when (nêu thời điểm hoặc việc lặp lại).",
+    "Gần nghĩa với since/because khi hoàn cảnh hiện tại là lý do cho việc khác; hoàn cảnh đó không nhất thiết vừa mới thay đổi. Khác now when (đặt sự việc vào thời điểm hiện tại, đôi khi lặp lại).",
   "now when":
-    "Nêu thời điểm hoặc việc lặp lại “giờ đây, mỗi khi”; khác now that (“vì giờ đây ...”). Cách dùng này ít phổ biến hơn when/whenever.",
+    "Đặt một sự việc vào thời điểm hiện tại (“giờ đây khi”) hoặc diễn tả sự việc lặp lại (“giờ đây mỗi khi”); khác now that, vốn nêu lý do (“vì giờ đây ...”). Cách dùng này ít phổ biến hơn when/whenever.",
   "even if":
-    "Nêu điều kiện giả định mà kết quả vẫn giữ nguyên; khác even though, dùng khi sự việc được xem là có thật.",
+    "Nêu điều kiện hoặc khả năng chưa xác định mà kết quả vẫn đúng dù điều đó có xảy ra hay không; khác even though, vốn nhượng bộ điều được trình bày như thật hoặc đã biết.",
   "even though":
-    "Nhượng bộ một sự việc có thật; khác even if, thường nói về khả năng hoặc điều kiện giả định.",
+    "Nhượng bộ điều được trình bày như thật hoặc đã biết; khác even if, vốn nêu điều kiện hoặc khả năng chưa xác định.",
   "provided that":
-    "Gần nghĩa với as long as khi nêu điều kiện; provided that thường trang trọng và nhấn mạnh điều kiện rõ ràng.",
+    "Gần nghĩa với as long as khi nêu điều kiện; provided that thường trang trọng hoặc chính thức hơn và nhấn mạnh điều kiện cần đáp ứng.",
   "if only":
-    "Mở đầu lời ước hoặc tiếc nuối; khác only if (“chỉ nếu”), vốn nêu điều kiện.",
+    "Mở đầu lời ước hoặc tiếc nuối; với việc trong quá khứ, thường nói về điều đã không xảy ra. Khác only if (“chỉ nếu”), vốn nêu điều kiện.",
   "just as":
-    "Trong ví dụ này, just as chỉ thời điểm trùng nhau; khác as soon as (ngay sau mốc) và as if/as though (“như thể”).",
+    "Trong nghĩa chỉ thời gian, just as nói hai việc xảy ra cùng lúc hoặc gần như cùng lúc; khác as soon as (việc sau xảy ra ngay sau mốc) và as if/as though (“như thể”).",
   "so that":
-    "Gần nghĩa với in order that khi nêu mục đích; so that thông dụng hơn. Ở ngữ cảnh khác, cụm này cũng có thể nêu kết quả.",
+    "Gần nghĩa với in order that khi nêu mục đích nhưng thông dụng hơn. So that cũng có thể nêu kết quả tùy ngữ cảnh; in order that thường trang trọng và thiên về mục đích hơn.",
 };
 
 const CONJUNCTION_COURSE_EXAMPLE_OVERRIDES: Readonly<

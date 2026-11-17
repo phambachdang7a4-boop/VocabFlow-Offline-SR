@@ -1358,6 +1358,30 @@ async function checkDictionaryOverlay() {
       "INSERT INTO word_definitions (word_id, definition_id, example) VALUES (?, ?, ?)",
     )
     .run(existingWordId, existingDefinitionId, "An existing dictionary example.");
+  const priorConjunction = additions.LOCAL_DICTIONARY_ADDITIONS.find(
+    (entry) => entry.term === "even if",
+  );
+  const priorConjunctionWordId = sqlite
+    .prepare("INSERT INTO words (word, lang_code) VALUES (?, 'en')")
+    .run(priorConjunction.term).lastInsertRowid;
+  const priorConjunctionDefinitionId = sqlite
+    .prepare(
+      "INSERT INTO definitions (definition, pos, sub_pos, definition_lang) VALUES (?, ?, ?, 'vi')",
+    )
+    .run(
+      "Ngay cả khi; nêu một điều kiện giả định nhưng kết quả vẫn không đổi.",
+      priorConjunction.pos,
+      priorConjunction.subPos,
+    ).lastInsertRowid;
+  sqlite
+    .prepare(
+      "INSERT INTO word_definitions (word_id, definition_id, example) VALUES (?, ?, ?)",
+    )
+    .run(
+      priorConjunctionWordId,
+      priorConjunctionDefinitionId,
+      priorConjunction.example,
+    );
   const db = {
     getFirstAsync: async (sql, ...params) =>
       sqlite.prepare(sql).get(...params) ?? null,
@@ -1424,6 +1448,15 @@ async function checkDictionaryOverlay() {
         row.definition === "Nghĩa đã có trong từ điển gốc.",
     ),
     "Adding a course sense does not replace an existing dictionary meaning.",
+  );
+  assert.ok(
+    rows.some(
+      (row) =>
+        row.word === priorConjunction.term &&
+        row.definition === priorConjunction.definition &&
+        row.example === priorConjunction.example,
+    ),
+    "An updated local conjunction meaning replaces the prior meaning for its own example.",
   );
   assert.equal(dictionaryDomain.dictionaryPartOfSpeech("conj"), "conjunction");
   const draft = dictionaryDomain.dictionaryDraft(

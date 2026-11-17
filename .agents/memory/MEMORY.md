@@ -20,3 +20,4 @@
 - [Độ tương phản nhãn rương](chest-rarity-contrast.md) — Màu kim loại bậc rương dễ chìm trên nền sáng; dùng màu chữ theo chủ đề cho nhãn.
 - [Expo FileSystem trên web](expo-web-filesystem.md) — Trên web, tránh khởi tạo File/Directory của Expo FileSystem; dùng xóa SQLite hoặc xử lý tệp theo nền tảng.
 - [Khóa cấu trúc câu](sentence-structure-course.md) — Tập hợp từ nối, giới từ và mẫu ngữ pháp ít gặp nhưng có tác dụng nối ý hoặc dựng câu.
+- [Cập nhật nghĩa từ điển offline](offline-dictionary-meaning-updates.md) — Khi sửa nghĩa biên soạn, cập nhật riêng liên kết mục nghĩa để không làm đổi định nghĩa dùng chung.
