@@ -49,7 +49,8 @@ export default function BlankScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const compactLayout = screenWidth < 360;
-  const missionArtworkSize = 64;
+  const missionArtworkSize =
+    screenWidth < 360 ? 48 : screenWidth < 430 ? 62 : 70;
   const chestArtworkSize = 64;
   const scrollBottom = Platform.OS === "web" ? Math.max(bottom, 120) : bottom;
   const top = Platform.OS === "web" ? 67 : insets.top;

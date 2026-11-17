@@ -97,6 +97,12 @@ const missionImageTypes = {
   "add-words": "add-words-image",
 };
 const missionTypes = ["review", "add-words", "grade", "time", "combo"];
+const artworkSizes = [48, 62, 70];
+assert.equal(
+  new Set(Object.values(missionImageTypes)).size,
+  Object.keys(missionImageTypes).length,
+  "The four image-based mission illustrations use distinct artwork.",
+);
 const collectElements = (node, result = []) => {
   if (Array.isArray(node)) {
     for (const child of node) collectElements(child, result);
@@ -123,34 +129,37 @@ const contrastRatio = (foreground, background) => {
   return (values[0] + 0.05) / (values[1] + 0.05);
 };
 
-for (const missionType of missionTypes) {
-  const tree = DailyMissionArtwork({ type: missionType, size: 62 });
-  if (missionImageTypes[missionType]) {
-    assert.equal(tree.type, "Image", `${missionType} uses the supplied image.`);
-    assert.equal(tree.props.source, missionImageTypes[missionType]);
-    assert.equal(tree.props.resizeMode, "contain");
-    assert.equal(tree.props.resizeMethod, "scale");
-    assert.equal(tree.props.style.width, 62);
-    assert.equal(tree.props.style.height, 62);
-    assert.equal(tree.props.style.imageRendering, "pixelated");
-  } else {
-    assert.equal(
-      tree.type.default,
-      "Svg",
-      `${missionType} retains its existing SVG illustration.`,
-    );
-    assert.equal(tree.props.width, 62);
-    assert.equal(tree.props.height, 62);
-    assert.ok(
-      collectElements(tree).some(
-        (element) =>
-          element.type === expectedArtwork[missionType].type &&
-          Object.entries(expectedArtwork[missionType].props).every(
-            ([key, value]) => String(element.props[key]) === String(value),
+for (const size of artworkSizes) {
+  for (const missionType of missionTypes) {
+    const tree = DailyMissionArtwork({ type: missionType, size });
+    if (missionImageTypes[missionType]) {
+      assert.equal(tree.type, "Image", `${missionType} uses the supplied image.`);
+      assert.equal(tree.props.source, missionImageTypes[missionType]);
+      assert.equal(tree.props.resizeMode, "contain");
+      assert.equal(tree.props.resizeMethod, "scale");
+      assert.equal(tree.props.style.width, size);
+      assert.equal(tree.props.style.height, size);
+      assert.equal(tree.props.style.imageRendering, "pixelated");
+    } else {
+      assert.equal(
+        tree.type.default,
+        "Svg",
+        `${missionType} retains its existing SVG illustration at ${size}px.`,
+      );
+      assert.equal(tree.props.width, size);
+      assert.equal(tree.props.height, size);
+      assert.equal(tree.props.viewBox, "0 0 80 80");
+      assert.ok(
+        collectElements(tree).some(
+          (element) =>
+            element.type === expectedArtwork[missionType].type &&
+            Object.entries(expectedArtwork[missionType].props).every(
+              ([key, value]) => String(element.props[key]) === String(value),
+            ),
           ),
-      ),
-      `${missionType} retains its identifying illustration.`,
-    );
+        `${missionType} retains its identifying illustration at ${size}px.`,
+      );
+    }
   }
 }
 
@@ -165,8 +174,13 @@ assert.match(
 );
 assert.match(
   missionScreen,
-  /const missionArtworkSize = 64/,
-  "The mission icon image is displayed at 64 dp.",
+  /const missionArtworkSize\s*=\s*screenWidth < 360 \? 48 : screenWidth < 430 \? 62 : 70/,
+  "The mission artwork uses 48, 62, and 70 dp at the matching screen widths.",
+);
+assert.match(
+  missionScreen,
+  /width: missionArtworkSize,\s*height: missionArtworkSize/,
+  "The mission icon frame matches the responsive artwork size.",
 );
 assert.match(
   missionScreen,
