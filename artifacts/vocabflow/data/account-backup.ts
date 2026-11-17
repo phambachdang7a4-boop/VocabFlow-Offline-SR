@@ -4,6 +4,8 @@ import type {
   SyncCollectionCraft,
   SyncCollectionPieceSpend,
   SyncDeletedWord,
+  SyncCorviChestReward,
+  SyncCorviFragmentAward,
   SyncMissionAward,
   SyncMissionChest,
   SyncMissionShopPurchase,
@@ -135,6 +137,14 @@ function validatePayload(value: unknown): SyncPayload {
   const missionAwards = optionalRecordArray(value, "missionAwards").map(
     parseMissionAward,
   );
+  const corviFragmentAwards = optionalRecordArray(
+    value,
+    "corviFragmentAwards",
+  ).map(parseCorviFragmentAward);
+  const corviChestRewards = optionalRecordArray(
+    value,
+    "corviChestRewards",
+  ).map(parseCorviChestReward);
   const missionChests = optionalRecordArray(value, "missionChests").map(
     parseMissionChest,
   );
@@ -181,6 +191,8 @@ function validatePayload(value: unknown): SyncPayload {
     reviewSessions.some((item) => item === null) ||
     reviewComboRewards.some((item) => item === null) ||
     missionAwards.some((item) => item === null) ||
+    corviFragmentAwards.some((item) => item === null) ||
+    corviChestRewards.some((item) => item === null) ||
     missionChests.some((item) => item === null) ||
     missionShopPurchases.some((item) => item === null) ||
     stoneInvestments.some((item) => item === null) ||
@@ -200,6 +212,9 @@ function validatePayload(value: unknown): SyncPayload {
   const validReviewSessions = reviewSessions as SyncReviewSession[];
   const validReviewComboRewards = reviewComboRewards as SyncReviewComboReward[];
   const validMissionAwards = missionAwards as SyncMissionAward[];
+  const validCorviFragmentAwards =
+    corviFragmentAwards as SyncCorviFragmentAward[];
+  const validCorviChestRewards = corviChestRewards as SyncCorviChestReward[];
   const validMissionChests = missionChests as SyncMissionChest[];
   const validMissionShopPurchases =
     missionShopPurchases as SyncMissionShopPurchase[];
@@ -241,6 +256,12 @@ function validatePayload(value: unknown): SyncPayload {
       validMissionAwards,
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
+    hasDuplicates(
+      validCorviFragmentAwards,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
+    hasDuplicates(validCorviChestRewards, (item) => item.chestId) ||
+    hasDuplicates(validCorviChestRewards, (item) => String(item.chestIndex)) ||
     hasDuplicates(validMissionChests, (item) => item.chestId) ||
     hasDuplicates(
       validMissionChests,
@@ -281,6 +302,8 @@ function validatePayload(value: unknown): SyncPayload {
     reviewSessions: validReviewSessions,
     reviewComboRewards: validReviewComboRewards,
     missionAwards: validMissionAwards,
+    corviFragmentAwards: validCorviFragmentAwards,
+    corviChestRewards: validCorviChestRewards,
     missionChests: validMissionChests,
     missionShopPurchases: validMissionShopPurchases,
     stoneInvestments: validStoneInvestments,
@@ -306,7 +329,8 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
       value.ruleSet !== 3 &&
       value.ruleSet !== 4 &&
       value.ruleSet !== 5 &&
-      value.ruleSet !== 6) ||
+      value.ruleSet !== 6 &&
+      value.ruleSet !== 7) ||
     (value.superUpgrade !== undefined &&
       typeof value.superUpgrade !== "boolean") ||
     !isChestRarity(value.rarity) ||
@@ -326,7 +350,9 @@ function parseMissionChest(value: unknown): SyncMissionChest | null {
     upgradeAttempts: value.upgradeAttempts,
     rarity: value.rarity,
     ruleSet:
-      value.ruleSet === 6
+      value.ruleSet === 7
+        ? 7
+        : value.ruleSet === 6
         ? 6
         : value.ruleSet === 5
           ? 5
@@ -539,6 +565,42 @@ function parseMissionAward(value: unknown): SyncMissionAward | null {
     missionId: value.missionId,
     stone: value.stone,
     completedAt: value.completedAt,
+  };
+}
+
+function parseCorviFragmentAward(
+  value: unknown,
+): SyncCorviFragmentAward | null {
+  if (
+    !isRecord(value) ||
+    !isDay(value.day) ||
+    !isString(value.missionId, 40, false) ||
+    !isTimestamp(value.awardedAt)
+  ) {
+    return null;
+  }
+  return {
+    day: value.day,
+    missionId: value.missionId,
+    awardedAt: value.awardedAt,
+  };
+}
+
+function parseCorviChestReward(value: unknown): SyncCorviChestReward | null {
+  if (
+    !isRecord(value) ||
+    !isString(value.chestId, 160, false) ||
+    !isPositiveInteger(value.chestIndex) ||
+    !isIntegerInRange(value.stone, 1, 10000) ||
+    !isTimestamp(value.createdAt)
+  ) {
+    return null;
+  }
+  return {
+    chestId: value.chestId,
+    chestIndex: value.chestIndex,
+    stone: value.stone,
+    createdAt: value.createdAt,
   };
 }
 

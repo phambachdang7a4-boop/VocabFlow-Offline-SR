@@ -108,6 +108,19 @@ export interface SyncMissionAward {
   completedAt: string;
 }
 
+export interface SyncCorviFragmentAward {
+  day: string;
+  missionId: string;
+  awardedAt: string;
+}
+
+export interface SyncCorviChestReward {
+  chestId: string;
+  chestIndex: number;
+  stone: number;
+  createdAt: string;
+}
+
 export interface SyncMissionChest extends MissionChest {}
 
 export interface SyncCollectionCraft extends CollectionCraft {}
@@ -151,6 +164,8 @@ export interface SyncPayload {
   reviewComboRewards?: SyncReviewComboReward[];
   missionAwards: SyncMissionAward[];
   missionChests: SyncMissionChest[];
+  corviFragmentAwards?: SyncCorviFragmentAward[];
+  corviChestRewards?: SyncCorviChestReward[];
   collectionCrafts: SyncCollectionCraft[];
   collectionPieceSpends: SyncCollectionPieceSpend[];
   missionShopPurchases?: SyncMissionShopPurchase[];
@@ -227,6 +242,8 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
       reviewSessions,
       reviewComboRewards,
       missionAwards,
+      corviFragmentAwards,
+      corviChestRewards,
       missionChests,
       collectionCrafts,
       missionShopPurchases,
@@ -271,6 +288,16 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         SELECT mission_day AS day, mission_id AS missionId, stone,
           completed_at AS completedAt
         FROM daily_mission_awards ORDER BY mission_day, mission_id
+      `),
+      db.getAllAsync<SyncCorviFragmentAward>(`
+        SELECT mission_day AS day, mission_id AS missionId,
+          awarded_at AS awardedAt
+        FROM corvi_fragment_awards ORDER BY mission_day, mission_id
+      `),
+      db.getAllAsync<SyncCorviChestReward>(`
+        SELECT chest_id AS chestId, chest_index AS chestIndex,
+          stone, created_at AS createdAt
+        FROM corvi_chest_rewards ORDER BY chest_index
       `),
       db.getAllAsync<
         Omit<SyncMissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
@@ -338,10 +365,14 @@ export async function exportSyncSnapshot(): Promise<LocalSyncSnapshot> {
         })),
         reviewComboRewards,
         missionAwards,
+        corviFragmentAwards,
+        corviChestRewards,
         missionChests: missionChests.map((chest) => ({
           ...chest,
           ruleSet:
-            chest.ruleSet === 6
+            chest.ruleSet === 7
+              ? 7
+              : chest.ruleSet === 6
               ? 6
               : chest.ruleSet === 5
                 ? 5
@@ -488,6 +519,8 @@ export async function clearLocalAccountAfterCloudReset(
         reviewComboRewards: [],
         missionAwards: [],
         missionChests: [],
+        corviFragmentAwards: [],
+        corviChestRewards: [],
         collectionCrafts: [],
         collectionPieceSpends: [],
         missionShopPurchases: [],
@@ -530,6 +563,8 @@ async function replacePayloadData(
     DELETE FROM review_combo_rewards;
     DELETE FROM daily_mission_awards;
     DELETE FROM mission_chests;
+    DELETE FROM corvi_fragment_awards;
+    DELETE FROM corvi_chest_rewards;
     DELETE FROM collection_crafts;
     DELETE FROM collection_piece_spends;
     DELETE FROM mission_shop_purchases;
@@ -669,6 +704,27 @@ async function replacePayloadData(
       award.missionId,
       award.stone,
       award.completedAt,
+    );
+  }
+  for (const award of payload.corviFragmentAwards ?? []) {
+    await db.runAsync(
+      `INSERT OR IGNORE INTO corvi_fragment_awards
+        (mission_day, mission_id, awarded_at)
+       VALUES (?, ?, ?)`,
+      award.day,
+      award.missionId,
+      award.awardedAt,
+    );
+  }
+  for (const reward of payload.corviChestRewards ?? []) {
+    await db.runAsync(
+      `INSERT OR IGNORE INTO corvi_chest_rewards
+        (chest_id, chest_index, stone, created_at)
+       VALUES (?, ?, ?, ?)`,
+      reward.chestId,
+      reward.chestIndex,
+      reward.stone,
+      reward.createdAt,
     );
   }
   for (const chest of payload.missionChests ?? []) {
@@ -1096,6 +1152,27 @@ async function mergeSnapshotIntoDatabase(
         award.completedAt,
       );
     }
+    for (const award of payload.corviFragmentAwards ?? []) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO corvi_fragment_awards
+          (mission_day, mission_id, awarded_at)
+         VALUES (?, ?, ?)`,
+        award.day,
+        award.missionId,
+        award.awardedAt,
+      );
+    }
+    for (const reward of payload.corviChestRewards ?? []) {
+      await db.runAsync(
+        `INSERT OR IGNORE INTO corvi_chest_rewards
+          (chest_id, chest_index, stone, created_at)
+         VALUES (?, ?, ?, ?)`,
+        reward.chestId,
+        reward.chestIndex,
+        reward.stone,
+        reward.createdAt,
+      );
+    }
     for (const incoming of payload.missionChests ?? []) {
       const currentRow = await db.getFirstAsync<
         Omit<SyncMissionChest, "opened" | "superUpgrade" | "ruleSet"> & {
@@ -1121,7 +1198,9 @@ async function mergeSnapshotIntoDatabase(
         ? {
             ...currentRow,
             ruleSet:
-              currentRow.ruleSet === 6
+              currentRow.ruleSet === 7
+                ? (7 as const)
+                : currentRow.ruleSet === 6
                 ? (6 as const)
                 : currentRow.ruleSet === 5
                   ? (5 as const)

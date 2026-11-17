@@ -136,6 +136,8 @@ export default function MissionChestScreen() {
       withTiming(0, { duration: 180 }),
     );
     try {
+      const wasAtTapCap =
+        chest.rarity === "epic" || chest.rarity === "legendary";
       const result = await attemptMissionChestUpgrade(id);
       setChest(result.chest);
       setStatueReward(
@@ -170,10 +172,15 @@ export default function MissionChestScreen() {
               }.`
             : ` Nhận thêm tượng ${statueName}.`
           : "";
+        const openedAtCapMessage =
+          `Rương ${rarityDisplayLabel(result.chest.rarity)} đã mở. ` +
+          `Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`;
         setMessage(
-          result.succeeded
-            ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`
-            : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`,
+          wasAtTapCap
+            ? openedAtCapMessage
+            : result.succeeded
+              ? `${usedSuperUpgrade ? "Nâng Cấp Siêu Việt thành công! " : ""}Rương đạt ${rarityDisplayLabel(result.chest.rarity)}! Bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`
+              : `Lần nâng cấp không thành công. Rương giữ phẩm chất ${rarityDisplayLabel(result.chest.rarity)}; bạn nhận ${result.awardedStone} Stone và ${fragmentRewardLabel(result.awardedFragments)}.${statueBonus}`,
         );
       }
     } catch (cause) {
@@ -220,9 +227,15 @@ export default function MissionChestScreen() {
               accessibilityLabel={
                 chest.opened
                   ? `Rương đã mở, phẩm chất ${rarityDisplayLabel(chest.rarity)}`
-                  : `Chạm để nâng rương ${rarityDisplayLabel(chest.rarity)}. Còn ${remainingAttempts} lượt.`
+                  : chest.rarity === "epic" || chest.rarity === "legendary"
+                    ? `Chạm để mở rương ${rarityDisplayLabel(chest.rarity)} và nhận thưởng`
+                    : `Chạm để nâng rương ${rarityDisplayLabel(chest.rarity)}. Còn ${remainingAttempts} lượt.`
               }
-              accessibilityHint="Mỗi lần chạm là một lượt nâng cấp; hoạt ảnh không tạo thêm lượt."
+              accessibilityHint={
+                chest.rarity === "epic" || chest.rarity === "legendary"
+                  ? "Rương đã đạt giới hạn nâng cấp, chạm để chốt và nhận thưởng."
+                  : "Mỗi lần chạm là một lượt nâng cấp; hoạt ảnh không tạo thêm lượt."
+              }
               disabled={busy || chest.opened}
               onPress={() => void upgrade()}
               hitSlop={12}
@@ -268,7 +281,9 @@ export default function MissionChestScreen() {
               >
                 {specialAttempt
                   ? "Chạm vào rương để Nâng Cấp Siêu Việt"
-                  : "Chạm vào rương để nâng cấp"}
+                  : chest.rarity === "epic" || chest.rarity === "legendary"
+                    ? "Đã đạt mức tối đa · Chạm để mở nhận thưởng"
+                    : "Chạm vào rương để nâng cấp"}
               </Text>
             ) : (
               <Text style={[styles.detail, { color: c.mutedForeground }]}>

@@ -15,6 +15,8 @@ export * from './syncCollectionCraftRarity';
 export * from './syncCollectionPieceSpend';
 export * from './syncCollectionPieceSpendPieceCost';
 export * from './syncCollectionPieceSpendRarity';
+export * from './syncCorviChestReward';
+export * from './syncCorviFragmentAward';
 export * from './syncCourseProgress';
 export * from './syncCourseProgressStage';
 export * from './syncCourseSelection';

@@ -28,9 +28,12 @@ import {
 } from "@/data/vocabulary";
 import { DAILY_MISSION_CHEST_RARITY } from "@/domain/daily-missions";
 import {
+  CORVI_CHEST_FRAGMENT_COST,
+  CORVI_CHEST_STONE_REWARD,
   CHEST_RARITY_COLORS,
   CHEST_RARITY_ICON_COLORS,
   CHEST_RARITY_LABELS,
+  MAX_TAP_CHEST_RARITY,
   chestStoneReward,
   maxChestUpgradeAttempts,
   type MissionChest,
@@ -359,6 +362,95 @@ export default function BlankScreen() {
                 );
               })
             )}
+            {overview ? (
+              <View
+                testID="corvi-chest-progress"
+                accessibilityLabel={`Tiến độ rương Corvi: ${overview.corviFragments} trên ${CORVI_CHEST_FRAGMENT_COST} mảnh`}
+                style={[
+                  styles.corviProgressCard,
+                  { backgroundColor: c.card, borderColor: c.border },
+                ]}
+              >
+                <LinearGradient
+                  colors={
+                    c.background === "#1E2130"
+                      ? [c.headerButton, c.vocabCard, c.vocabCardPressed]
+                      : [c.card, c.card, c.card]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <View style={styles.corviProgressHeader}>
+                  <View
+                    style={[
+                      styles.corviProgressIcon,
+                      { backgroundColor: c.headerButton },
+                    ]}
+                  >
+                    <Feather name="gift" size={19} color={c.accent} />
+                  </View>
+                  <View style={styles.corviProgressCopy}>
+                    <Text
+                      style={[
+                        styles.corviProgressTitle,
+                        { color: c.foreground },
+                      ]}
+                    >
+                      Mảnh rương Corvi
+                    </Text>
+                    <Text
+                      testID="corvi-fragment-count"
+                      style={[
+                        styles.corviProgressCount,
+                        { color: c.primary },
+                      ]}
+                    >
+                      {overview.corviFragments}/{CORVI_CHEST_FRAGMENT_COST} mảnh
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={[styles.corviProgressTrack, { backgroundColor: c.muted }]}
+                >
+                  <View
+                    style={[
+                      styles.corviProgressFill,
+                      {
+                        width: `${Math.min(
+                          100,
+                          (overview.corviFragments / CORVI_CHEST_FRAGMENT_COST) *
+                            100,
+                        )}%`,
+                        backgroundColor: c.accent,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.corviProgressHint,
+                    { color: c.mutedForeground },
+                  ]}
+                >
+                  Mỗi nhiệm vụ hoàn thành nhận 1 mảnh. Đủ{" "}
+                  {CORVI_CHEST_FRAGMENT_COST} mảnh, rương tự mở và thưởng{" "}
+                  {CORVI_CHEST_STONE_REWARD.toLocaleString("vi-VN")} Stone.
+                </Text>
+                {overview.corviChestsOpened > 0 ? (
+                  <Text
+                    testID="corvi-chest-latest-reward"
+                    style={[
+                      styles.corviProgressLatest,
+                      { color: c.primary },
+                    ]}
+                  >
+                    Đã tự mở {overview.corviChestsOpened} rương Corvi · lần gần
+                    nhất +{(overview.corviLatestStoneReward ?? 0).toLocaleString("vi-VN")} Stone
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
             {overview?.chests.length ? (
               <>
                 <View style={styles.sectionHeading}>
@@ -405,6 +497,10 @@ function ChestCard({
     chest.superUpgrade ?? false,
   );
   const attemptsLeft = Math.max(0, attemptLimit - chest.upgradeAttempts);
+  const canUpgrade =
+    chest.rarity !== MAX_TAP_CHEST_RARITY &&
+    chest.rarity !== "legendary";
+  const visibleAttemptsLeft = canUpgrade ? attemptsLeft : 0;
   const currentStone = chestStoneReward(
     chest.baseStone,
     chest.rarity,
@@ -448,14 +544,19 @@ function ChestCard({
         <Text
           style={[styles.chestDescription, { color: colors.mutedForeground }]}
         >
-          Nếu chốt ở bậc này: {currentStone} Stone · Còn {attemptsLeft}/
-          {attemptLimit} lượt nâng cấp
+          {canUpgrade
+            ? `Nếu chốt ở bậc này: ${currentStone} Stone · Còn ${attemptsLeft}/${attemptLimit} lượt nâng cấp`
+            : `Đã đạt mức tối đa · Chạm để mở nhận ${currentStone} Stone`}
         </Text>
       </View>
       <Pressable
         testID={`open-chest-${chest.chestId}`}
         accessibilityRole="button"
-        accessibilityLabel={`Mở rương ${rarityLabel}. Nếu chốt ở bậc này nhận ${currentStone} Stone. Còn ${attemptsLeft} trên ${attemptLimit} lượt nâng cấp.`}
+        accessibilityLabel={
+          canUpgrade
+            ? `Mở rương ${rarityLabel}. Nếu chốt ở bậc này nhận ${currentStone} Stone. Còn ${visibleAttemptsLeft} trên ${attemptLimit} lượt nâng cấp.`
+            : `Mở rương ${rarityLabel} đã đạt mức tối đa và nhận ${currentStone} Stone.`
+        }
         onPress={() =>
           router.push({
             pathname: "/chest/[chestId]",
@@ -533,6 +634,34 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 7,
   },
+  corviProgressCard: {
+    position: "relative",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 14,
+    gap: 9,
+    marginTop: 1,
+  },
+  corviProgressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  corviProgressIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  corviProgressCopy: { flex: 1, minWidth: 0, gap: 2 },
+  corviProgressTitle: { fontFamily: F.b, fontSize: 16 },
+  corviProgressCount: { fontFamily: F.s, fontSize: 13 },
+  corviProgressTrack: { height: 9, borderRadius: 5, overflow: "hidden" },
+  corviProgressFill: { height: 9, borderRadius: 5 },
+  corviProgressHint: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
+  corviProgressLatest: { fontFamily: F.s, fontSize: 12, lineHeight: 16 },
   missionTop: {
     flex: 1,
     flexDirection: "row",

@@ -7,6 +7,8 @@ import {
   userCourseSelections,
   userCollectionCrafts,
   userCollectionPieceSpends,
+  userCorviChestRewards,
+  userCorviFragmentAwards,
   userDailyMissionAwards,
   userMissionChests,
   userMissionShopPurchases,
@@ -76,6 +78,8 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
   const reviewSessions = parsed.data.reviewSessions ?? [];
   const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
+  const corviFragmentAwards = parsed.data.corviFragmentAwards ?? [];
+  const corviChestRewards = parsed.data.corviChestRewards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
   const missionShopPurchases = parsed.data.missionShopPurchases ?? [];
   const stoneInvestments = parsed.data.stoneInvestments ?? [];
@@ -96,6 +100,8 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       missionAwards,
       missionChests,
       rawCollectionCrafts,
+      corviFragmentAwards,
+      corviChestRewards,
     ) ||
     hasInvalidCollectionPieceSpends(collectionPieceSpends) ||
     hasInvalidMissionShopPurchases(missionShopPurchases) ||
@@ -128,6 +134,12 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       missionAwards,
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
+    hasDuplicates(
+      corviFragmentAwards,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
+    hasDuplicates(corviChestRewards, (item) => item.chestId) ||
+    hasDuplicates(corviChestRewards, (item) => String(item.chestIndex)) ||
     hasDuplicates(missionChests, (item) => item.chestId) ||
     hasDuplicates(
       missionChests,
@@ -182,6 +194,14 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       missionAwards: missionAwards.map((award) => ({
         ...award,
         completedAt: toTimestamp(award.completedAt),
+      })),
+      corviFragmentAwards: corviFragmentAwards.map((award) => ({
+        ...award,
+        awardedAt: toTimestamp(award.awardedAt),
+      })),
+      corviChestRewards: corviChestRewards.map((reward) => ({
+        ...reward,
+        createdAt: toTimestamp(reward.createdAt),
       })),
       missionChests: missionChests.map((chest) => ({
         ...chest,
@@ -277,6 +297,12 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
       await tx
         .delete(userDailyMissionAwards)
         .where(eq(userDailyMissionAwards.userId, userId));
+      await tx
+        .delete(userCorviFragmentAwards)
+        .where(eq(userCorviFragmentAwards.userId, userId));
+      await tx
+        .delete(userCorviChestRewards)
+        .where(eq(userCorviChestRewards.userId, userId));
       await tx
         .delete(userMissionChests)
         .where(eq(userMissionChests.userId, userId));
@@ -381,6 +407,27 @@ router.post("/sync/replace", requireAuth, async (req, res) => {
             missionId: award.missionId,
             stone: award.stone,
             completedAt: award.completedAt,
+          })),
+        );
+      }
+      if (snapshot.corviFragmentAwards.length) {
+        await tx.insert(userCorviFragmentAwards).values(
+          snapshot.corviFragmentAwards.map((award) => ({
+            userId,
+            day: award.day,
+            missionId: award.missionId,
+            awardedAt: award.awardedAt,
+          })),
+        );
+      }
+      if (snapshot.corviChestRewards.length) {
+        await tx.insert(userCorviChestRewards).values(
+          snapshot.corviChestRewards.map((reward) => ({
+            userId,
+            chestId: reward.chestId,
+            chestIndex: reward.chestIndex,
+            stone: reward.stone,
+            createdAt: reward.createdAt,
           })),
         );
       }
@@ -512,6 +559,8 @@ router.post("/sync", requireAuth, async (req, res) => {
   const reviewSessions = parsed.data.reviewSessions ?? [];
   const reviewComboRewards = parsed.data.reviewComboRewards ?? [];
   const missionAwards = parsed.data.missionAwards ?? [];
+  const corviFragmentAwards = parsed.data.corviFragmentAwards ?? [];
+  const corviChestRewards = parsed.data.corviChestRewards ?? [];
   const missionChests = parsed.data.missionChests ?? [];
   const missionShopPurchases = parsed.data.missionShopPurchases ?? [];
   const stoneInvestments = parsed.data.stoneInvestments ?? [];
@@ -532,6 +581,8 @@ router.post("/sync", requireAuth, async (req, res) => {
       missionAwards,
       missionChests,
       rawCollectionCrafts,
+      corviFragmentAwards,
+      corviChestRewards,
     ) ||
     hasInvalidCollectionPieceSpends(collectionPieceSpends) ||
     hasInvalidMissionShopPurchases(missionShopPurchases) ||
@@ -564,6 +615,12 @@ router.post("/sync", requireAuth, async (req, res) => {
       missionAwards,
       (item) => `${item.day}\u0000${item.missionId}`,
     ) ||
+    hasDuplicates(
+      corviFragmentAwards,
+      (item) => `${item.day}\u0000${item.missionId}`,
+    ) ||
+    hasDuplicates(corviChestRewards, (item) => item.chestId) ||
+    hasDuplicates(corviChestRewards, (item) => String(item.chestIndex)) ||
     hasDuplicates(missionChests, (item) => item.chestId) ||
     hasDuplicates(
       missionChests,
@@ -688,6 +745,14 @@ router.post("/sync", requireAuth, async (req, res) => {
         missionAwards: missionAwards.map((award) => ({
           ...award,
           completedAt: toTimestamp(award.completedAt),
+        })),
+        corviFragmentAwards: corviFragmentAwards.map((award) => ({
+          ...award,
+          awardedAt: toTimestamp(award.awardedAt),
+        })),
+        corviChestRewards: corviChestRewards.map((reward) => ({
+          ...reward,
+          createdAt: toTimestamp(reward.createdAt),
         })),
         missionChests: missionChests.map((chest) => ({
           ...chest,
@@ -916,6 +981,33 @@ router.post("/sync", requireAuth, async (req, res) => {
           )
           .onConflictDoNothing();
       }
+      if (snapshot.corviFragmentAwards.length) {
+        await tx
+          .insert(userCorviFragmentAwards)
+          .values(
+            snapshot.corviFragmentAwards.map((award) => ({
+              userId,
+              day: award.day,
+              missionId: award.missionId,
+              awardedAt: award.awardedAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
+      if (snapshot.corviChestRewards.length) {
+        await tx
+          .insert(userCorviChestRewards)
+          .values(
+            snapshot.corviChestRewards.map((reward) => ({
+              userId,
+              chestId: reward.chestId,
+              chestIndex: reward.chestIndex,
+              stone: reward.stone,
+              createdAt: reward.createdAt,
+            })),
+          )
+          .onConflictDoNothing();
+      }
       for (const chest of snapshot.missionChests) {
         const normalizedChest = {
           ...chest,
@@ -1124,6 +1216,8 @@ router.post("/sync", requireAuth, async (req, res) => {
         allSessions,
         allComboRewards,
         allAwards,
+        allCorviFragmentAwards,
+        allCorviChestRewards,
         allChests,
         allCrafts,
         allPieceSpends,
@@ -1155,6 +1249,14 @@ router.post("/sync", requireAuth, async (req, res) => {
           .select()
           .from(userDailyMissionAwards)
           .where(eq(userDailyMissionAwards.userId, userId)),
+        tx
+          .select()
+          .from(userCorviFragmentAwards)
+          .where(eq(userCorviFragmentAwards.userId, userId)),
+        tx
+          .select()
+          .from(userCorviChestRewards)
+          .where(eq(userCorviChestRewards.userId, userId)),
         tx
           .select()
           .from(userMissionChests)
@@ -1250,6 +1352,15 @@ router.post("/sync", requireAuth, async (req, res) => {
             ...award,
             day: award.day,
           })),
+          corviFragmentAwards: allCorviFragmentAwards.map(
+            ({ userId: _owner, ...award }) => ({
+              ...award,
+              day: award.day,
+            }),
+          ),
+          corviChestRewards: allCorviChestRewards.map(
+            ({ userId: _owner, ...reward }) => reward,
+          ),
           missionChests: allChests.map(({ userId: _owner, ...chest }) => ({
             ...chest,
             day: chest.day,
@@ -1315,6 +1426,8 @@ async function readUserSyncSnapshot(userId: string) {
     allSessions,
     allComboRewards,
     allAwards,
+    allCorviFragmentAwards,
+    allCorviChestRewards,
     allChests,
     allCrafts,
     allPieceSpends,
@@ -1347,6 +1460,14 @@ async function readUserSyncSnapshot(userId: string) {
       .select()
       .from(userDailyMissionAwards)
       .where(eq(userDailyMissionAwards.userId, userId)),
+    db
+      .select()
+      .from(userCorviFragmentAwards)
+      .where(eq(userCorviFragmentAwards.userId, userId)),
+    db
+      .select()
+      .from(userCorviChestRewards)
+      .where(eq(userCorviChestRewards.userId, userId)),
     db
       .select()
       .from(userMissionChests)
@@ -1417,6 +1538,15 @@ async function readUserSyncSnapshot(userId: string) {
       ...award,
       day: award.day,
     })),
+    corviFragmentAwards: allCorviFragmentAwards.map(
+      ({ userId: _owner, ...award }) => ({
+        ...award,
+        day: award.day,
+      }),
+    ),
+    corviChestRewards: allCorviChestRewards.map(
+      ({ userId: _owner, ...reward }) => reward,
+    ),
     missionChests: allChests.map(({ userId: _owner, ...chest }) => ({
       ...chest,
       day: chest.day,
@@ -1733,6 +1863,17 @@ function hasInvalidMissionData(
     craftedAt: string | Date;
     pieceCost?: number;
   }>,
+  corviFragmentAwards: Array<{
+    day: string;
+    missionId: string;
+    awardedAt: string | Date;
+  }>,
+  corviChestRewards: Array<{
+    chestId: string;
+    chestIndex: number;
+    stone: number;
+    createdAt: string | Date;
+  }>,
 ): boolean {
   return (
     sessions.some(
@@ -1802,7 +1943,24 @@ function hasInvalidMissionData(
           !craft.craftId.startsWith("cycle2-corvi-")) ||
         !Number.isFinite(Date.parse(toTimestamp(craft.craftedAt)))
       );
-    })
+    }) ||
+    corviFragmentAwards.some(
+      (award) =>
+        !isValidDay(award.day) ||
+        !/^(review|add-words|lesson|grade|time|combo)-[1-3]$/.test(
+          award.missionId,
+        ) ||
+        !Number.isFinite(Date.parse(toTimestamp(award.awardedAt))),
+    ) ||
+    corviChestRewards.some(
+      (reward) =>
+        reward.chestId !== `corvi-progress-${reward.chestIndex}` ||
+        !Number.isSafeInteger(reward.chestIndex) ||
+        reward.chestIndex < 1 ||
+        reward.chestIndex > Math.floor(corviFragmentAwards.length / 15) ||
+        reward.stone !== 2000 ||
+        !Number.isFinite(Date.parse(toTimestamp(reward.createdAt))),
+    )
   );
 }
 
@@ -1840,7 +1998,8 @@ function isValidMissionChestRecord(chest: {
       ruleSet !== 3 &&
       ruleSet !== 4 &&
       ruleSet !== 5 &&
-      ruleSet !== 6) ||
+      ruleSet !== 6 &&
+      ruleSet !== 7) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== serverHasSuperUpgrade(chest.chestId)) ||
     !isChestRarity(chest.rarity)
@@ -1854,21 +2013,41 @@ function isValidMissionChestRecord(chest: {
   let lastUpgradeSucceeded = true;
   for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
     if (opened) return false;
-    const outcome = serverChestUpgrade(
+    let outcome = serverChestUpgrade(
       chest.chestId,
       attempt,
       rarity,
       ruleSet,
       superUpgrade,
     );
+    if (
+      ruleSet === 1 &&
+      chest.rarity !== "legendary" &&
+      outcome.success &&
+      outcome.rarity === "legendary"
+    ) {
+      outcome = { success: true, rarity: "epic" };
+    }
     resolvedAttempts = attempt;
     lastUpgradeSucceeded = outcome.success;
     if (outcome.success) rarity = outcome.rarity;
     opened =
       attempt === attemptLimit ||
+      (ruleSet >= 7 && rarity === "epic") ||
       rarity === "legendary" ||
       (ruleSet === 1 && !outcome.success);
   }
+  const directOpenAtPlatinum =
+    chest.opened &&
+    chest.rarity === "epic" &&
+    rarity === "epic" &&
+    resolvedAttempts === chest.upgradeAttempts;
+  const migratedPendingPlatinum =
+    !chest.opened &&
+    ruleSet >= 7 &&
+    chest.rarity === "epic" &&
+    rarity === "epic" &&
+    resolvedAttempts === chest.upgradeAttempts;
   const wasPrematurelyFinalized =
     ruleSet >= 2 &&
     chest.opened &&
@@ -1879,7 +2058,10 @@ function isValidMissionChestRecord(chest: {
   if (
     resolvedAttempts !== chest.upgradeAttempts ||
     rarity !== chest.rarity ||
-    (opened !== chest.opened && !wasPrematurelyFinalized) ||
+    (opened !== chest.opened &&
+      !wasPrematurelyFinalized &&
+      !directOpenAtPlatinum &&
+      !migratedPendingPlatinum) ||
     !Number.isFinite(Date.parse(toTimestamp(chest.createdAt))) ||
     !Number.isFinite(Date.parse(toTimestamp(chest.updatedAt)))
   )
@@ -1965,7 +2147,8 @@ function serverChestUpgrade(
   if (ruleSet === 1) return serverLegacyChestUpgrade(chestId, attempt);
   const rarities = ["common", "uncommon", "rare", "epic", "legendary"];
   const currentIndex = rarities.indexOf(currentRarity);
-  if (currentIndex < 0 || currentIndex >= rarities.length - 1)
+  const topTapTierIndex = ruleSet >= 7 ? rarities.indexOf("epic") : rarities.length - 1;
+  if (currentIndex < 0 || currentIndex >= topTapTierIndex)
     return { success: false, rarity: currentRarity };
   const nextRarity = rarities[currentIndex + 1]!;
   if (attempt === 4 && superUpgrade)

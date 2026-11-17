@@ -204,6 +204,16 @@ components:
           maxItems: 10000
           items:
             $ref: "#/components/schemas/SyncMissionChest"
+        corviFragmentAwards:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncCorviFragmentAward"
+        corviChestRewards:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/SyncCorviChestReward"
         collectionCrafts:
           type: array
           maxItems: 10000
@@ -463,6 +473,39 @@ components:
         completedAt:
           type: string
           format: date-time
+    SyncCorviFragmentAward:
+      type: object
+      required: [day, missionId, awardedAt]
+      properties:
+        day:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        missionId:
+          type: string
+          minLength: 1
+          maxLength: 40
+          pattern: "^(review|add-words|lesson|grade|time|combo)-[1-3]$"
+        awardedAt:
+          type: string
+          format: date-time
+    SyncCorviChestReward:
+      type: object
+      required: [chestId, chestIndex, stone, createdAt]
+      properties:
+        chestId:
+          type: string
+          minLength: 1
+          maxLength: 160
+        chestIndex:
+          type: integer
+          minimum: 1
+        stone:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        createdAt:
+          type: string
+          format: date-time
     SyncMissionChest:
       type: object
       required:
@@ -504,8 +547,8 @@ components:
           enum: [common, uncommon, rare, epic, legendary]
         ruleSet:
           type: integer
-          enum: [1, 2, 3, 4, 5, 6]
-          description: Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions.
+          enum: [1, 2, 3, 4, 5, 6, 7]
+          description: Optional for legacy clients; rule 7 caps tap upgrades at Platinum.
         superUpgrade:
           type: boolean
           description: Whether this chest has its guaranteed fourth upgrade.

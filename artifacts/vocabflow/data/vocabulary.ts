@@ -26,6 +26,9 @@ import {
   type DailyReviewGrade,
 } from "../domain/daily-missions";
 import {
+  CORVI_CHEST_FRAGMENT_COST,
+  CORVI_CHEST_STONE_REWARD,
+  MAX_TAP_CHEST_RARITY,
   chestFragmentReward,
   chestTotalStoneReward,
   hasSuperUpgradeChance,
@@ -79,6 +82,9 @@ export interface DailyMissionOverview {
   stoneBalance: number;
   missions: DailyMission[];
   chests: MissionChest[];
+  corviFragments: number;
+  corviChestsOpened: number;
+  corviLatestStoneReward: number | null;
 }
 
 export interface MissionCollectionOverview {
@@ -1203,6 +1209,64 @@ async function initialize(): Promise<SQLiteDatabase> {
         if ((pendingChests?.count ?? 0) > 0) await markSyncDirty(db);
       });
     }
+    if ((version?.user_version ?? 0) < 31) {
+      await db.withTransactionAsync(async () => {
+        const pendingChests = await db.getFirstAsync<{ count: number }>(
+          "SELECT COUNT(*) AS count FROM mission_chests WHERE opened = 0",
+        );
+        await db.execAsync(`
+          CREATE TABLE IF NOT EXISTS corvi_fragment_awards (
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            awarded_at TEXT NOT NULL,
+            PRIMARY KEY (mission_day, mission_id)
+          );
+          CREATE TABLE IF NOT EXISTS corvi_chest_rewards (
+            chest_id TEXT PRIMARY KEY NOT NULL,
+            chest_index INTEGER NOT NULL UNIQUE CHECK (chest_index >= 1),
+            stone INTEGER NOT NULL CHECK (stone BETWEEN 1 AND 10000),
+            created_at TEXT NOT NULL
+          );
+          CREATE TABLE mission_chests_v31 (
+            chest_id TEXT PRIMARY KEY NOT NULL,
+            mission_day TEXT NOT NULL,
+            mission_id TEXT NOT NULL,
+            base_stone INTEGER NOT NULL CHECK (base_stone BETWEEN 1 AND 20),
+            upgrade_attempts INTEGER NOT NULL DEFAULT 0 CHECK (upgrade_attempts BETWEEN 0 AND 4),
+            rarity TEXT NOT NULL DEFAULT 'common'
+              CHECK (rarity IN ('common', 'uncommon', 'rare', 'epic', 'legendary')),
+            rule_set INTEGER NOT NULL DEFAULT 1 CHECK (rule_set IN (1, 2, 3, 4, 5, 6, 7)),
+            super_upgrade INTEGER NOT NULL DEFAULT 0 CHECK (super_upgrade IN (0, 1)),
+            opened INTEGER NOT NULL DEFAULT 0 CHECK (opened IN (0, 1)),
+            final_stone INTEGER,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (mission_day, mission_id),
+            CHECK (
+              (opened = 0 AND final_stone IS NULL) OR
+              (opened = 1 AND final_stone BETWEEN 1 AND 5050)
+            )
+          );
+          INSERT INTO mission_chests_v31
+            (chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+              rule_set, super_upgrade, opened, final_stone, created_at, updated_at)
+          SELECT chest_id, mission_day, mission_id, base_stone, upgrade_attempts, rarity,
+            rule_set, super_upgrade, opened, final_stone, created_at, updated_at
+          FROM mission_chests;
+          DROP TABLE mission_chests;
+          ALTER TABLE mission_chests_v31 RENAME TO mission_chests;
+          CREATE INDEX idx_mission_chests_opened
+            ON mission_chests(opened, mission_day);
+          PRAGMA user_version = 31;
+        `);
+        await db.runAsync(
+          `INSERT OR IGNORE INTO sync_state (key, value)
+           VALUES ('corvi_fragment_start_day', ?)`,
+          localDay(new Date()),
+        );
+        if ((pendingChests?.count ?? 0) > 0) await markSyncDirty(db);
+      });
+    }
     await repairKnownExtractionExample(db);
     return db;
   } catch (error) {
@@ -1295,6 +1359,9 @@ async function grantDailyMissionChests(
       completedAt: chest.createdAt,
     })),
   ];
+  const corviStartDay = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM sync_state WHERE key = 'corvi_fragment_start_day'",
+  );
   for (const mission of evaluateDailyMissions(day, activity, missionRewards)) {
     if (!missionAwardIsEarned(mission)) continue;
     const chestId = `mission-${day}-${mission.id}`;
@@ -1302,7 +1369,7 @@ async function grantDailyMissionChests(
       `INSERT OR IGNORE INTO mission_chests
         (chest_id, mission_day, mission_id, base_stone, rarity, rule_set, super_upgrade,
           created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 6, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 7, ?, ?, ?)`,
       chestId,
       day,
       mission.id,
@@ -1313,8 +1380,86 @@ async function grantDailyMissionChests(
       now,
     );
     changed ||= result.changes === 1;
+    if (result.changes === 1 && corviStartDay?.value && day >= corviStartDay.value) {
+      const fragmentAward = await db.runAsync(
+        `INSERT OR IGNORE INTO corvi_fragment_awards
+          (mission_day, mission_id, awarded_at)
+         VALUES (?, ?, ?)`,
+        day,
+        mission.id,
+        now,
+      );
+      changed ||= fragmentAward.changes === 1;
+    }
+  }
+  changed ||= await grantCorviChestRewards(db, now);
+  return changed;
+}
+
+async function grantCorviChestRewards(
+  db: SQLiteDatabase,
+  now: string,
+): Promise<boolean> {
+  const fragmentCount = await db.getFirstAsync<{ count: number | null }>(
+    "SELECT COUNT(*) AS count FROM corvi_fragment_awards",
+  );
+  const earnedChestCount = Math.floor(
+    (fragmentCount?.count ?? 0) / CORVI_CHEST_FRAGMENT_COST,
+  );
+  let changed = false;
+  for (let chestIndex = 1; chestIndex <= earnedChestCount; chestIndex += 1) {
+    const chestId = `corvi-progress-${chestIndex}`;
+    const reward = await db.runAsync(
+      `INSERT OR IGNORE INTO corvi_chest_rewards
+        (chest_id, chest_index, stone, created_at)
+       VALUES (?, ?, ?, ?)`,
+      chestId,
+      chestIndex,
+      CORVI_CHEST_STONE_REWARD,
+      now,
+    );
+    const statueCraft = await db.getFirstAsync<{ craftId: string }>(
+      "SELECT craft_id AS craftId FROM collection_crafts WHERE craft_id = ?",
+      `${COLLECTION_CYCLE_PREFIX}corvi-${chestId}`,
+    );
+    if (reward.changes === 1 || !statueCraft) {
+      await awardCorviStatue(db, chestId);
+      changed = true;
+    }
+    changed ||= reward.changes === 1;
   }
   return changed;
+}
+
+async function readCorviChestProgress(
+  db: SQLiteDatabase,
+): Promise<
+  Pick<
+    DailyMissionOverview,
+    "corviFragments" | "corviChestsOpened" | "corviLatestStoneReward"
+  >
+> {
+  const [fragmentCount, chestCount, latestReward] = await Promise.all([
+    db.getFirstAsync<{ count: number | null }>(
+      "SELECT COUNT(*) AS count FROM corvi_fragment_awards",
+    ),
+    db.getFirstAsync<{ count: number | null }>(
+      "SELECT COUNT(*) AS count FROM corvi_chest_rewards",
+    ),
+    db.getFirstAsync<{ stone: number }>(
+      "SELECT stone FROM corvi_chest_rewards ORDER BY chest_index DESC LIMIT 1",
+    ),
+  ]);
+  const totalFragments = fragmentCount?.count ?? 0;
+  const openedCount = chestCount?.count ?? 0;
+  return {
+    corviFragments: Math.max(
+      0,
+      totalFragments - openedCount * CORVI_CHEST_FRAGMENT_COST,
+    ),
+    corviChestsOpened: openedCount,
+    corviLatestStoneReward: latestReward?.stone ?? null,
+  };
 }
 
 async function migrateUntouchedMissionChests(
@@ -1368,7 +1513,13 @@ export function getDailyMissionOverview(
     await db.withTransactionAsync(async () => {
       chestsChanged = await grantDailyMissionChests(db, day);
       if (chestsChanged) await markSyncDirty(db);
-      const [activity, legacyAwards, chestAwards, chests] = await Promise.all([
+      const [
+        activity,
+        legacyAwards,
+        chestAwards,
+        chests,
+        corviProgress,
+      ] = await Promise.all([
         readDailyMissionActivity(db, day),
         db.getAllAsync<DailyMissionAward>(
           "SELECT mission_day AS missionDay, mission_id AS missionId, stone, completed_at AS completedAt FROM daily_mission_awards WHERE mission_day = ?",
@@ -1380,6 +1531,7 @@ export function getDailyMissionOverview(
           day,
         ),
         readUnopenedMissionChests(db),
+        readCorviChestProgress(db),
       ]);
       const missionRewards = [...legacyAwards, ...chestAwards];
       overview = {
@@ -1387,6 +1539,7 @@ export function getDailyMissionOverview(
         stoneBalance: await readStoneBalance(db),
         missions: evaluateDailyMissions(day, activity, missionRewards),
         chests,
+        ...corviProgress,
       };
     });
     if (chestsChanged) notifySyncListeners();
@@ -1874,6 +2027,7 @@ async function readStoneBalance(db: SQLiteDatabase): Promise<number> {
   const [
     legacyRewards,
     chestRewards,
+    corviRewards,
     comboRewards,
     shopPurchases,
     investments,
@@ -1884,6 +2038,9 @@ async function readStoneBalance(db: SQLiteDatabase): Promise<number> {
       ),
       db.getFirstAsync<{ total: number | null }>(
         "SELECT SUM(final_stone) AS total FROM mission_chests WHERE opened = 1",
+      ),
+      db.getFirstAsync<{ total: number | null }>(
+        "SELECT SUM(stone) AS total FROM corvi_chest_rewards",
       ),
       db.getFirstAsync<{ total: number | null }>(
         "SELECT SUM(combo_length) AS total FROM review_combo_rewards",
@@ -1903,6 +2060,7 @@ async function readStoneBalance(db: SQLiteDatabase): Promise<number> {
   return (
     (legacyRewards?.total ?? 0) +
     (chestRewards?.total ?? 0) +
+    (corviRewards?.total ?? 0) +
     (comboRewards?.total ?? 0) -
     (shopPurchases?.total ?? 0) -
     (investments?.principal ?? 0) +
@@ -1939,7 +2097,9 @@ function missionChestFromRow(
   return {
     ...row,
     ruleSet:
-      row.ruleSet === 6
+      row.ruleSet === 7
+        ? 7
+        : row.ruleSet === 6
         ? 6
         : row.ruleSet === 5
           ? 5
@@ -2036,21 +2196,32 @@ export function attemptMissionChestUpgrade(
       if (!row) throw new Error("Không tìm thấy rương này.");
       const current = missionChestFromRow(row);
       if (current.opened) throw new Error("Rương này đã được mở.");
-      const nextAttempt = current.upgradeAttempts + 1;
       const ruleSet = current.ruleSet ?? 1;
       const superUpgrade = current.superUpgrade ?? false;
-      const upgrade = resolveChestUpgrade(
-        chestId,
-        nextAttempt,
-        current.rarity,
-        ruleSet,
-        superUpgrade,
-      );
-      const rarity = upgrade.success ? upgrade.rarity : current.rarity;
+      const reachedTapCap =
+        current.rarity === MAX_TAP_CHEST_RARITY ||
+        current.rarity === "legendary";
+      const nextAttempt = reachedTapCap
+        ? current.upgradeAttempts
+        : current.upgradeAttempts + 1;
+      const upgrade = reachedTapCap
+        ? { success: true, rarity: current.rarity }
+        : resolveChestUpgrade(
+            chestId,
+            nextAttempt,
+            current.rarity,
+            ruleSet,
+            superUpgrade,
+          );
+      const rawRarity = upgrade.success ? upgrade.rarity : current.rarity;
+      const rarity =
+        rawRarity === "legendary" ? MAX_TAP_CHEST_RARITY : rawRarity;
       const finished =
+        reachedTapCap ||
         (ruleSet === 1 && !upgrade.success) ||
         nextAttempt === maxChestUpgradeAttempts(ruleSet, superUpgrade) ||
-        rarity === "legendary";
+        rarity === MAX_TAP_CHEST_RARITY ||
+        rawRarity === "legendary";
       const awardedStone = finished
         ? chestTotalStoneReward(
             chestId,
@@ -2088,7 +2259,7 @@ export function attemptMissionChestUpgrade(
           : null;
       result = {
         chest: next,
-        succeeded: upgrade.success,
+        succeeded: !reachedTapCap && upgrade.success,
         finished,
         awardedStone,
         awardedFragments: finished
@@ -2184,14 +2355,19 @@ async function readMissionCollectionOverview(
 async function readMissionCollectionBalance(
   db: SQLiteDatabase,
 ): Promise<MissionCollectionOverview> {
-  const openedChests = await db.getAllAsync<{
-    chestId: string;
-    rarity: ChestRarity;
-    ruleSet: number;
-  }>(
-    `SELECT chest_id AS chestId, rarity, rule_set AS ruleSet
-     FROM mission_chests WHERE opened = 1`,
-  );
+  const [openedChests, corviChests] = await Promise.all([
+    db.getAllAsync<{
+      chestId: string;
+      rarity: ChestRarity;
+      ruleSet: number;
+    }>(
+      `SELECT chest_id AS chestId, rarity, rule_set AS ruleSet
+       FROM mission_chests WHERE opened = 1`,
+    ),
+    db.getAllAsync<{ chestId: string }>(
+      "SELECT chest_id AS chestId FROM corvi_chest_rewards ORDER BY chest_index",
+    ),
+  ]);
   const allCrafts = await db.getAllAsync<CollectionCraft>(
     `SELECT craft_id AS craftId, rarity, craft_index AS craftIndex,
       artwork_id AS artworkId, crafted_at AS craftedAt, piece_cost AS pieceCost
@@ -2223,7 +2399,9 @@ async function readMissionCollectionBalance(
 
   for (const chest of openedChests) {
     const chestRules =
-      chest.ruleSet === 6
+      chest.ruleSet === 7
+        ? 7
+        : chest.ruleSet === 6
         ? 6
         : chest.ruleSet === 5
           ? 5
@@ -2235,6 +2413,12 @@ async function readMissionCollectionBalance(
               ? 2
               : 1;
     const reward = chestFragmentReward(chest.chestId, chest.rarity, chestRules);
+    for (const rarity of Object.keys(fragments) as ChestRarity[]) {
+      fragments[rarity] += reward[rarity];
+    }
+  }
+  for (const chest of corviChests) {
+    const reward = chestFragmentReward(chest.chestId, "legendary", 7);
     for (const rarity of Object.keys(fragments) as ChestRarity[]) {
       fragments[rarity] += reward[rarity];
     }

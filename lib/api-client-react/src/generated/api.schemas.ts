@@ -207,7 +207,7 @@ export const SyncMissionChestRarity = {
 } as const;
 
 /**
- * Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions.
+ * Optional for legacy clients; rule 7 caps tap upgrades at Platinum.
  */
 export type SyncMissionChestRuleSet = typeof SyncMissionChestRuleSet[keyof typeof SyncMissionChestRuleSet];
 
@@ -219,6 +219,7 @@ export const SyncMissionChestRuleSet = {
   NUMBER_4: 4,
   NUMBER_5: 5,
   NUMBER_6: 6,
+  NUMBER_7: 7,
 } as const;
 
 export interface SyncMissionChest {
@@ -246,7 +247,7 @@ export interface SyncMissionChest {
      */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
-  /** Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions. */
+  /** Optional for legacy clients; rule 7 caps tap upgrades at Platinum. */
   ruleSet?: SyncMissionChestRuleSet;
   /** Whether this chest has its guaranteed fourth upgrade. */
   superUpgrade?: boolean;
@@ -259,6 +260,34 @@ export interface SyncMissionChest {
   finalStone: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SyncCorviFragmentAward {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  day: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     * @pattern ^(review|add-words|lesson|grade|time|combo)-[1-3]$
+     */
+  missionId: string;
+  awardedAt: string;
+}
+
+export interface SyncCorviChestReward {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  chestId: string;
+  /** @minimum 1 */
+  chestIndex: number;
+  /**
+     * @minimum 1
+     * @maximum 10000
+     */
+  stone: number;
+  createdAt: string;
 }
 
 export type SyncCollectionCraftRarity = typeof SyncCollectionCraftRarity[keyof typeof SyncCollectionCraftRarity];
@@ -481,6 +510,10 @@ export interface UserSyncSnapshot {
   missionAwards?: SyncMissionAward[];
   /** @maxItems 10000 */
   missionChests?: SyncMissionChest[];
+  /** @maxItems 10000 */
+  corviFragmentAwards?: SyncCorviFragmentAward[];
+  /** @maxItems 10000 */
+  corviChestRewards?: SyncCorviChestReward[];
   /** @maxItems 10000 */
   collectionCrafts?: SyncCollectionCraft[];
   /** @maxItems 10000 */

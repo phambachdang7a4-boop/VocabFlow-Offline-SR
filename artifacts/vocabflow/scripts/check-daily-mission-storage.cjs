@@ -277,8 +277,8 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       firstOverview.chests[0].ruleSet,
-      6,
-      "New missions use fixed Stone rewards and Points-based fragments.",
+      7,
+      "New missions use fixed Stone rewards, Platinum cap, and Corvi fragments.",
     );
     assert.equal(
       firstOverview.chests[0].rarity,
@@ -416,7 +416,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
       const candidate = `storage-super-${index}`;
       if (!missionChests.hasSuperUpgradeChance(candidate)) continue;
       let rarity = "common";
-      let succeeded = true;
+      let thirdAttemptFailedAtRare = false;
       for (let attempt = 1; attempt <= 3; attempt += 1) {
         const upgrade = missionChests.resolveChestUpgrade(
           candidate,
@@ -426,12 +426,12 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
           true,
         );
         if (!upgrade.success) {
-          succeeded = false;
+          thirdAttemptFailedAtRare = attempt === 3 && rarity === "rare";
           break;
         }
         rarity = upgrade.rarity;
       }
-      if (succeeded) {
+      if (thirdAttemptFailedAtRare) {
         superChestId = candidate;
         superChestRarity = rarity;
       }
@@ -462,41 +462,16 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     );
     assert.equal(
       superResult.chest.rarity,
-      "legendary",
-      "The special fourth attempt reaches Corvi.",
+      "epic",
+      "The special fourth attempt reaches Platinum, not Corvi.",
     );
     assert.equal(superResult.chest.opened, true);
     assert.equal(
       superResult.awardedStone,
-      1000,
-      "A Corvi chest awards the fixed total exactly once.",
+      150,
+      "A Platinum chest awards the fixed total exactly once.",
     );
-    assert.ok(
-      superResult.awardedStatue,
-      "Every Corvi chest also grants a statue.",
-    );
-    if (superResult.awardedStatue.rarity === "legendary") {
-      assert.equal(
-        superResult.awardedStatue.id,
-        collectionArtworks.FIRST_STATUE_ID,
-        "Hồ Chí Minh is the first Legendary statue.",
-      );
-    }
-    assert.deepEqual(
-      await harness.repo.getMissionCorviStatueReward(superChestId),
-      {
-        artwork: superResult.awardedStatue,
-        compensationPieces: 0,
-      },
-      "A Corvi statue reward remains visible after reopening its chest screen.",
-    );
-    const corviRewardRow = harness.db
-      .prepare(
-        `SELECT craft_id AS craftId, piece_cost AS pieceCost
-         FROM collection_crafts WHERE craft_id = ?`,
-      )
-      .get(`cycle2-corvi-${superChestId}`);
-    assert.equal(corviRewardRow.pieceCost, 0);
+    assert.equal(superResult.awardedStatue, null);
     await harness.repo.recordReviewSessionResult({
       sessionId: "qualified-session-0",
       startedAt: new Date(`${day}T12:00:00`).getTime(),
@@ -946,7 +921,7 @@ const correctCountByGrade = { "A-": 23, A: 24, "A+": 26 };
     rmSync(timeRoot, { recursive: true, force: true });
     comboHarness.db.close();
     rmSync(comboRoot, { recursive: true, force: true });
-    retryHarness.db.close();
+    retryHarness?.db?.close();
     rmSync(retryRoot, { recursive: true, force: true });
     migrationAfterUpdate?.db.close();
     if (migrationSetup.db && !migrationAfterUpdate) migrationSetup.db.close();

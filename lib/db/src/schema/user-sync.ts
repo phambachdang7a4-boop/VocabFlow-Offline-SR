@@ -141,6 +141,37 @@ export const userDailyMissionAwards = pgTable(
   ],
 );
 
+export const userCorviFragmentAwards = pgTable(
+  "user_corvi_fragment_awards",
+  {
+    userId: text("user_id").notNull(),
+    day: date("mission_day", { mode: "string" }).notNull(),
+    missionId: text("mission_id").notNull(),
+    awardedAt: timestampColumn("awarded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.day, table.missionId] }),
+  ],
+);
+
+export const userCorviChestRewards = pgTable(
+  "user_corvi_chest_rewards",
+  {
+    userId: text("user_id").notNull(),
+    chestId: text("chest_id").notNull(),
+    chestIndex: integer("chest_index").notNull(),
+    stone: integer("stone").notNull(),
+    createdAt: timestampColumn("created_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.chestId] }),
+    uniqueIndex("user_corvi_chest_rewards_index_idx").on(
+      table.userId,
+      table.chestIndex,
+    ),
+  ],
+);
+
 export const userMissionChests = pgTable(
   "user_mission_chests",
   {

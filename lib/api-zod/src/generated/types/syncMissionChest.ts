@@ -33,7 +33,7 @@ export interface SyncMissionChest {
      */
   upgradeAttempts: number;
   rarity: SyncMissionChestRarity;
-  /** Optional for legacy clients; rule 5 converts Common fragments to Stone, while rule 6 removes Common and Uncommon fragment conversions. */
+  /** Optional for legacy clients; rule 7 caps tap upgrades at Platinum. */
   ruleSet?: SyncMissionChestRuleSet;
   /** Whether this chest has its guaranteed fourth upgrade. */
   superUpgrade?: boolean;

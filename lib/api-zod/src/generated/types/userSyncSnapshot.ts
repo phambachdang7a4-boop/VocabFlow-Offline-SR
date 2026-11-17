@@ -7,6 +7,8 @@
  */
 import type { SyncCollectionCraft } from './syncCollectionCraft';
 import type { SyncCollectionPieceSpend } from './syncCollectionPieceSpend';
+import type { SyncCorviChestReward } from './syncCorviChestReward';
+import type { SyncCorviFragmentAward } from './syncCorviFragmentAward';
 import type { SyncCourseProgress } from './syncCourseProgress';
 import type { SyncCourseSelection } from './syncCourseSelection';
 import type { SyncDeletedWord } from './syncDeletedWord';
@@ -44,6 +46,10 @@ export interface UserSyncSnapshot {
   missionAwards?: SyncMissionAward[];
   /** @maxItems 10000 */
   missionChests?: SyncMissionChest[];
+  /** @maxItems 10000 */
+  corviFragmentAwards?: SyncCorviFragmentAward[];
+  /** @maxItems 10000 */
+  corviChestRewards?: SyncCorviChestReward[];
   /** @maxItems 10000 */
   collectionCrafts?: SyncCollectionCraft[];
   /** @maxItems 10000 */

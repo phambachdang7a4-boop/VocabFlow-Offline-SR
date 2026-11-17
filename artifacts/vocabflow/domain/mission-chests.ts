@@ -6,7 +6,10 @@ export const CHEST_RARITIES = [
   "legendary",
 ] as const;
 export type ChestRarity = (typeof CHEST_RARITIES)[number];
-export type ChestRuleSet = 1 | 2 | 3 | 4 | 5 | 6;
+export type ChestRuleSet = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const CORVI_CHEST_FRAGMENT_COST = 15;
+export const CORVI_CHEST_STONE_REWARD = 2000;
+export const MAX_TAP_CHEST_RARITY: ChestRarity = "epic";
 
 export const CHEST_RARITY_LABELS: Record<ChestRarity, string> = {
   common: "Copper",
@@ -245,6 +248,7 @@ export function reopenPrematureMissionChest(
     ruleSet < 2 ||
     !chest.opened ||
     chest.upgradeAttempts >= attemptLimit ||
+    chest.rarity === MAX_TAP_CHEST_RARITY ||
     chest.rarity === "legendary" ||
     !isValidMissionChest(chest)
   ) {
@@ -260,8 +264,10 @@ export function chestUpgradeChance(
   superUpgrade: boolean,
 ): number | null {
   if (ruleSet === 1) return null;
-  if (attempt === 4 && superUpgrade) return 100;
   const tierIndex = CHEST_RARITIES.indexOf(rarity);
+  const topTapTierIndex = CHEST_RARITIES.indexOf(MAX_TAP_CHEST_RARITY);
+  if (ruleSet >= 7 && tierIndex >= topTapTierIndex) return null;
+  if (attempt === 4 && superUpgrade) return 100;
   if (tierIndex < 0 || tierIndex >= 4) return null;
   return [70, 50, 25, 10][tierIndex] ?? null;
 }
@@ -289,7 +295,11 @@ export function resolveChestUpgrade(
   if (ruleSet === 1) return resolveLegacyChestUpgrade(chestId, attempt);
 
   const tierIndex = CHEST_RARITIES.indexOf(currentRarity);
-  if (tierIndex < 0 || tierIndex >= CHEST_RARITIES.length - 1) {
+  const topTapTierIndex =
+    ruleSet >= 7
+      ? CHEST_RARITIES.indexOf(MAX_TAP_CHEST_RARITY)
+      : CHEST_RARITIES.length - 1;
+  if (tierIndex < 0 || tierIndex >= topTapTierIndex) {
     throw new Error("Rương đã ở phẩm chất cao nhất.");
   }
   const rarity = CHEST_RARITIES[tierIndex + 1]!;
@@ -348,7 +358,8 @@ export function isValidMissionChest(chest: MissionChest): boolean {
       ruleSet !== 3 &&
       ruleSet !== 4 &&
       ruleSet !== 5 &&
-      ruleSet !== 6) ||
+      ruleSet !== 6 &&
+      ruleSet !== 7) ||
     (ruleSet === 1 && superUpgrade) ||
     (ruleSet >= 2 && superUpgrade !== hasSuperUpgradeChance(chest.chestId)) ||
     !CHEST_RARITIES.includes(chest.rarity) ||
@@ -367,22 +378,42 @@ export function isValidMissionChest(chest: MissionChest): boolean {
   const attemptLimit = maxChestUpgradeAttempts(ruleSet, superUpgrade);
   for (let attempt = 1; attempt <= chest.upgradeAttempts; attempt += 1) {
     if (expectedOpened) return false;
-    const result = resolveChestUpgrade(
+    let result = resolveChestUpgrade(
       chest.chestId,
       attempt,
       expectedRarity,
       ruleSet,
       superUpgrade,
     );
+    if (
+      ruleSet === 1 &&
+      chest.rarity !== "legendary" &&
+      result.success &&
+      result.rarity === "legendary"
+    ) {
+      result = { success: true, rarity: MAX_TAP_CHEST_RARITY };
+    }
     resolvedAttempts = attempt;
     lastUpgradeSucceeded = result.success;
     if (result.success) expectedRarity = result.rarity;
     expectedOpened =
       attempt === attemptLimit ||
+      (ruleSet >= 7 && expectedRarity === MAX_TAP_CHEST_RARITY) ||
       expectedRarity === "legendary" ||
       (ruleSet === 1 && !result.success);
   }
 
+  const directOpenAtPlatinum =
+    chest.opened &&
+    chest.rarity === MAX_TAP_CHEST_RARITY &&
+    expectedRarity === MAX_TAP_CHEST_RARITY &&
+    resolvedAttempts === chest.upgradeAttempts;
+  const migratedPendingPlatinum =
+    !chest.opened &&
+    ruleSet >= 7 &&
+    chest.rarity === MAX_TAP_CHEST_RARITY &&
+    expectedRarity === MAX_TAP_CHEST_RARITY &&
+    resolvedAttempts === chest.upgradeAttempts;
   const wasPrematurelyFinalized =
     ruleSet >= 2 &&
     chest.opened &&
@@ -393,7 +424,10 @@ export function isValidMissionChest(chest: MissionChest): boolean {
   if (
     resolvedAttempts !== chest.upgradeAttempts ||
     chest.rarity !== expectedRarity ||
-    (chest.opened !== expectedOpened && !wasPrematurelyFinalized)
+    (chest.opened !== expectedOpened &&
+      !wasPrematurelyFinalized &&
+      !directOpenAtPlatinum &&
+      !migratedPendingPlatinum)
   ) {
     return false;
   }
