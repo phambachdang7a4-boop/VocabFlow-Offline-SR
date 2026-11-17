@@ -47,7 +47,7 @@ const GALLERY_RARITY_ORDER: ChestRarity[] = [
   "rare",
 ];
 type FragmentRarity = "rare" | "epic" | "legendary";
-const FRAGMENT_RARITY_ORDER: FragmentRarity[] = ["epic", "rare", "legendary"];
+const FRAGMENT_RARITY_ORDER: FragmentRarity[] = ["rare", "epic", "legendary"];
 const STATUE_UNLOCK_COST = 10;
 const FRAGMENT_ICON_SOURCES: Record<FragmentRarity, ImageSourcePropType> = {
   rare: require("../assets/images/puzzle-silver.png"),

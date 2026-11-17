@@ -608,12 +608,12 @@ assert.match(
 );
 assert.match(
   collectionScreen,
-  /FRAGMENT_RARITY_ORDER: FragmentRarity\[\] = \["epic", "rare", "legendary"\]/,
-  "Fragment cards display in Silver, Gold, Platinum order without changing their rarity keys.",
+  /FRAGMENT_RARITY_ORDER: FragmentRarity\[\] = \["rare", "epic", "legendary"\]/,
+  "Fragment cards display in Rare, Epic, Legendary order without changing their rarity keys.",
 );
 assert.match(
   collectionScreen,
-  /rare:\s*require\("\.\.\/assets\/images\/puzzle-gold\.png"\)[\s\S]*epic:\s*require\("\.\.\/assets\/images\/puzzle-silver\.png"\)[\s\S]*legendary:\s*require\("\.\.\/assets\/images\/puzzle-platinum\.png"\)/,
+  /rare:\s*require\("\.\.\/assets\/images\/puzzle-silver\.png"\)[\s\S]*epic:\s*require\("\.\.\/assets\/images\/puzzle-gold\.png"\)[\s\S]*legendary:\s*require\("\.\.\/assets\/images\/puzzle-platinum\.png"\)/,
   "Collection fragment artwork is mapped by rarity key.",
 );
 assert.match(
