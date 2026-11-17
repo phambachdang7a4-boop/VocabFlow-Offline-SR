@@ -2396,10 +2396,11 @@ function main() {
   );
   if (
     Object.keys(expansionContent).length !== expectedExpansionTerms.length ||
+    new Set(expectedExpansionTerms).size !== expectedExpansionTerms.length ||
     expectedExpansionTerms.some((term) => !expansionContent[term])
   ) {
     throw new Error(
-      `IELTS AI expansion must contain exactly ${expectedExpansionTerms.length} unique reviewed entries.`,
+      `IELTS expansion content must contain exactly ${expectedExpansionTerms.length} unique reviewed entries.`,
     );
   }
 

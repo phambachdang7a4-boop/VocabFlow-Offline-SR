@@ -2387,8 +2387,8 @@ async function checkCourseContentAndProgress() {
   );
   assert.ok(ieltsTerms.length > 6000);
   assert.ok(ieltsAdvancedTerms.length > 0 && ieltsAdvancedTerms.length < 1000);
-  assert.equal(ieltsTerms.length, 6361);
-  assert.equal(ieltsAdvancedTerms.length, 684);
+  assert.equal(ieltsTerms.length, 6369);
+  assert.equal(ieltsAdvancedTerms.length, 775);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(new Set(ieltsAdvancedTerms).size, ieltsAdvancedTerms.length);
   assert.equal(
@@ -2407,6 +2407,13 @@ async function checkCourseContentAndProgress() {
     "exotic",
     "interval",
     "phenomenon",
+    "genre",
+    "ballet",
+    "composer",
+    "globalization",
+    "attachment",
+    "cruise",
+    "screening",
   ];
   assert.ok(
     oxfordB2TermsMovedToStandard.every(
@@ -2414,10 +2421,14 @@ async function checkCourseContentAndProgress() {
     ),
     "Oxford B2 terms move to standard IELTS without duplicating vocabulary.",
   );
+  assert.ok(
+    ieltsTerms.includes("poetry") && !ieltsAdvancedTerms.includes("poetry"),
+    "The Oxford B1 poetry entry remains in standard IELTS.",
+  );
   assert.equal(
     ieltsTerms.length + ieltsAdvancedTerms.length,
-    7045,
-    "The split keeps every existing IELTS term.",
+    7144,
+    "The split keeps every existing term and adds the deduplicated vocabulary.",
   );
   assert.equal(
     ieltsTopicCourse.IELTS_TOPIC_COURSE_WORD_COUNT,

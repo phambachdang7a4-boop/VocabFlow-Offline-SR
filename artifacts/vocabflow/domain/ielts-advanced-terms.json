@@ -13,7 +13,13 @@
       "prerequisite",
       "prospectus",
       "rubric",
-      "tutelage"
+      "tutelage",
+      "academia",
+      "accreditation",
+      "didactic",
+      "extracurricular",
+      "co-curricular",
+      "holistic"
     ],
     "environment": [
       "biodiversity",
@@ -39,7 +45,10 @@
       "sanctuary",
       "stewardship",
       "sustainability",
-      "taint"
+      "taint",
+      "climate change",
+      "fossil fuel",
+      "carbon footprint"
     ],
     "technology": [
       "computation",
@@ -49,7 +58,9 @@
       "electromechanical",
       "filtration",
       "synchronize",
-      "stylus"
+      "stylus",
+      "simulation",
+      "cybersecurity"
     ],
     "health": [
       "sedentary",
@@ -84,12 +95,35 @@
       "tinnitus",
       "trimester",
       "virulent",
-      "vulnerable"
+      "vulnerable",
+      "mental health",
+      "placebo",
+      "immunity",
+      "antioxidant",
+      "hydration",
+      "rehabilitation",
+      "allergen",
+      "pharmacology",
+      "calorie",
+      "probiotic"
     ],
     "society-work": [
       "hierarchical",
       "inductee",
-      "subordination"
+      "subordination",
+      "freelancer",
+      "networking",
+      "layoff",
+      "subordinate",
+      "resignation",
+      "competency",
+      "remuneration",
+      "delegation",
+      "work-life balance",
+      "proficiency",
+      "maternity leave",
+      "severance",
+      "redundancy"
     ],
     "society": [
       "demographer",
@@ -105,7 +139,10 @@
       "loggerhead",
       "proletariat",
       "rustication",
-      "salacious"
+      "salacious",
+      "advocacy",
+      "autonomy",
+      "cohesion"
     ],
     "work": [
       "careerist",
@@ -172,7 +209,15 @@
       "utilise",
       "utilization",
       "utilize",
-      "valuation"
+      "valuation",
+      "monopoly",
+      "fiscal",
+      "commodity",
+      "gross domestic product",
+      "liquidity",
+      "bankruptcy",
+      "exchange rate",
+      "leverage"
     ],
     "transport": [
       "aviation",
@@ -199,7 +244,9 @@
       "tavern",
       "trek",
       "voyage",
-      "voyager"
+      "voyager",
+      "itinerary",
+      "souvenir"
     ],
     "culture": [
       "apotheosis",
@@ -217,7 +264,13 @@
       "prosaic",
       "sublime",
       "transcendental",
-      "vaudeville"
+      "vaudeville",
+      "canvas",
+      "curator",
+      "renaissance",
+      "depict",
+      "impressionism",
+      "motif"
     ],
     "media": [
       "mediation",
@@ -249,7 +302,16 @@
       "regime",
       "stringent",
       "subvert",
-      "veto"
+      "veto",
+      "sovereignty",
+      "diplomacy",
+      "constituent",
+      "coalition",
+      "bureaucracy",
+      "citizenry",
+      "sanction",
+      "referendum",
+      "electorate"
     ],
     "crime": [
       "criminality",
@@ -357,7 +419,9 @@
       "manufacturable",
       "outsourcing",
       "interdependence",
-      "reciprocity"
+      "reciprocity",
+      "supply chain",
+      "trade surplus"
     ],
     "family": [
       "maternal",
@@ -396,7 +460,8 @@
       "plosive",
       "rebus",
       "reiteration",
-      "tacit"
+      "tacit",
+      "vernacular"
     ],
     "sports": [
       "endurance",
@@ -516,7 +581,9 @@
       "sluice",
       "submerge",
       "torrent",
-      "trickle"
+      "trickle",
+      "watershed",
+      "reclamation"
     ],
     "psychology": [
       "abhor",
@@ -605,7 +672,17 @@
       "unprepossessing",
       "vagary",
       "voyeurism",
-      "waver"
+      "waver",
+      "subconscious",
+      "empathy",
+      "psychoanalysis",
+      "conditioning",
+      "introspection",
+      "arousal",
+      "defense mechanism",
+      "psychometric",
+      "hallucination",
+      "self-efficacy"
     ],
     "biology": [
       "anatomical",
@@ -666,7 +743,8 @@
       "taxonomy",
       "unviable",
       "vasomotor",
-      "vertebrate"
+      "vertebrate",
+      "biotechnology"
     ],
     "earth-science": [
       "lithosphere",
@@ -710,7 +788,12 @@
       "postulate",
       "rebut",
       "rhetoric",
-      "seminal"
+      "seminal",
+      "dissertation",
+      "peer review",
+      "metacognition",
+      "paradigm",
+      "epistemology"
     ],
     "geography": [
       "abyssal",
@@ -731,7 +814,13 @@
       "subcontinent",
       "topographic",
       "topographical",
-      "uninhabited"
+      "uninhabited",
+      "cartography",
+      "vista",
+      "nomad",
+      "islet",
+      "hinterland",
+      "estuary"
     ],
     "materials-science": [
       "alloy",
@@ -744,7 +833,9 @@
       "molten",
       "obsidian",
       "substrate",
-      "volatile"
+      "volatile",
+      "nanotechnology",
+      "quantum"
     ],
     "general-reading": [
       "albeit",

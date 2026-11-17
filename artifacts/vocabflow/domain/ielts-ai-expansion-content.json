@@ -1108,6 +1108,13 @@
       "pos": "N"
     },
     {
+      "term": "exchange rate",
+      "definition": "Giá trị của một đồng tiền khi được đổi sang đồng tiền khác.",
+      "example": "A weaker exchange rate made imported fuel more expensive.",
+      "exampleTranslation": "Tỷ giá yếu hơn khiến nhiên liệu nhập khẩu đắt đỏ hơn.",
+      "pos": "N"
+    },
+    {
       "term": "supply chain",
       "definition": "Mạng lưới gồm các tổ chức và hoạt động đưa sản phẩm từ nguyên liệu đến người tiêu dùng.",
       "example": "A disruption at the port affected the entire supply chain.",
@@ -1250,8 +1257,8 @@
     {
       "term": "depict",
       "definition": "Mô tả hoặc thể hiện một người, sự vật hay tình huống bằng hình ảnh hoặc lời nói.",
-      "example": "The chart depicts a steady decline in household energy use.",
-      "exampleTranslation": "Biểu đồ mô tả mức sử dụng năng lượng trong hộ gia đình giảm đều.",
+      "example": "The chart can depict a steady decline in household energy use.",
+      "exampleTranslation": "Biểu đồ có thể mô tả mức sử dụng năng lượng trong hộ gia đình giảm đều.",
       "pos": "V"
     },
     {
@@ -1406,6 +1413,377 @@
       "definition": "Quá trình kiểm tra một nhóm người để phát hiện sớm bệnh hoặc nguy cơ sức khỏe.",
       "example": "Early screening can detect the condition before symptoms become severe.",
       "exampleTranslation": "Sàng lọc sớm có thể phát hiện tình trạng bệnh trước khi triệu chứng trở nên nghiêm trọng.",
+      "pos": "N"
+    },
+    {
+      "term": "subconscious",
+      "definition": "Thuộc về phần tâm trí hoạt động mà con người không nhận biết hoàn toàn.",
+      "example": "A subconscious fear influenced some participants' choices.",
+      "exampleTranslation": "Một nỗi sợ trong tiềm thức đã ảnh hưởng đến lựa chọn của một số người tham gia.",
+      "pos": "A"
+    },
+    {
+      "term": "psychoanalysis",
+      "definition": "Phương pháp nghiên cứu và điều trị tâm lý tập trung vào các quá trình vô thức.",
+      "example": "Psychoanalysis explores how unconscious conflicts may shape behavior.",
+      "exampleTranslation": "Phân tâm học tìm hiểu cách những xung đột vô thức có thể định hình hành vi.",
+      "pos": "N"
+    },
+    {
+      "term": "introspection",
+      "definition": "Việc tự quan sát và suy ngẫm về suy nghĩ, cảm xúc của chính mình.",
+      "example": "Introspection helped the participants explain their reactions to the task.",
+      "exampleTranslation": "Sự tự suy ngẫm giúp những người tham gia giải thích phản ứng của họ với nhiệm vụ.",
+      "pos": "N"
+    },
+    {
+      "term": "psychometric",
+      "definition": "Liên quan đến việc đo lường các đặc điểm tâm lý như năng lực hoặc tính cách.",
+      "example": "A psychometric test measured the applicants' reasoning skills.",
+      "exampleTranslation": "Một bài kiểm tra tâm trắc học đo kỹ năng suy luận của các ứng viên.",
+      "pos": "A"
+    },
+    {
+      "term": "hallucination",
+      "definition": "Trải nghiệm nhìn, nghe hoặc cảm nhận điều không có thật bên ngoài.",
+      "example": "The patient reported a hallucination after several nights without sleep.",
+      "exampleTranslation": "Bệnh nhân kể rằng họ bị ảo giác sau vài đêm mất ngủ.",
+      "pos": "N"
+    },
+    {
+      "term": "biotechnology",
+      "definition": "Việc sử dụng sinh vật hoặc quá trình sinh học để phát triển sản phẩm và công nghệ.",
+      "example": "Biotechnology has helped researchers develop more resistant crops.",
+      "exampleTranslation": "Công nghệ sinh học giúp các nhà nghiên cứu phát triển những giống cây trồng có sức chống chịu tốt hơn.",
+      "pos": "N"
+    },
+    {
+      "term": "vernacular",
+      "definition": "Ngôn ngữ hoặc cách diễn đạt thông thường của một cộng đồng địa phương.",
+      "example": "The guide explained the monument in the local vernacular.",
+      "exampleTranslation": "Hướng dẫn viên giải thích về di tích bằng ngôn ngữ địa phương.",
+      "pos": "N"
+    },
+    {
+      "term": "dissertation",
+      "definition": "Bài nghiên cứu dài được viết để đáp ứng yêu cầu của một chương trình học thuật.",
+      "example": "Her dissertation examined how urban parks affect public health.",
+      "exampleTranslation": "Luận văn của cô nghiên cứu ảnh hưởng của công viên đô thị đến sức khỏe cộng đồng.",
+      "pos": "N"
+    },
+    {
+      "term": "epistemology",
+      "definition": "Ngành triết học nghiên cứu bản chất, nguồn gốc và giới hạn của tri thức.",
+      "example": "Epistemology asks what counts as reliable knowledge.",
+      "exampleTranslation": "Nhận thức luận đặt câu hỏi thế nào là tri thức đáng tin cậy.",
+      "pos": "N"
+    },
+    {
+      "term": "vista",
+      "definition": "Khung cảnh rộng và đẹp có thể nhìn thấy từ một vị trí.",
+      "example": "The hilltop offered a clear vista of the river valley.",
+      "exampleTranslation": "Đỉnh đồi mở ra khung cảnh bao quát thung lũng ven sông.",
+      "pos": "N"
+    },
+    {
+      "term": "nomad",
+      "definition": "Người hoặc thành viên cộng đồng thường di chuyển từ nơi này sang nơi khác.",
+      "example": "A nomad may move seasonally to find water and grazing land.",
+      "exampleTranslation": "Người du mục có thể di chuyển theo mùa để tìm nước và đồng cỏ.",
+      "pos": "N"
+    },
+    {
+      "term": "islet",
+      "definition": "Một hòn đảo nhỏ.",
+      "example": "A small islet provided a nesting site for seabirds.",
+      "exampleTranslation": "Một hòn đảo nhỏ tạo nơi làm tổ cho các loài chim biển.",
+      "pos": "N"
+    },
+    {
+      "term": "hinterland",
+      "definition": "Vùng đất nằm sâu phía trong, phía sau một khu vực ven biển hoặc đô thị.",
+      "example": "The port connects coastal businesses with the agricultural hinterland.",
+      "exampleTranslation": "Cảng kết nối các doanh nghiệp ven biển với vùng nội địa nông nghiệp.",
+      "pos": "N"
+    },
+    {
+      "term": "estuary",
+      "definition": "Vùng cửa sông nơi nước ngọt hòa trộn với nước biển.",
+      "example": "The estuary supports fish that tolerate both fresh and salt water.",
+      "exampleTranslation": "Cửa sông là nơi sinh sống của các loài cá chịu được cả nước ngọt lẫn nước mặn.",
+      "pos": "N"
+    },
+    {
+      "term": "canvas",
+      "definition": "Vải dày dùng để vẽ tranh; cũng chỉ bề mặt mà họa sĩ tạo tác phẩm.",
+      "example": "The artist prepared a canvas before painting the coastal scene.",
+      "exampleTranslation": "Họa sĩ chuẩn bị một tấm toan trước khi vẽ cảnh ven biển.",
+      "pos": "N"
+    },
+    {
+      "term": "curator",
+      "definition": "Người quản lý bộ sưu tập và tổ chức trưng bày tại bảo tàng hoặc phòng triển lãm.",
+      "example": "The curator selected archival photographs for the exhibition.",
+      "exampleTranslation": "Người phụ trách tuyển chọn ảnh lưu trữ cho triển lãm.",
+      "pos": "N"
+    },
+    {
+      "term": "genre",
+      "definition": "Một thể loại nghệ thuật, văn học, âm nhạc hoặc truyền thông có đặc điểm chung.",
+      "example": "The documentary genre can present complex social issues to a wide audience.",
+      "exampleTranslation": "Thể loại phim tài liệu có thể truyền tải các vấn đề xã hội phức tạp đến đông đảo khán giả.",
+      "pos": "N"
+    },
+    {
+      "term": "renaissance",
+      "definition": "Sự hồi sinh hoặc phát triển trở lại mạnh mẽ của một lĩnh vực, phong trào hay hoạt động.",
+      "example": "The city experienced a renaissance in public art after the new museum opened.",
+      "exampleTranslation": "Thành phố chứng kiến sự phục hưng của nghệ thuật công cộng sau khi bảo tàng mới mở cửa.",
+      "pos": "N"
+    },
+    {
+      "term": "impressionism",
+      "definition": "Trào lưu nghệ thuật nhấn mạnh ấn tượng về ánh sáng, màu sắc và khoảnh khắc.",
+      "example": "Impressionism changed how artists represented light and movement.",
+      "exampleTranslation": "Chủ nghĩa Ấn tượng đã thay đổi cách họa sĩ thể hiện ánh sáng và chuyển động.",
+      "pos": "N"
+    },
+    {
+      "term": "ballet",
+      "definition": "Nghệ thuật múa sân khấu sử dụng các động tác được luyện tập theo kỹ thuật.",
+      "example": "The ballet combined classical music with contemporary choreography.",
+      "exampleTranslation": "Buổi ba lê kết hợp âm nhạc cổ điển với vũ đạo đương đại.",
+      "pos": "N"
+    },
+    {
+      "term": "poetry",
+      "definition": "Tác phẩm văn học dùng ngôn ngữ giàu nhịp điệu, hình ảnh và cảm xúc.",
+      "example": "Poetry can preserve local stories and ways of speaking.",
+      "exampleTranslation": "Thơ ca có thể lưu giữ những câu chuyện và cách nói của địa phương.",
+      "pos": "N"
+    },
+    {
+      "term": "composer",
+      "definition": "Người sáng tác nhạc.",
+      "example": "The composer drew inspiration from traditional folk songs.",
+      "exampleTranslation": "Nhà soạn nhạc lấy cảm hứng từ các bài dân ca truyền thống.",
+      "pos": "N"
+    },
+    {
+      "term": "motif",
+      "definition": "Hình ảnh, ý tưởng hoặc chủ đề được lặp lại trong một tác phẩm.",
+      "example": "The recurring bird motif linked the novel's separate chapters.",
+      "exampleTranslation": "Họa tiết chim lặp lại đã kết nối các chương riêng biệt của cuốn tiểu thuyết.",
+      "pos": "N"
+    },
+    {
+      "term": "cybersecurity",
+      "definition": "Các biện pháp bảo vệ hệ thống máy tính, mạng và dữ liệu khỏi truy cập trái phép hoặc tấn công.",
+      "example": "Cybersecurity training helps staff recognize fraudulent messages.",
+      "exampleTranslation": "Đào tạo an ninh mạng giúp nhân viên nhận biết các tin nhắn lừa đảo.",
+      "pos": "N"
+    },
+    {
+      "term": "fiscal",
+      "definition": "Liên quan đến thuế, chi tiêu và nguồn thu của chính phủ.",
+      "example": "The government introduced fiscal measures to support small businesses.",
+      "exampleTranslation": "Chính phủ đưa ra các biện pháp tài khóa để hỗ trợ doanh nghiệp nhỏ.",
+      "pos": "A"
+    },
+    {
+      "term": "bankruptcy",
+      "definition": "Tình trạng một cá nhân hoặc doanh nghiệp không thể trả các khoản nợ đến hạn.",
+      "example": "The retailer avoided bankruptcy after restructuring its debt.",
+      "exampleTranslation": "Nhà bán lẻ tránh được phá sản sau khi tái cơ cấu nợ.",
+      "pos": "N"
+    },
+    {
+      "term": "leverage",
+      "definition": "Việc sử dụng vốn vay để tăng quy mô đầu tư; cũng là lợi thế có thể dùng để tạo ảnh hưởng.",
+      "example": "The firm used financial leverage to expand its production capacity.",
+      "exampleTranslation": "Công ty sử dụng đòn bẩy tài chính để mở rộng năng lực sản xuất.",
+      "pos": "N"
+    },
+    {
+      "term": "diplomacy",
+      "definition": "Hoạt động duy trì quan hệ và giải quyết bất đồng giữa các quốc gia bằng đàm phán.",
+      "example": "Diplomacy helped the two governments reach a water-sharing agreement.",
+      "exampleTranslation": "Ngoại giao giúp hai chính phủ đạt được thỏa thuận chia sẻ nguồn nước.",
+      "pos": "N"
+    },
+    {
+      "term": "constituent",
+      "definition": "Là một bộ phận cấu thành nên một tổng thể.",
+      "example": "Nitrogen is a constituent element of the atmosphere.",
+      "exampleTranslation": "Nitơ là một thành phần cấu tạo của khí quyển.",
+      "pos": "A"
+    },
+    {
+      "term": "coalition",
+      "definition": "Liên minh tạm thời giữa các nhóm hoặc đảng để cùng đạt một mục tiêu.",
+      "example": "Several parties formed a coalition to pass the environmental bill.",
+      "exampleTranslation": "Một số đảng thành lập liên minh để thông qua dự luật môi trường.",
+      "pos": "N"
+    },
+    {
+      "term": "bureaucracy",
+      "definition": "Hệ thống quản lý của các cơ quan công quyền hoặc doanh nghiệp, thường có nhiều quy trình và cấp bậc.",
+      "example": "The new online service reduced delays caused by bureaucracy.",
+      "exampleTranslation": "Dịch vụ trực tuyến mới giảm chậm trễ do thủ tục hành chính.",
+      "pos": "N"
+    },
+    {
+      "term": "sanction",
+      "definition": "Biện pháp chính thức được áp dụng để gây sức ép hoặc trừng phạt một quốc gia hay tổ chức.",
+      "example": "The international body imposed a sanction after the treaty was violated.",
+      "exampleTranslation": "Tổ chức quốc tế áp đặt biện pháp trừng phạt sau khi hiệp ước bị vi phạm.",
+      "pos": "N"
+    },
+    {
+      "term": "referendum",
+      "definition": "Cuộc bỏ phiếu trong đó cử tri trực tiếp quyết định một vấn đề chính trị hoặc pháp lý.",
+      "example": "A referendum allowed residents to decide whether the city should build a new airport.",
+      "exampleTranslation": "Một cuộc trưng cầu dân ý cho phép cư dân quyết định thành phố có nên xây sân bay mới hay không.",
+      "pos": "N"
+    },
+    {
+      "term": "electorate",
+      "definition": "Toàn thể những người có quyền bỏ phiếu trong một cuộc bầu cử.",
+      "example": "The electorate considered the candidates' plans for public transport.",
+      "exampleTranslation": "Cử tri cân nhắc các kế hoạch giao thông công cộng của những ứng viên.",
+      "pos": "N"
+    },
+    {
+      "term": "academia",
+      "definition": "Cộng đồng giảng viên, nhà nghiên cứu và các tổ chức giáo dục đại học.",
+      "example": "Academia debated whether the findings could be replicated.",
+      "exampleTranslation": "Giới học thuật tranh luận liệu các phát hiện có thể được tái lập hay không.",
+      "pos": "N"
+    },
+    {
+      "term": "didactic",
+      "definition": "Có mục đích hoặc đặc điểm nhằm dạy kiến thức hay truyền đạt một bài học.",
+      "example": "The museum used didactic displays to explain the history of vaccination.",
+      "exampleTranslation": "Bảo tàng dùng các phần trưng bày mang tính giáo dục để giải thích lịch sử tiêm chủng.",
+      "pos": "A"
+    },
+    {
+      "term": "extracurricular",
+      "definition": "Diễn ra ngoài chương trình học chính thức.",
+      "example": "Extracurricular activities gave students more chances to practise teamwork.",
+      "exampleTranslation": "Các hoạt động ngoại khóa giúp học sinh có thêm cơ hội rèn luyện kỹ năng làm việc nhóm.",
+      "pos": "A"
+    },
+    {
+      "term": "holistic",
+      "definition": "Xem xét một người hoặc vấn đề như một tổng thể có các phần liên quan với nhau.",
+      "example": "A holistic approach considers patients' physical and emotional needs.",
+      "exampleTranslation": "Cách tiếp cận toàn diện xem xét cả nhu cầu thể chất lẫn cảm xúc của bệnh nhân.",
+      "pos": "A"
+    },
+    {
+      "term": "rehabilitation",
+      "definition": "Quá trình giúp một người phục hồi sức khỏe, chức năng hoặc khả năng hòa nhập sau tổn thương hay bệnh tật.",
+      "example": "Rehabilitation helped the injured workers return to their jobs.",
+      "exampleTranslation": "Quá trình phục hồi chức năng giúp những công nhân bị thương trở lại làm việc.",
+      "pos": "N"
+    },
+    {
+      "term": "allergen",
+      "definition": "Chất có thể gây phản ứng dị ứng ở một số người.",
+      "example": "The clinic identified the allergen responsible for the patient's rash.",
+      "exampleTranslation": "Phòng khám xác định chất gây dị ứng dẫn đến phát ban của bệnh nhân.",
+      "pos": "N"
+    },
+    {
+      "term": "pharmacology",
+      "definition": "Ngành khoa học nghiên cứu thuốc và tác động của thuốc lên cơ thể.",
+      "example": "Pharmacology examines how medicines affect different organs.",
+      "exampleTranslation": "Dược lý học nghiên cứu cách thuốc tác động đến các cơ quan khác nhau.",
+      "pos": "N"
+    },
+    {
+      "term": "calorie",
+      "definition": "Đơn vị đo năng lượng mà thức ăn cung cấp cho cơ thể.",
+      "example": "A calorie is a unit used to measure the energy in food.",
+      "exampleTranslation": "Calo là đơn vị dùng để đo năng lượng trong thức ăn.",
+      "pos": "N"
+    },
+    {
+      "term": "itinerary",
+      "definition": "Kế hoạch hoặc lịch trình các địa điểm sẽ đến trong một chuyến đi.",
+      "example": "The itinerary included a museum visit and a day in the countryside.",
+      "exampleTranslation": "Lịch trình gồm chuyến thăm bảo tàng và một ngày ở vùng nông thôn.",
+      "pos": "N"
+    },
+    {
+      "term": "souvenir",
+      "definition": "Vật được giữ lại để gợi nhớ về một nơi hoặc trải nghiệm.",
+      "example": "She bought a locally made souvenir to remember the trip.",
+      "exampleTranslation": "Cô mua một món quà lưu niệm làm tại địa phương để nhớ về chuyến đi.",
+      "pos": "N"
+    },
+    {
+      "term": "cruise",
+      "definition": "Chuyến du lịch bằng tàu, thường ghé thăm nhiều địa điểm.",
+      "example": "The cruise stopped at several coastal towns.",
+      "exampleTranslation": "Chuyến du lịch bằng tàu dừng tại một số thị trấn ven biển.",
+      "pos": "N"
+    },
+    {
+      "term": "freelancer",
+      "definition": "Người làm việc độc lập cho nhiều khách hàng thay vì làm nhân viên cố định của một công ty.",
+      "example": "A freelancer can choose projects that match their specialist skills.",
+      "exampleTranslation": "Người làm nghề tự do có thể chọn dự án phù hợp với kỹ năng chuyên môn của mình.",
+      "pos": "N"
+    },
+    {
+      "term": "subordinate",
+      "definition": "Có cấp bậc thấp hơn hoặc phụ thuộc vào một người hay bộ phận khác.",
+      "example": "The report treated community feedback as subordinate to cost estimates.",
+      "exampleTranslation": "Báo cáo xem ý kiến cộng đồng là thứ yếu so với ước tính chi phí.",
+      "pos": "A"
+    },
+    {
+      "term": "resignation",
+      "definition": "Hành động rời khỏi một vị trí hoặc công việc theo quyết định của bản thân.",
+      "example": "Her resignation prompted the board to begin a search for a successor.",
+      "exampleTranslation": "Việc cô từ chức khiến hội đồng bắt đầu tìm người kế nhiệm.",
+      "pos": "N"
+    },
+    {
+      "term": "remuneration",
+      "definition": "Tiền công hoặc lợi ích được trả cho công việc đã thực hiện.",
+      "example": "The contract specifies the remuneration for each completed assignment.",
+      "exampleTranslation": "Hợp đồng quy định thù lao cho mỗi nhiệm vụ đã hoàn thành.",
+      "pos": "N"
+    },
+    {
+      "term": "delegation",
+      "definition": "Việc giao trách nhiệm hoặc quyền hạn cho người khác; cũng có thể chỉ một đoàn đại diện.",
+      "example": "Effective delegation allowed the manager to focus on long-term planning.",
+      "exampleTranslation": "Việc ủy quyền hiệu quả cho phép người quản lý tập trung vào kế hoạch dài hạn.",
+      "pos": "N"
+    },
+    {
+      "term": "proficiency",
+      "definition": "Mức độ thành thạo một kỹ năng hoặc lĩnh vực.",
+      "example": "The position requires proficiency in written and spoken English.",
+      "exampleTranslation": "Vị trí này yêu cầu khả năng sử dụng thành thạo tiếng Anh nói và viết.",
+      "pos": "N"
+    },
+    {
+      "term": "autonomy",
+      "definition": "Quyền tự quản lý hoặc đưa ra quyết định độc lập.",
+      "example": "Local autonomy allowed the region to manage its schools.",
+      "exampleTranslation": "Quyền tự chủ địa phương cho phép khu vực tự quản lý các trường học.",
+      "pos": "N"
+    },
+    {
+      "term": "watershed",
+      "definition": "Vùng đất mà nước mưa chảy về cùng một con sông, hồ hoặc vùng thoát nước.",
+      "example": "The watershed supplies drinking water to several rural communities.",
+      "exampleTranslation": "Lưu vực cung cấp nước uống cho một số cộng đồng nông thôn.",
       "pos": "N"
     }
   ]

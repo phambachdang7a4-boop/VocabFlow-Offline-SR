@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { join } = require("node:path");
 const courseData = require("../domain/ielts-topic-course-data.json");
+const expansionContent = require("../domain/ielts-ai-expansion-content.json");
 const readingVocabularyMap = require("../domain/ielts-reading-vocabulary-topic-map.json");
 const readingExampleTranslations = require("../domain/ielts-reading-example-translations.json");
 const { loadTs } = require("./test-support.cjs");
@@ -100,20 +101,37 @@ for (const [term, reason] of Object.entries(RETAINED_FORM_REASONS)) {
 const expansionTerms = IELTS_EXPANSION_CANDIDATES.topics.flatMap(
   (topic) => topic.terms,
 );
+const authoredExpansionTerms = new Set(
+  expansionContent.entries.map((entry) => entry.term),
+);
 assert.equal(
   IELTS_EXPANSION_CANDIDATES.topics.length,
-  11,
+  22,
   "The academic reading expansion should cover all reviewed topic areas.",
 );
 assert.equal(
   expansionTerms.length,
-  156,
+  255,
   "The reviewed IELTS expansion candidate list should remain explicit.",
 );
 assert.equal(
   new Set(expansionTerms).size,
   expansionTerms.length,
   "The expansion must not repeat headwords across topics.",
+);
+assert.equal(
+  authoredExpansionTerms.size,
+  expansionContent.entries.length,
+  "Authored expansion content must not repeat headwords.",
+);
+assert.equal(
+  expansionContent.entries.length,
+  255,
+  "The authored IELTS vocabulary content must retain every reviewed entry.",
+);
+assert.ok(
+  [...authoredExpansionTerms].every((term) => expansionTerms.includes(term)),
+  "Authored expansion content must only contain selected course terms.",
 );
 for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
   const courseTopicId = IELTS_EXPANSION_TOPIC_ROUTES[topic.id];
@@ -128,8 +146,12 @@ for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
     );
     assert.equal(
       courseData.entries[term]?.exampleSource,
-      "authored",
-      `${term} must use an authored example rather than a weak dictionary example.`,
+      authoredExpansionTerms.has(term) ? "authored" : "offline",
+      `${term} must keep the source of its reviewed example.`,
+    );
+    assert.ok(
+      courseData.entries[term]?.example?.trim(),
+      `${term} must include an English example.`,
     );
     assert.ok(
       courseData.entries[term]?.exampleTranslation?.trim(),
@@ -139,8 +161,8 @@ for (const topic of IELTS_EXPANSION_CANDIDATES.topics) {
 }
 assert.equal(
   courseData.topics.reduce((count, topic) => count + topic.terms.length, 0),
-  1342,
-  "The existing IELTS lessons should retain their 1,342 words.",
+  1441,
+  "The IELTS lessons should retain all 1,441 selected topic terms.",
 );
 assert.deepEqual(
   courseData.topics.flatMap((topic) =>
@@ -252,9 +274,9 @@ for (const term of importedReadingTerms) {
   );
 }
 const expectedReviewedTopicCounts = {
-  education: 41,
-  work: 42,
-  economy: 75,
+  education: 47,
+  work: 55,
+  economy: 83,
   transport: 53,
   crime: 65,
   science: 45,
