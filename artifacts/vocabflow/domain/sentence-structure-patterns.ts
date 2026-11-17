@@ -42,7 +42,7 @@ export const SENTENCE_STRUCTURE_PATTERN_LESSONS: readonly SentenceStructurePatte
         {
           term: "neither … nor",
           prompt:
-            "The old plan provided _____ enough time to inspect the site _____ a safe route to the entrance, so the team rejected it.",
+            "The old plan provided _____ enough time to inspect the site _____ a safe route to the entrance; it lacked both, so the team rejected it.",
           choices: [
             "neither … nor",
             "both … and",
@@ -160,8 +160,8 @@ export const SENTENCE_STRUCTURE_PATTERN_LESSONS: readonly SentenceStructurePatte
         {
           term: "so do I",
           prompt:
-            "“I enjoy reading historical biographies.” “_____,” Minh replied.",
-          choices: ["so do I", "neither do I", "so I do", "neither I do"],
+            "“I enjoy reading historical biographies.” “_____,” Minh replied, agreeing that he enjoyed them too.",
+          choices: ["so do I", "neither do I", "so have I", "neither I do"],
         },
         {
           term: "neither have I",
@@ -350,7 +350,7 @@ export const SENTENCE_STRUCTURE_PATTERN_LESSONS: readonly SentenceStructurePatte
         {
           term: "on the desk",
           prompt:
-            "Leave the signed form _____, resting on its surface rather than inside it.",
+            "Leave the signed form _____, resting on the desk's top surface rather than inside a drawer.",
           choices: [
             "on the desk",
             "in the desk",

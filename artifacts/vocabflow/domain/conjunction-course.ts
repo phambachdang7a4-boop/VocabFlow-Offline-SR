@@ -43,7 +43,7 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
       {
         term: "now when",
         prompt:
-          "_____ I hear the old school bell now, it takes me straight back to my first day.",
+          "I used to ignore the old school bell, but _____ I hear it, I remember my first day.",
         choices: ["now when", "in case", "provided that", "so that"],
       },
       {
@@ -79,7 +79,7 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
         term: "even though",
         prompt:
           "_____ the road was in fact icy, the bus still arrived on time.",
-        choices: ["even though", "even if", "in case", "as if"],
+        choices: ["even though", "in case", "provided that", "so that"],
       },
       {
         term: "provided that",
@@ -95,7 +95,7 @@ export const CONJUNCTION_COURSE_LESSONS: readonly ConjunctionCourseLesson[] = [
       {
         term: "as much as",
         prompt: "_____ I like the idea, I cannot approve the budget without figures.",
-        choices: ["as much as", "provided that", "in case", "just as"],
+        choices: ["as much as", "provided that", "in case", "as though"],
       },
     ],
   },

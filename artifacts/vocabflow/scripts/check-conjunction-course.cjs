@@ -228,6 +228,18 @@ async function checkCourseContentAndProgress() {
     /in fact/i,
   );
   assert.match(conjunctionQuestionByTerm.get("if only").prompt, /!/);
+  assert.match(
+    conjunctionQuestionByTerm.get("now when").prompt,
+    /used to ignore the old school bell/i,
+  );
+  assert.ok(
+    !conjunctionQuestionByTerm.get("even though").choices.includes("even if"),
+    "A factual concession does not offer the hypothetical even-if alternative.",
+  );
+  assert.ok(
+    !conjunctionQuestionByTerm.get("as much as").choices.includes("just as"),
+    "The concessive as much as question does not offer the potentially competing just-as phrase.",
+  );
 
   const linkingTerms = Object.keys(
     linkingAdverbCourse.LINKING_ADVERB_COURSE_ENTRIES,
@@ -272,12 +284,30 @@ async function checkCourseContentAndProgress() {
     ["hence", "instead"],
     ["therefore", "moreover"],
     ["then", "accordingly"],
+    ["meanwhile", "accordingly"],
+    ["finally", "therefore"],
+    ["indeed", "however"],
+    ["indeed", "then"],
   ]) {
     assert.ok(
       !linkingQuestionByTerm.get(term).choices.includes(distractor),
       `${term} does not compete with the similar answer ${distractor}.`,
     );
   }
+  assert.match(
+    linkingQuestionByTerm.get("finally").prompt,
+    /after an hour of checking every sheet.*at last/i,
+    "The finally question establishes a completed search rather than a generic result.",
+  );
+  assert.match(
+    linkingQuestionByTerm.get("indeed").prompt,
+    /confirming how strenuous it was/i,
+    "The indeed question makes the second clause explicit evidence for the first.",
+  );
+  assert.ok(
+    !linkingQuestionByTerm.get("meanwhile").choices.includes("accordingly"),
+    "The concurrent task does not offer accordingly as a second plausible connector.",
+  );
 
   const patternLessons =
     sentenceStructurePatternCourse.SENTENCE_STRUCTURE_PATTERN_LESSONS;
@@ -295,6 +325,23 @@ async function checkCourseContentAndProgress() {
       "Giới từ trong cụm thường gặp",
       "Phân biệt in, on và at",
     ],
+  );
+  const patternQuestionByTerm = new Map(
+    patternQuestions.map((question) => [question.term, question]),
+  );
+  assert.match(
+    patternQuestionByTerm.get("neither … nor").prompt,
+    /it lacked both/i,
+    "The paired-conjunction prompt establishes that both features are absent.",
+  );
+  assert.ok(
+    !patternQuestionByTerm.get("so do I").choices.includes("so I do"),
+    "The agreement question excludes the grammatical confirmation phrase so I do.",
+  );
+  assert.match(
+    patternQuestionByTerm.get("on the desk").prompt,
+    /top surface rather than inside a drawer/i,
+    "The location question distinguishes the desk top from other desk locations.",
   );
   assert.equal(patternTerms.length, 36);
   assert.equal(patternQuestions.length, patternTerms.length);

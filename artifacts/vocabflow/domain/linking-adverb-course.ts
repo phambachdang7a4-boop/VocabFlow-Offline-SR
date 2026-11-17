@@ -201,8 +201,8 @@ export const LINKING_ADVERB_COURSE_LESSONS: readonly LinkingAdverbCourseLesson[]
         {
           term: "finally",
           prompt:
-            "We checked every page and _____ found the missing signature.",
-          choices: ["finally", "meanwhile", "therefore", "instead"],
+            "The signature was hidden on the final page; after an hour of checking every sheet, we _____ found it at last.",
+          choices: ["finally", "meanwhile", "similarly", "instead"],
         },
       ],
     },
@@ -228,13 +228,13 @@ export const LINKING_ADVERB_COURSE_LESSONS: readonly LinkingAdverbCourseLesson[]
           term: "meanwhile",
           prompt:
             "The rice is cooking; _____, chop the vegetables while it simmers.",
-          choices: ["meanwhile", "accordingly", "however", "indeed"],
+          choices: ["meanwhile", "rather", "however", "indeed"],
         },
         {
           term: "indeed",
           prompt:
-            "The hike was demanding; _____, we climbed for six hours.",
-          choices: ["indeed", "instead", "then", "however"],
+            "The hike was demanding; _____, we climbed for six hours without a break, confirming how strenuous it was.",
+          choices: ["indeed", "instead", "accordingly", "similarly"],
         },
         {
           term: "likewise",
