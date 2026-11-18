@@ -37,6 +37,7 @@ import { Feather } from "@expo/vector-icons";
 import { Redirect, router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { MissionRewardCoordinator } from "@/components/MissionRewardCoordinator";
+import { WebOfflineDataDialog } from "@/components/WebOfflineDataDialog";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -129,6 +130,7 @@ function RootStack() {
       />
       </Stack>
       <MissionRewardCoordinator />
+      <WebOfflineDataDialog />
     </>
   );
 }

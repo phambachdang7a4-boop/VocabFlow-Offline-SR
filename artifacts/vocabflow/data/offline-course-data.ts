@@ -366,14 +366,17 @@ async function fetchCourseChunk(
   url: string,
   start: number,
   end: number,
+  signal?: AbortSignal,
 ): Promise<Uint8Array> {
   let lastError = "máy chủ chưa trả dữ liệu";
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
+      if (signal?.aborted) throw new Error("Đã hủy tải gói khóa học.");
       const response = await fetch(url, {
         headers: { Range: `bytes=${start}-${end}` },
         credentials: "omit",
         cache: "no-store",
+        signal,
       });
       if (response.status !== 206) {
         await response.body?.cancel().catch(() => undefined);
@@ -400,6 +403,9 @@ async function fetchCourseChunk(
       }
       return bytes;
     } catch (error) {
+      if (signal?.aborted) {
+        throw new Error("Đã hủy tải gói khóa học.");
+      }
       lastError = error instanceof Error ? error.message : String(error);
       if (attempt < 2) {
         await new Promise((resolve) => setTimeout(resolve, 350 * 2 ** attempt));
@@ -454,10 +460,12 @@ async function installWebBundle(bytes: Uint8Array): Promise<void> {
 
 export async function downloadOfflineCourseData(
   onProgress?: (bytesWritten: number, totalBytes: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   if (activeDownload) throw new Error("Đang tải dữ liệu khóa học. Hãy đợi.");
   activeDownload = true;
   try {
+    if (signal?.aborted) throw new Error("Đã hủy tải gói khóa học.");
     const url = packageUrl();
     let downloadedBytes = 0;
     let nativeFile: File | null = null;
@@ -496,7 +504,7 @@ export async function downloadOfflineCourseData(
           start + OFFLINE_COURSE_DATA_CHUNK_BYTES - 1,
           OFFLINE_COURSE_DATA.bytes - 1,
         );
-        const chunk = await fetchCourseChunk(url, start, end);
+        const chunk = await fetchCourseChunk(url, start, end, signal);
         if (Platform.OS === "web") {
           await writeWebChunk(start, chunk);
           webChunks.push({ offset: start, bytes: chunk });
@@ -511,6 +519,7 @@ export async function downloadOfflineCourseData(
     } finally {
       nativeHandle?.close();
     }
+    if (signal?.aborted) throw new Error("Đã hủy tải gói khóa học.");
 
     let bytes: Uint8Array;
     if (Platform.OS === "web") {
@@ -531,6 +540,7 @@ export async function downloadOfflineCourseData(
       bytes = await nativeFile.bytes();
     }
     const bundle = await readInstalledBundle(bytes);
+    if (signal?.aborted) throw new Error("Đã hủy tải gói khóa học.");
     if (Platform.OS === "web") {
       await installWebBundle(bytes);
     } else {
