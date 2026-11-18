@@ -23,6 +23,7 @@ const queries = loadTs(join(root, "data/dictionary-queries.ts"), {
   "../domain/dictionary": domain,
   "../domain/dictionary-suggestions": spelling,
   "../domain/dictionary-inflections": inflections,
+  "./dictionary-course-index": courseIndexModule,
 });
 
 function adapter(handle) {
@@ -148,6 +149,52 @@ function normalizeTerm(term) {
     ).get(multiCourseWord.id).count,
     multiCourseTerm.courseIds.length,
   );
+  const multiCourseTitles = multiCourseTerm.courseIds.map(
+    (id) => index.courses.find((course) => course.id === id).title,
+  );
+  const unfilteredSharedSearch = await queries.searchInDictionary(
+    db,
+    multiCourseTerm.term,
+  );
+  const unfilteredSharedWord = unfilteredSharedSearch.items.find(
+    (item) => normalizeTerm(item.term) === normalizeTerm(multiCourseTerm.term),
+  );
+  assert.ok(unfilteredSharedWord, "Unfiltered search still finds shared course words.");
+  assert.deepEqual(
+    [...unfilteredSharedWord.courseTags].sort(),
+    [...multiCourseTitles].sort(),
+    "Filtering support does not remove any course labels from results.",
+  );
+  for (const courseId of multiCourseTerm.courseIds) {
+    const filtered = await queries.searchInDictionary(
+      db,
+      multiCourseTerm.term,
+      0,
+      courseId,
+    );
+    const filteredSharedWord = filtered.items.find(
+      (item) => normalizeTerm(item.term) === normalizeTerm(multiCourseTerm.term),
+    );
+    assert.ok(filteredSharedWord, `The shared word appears in ${courseId}.`);
+  }
+  const otherCourseId = index.courses.find(
+    (course) => !multiCourseTerm.courseIds.includes(course.id),
+  )?.id;
+  if (otherCourseId) {
+    const unrelatedFiltered = await queries.searchInDictionary(
+      db,
+      multiCourseTerm.term,
+      0,
+      otherCourseId,
+    );
+    assert.equal(
+      unrelatedFiltered.items.some(
+        (item) => normalizeTerm(item.term) === normalizeTerm(multiCourseTerm.term),
+      ),
+      false,
+      "A course filter excludes words that are not tagged for that course.",
+    );
+  }
 
   const search = await queries.searchInDictionary(db, addedTerm.term);
   const match = search.items.find(

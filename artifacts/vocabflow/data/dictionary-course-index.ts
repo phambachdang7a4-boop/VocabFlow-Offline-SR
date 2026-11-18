@@ -7,6 +7,7 @@ import courseIndex from "../domain/course-dictionary-index.json";
 
 const COURSE_INDEX = courseIndex as DictionaryCourseIndex;
 export const COURSE_DICTIONARY_INDEX_REVISION = COURSE_INDEX.contentSha256;
+export const COURSE_DICTIONARY_COURSES = COURSE_INDEX.courses;
 
 function normalizedTerm(term: string): string {
   return term

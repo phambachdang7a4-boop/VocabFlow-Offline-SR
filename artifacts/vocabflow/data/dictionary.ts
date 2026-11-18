@@ -460,8 +460,12 @@ export async function deleteOfflineDictionary(): Promise<void> {
   if (file.exists) await deleteDatabaseAsync(filename);
 }
 
-export async function searchDictionary(query: string, offset = 0) {
-  return searchInDictionary(await openDictionary(), query, offset);
+export async function searchDictionary(
+  query: string,
+  offset = 0,
+  courseId: string | null = null,
+) {
+  return searchInDictionary(await openDictionary(), query, offset, courseId);
 }
 export async function suggestDictionary(query: string) {
   return suggestInDictionary(await openDictionary(), query);

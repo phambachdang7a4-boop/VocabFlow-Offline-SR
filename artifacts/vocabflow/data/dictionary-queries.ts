@@ -5,8 +5,23 @@ import {
 } from '../domain/dictionary';
 import { canSuggest, rankSuggestions, spellingVariants, suggestionTerm } from '../domain/dictionary-suggestions';
 import { explicitInflectionLemmas } from '../domain/dictionary-inflections';
+import { COURSE_DICTIONARY_COURSES } from './dictionary-course-index';
 
 const courseTagTableExists = new WeakMap<object, Promise<boolean>>();
+
+async function hasCourseTagTable(db: SQLiteDatabase): Promise<boolean> {
+  let tableExists = courseTagTableExists.get(db);
+  if (!tableExists) {
+    tableExists = db
+      .getFirstAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master
+         WHERE type = 'table' AND name = 'vocabflow_course_tags'`,
+      )
+      .then((row) => Boolean(row));
+    courseTagTableExists.set(db, tableExists);
+  }
+  return tableExists;
+}
 
 function checkPage(offset: number) {
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) {
@@ -24,17 +39,7 @@ async function courseTagsForWordIds(
   const tagsByWordId = new Map<number, string[]>();
   if (!wordIds.length) return tagsByWordId;
 
-  let tableExists = courseTagTableExists.get(db);
-  if (!tableExists) {
-    tableExists = db
-      .getFirstAsync<{ name: string }>(
-        `SELECT name FROM sqlite_master
-         WHERE type = 'table' AND name = 'vocabflow_course_tags'`,
-      )
-      .then((row) => Boolean(row));
-    courseTagTableExists.set(db, tableExists);
-  }
-  if (!(await tableExists)) return tagsByWordId;
+  if (!(await hasCourseTagTable(db))) return tagsByWordId;
 
   for (let offset = 0; offset < wordIds.length; offset += 400) {
     const batch = wordIds.slice(offset, offset + 400);
@@ -57,17 +62,34 @@ async function courseTagsForWordIds(
   return tagsByWordId;
 }
 
-export async function searchInDictionary(db: SQLiteDatabase, query: string, offset = 0): Promise<DictionaryMatches> {
+export async function searchInDictionary(
+  db: SQLiteDatabase,
+  query: string,
+  offset = 0,
+  courseId: string | null = null,
+): Promise<DictionaryMatches> {
   checkPage(offset);
   if (!query.trim()) return { items: [], hasMore: false };
   if (query.length > 200) throw new Error('Từ tra cứu tối đa 200 ký tự.');
+  if (courseId !== null) {
+    if (!COURSE_DICTIONARY_COURSES.some((course) => course.id === courseId)) {
+      throw new Error('Khóa học được chọn không hợp lệ.');
+    }
+    if (!(await hasCourseTagTable(db))) return { items: [], hasMore: false };
+  }
   const rows = await db.getAllAsync<DictionaryMatch>(
     `SELECT w.id, w.word AS term,
        COALESCE((SELECT d.definition FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id
          WHERE wd.word_id = w.id ORDER BY wd.id LIMIT 1), '') AS meaning
      FROM words w WHERE w.word LIKE ? ESCAPE '\\'
+       ${courseId === null ? '' : `AND EXISTS (
+         SELECT 1 FROM vocabflow_course_tags ct
+         WHERE ct.word_id = w.id AND ct.course_id = ?
+       )`}
      ORDER BY w.word COLLATE NOCASE, w.id LIMIT ? OFFSET ?`,
-    `${lookupPrefix(query)}%`, DICTIONARY_PAGE_SIZE + 1, offset,
+    ...(courseId === null
+      ? [`${lookupPrefix(query)}%`, DICTIONARY_PAGE_SIZE + 1, offset]
+      : [`${lookupPrefix(query)}%`, courseId, DICTIONARY_PAGE_SIZE + 1, offset]),
   );
   const items = rows.slice(0, DICTIONARY_PAGE_SIZE);
   const tagsByWordId = await courseTagsForWordIds(

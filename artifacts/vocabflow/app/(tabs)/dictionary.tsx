@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getRandomUnlearnedDictionaryWord, searchDictionary, suggestDictionary } from '@/data/dictionary';
+import { COURSE_DICTIONARY_COURSES } from '@/data/dictionary-course-index';
 import { type DictionaryMatch, type DictionarySuggestion } from '@/domain/dictionary';
 import { DictionarySuggestions } from '@/components/DictionarySuggestions';
 import { DictionaryGate } from '@/components/DictionaryGate';
@@ -160,6 +161,7 @@ export default function DictionaryScreen() {
   const { words } = useVocabulary();
   const [q, setQ] = useState('');
   const [lookup, setLookup] = useState({ term: '', openExact: false });
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const debounced = lookup.term;
   const [items, setItems] = useState<DictionaryMatch[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -309,7 +311,7 @@ export default function DictionaryScreen() {
     setSuggestions([]);
     if (!dict.ready || !debounced) { setItems([]); setHasMore(false); setLoading(false); return; }
     setLoading(true);
-    searchDictionary(debounced, 0).then(
+    searchDictionary(debounced, 0, selectedCourseId).then(
       (r) => {
         if (reqRef.current !== id) return;
         setItems(r.items); setHasMore(r.hasMore);
@@ -317,7 +319,7 @@ export default function DictionaryScreen() {
           const exact = r.items.find((item) => normalizeTerm(item.term) === normalizeTerm(debounced));
           if (exact) setOpenId(exact.id);
         }
-        if (r.items.length === 0) {
+        if (r.items.length === 0 && selectedCourseId === null) {
           // Typo help only after an empty first page; loading stays on until done.
           return suggestDictionary(debounced).then(
             (s) => { if (reqRef.current === id) setSuggestions(s); },
@@ -329,7 +331,23 @@ export default function DictionaryScreen() {
       setItems([]); setSuggestions([]); setHasMore(false);
       setError(e instanceof Error ? e.message : 'Không thể tra cứu hoặc gợi ý từ.');
     }).finally(() => { if (reqRef.current === id) setLoading(false); });
-  }, [lookup, dict.ready, retryTick]);
+  }, [lookup, dict.ready, retryTick, selectedCourseId]);
+
+  const selectCourse = (courseId: string | null) => {
+    if (courseId === selectedCourseId) return;
+    reqRef.current += 1;
+    if (debounceRef.current !== null) clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    setSelectedCourseId(courseId);
+    setItems([]);
+    setSuggestions([]);
+    setHasMore(false);
+    setOpenId(null);
+    setError(null);
+    setLoading(!!q.trim());
+    setLoadingMore(false);
+    setLookup({ term: q.trim(), openExact: false });
+  };
 
   const onChange = (v: string) => {
     // Invalidate immediately, not 250 ms later: an older exact-match response
@@ -379,7 +397,7 @@ export default function DictionaryScreen() {
     const id = reqRef.current;
     setError(null);
     setLoadingMore(true);
-    searchDictionary(debounced, items.length).then(
+    searchDictionary(debounced, items.length, selectedCourseId).then(
       (r) => {
         if (reqRef.current !== id) return;
         setItems((prev) => {
@@ -644,7 +662,13 @@ export default function DictionaryScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: bottom }}
     >
-      <EmptyState icon="feather" title="Không có mục từ phù hợp" body={`Không tìm thấy từ bắt đầu bằng “${debounced}”. Bạn vẫn có thể tự ghi từ này vào sổ.`}>
+      <EmptyState
+        icon="feather"
+        title="Không có mục từ phù hợp"
+        body={selectedCourseId
+          ? `Không tìm thấy từ bắt đầu bằng “${debounced}” trong khóa học đã chọn.`
+          : `Không tìm thấy từ bắt đầu bằng “${debounced}”. Bạn vẫn có thể tự ghi từ này vào sổ.`}
+      >
         <Button testID="dictionary-add-manual" label="Tự ghi từ mới" icon="edit-3" variant="ghost" onPress={() => router.push('/word')} />
       </EmptyState>
     </ScrollView>
@@ -749,6 +773,58 @@ export default function DictionaryScreen() {
             </Pressable>
           </View>
         )}
+        {!corviConversationOpen && dict.ready ? (
+          <View testID="dictionary-course-filter" style={styles.courseFilter}>
+            <Text style={[styles.courseFilterLabel, { color: c.dictHead }]}>Lọc khóa học</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.courseFilterOptions}
+            >
+              <Pressable
+                testID="dictionary-course-filter-all"
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedCourseId === null }}
+                accessibilityLabel="Tất cả khóa học"
+                onPress={() => selectCourse(null)}
+                style={({ pressed }) => [
+                  styles.courseFilterChip,
+                  {
+                    backgroundColor: selectedCourseId === null ? c.dictHead : c.dictPage,
+                    borderColor: selectedCourseId === null ? c.dictHead : c.dictLine,
+                    opacity: pressed ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.courseFilterText, { color: selectedCourseId === null ? c.dictPage : c.dictHead }]}>Tất cả</Text>
+              </Pressable>
+              {COURSE_DICTIONARY_COURSES.map((course) => {
+                const selected = selectedCourseId === course.id;
+                return (
+                  <Pressable
+                    key={course.id}
+                    testID={`dictionary-course-filter-${course.id}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Khóa học ${course.title}`}
+                    onPress={() => selectCourse(course.id)}
+                    style={({ pressed }) => [
+                      styles.courseFilterChip,
+                      {
+                        backgroundColor: selected ? c.dictHead : c.dictPage,
+                        borderColor: selected ? c.dictHead : c.dictLine,
+                        opacity: pressed ? 0.72 : 1,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.courseFilterText, { color: selected ? c.dictPage : c.dictHead }]}>{course.title}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
       </View>
       <View style={{ flex: 1, backgroundColor: c.dictPage }}>{body}</View>
       <Modal
@@ -841,6 +917,11 @@ const styles = StyleSheet.create({
   iconBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
+  courseFilter: { paddingTop: 10, gap: 6 },
+  courseFilterLabel: { fontFamily: F.s, fontSize: 12 },
+  courseFilterOptions: { alignItems: 'center', gap: 7, paddingRight: 4 },
+  courseFilterChip: { minHeight: 32, justifyContent: 'center', paddingHorizontal: 11, borderRadius: 16, borderWidth: 1 },
+  courseFilterText: { fontFamily: F.s, fontSize: 12 },
   corviAssistantScreen: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: 16, paddingBottom: 18 },
   corviAssistantHero: { alignItems: 'center', gap: 10 },
   corviAssistantBubble: { width: '100%', maxWidth: 520, borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },
