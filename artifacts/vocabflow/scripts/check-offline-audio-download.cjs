@@ -25,7 +25,7 @@ const domainForTest = {
 };
 const publicDataAssetUrls = loadTs(
   join(__dirname, "../domain/public-data-asset-url.ts"),
-  {},
+  { "react-native": { Platform: { OS: "android" } } },
   { process: { env: {} } },
 );
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "vocabflow-audio-test-"));

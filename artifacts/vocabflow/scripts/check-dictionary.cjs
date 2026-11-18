@@ -64,7 +64,7 @@ function adapter(filename, readOnly = false) {
   const domain = loadDictionaryDomain();
   const publicDataAssetUrls = loadTs(
     join(__dirname, "../domain/public-data-asset-url.ts"),
-    {},
+    { "react-native": { Platform: { OS: "android" } } },
     { process: { env: {} } },
   );
   const download = loadTs(join(__dirname, "../domain/dictionary-download.ts"), {

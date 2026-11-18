@@ -24,3 +24,4 @@
 - [Từ khóa học trong từ điển](course-dictionary-index.md) — Sinh chỉ mục tag gọn từ dữ liệu khóa; chỉ thêm nghĩa cho mục chưa có trong từ điển nguồn.
 - [Tra cứu CEFR bằng Cambridge](cambridge-cefr-audit.md) — Trang Cambridge bị chặn không xác nhận nhãn; giữ Oxford và để từ chưa xác minh.
 - [Tải gói khóa học offline](offline-course-download.md) — Native dùng khối 4 MiB để giảm lượt mạng; web giữ 1 MiB để hạn chế bộ nhớ tạm.
+- [Tải gói công khai từ R2](cloudflare-r2-downloads.md) — Chỉ bật tải trực tiếp theo nền tảng sau khi xác minh hash; web cần CORS cho Range và header.

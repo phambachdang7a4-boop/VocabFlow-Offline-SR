@@ -407,10 +407,17 @@ async function fetchCourseChunk(
         throw new Error(`máy chủ trả HTTP ${response.status}`);
       }
       const version = response.headers.get("x-course-data-version");
-      const checksum = response.headers.get("x-course-data-sha256");
+      const r2Version = response.headers.get("x-amz-meta-course-data-version");
+      const checksum =
+        response.headers.get("x-course-data-sha256") ??
+        response.headers.get("x-amz-meta-sha256");
       if (
-        version !== String(OFFLINE_COURSE_DATA.version) ||
-        checksum?.toLowerCase() !== OFFLINE_COURSE_DATA.sha256
+        (version !== null &&
+          version !== String(OFFLINE_COURSE_DATA.version)) ||
+        (r2Version !== null &&
+          r2Version !== String(OFFLINE_COURSE_DATA.version)) ||
+        (checksum !== null &&
+          checksum.toLowerCase() !== OFFLINE_COURSE_DATA.sha256)
       ) {
         await response.body?.cancel().catch(() => undefined);
         throw new Error("Máy chủ trả về phiên bản gói khóa học không khớp.");

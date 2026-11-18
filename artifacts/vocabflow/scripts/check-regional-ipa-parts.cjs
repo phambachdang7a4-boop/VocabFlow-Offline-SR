@@ -28,7 +28,7 @@ function createRuntime() {
   let native;
   const publicDataAssetUrls = loadTs(
     join(__dirname, "../domain/public-data-asset-url.ts"),
-    {},
+    { "react-native": { Platform: { OS: "android" } } },
     { process: { env: {} } },
   );
   const runtime = loadTs(

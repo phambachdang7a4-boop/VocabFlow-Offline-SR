@@ -6,17 +6,29 @@ const { loadTs, loadLocalDictionaryAdditions } = require("./test-support.cjs");
 const domainRoot = join(__dirname, "../domain");
 const fallbackUrls = loadTs(
   join(domainRoot, "public-data-asset-url.ts"),
-  {},
+  { "react-native": { Platform: { OS: "android" } } },
   { process: { env: {} } },
 );
 const cloudflareUrls = loadTs(
   join(domainRoot, "public-data-asset-url.ts"),
-  {},
+  { "react-native": { Platform: { OS: "android" } } },
   {
     process: {
       env: {
         EXPO_PUBLIC_CLOUDFLARE_R2_PUBLIC_BASE_URL:
           "https://pub-test.r2.dev/",
+      },
+    },
+  },
+);
+const webUrls = loadTs(
+  join(domainRoot, "public-data-asset-url.ts"),
+  { "react-native": { Platform: { OS: "web" } } },
+  {
+    process: {
+      env: {
+        EXPO_PUBLIC_CLOUDFLARE_R2_PUBLIC_BASE_URL:
+          "https://pub-test.r2.dev",
       },
     },
   },
@@ -33,6 +45,14 @@ assert.equal(
   ),
   "https://pub-test.r2.dev/vocabflow/file%20with%20spaces.db",
   "Resolve public object keys against the configured R2 base URL.",
+);
+assert.equal(
+  webUrls.publicDataAssetUrl(
+    "vocabflow/file.db",
+    "https://api.test/file",
+  ),
+  "https://api.test/file",
+  "Keep the web app on its existing source until R2 CORS is verified.",
 );
 
 const dictionary = loadTs(join(domainRoot, "dictionary.ts"), {
@@ -81,10 +101,12 @@ for (const key of [
 ]) {
   assert.ok(migration.includes(key), `R2 migration must include ${key}.`);
 }
-assert.match(migration, /PutBucketCorsCommand/u);
 assert.match(migration, /Content-Range/u);
 assert.match(migration, /actualSha256 !== asset\.sha256/u);
 assert.match(migration, /App Storage remains unchanged/u);
+assert.match(migration, /AllowedOrigins: \["\*"\]/u);
+assert.match(migration, /"course-data-version": "1"/u);
+assert.match(migration, /X-Amz-Meta-Course-Data-Version/u);
 
 for (const relativePath of [
   "../data/offline-audio.ts",

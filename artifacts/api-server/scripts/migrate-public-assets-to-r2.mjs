@@ -4,9 +4,7 @@ import { pipeline } from "node:stream/promises";
 import { Storage } from "@google-cloud/storage";
 import {
   DeleteObjectCommand,
-  GetBucketCorsCommand,
   HeadObjectCommand,
-  PutBucketCorsCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
@@ -39,6 +37,7 @@ const assets = [
     sha256:
       "8cb5bc7796b11a6dd83a42f02a7e390cce8fa65f256ae593dd7d046f48b18f02",
     contentType: "application/octet-stream",
+    metadata: { "course-data-version": "1" },
   },
 ];
 
@@ -155,7 +154,7 @@ async function copyVerifiedAsset(asset) {
       ContentLength: asset.bytes,
       ContentType: asset.contentType,
       CacheControl: "public, max-age=86400",
-      Metadata: { sha256: asset.sha256 },
+      Metadata: { sha256: asset.sha256, ...asset.metadata },
     },
     queueSize: 2,
     partSize: 16 * 1024 * 1024,
@@ -193,55 +192,32 @@ async function copyVerifiedAsset(asset) {
   );
 }
 
-let corsRules = [];
-try {
-  const currentCors = await r2.send(
-    new GetBucketCorsCommand({ Bucket: bucket }),
-  );
-  corsRules = currentCors.CORSRules ?? [];
-} catch (error) {
-  if (
-    error?.$metadata?.httpStatusCode !== 404 &&
-    error?.name !== "NoSuchCORSConfiguration"
-  ) {
-    throw error;
-  }
-}
-
-const downloadCorsRule = {
-  ID: "vocabflow-public-download",
-  AllowedOrigins: ["*"],
-  AllowedMethods: ["GET", "HEAD"],
-  AllowedHeaders: ["Range", "If-Range"],
-  ExposeHeaders: [
-    "Accept-Ranges",
-    "Content-Range",
-    "Content-Length",
-    "ETag",
-    "X-Audio-Dictionary-SHA256",
-    "X-Audio-Dictionary-Entries",
-    "X-Course-Data-Version",
-    "X-Course-Data-SHA256",
-    "X-UK-IPA-SHA256",
-  ],
-  MaxAgeSeconds: 3600,
-};
-corsRules = [
-  ...corsRules.filter((rule) => rule.ID !== downloadCorsRule.ID),
-  downloadCorsRule,
-];
-await r2.send(
-  new PutBucketCorsCommand({
-    Bucket: bucket,
-    CORSConfiguration: { CORSRules: corsRules },
-  }),
-);
-console.log("Added public-download CORS while preserving other bucket CORS rules.");
-
 for (const asset of assets) {
   await copyVerifiedAsset(asset);
 }
 
 console.log(
   "All pinned public packages were copied to R2 and verified. Replit App Storage remains unchanged.",
+);
+console.log(
+  "For browser downloads, add this CORS rule in the bucket Settings: " +
+    JSON.stringify({
+      AllowedOrigins: ["*"],
+      AllowedMethods: ["GET", "HEAD"],
+      AllowedHeaders: ["Range", "If-Range"],
+      ExposeHeaders: [
+        "Accept-Ranges",
+        "Content-Range",
+        "Content-Length",
+        "ETag",
+        "X-Audio-Dictionary-SHA256",
+        "X-Audio-Dictionary-Entries",
+        "X-Course-Data-Version",
+        "X-Course-Data-SHA256",
+        "X-UK-IPA-SHA256",
+        "X-Amz-Meta-SHA256",
+        "X-Amz-Meta-Course-Data-Version",
+      ],
+      MaxAgeSeconds: 3600,
+    }),
 );

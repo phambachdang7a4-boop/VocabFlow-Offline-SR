@@ -181,7 +181,7 @@ assert.match(sources, /sources-regional-ipa/);
 async function checkOfflineLookupStates() {
   const publicDataAssetUrls = loadTs(
     join(__dirname, "../domain/public-data-asset-url.ts"),
-    {},
+    { "react-native": { Platform: { OS: "android" } } },
     { process: { env: {} } },
   );
   const loadOfflineData = (database) => loadTs(
