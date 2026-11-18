@@ -192,6 +192,7 @@ export default function SettingsScreen() {
               downloading: "Đang tải từ điển",
               verifying: "Đang xác minh tệp",
               importing: "Đang cài từ điển",
+              "indexing-courses": "Đang thêm nội dung khóa học",
               ready: "Đã cài xong",
             }[stage],
           );

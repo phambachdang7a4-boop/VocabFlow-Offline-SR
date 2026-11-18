@@ -142,6 +142,20 @@ export async function applyCourseDictionaryIndex(
     const courseById = new Map(
       COURSE_INDEX.courses.map((course) => [course.id, course]),
     );
+    const senseKey = (
+      definition: string,
+      pos: string | null,
+      subPos: string | null,
+    ) => JSON.stringify([definition, pos, subPos]);
+    const definitionsByKey = new Map<
+      string,
+      { definition: string; pos: string | null; subPos: string | null; id?: number }
+    >();
+    const sensesByTerm = new Map<
+      string,
+      Array<{ definitionKey: string; example: string }>
+    >();
+
     for (const term of missingTerms) {
       const wordIds = wordIdsByTerm.get(normalizedTerm(term.term));
       if (!wordIds?.length) {
@@ -151,50 +165,121 @@ export async function applyCourseDictionaryIndex(
         throw new Error(`Mục "${term.term}" chưa có nghĩa để thêm vào từ điển.`);
       }
 
-      for (const wordId of wordIds) {
-        for (const sense of term.senses) {
-          const pos = normalizePartOfSpeech(sense.pos);
-          const subPos = sense.subPos?.trim() || null;
-          const existingSense = await db.getFirstAsync<{
-            definitionId: number;
-            exactExampleId: number | null;
-          }>(
-            `SELECT d.id AS definitionId,
-               (SELECT wd.id FROM word_definitions wd
-                WHERE wd.word_id = ? AND wd.definition_id = d.id
-                  AND wd.example = ? LIMIT 1) AS exactExampleId
-             FROM definitions d
-             WHERE d.definition = ? AND d.pos IS ? AND d.sub_pos IS ?
-             LIMIT 1`,
-            wordId,
-            sense.example,
-            sense.definition,
+      const senses = term.senses.map((sense) => {
+        const pos = normalizePartOfSpeech(sense.pos);
+        const subPos = sense.subPos?.trim() || null;
+        const definitionKey = senseKey(sense.definition, pos, subPos);
+        if (!definitionsByKey.has(definitionKey)) {
+          definitionsByKey.set(definitionKey, {
+            definition: sense.definition,
             pos,
             subPos,
-          );
-          if (existingSense?.exactExampleId != null) continue;
+          });
+        }
+        return { definitionKey, example: sense.example };
+      });
+      sensesByTerm.set(normalizedTerm(term.term), senses);
+    }
 
-          const definitionId =
-            existingSense?.definitionId ??
-            (
-              await db.runAsync(
-                `INSERT INTO definitions
-                  (definition, pos, sub_pos, definition_lang)
-                 VALUES (?, ?, ?, 'vi')`,
-                sense.definition,
-                pos,
-                subPos,
-              )
-            ).lastInsertRowId;
-          await db.runAsync(
-            `INSERT INTO word_definitions (word_id, definition_id, example)
-             VALUES (?, ?, ?)`,
-            wordId,
-            definitionId,
-            sense.example,
-          );
+    // Look up existing shared definitions in bounded batches rather than making
+    // one SQLite worker round-trip for every course-only term.
+    const uniqueDefinitions = [...definitionsByKey.values()];
+    const definitionBatchSize = 200;
+    for (
+      let offset = 0;
+      offset < uniqueDefinitions.length;
+      offset += definitionBatchSize
+    ) {
+      const chunk = uniqueDefinitions.slice(
+        offset,
+        offset + definitionBatchSize,
+      );
+      const rows = await db.getAllAsync<{
+        id: number;
+        definition: string;
+        pos: string | null;
+        sub_pos: string | null;
+      }>(
+        `WITH incoming(definition, pos, sub_pos) AS (
+           VALUES ${chunk.map(() => "(?, ?, ?)").join(", ")}
+         )
+         SELECT d.id, incoming.definition, incoming.pos, incoming.sub_pos
+         FROM incoming
+         JOIN definitions d
+           ON d.definition = incoming.definition
+          AND d.pos IS incoming.pos
+          AND d.sub_pos IS incoming.sub_pos`,
+        ...chunk.flatMap((sense) => [
+          sense.definition,
+          sense.pos,
+          sense.subPos,
+        ]),
+      );
+      for (const row of rows) {
+        const key = senseKey(row.definition, row.pos, row.sub_pos);
+        const existing = definitionsByKey.get(key);
+        if (existing && existing.id === undefined) existing.id = row.id;
+      }
+    }
+
+    const definitionsToInsert = uniqueDefinitions.filter(
+      (sense) => sense.id === undefined,
+    );
+    for (
+      let offset = 0;
+      offset < definitionsToInsert.length;
+      offset += definitionBatchSize
+    ) {
+      const chunk = definitionsToInsert.slice(
+        offset,
+        offset + definitionBatchSize,
+      );
+      const rows = await db.getAllAsync<{
+        id: number;
+        definition: string;
+        pos: string | null;
+        sub_pos: string | null;
+      }>(
+        `INSERT INTO definitions
+           (definition, pos, sub_pos, definition_lang)
+         VALUES ${chunk.map(() => "(?, ?, ?, 'vi')").join(", ")}
+         RETURNING id, definition, pos, sub_pos`,
+        ...chunk.flatMap((sense) => [
+          sense.definition,
+          sense.pos,
+          sense.subPos,
+        ]),
+      );
+      for (const row of rows) {
+        const key = senseKey(row.definition, row.pos, row.sub_pos);
+        const inserted = definitionsByKey.get(key);
+        if (inserted) inserted.id = row.id;
+      }
+    }
+
+    const links: Array<[number, number, string]> = [];
+    for (const term of missingTerms) {
+      const wordIds = wordIdsByTerm.get(normalizedTerm(term.term))!;
+      const senses = sensesByTerm.get(normalizedTerm(term.term))!;
+      for (const wordId of wordIds) {
+        for (const sense of senses) {
+          const definitionId = definitionsByKey.get(sense.definitionKey)?.id;
+          if (definitionId === undefined) {
+            throw new Error(
+              `Không thể thêm nghĩa khóa học cho "${term.term}" vào từ điển.`,
+            );
+          }
+          links.push([wordId, definitionId, sense.example]);
         }
       }
+    }
+    for (let offset = 0; offset < links.length; offset += 250) {
+      const chunk = links.slice(offset, offset + 250);
+      await db.runAsync(
+        `INSERT INTO word_definitions (word_id, definition_id, example)
+         VALUES ${chunk.map(() => "(?, ?, ?)").join(", ")}`,
+        ...chunk.flat(),
+      );
     }
 
     const tagRows: Array<[number, string, string]> = [];

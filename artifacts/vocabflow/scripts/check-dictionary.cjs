@@ -806,6 +806,7 @@ function adapter(filename, readOnly = false) {
     "downloading",
     "verifying",
     "importing",
+    "indexing-courses",
     "ready",
   ]);
   assert.equal(downloads, expectedDownloadChunks);
@@ -919,6 +920,7 @@ function adapter(filename, readOnly = false) {
     "downloading",
     "verifying",
     "importing",
+    "indexing-courses",
     "ready",
   ]);
   assert.equal(nativeRangeRequests, expectedDownloadChunks);
@@ -990,7 +992,7 @@ function adapter(filename, readOnly = false) {
   );
   assert.deepEqual(
     offlineStages,
-    ["checking", "ready"],
+    ["checking", "indexing-courses", "ready"],
     "Upgrading the cached dictionary stays offline",
   );
   assert.equal(

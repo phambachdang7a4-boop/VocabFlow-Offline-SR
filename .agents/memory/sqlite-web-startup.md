@@ -16,3 +16,9 @@ Khi nhập cơ sở dữ liệu lớn trên web, `expo-sqlite` chuyển `Uint8Ar
 **Why:** Buffer nguồn, bản sao chuẩn hóa, bản structured clone sang Worker và bộ nhớ SQLite WASM cùng tồn tại ở đỉnh nhập; kiểm tra WASM trực tiếp trên desktop không tái hiện áp lực bộ nhớ của trình duyệt điện thoại.
 
 **How to apply:** Với tệp lớn đưa vào `deserializeDatabaseAsync` trên web, xác minh toàn bộ hash trước, tái sử dụng buffer dùng một lần sau xác minh, giảm kích thước từng đoạn tải và kiểm tra trên Chrome Android. Không bỏ xác minh toàn vẹn hoặc thay bằng nguồn tạm.
+
+Khi nhập chỉ mục khóa học lớn, gom tra cứu và ghi nghĩa/liên kết thành các lô SQL có kích thước giới hạn thay vì gửi một lệnh cho mỗi mục qua SQLite Worker.
+
+**Why:** Mỗi câu lệnh Expo SQLite trên web là một lượt nhắn tin bất đồng bộ tới Worker; vài nghìn lượt tuần tự khiến màn nhập đầu tiên trông như bị treo trên điện thoại.
+
+**How to apply:** Dùng truy vấn theo lô với số tham số thấp hơn giới hạn SQLite, giữ cập nhật trong transaction, và cho giao diện biết riêng khi đang áp dụng nhãn/thuật ngữ khóa học.

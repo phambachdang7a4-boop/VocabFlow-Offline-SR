@@ -265,6 +265,7 @@ async function initialize(
         await imported.closeAsync();
       }
       buffer = new Uint8Array(0);
+      onStage?.("indexing-courses");
       await applyCourseDictionaryIndex(db);
       await db.execAsync(
         "CREATE INDEX IF NOT EXISTS idx_vocabflow_words_nocase ON words(word COLLATE NOCASE, id);",
@@ -300,6 +301,7 @@ async function initialize(
       await db.execAsync("PRAGMA query_only = OFF;");
       await applyExampleUpdates(db);
       await applyLocalDictionaryAdditions(db);
+      onStage?.("indexing-courses");
       await applyCourseDictionaryIndex(db);
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
