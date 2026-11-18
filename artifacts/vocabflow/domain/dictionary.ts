@@ -19,7 +19,17 @@ export const DICTIONARY = {
 
 export const DICTIONARY_PAGE_SIZE = 30;
 export const DICTIONARY_ASSET_PATH = '/api/dictionary/asset';
-export type DictionaryStage = 'checking' | 'awaiting-consent' | 'downloading' | 'verifying' | 'importing' | 'indexing-courses' | 'ready';
+export type DictionaryStage =
+  | 'checking'
+  | 'awaiting-consent'
+  | 'downloading'
+  | 'verifying'
+  | 'importing'
+  | 'validating-import'
+  | 'updating-content'
+  | 'saving'
+  | 'indexing-courses'
+  | 'ready';
 export interface DictionaryCourseIndexSense {
   definition: string;
   example: string;

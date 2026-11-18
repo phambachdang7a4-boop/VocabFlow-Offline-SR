@@ -816,6 +816,9 @@ function adapter(filename, readOnly = false) {
     "downloading",
     "verifying",
     "importing",
+    "validating-import",
+    "updating-content",
+    "saving",
     "indexing-courses",
     "ready",
   ]);
@@ -930,6 +933,9 @@ function adapter(filename, readOnly = false) {
     "downloading",
     "verifying",
     "importing",
+    "validating-import",
+    "updating-content",
+    "saving",
     "indexing-courses",
     "ready",
   ]);

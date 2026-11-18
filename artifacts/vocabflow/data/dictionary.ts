@@ -263,26 +263,19 @@ async function initialize(
         dictionaryImportBytes(buffer, { copy: false }),
       );
       try {
+        onStage?.("validating-import");
         const check = await imported.getFirstAsync<{ quick_check: string }>(
           "PRAGMA quick_check",
         );
         if (check?.quick_check !== "ok")
           throw new Error("Kho từ điển bị lỗi. Hãy tải lại.");
-        const sourceWordCount = await imported.getFirstAsync<{
-          count: number;
-        }>("SELECT COUNT(*) AS count FROM words");
-        if (sourceWordCount?.count !== DICTIONARY.wordCount)
-          throw new Error(
-            "Số lượng từ điển gốc không khớp phiên bản đã kiểm tra.",
-          );
+        // The pinned SHA-256 verifies the exact source bytes. Avoid scanning
+        // the full words table here; the final installed count is checked below.
+        onStage?.("updating-content");
         await applyExampleUpdates(imported);
         await applyLocalDictionaryAdditions(imported);
-        const totalWordCount = await imported.getFirstAsync<{ count: number }>(
-          "SELECT COUNT(*) AS count FROM words",
-        );
-        if ((totalWordCount?.count ?? 0) < DICTIONARY.wordCount)
-          throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
         deleteCacheOnFailure = !hasExistingWords;
+        onStage?.("saving");
         await backupDatabaseAsync({
           sourceDatabase: imported,
           destDatabase: db,

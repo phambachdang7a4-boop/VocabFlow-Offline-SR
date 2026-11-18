@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { DICTIONARY, type DictionaryStage } from '@/domain/dictionary';
@@ -15,7 +15,10 @@ const STAGE_TEXT: Record<DictionaryStage, string> = {
   'awaiting-consent': 'Tải kho từ điển về máy?',
   downloading: `Đang tải kho từ điển (${(DICTIONARY.bytes / 1048576).toFixed(1)} MiB). Chỉ tải một lần, cần có mạng.`,
   verifying: 'Đang kiểm tra tính toàn vẹn của tệp…',
-  importing: 'Đã tải xong. Đang nhập từ điển vào SQLite trên máy…',
+  importing: 'Đã tải xong. Đang mở dữ liệu từ điển…',
+  'validating-import': 'Đang kiểm tra dữ liệu SQLite…',
+  'updating-content': 'Đang cập nhật ví dụ và từ khóa học…',
+  saving: 'Đang lưu từ điển vào bộ nhớ trên máy…',
   'indexing-courses': 'Đang thêm từ và nhãn của các khóa học vào từ điển…',
   ready: 'Sẵn sàng tra cứu ngoại tuyến.',
 };
@@ -26,6 +29,8 @@ export function DictionaryGate({ stage, error, retry, approveDownload }: { stage
   const sound = useSoundEffects();
   const mounted = useRef(true);
   const approving = useRef(false);
+  const stageStartedAt = useRef(Date.now());
+  const [stageElapsedSeconds, setStageElapsedSeconds] = useState(0);
   const needsConsent = stage === 'awaiting-consent';
 
   useEffect(() => {
@@ -35,6 +40,17 @@ export function DictionaryGate({ stage, error, retry, approveDownload }: { stage
       sound.stopLoop(DICTIONARY_LOOP_KEY);
     };
   }, [sound.stopLoop]);
+
+  useEffect(() => {
+    stageStartedAt.current = Date.now();
+    setStageElapsedSeconds(0);
+    if (needsConsent || stage === 'ready') return;
+    const timer = setInterval(
+      () => setStageElapsedSeconds(Math.floor((Date.now() - stageStartedAt.current) / 1000)),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, [needsConsent, stage]);
 
   const startDownload = () => {
     if (approving.current) return;
@@ -61,7 +77,12 @@ export function DictionaryGate({ stage, error, retry, approveDownload }: { stage
         <View style={{ padding: 16, gap: 10, borderWidth: 1, backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             {!needsConsent ? <ActivityIndicator color={c.primary} /> : null}
-            <Text style={{ flex: 1, fontFamily: F.s, fontSize: 15, lineHeight: 21, color: c.foreground }}>{STAGE_TEXT[stage]}</Text>
+            <Text style={{ flex: 1, fontFamily: F.s, fontSize: 15, lineHeight: 21, color: c.foreground }}>
+              {STAGE_TEXT[stage]}
+              {!needsConsent && stage !== 'ready' && stageElapsedSeconds > 0
+                ? ` (${stageElapsedSeconds} giây)`
+                : ''}
+            </Text>
           </View>
           <Text style={{ fontFamily: F.r, fontSize: 14, lineHeight: 20, color: c.mutedForeground }}>
             Lần đầu cần có mạng và đủ dung lượng trống để nạp {DICTIONARY.wordCount.toLocaleString('vi-VN')} mục từ. Sau đó tra cứu trên máy, không gửi từ bạn tra đi đâu.
