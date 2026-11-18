@@ -1,4 +1,5 @@
 import courseData from "./idiom-course-data.json";
+import exampleTranslations from "./idiom-course-example-translations.json";
 import { exampleSegments } from "./dictionary";
 
 export interface IdiomCourseQuestion {
@@ -18,6 +19,7 @@ export interface IdiomCourseLesson {
 export interface IdiomCourseEntry {
   definition: string;
   example: string;
+  exampleTranslation?: string;
 }
 
 interface IdiomCourseData {
@@ -29,12 +31,21 @@ interface IdiomCourseData {
 }
 
 const data = courseData as IdiomCourseData;
+const translations = exampleTranslations as Record<string, string>;
 
 export const IDIOM_COURSE_ID = "idioms-v1";
 export const IDIOM_COURSE_TITLE = "Idioms";
 export const IDIOM_COURSE_ENTRIES: Readonly<
   Record<string, IdiomCourseEntry>
-> = data.entries;
+> = Object.fromEntries(
+  Object.entries(data.entries).map(([term, entry]) => [
+    term,
+    {
+      ...entry,
+      exampleTranslation: translations[term] ?? "",
+    },
+  ]),
+);
 export const IDIOM_COURSE_WORD_COUNT = Object.keys(data.entries).length;
 
 function stableHash(value: string): number {

@@ -210,3 +210,17 @@ mtime_ms = 1794981589043
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/aadecac5-1202-4807-841d-65c0200b2b28/bbe294ea-2a05-4d74-9c73-0daa3e0c4894"
 storage_version_token = "1794981731813151"
 content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+[[outputs]]
+id = "X-gvOMxPI0aLenUQjP7-2"
+uri = "file://attached_assets/vocabflow-course-vocabulary-reviewed.xlsx"
+type = "table"
+title = "Workbook từ vựng đã rà soát"
+description = "14.610 mục, 7 cột; đã chỉnh 8 bản dịch ví dụ đã xác nhận và giữ nguyên phân loại khóa học."
+logical_id = "825ce28f-6f32-47da-af92-194fa623043e"
+content_hash = "sha256:e2d078b3d3e0d76ece9a1508e4dfd36a3e5b6c63eb9de956b76e64fc0b69bb89"
+size = 1705188
+mtime_ms = 1794992115010
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/825ce28f-6f32-47da-af92-194fa623043e/aa579bed-c511-4b5b-9fbb-c2e49366f8be"
+storage_version_token = "1794992402381311"
+content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

@@ -37,11 +37,16 @@ const officeAppsDomain = loadTs(
   join(__dirname, "../domain/office-apps-course.ts"),
 );
 const idiomCourseData = require("../domain/idiom-course-data.json");
+const idiomCourseExampleTranslations = require(
+  "../domain/idiom-course-example-translations.json",
+);
 const dictionaryDomain = require("./test-support.cjs").loadDictionaryDomain();
 const idiomCourseDomain = loadTs(
   join(__dirname, "../domain/idiom-course.ts"),
   {
     "./idiom-course-data.json": idiomCourseData,
+    "./idiom-course-example-translations.json":
+      idiomCourseExampleTranslations,
     "./dictionary": dictionaryDomain,
   },
 );
@@ -55,6 +60,11 @@ const phrasalVerbCourseDomain = loadTs(
 );
 const basicVocabularyCourseDomain = loadTs(
   join(__dirname, "../domain/basic-vocabulary-course.ts"),
+  {
+    "./basic-vocabulary-examples.json": require(
+      "../domain/basic-vocabulary-examples.json",
+    ),
+  },
 );
 const combinedLessonCount =
   courseDomain.CONJUNCTION_COURSE_LESSONS.length +

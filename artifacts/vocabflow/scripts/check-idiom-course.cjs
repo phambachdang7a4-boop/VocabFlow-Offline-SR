@@ -3,9 +3,13 @@ const { join } = require("node:path");
 const { loadDictionaryDomain, loadTs } = require("./test-support.cjs");
 
 const data = require("../domain/idiom-course-data.json");
+const exampleTranslations = require(
+  "../domain/idiom-course-example-translations.json",
+);
 const dictionary = loadDictionaryDomain();
 const course = loadTs(join(__dirname, "../domain/idiom-course.ts"), {
   "./idiom-course-data.json": data,
+  "./idiom-course-example-translations.json": exampleTranslations,
   "./dictionary": dictionary,
 });
 
@@ -18,6 +22,19 @@ assert.equal(data.uniqueTerms, 1499,
   "Duplicate entries differing only by capitalization appear once.");
 assert.equal(course.IDIOM_COURSE_TITLE, "Idioms");
 assert.equal(course.IDIOM_COURSE_WORD_COUNT, 1499);
+assert.equal(Object.keys(exampleTranslations).length, 1499);
+assert.ok(
+  Object.keys(data.entries).every(
+    (term) => exampleTranslations[term]?.trim(),
+  ),
+  "Every idiom has a translated example.",
+);
+assert.ok(
+  Object.values(course.IDIOM_COURSE_ENTRIES).every(
+    (entry) => entry.exampleTranslation?.trim(),
+  ),
+  "Translations reach course feedback entries.",
+);
 assert.ok(course.IDIOM_COURSE_LESSONS.length > 50);
 assert.ok(course.IDIOM_COURSE_LESSONS.every((lesson) =>
   lesson.questions.length > 0 && lesson.questions.length <= 20,

@@ -1,3 +1,5 @@
+import exampleData from "./basic-vocabulary-examples.json";
+
 export interface BasicVocabularyCourseQuestion {
   term: string;
   prompt: string;
@@ -16,6 +18,7 @@ export interface BasicVocabularyCourseLesson {
 export interface BasicVocabularyCourseEntry {
   definition: string;
   example: string;
+  exampleTranslation: string;
 }
 
 type Word = readonly [term: string, meaning: string];
@@ -531,8 +534,16 @@ export const BASIC_VOCABULARY_COURSE_WORD_COUNT = allWords.length;
 export const BASIC_VOCABULARY_COURSE_TOPIC_COUNT = TOPICS.length;
 
 const entries: Record<string, BasicVocabularyCourseEntry> = {};
+const examples = exampleData as Record<
+  string,
+  { example: string; exampleTranslation: string }
+>;
 for (const [term, definition] of allWords) {
-  entries[term] = { definition, example: "" };
+  const example = examples[term];
+  if (!example?.example.trim() || !example.exampleTranslation.trim()) {
+    throw new Error(`Thiếu ví dụ song ngữ cho từ "${term}".`);
+  }
+  entries[term] = { definition, ...example };
 }
 
 export const BASIC_VOCABULARY_COURSE_ENTRIES: Readonly<
