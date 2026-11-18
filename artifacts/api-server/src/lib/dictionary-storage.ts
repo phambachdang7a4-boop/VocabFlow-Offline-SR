@@ -22,6 +22,8 @@ export const AUDIO_DICTIONARY_OBJECT_KEY =
   "vocabflow/audio-dictionary-b3821cbbe15ee0e4.db";
 export const UK_IPA_OBJECT_KEY =
   "vocabflow/uk-ipa-supplement-b3ae7040c0a2c7a4.txt";
+export const COURSE_DATA_OBJECT_KEY =
+  "vocabflow/course-data-v1-8cb5bc7796b11a6d.json";
 
 export async function findDictionaryAsset() {
   const paths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS ?? "")
@@ -72,4 +74,21 @@ export async function findUkIpaAsset() {
     if (exists) return file;
   }
   throw new Error("UK IPA supplement is not in App Storage");
+}
+
+export async function findCourseDataAsset() {
+  const paths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS ?? "")
+    .split(",")
+    .map((path) => path.trim())
+    .filter(Boolean);
+  if (!paths.length) throw new Error("Public App Storage is not configured");
+  for (const path of paths) {
+    const [bucket, ...prefix] = path.replace(/^\/+/, "").split("/");
+    const file = objectStorageClient
+      .bucket(bucket)
+      .file([...prefix, COURSE_DATA_OBJECT_KEY].join("/"));
+    const [exists] = await file.exists();
+    if (exists) return file;
+  }
+  throw new Error("Pinned offline course package is not in App Storage");
 }

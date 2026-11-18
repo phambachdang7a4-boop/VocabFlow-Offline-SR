@@ -30,6 +30,7 @@ export interface DictionaryCourseIndexTerm {
   term: string;
   courseIds: string[];
   senses?: DictionaryCourseIndexSense[];
+  lessonIdsByCourse?: Record<string, string[]>;
 }
 export interface DictionaryCourseIndex {
   sourceSha256: string;
@@ -171,14 +172,18 @@ export function exampleSegments(example: string, term: string): { text: string; 
   return segments.length ? segments : [{ text: example, underline: false }];
 }
 
-export function dictionaryDraft(entry: Pick<DictionaryEntry, 'id' | 'term' | 'pronunciations'>, sense: DictionarySense): WordInput {
+export function dictionaryDraft(
+  entry: Pick<DictionaryEntry, 'id' | 'term' | 'pronunciations'> &
+    Partial<Pick<DictionaryEntry, 'courseTags'>>,
+  sense: DictionarySense,
+): WordInput {
   const kind = [
     dictionaryPartOfSpeechLabel(sense.pos),
     sense.subPos?.trim(),
   ].filter(Boolean).join(' · ');
   const isLocalAddition = localAdditionTerms.has(
     entry.term.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en'),
-  );
+  ) || Boolean(entry.courseTags?.length);
   return {
     term: entry.term,
     dictionaryEntryId: entry.id,

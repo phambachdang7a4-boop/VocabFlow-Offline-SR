@@ -12,6 +12,7 @@ import {
   DICTIONARY,
   formatDictionaryPronunciations,
   mergeDictionaryPronunciations,
+  type DictionaryCourseIndex,
   type DictionaryStage,
   type DictionaryPronunciation,
 } from "../domain/dictionary";
@@ -27,8 +28,10 @@ import {
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
 import {
   applyCourseDictionaryIndex,
-  COURSE_DICTIONARY_INDEX_REVISION,
+  courseDictionaryIndexRevision,
 } from "./dictionary-course-index";
+import { getOfflineCourseBundle } from "./offline-course-data";
+import { TOEIC_TOPIC_COURSE_ID } from "../domain/course-ids";
 import {
   getRegionalIpaForTerm,
   getRegionalIpaForTerms,
@@ -49,8 +52,28 @@ import { openDatabaseSafely, storageFailureMessage } from "./sqlite-connection";
 
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
 const DICTIONARY_DOWNLOAD_CHUNK_BYTES = 4 * 1024 * 1024;
-const DICTIONARY_CONTENT_REVISION =
-  `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}+${COURSE_DICTIONARY_INDEX_REVISION}`;
+function dictionaryContentRevision(
+  courseIndex: DictionaryCourseIndex | null,
+): string {
+  return `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}+${courseDictionaryIndexRevision(courseIndex)}`;
+}
+
+async function applyInstalledCourseIndex(
+  db: SQLiteDatabase,
+  courseBundle: Awaited<ReturnType<typeof getOfflineCourseBundle>>,
+  onStage?: (stage: DictionaryStage) => void,
+): Promise<void> {
+  if (!courseBundle) return;
+  const toeicEntries = courseBundle.courses.find(
+    (course) => course.id === TOEIC_TOPIC_COURSE_ID,
+  )?.entriesByTerm;
+  onStage?.("indexing-courses");
+  await applyCourseDictionaryIndex(
+    db,
+    courseBundle.dictionaryIndex,
+    toeicEntries,
+  );
+}
 let connection: Promise<SQLiteDatabase> | undefined;
 
 function sha256Hex(bytes: Uint8Array): string {
@@ -144,6 +167,9 @@ async function initialize(
 ): Promise<SQLiteDatabase> {
   onStage?.("checking");
   const db = await openDatabaseSafely(() => openDatabaseAsync(filename));
+  const courseBundle = await getOfflineCourseBundle().catch(() => null);
+  const courseIndex = courseBundle?.dictionaryIndex ?? null;
+  const contentRevision = dictionaryContentRevision(courseIndex);
   let deleteCacheOnFailure = false;
   try {
     const table = await db.getFirstAsync<{ name: string }>(
@@ -266,7 +292,7 @@ async function initialize(
       }
       buffer = new Uint8Array(0);
       onStage?.("indexing-courses");
-      await applyCourseDictionaryIndex(db);
+        await applyInstalledCourseIndex(db, courseBundle, onStage);
       await db.execAsync(
         "CREATE INDEX IF NOT EXISTS idx_vocabflow_words_nocase ON words(word COLLATE NOCASE, id);",
       );
@@ -284,12 +310,12 @@ async function initialize(
         await db.runAsync(
           "INSERT INTO vocabflow_dictionary_meta (source_hash, example_revision, dictionary_word_count) VALUES (?, ?, ?)",
           DICTIONARY.sha256,
-          DICTIONARY_CONTENT_REVISION,
+          contentRevision,
           count.count,
         );
       });
       deleteCacheOnFailure = false;
-    } else if (cached.example_revision !== DICTIONARY_CONTENT_REVISION) {
+    } else if (cached.example_revision !== contentRevision) {
       // Upgrade an already-downloaded offline copy in place: no second 44 MB download.
       const check = await db.getFirstAsync<{ quick_check: string }>(
         "PRAGMA quick_check",
@@ -301,8 +327,7 @@ async function initialize(
       await db.execAsync("PRAGMA query_only = OFF;");
       await applyExampleUpdates(db);
       await applyLocalDictionaryAdditions(db);
-      onStage?.("indexing-courses");
-      await applyCourseDictionaryIndex(db);
+      await applyInstalledCourseIndex(db, courseBundle, onStage);
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
@@ -312,7 +337,7 @@ async function initialize(
       }
       await db.runAsync(
         "UPDATE vocabflow_dictionary_meta SET example_revision = ?, dictionary_word_count = ?",
-        DICTIONARY_CONTENT_REVISION,
+        contentRevision,
         count.count,
       );
     } else if (cached?.dictionary_word_count) {

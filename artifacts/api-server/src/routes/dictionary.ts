@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { DownloadDictionaryAsset503Response } from "@workspace/api-zod";
 import {
   findAudioDictionaryAsset,
+  findCourseDataAsset,
   findDictionaryAsset,
   findUkIpaAsset,
 } from "../lib/dictionary-storage";
@@ -165,6 +166,83 @@ router.get("/dictionary/ipa-uk", async (req, res): Promise<void> => {
         error: "Gói IPA Anh-Anh bổ sung tạm thời chưa tải được. Hãy thử lại.",
       }),
     );
+  }
+});
+
+router.get("/courses/asset", async (req, res): Promise<void> => {
+  try {
+    const file = await findCourseDataAsset();
+    const [metadata] = await file.getMetadata();
+    const totalBytes = Number(metadata.size);
+    const rangeHeader = req.header("range");
+    let start = 0;
+    let end = totalBytes - 1;
+    let status = 200;
+
+    if (rangeHeader) {
+      const match = /^bytes=(\d+)-(\d*)$/.exec(rangeHeader.trim());
+      if (!match) {
+        res.set("Content-Range", `bytes */${totalBytes}`).sendStatus(416);
+        return;
+      }
+      start = Number(match[1]);
+      end = match[2] ? Number(match[2]) : totalBytes - 1;
+      if (
+        !Number.isSafeInteger(start) ||
+        !Number.isSafeInteger(end) ||
+        start < 0 ||
+        start >= totalBytes ||
+        end < start
+      ) {
+        res.set("Content-Range", `bytes */${totalBytes}`).sendStatus(416);
+        return;
+      }
+      end = Math.min(end, totalBytes - 1);
+      status = 206;
+    }
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/octet-stream",
+      "Content-Length": String(end - start + 1),
+      "Cache-Control": "public, max-age=86400",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Disposition":
+        'attachment; filename="vocabflow-courses-v1.json"',
+      "Accept-Ranges": "bytes",
+      "Access-Control-Expose-Headers":
+        "Accept-Ranges, Content-Range, Content-Length, X-Course-Data-Version, X-Course-Data-SHA256",
+      "X-Course-Data-Version": "1",
+      "X-Course-Data-SHA256":
+        "8cb5bc7796b11a6dd83a42f02a7e390cce8fa65f256ae593dd7d046f48b18f02",
+    };
+    if (status === 206)
+      headers["Content-Range"] = `bytes ${start}-${end}/${totalBytes}`;
+    res.status(status).set(headers);
+
+    const stream = file.createReadStream(
+      status === 206 ? { start, end } : undefined,
+    );
+    res.on("close", () => {
+      if (!res.writableEnded) stream.destroy();
+    });
+    stream.on("error", (error) => {
+      req.log.error({ err: error }, "Offline course package stream failed");
+      if (res.headersSent) res.destroy(error);
+      else {
+        res.removeHeader("Content-Length");
+        res.removeHeader("Content-Disposition");
+        res.removeHeader("Cache-Control");
+        res.status(503).json({
+          error: "Gói dữ liệu khóa học tạm thời chưa tải được. Hãy thử lại.",
+        });
+      }
+    });
+    stream.pipe(res);
+  } catch (error) {
+    req.log.error({ err: error }, "Cannot serve the offline course package");
+    res.status(503).json({
+      error: "Gói dữ liệu khóa học tạm thời chưa tải được. Hãy thử lại.",
+    });
   }
 });
 

@@ -207,6 +207,84 @@ export function useDownloadUkIpaSupplement<TData = Awaited<ReturnType<typeof dow
 
 
 
+export const getDownloadOfflineCoursePackageUrl = () => {
+
+
+
+
+  return `/api/courses/asset`
+}
+
+/**
+ * Supports byte ranges so interrupted downloads can resume safely.
+ * @summary Download the versioned public offline course package
+ */
+export const downloadOfflineCoursePackage = async ( options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadOfflineCoursePackageUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadOfflineCoursePackageQueryKey = () => {
+    return [
+    `/api/courses/asset`
+    ] as const;
+    }
+
+
+export const getDownloadOfflineCoursePackageQueryOptions = <TData = Awaited<ReturnType<typeof downloadOfflineCoursePackage>>, TError = ErrorType<void | DictionaryAssetError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadOfflineCoursePackage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadOfflineCoursePackageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadOfflineCoursePackage>>> = ({ signal }) => downloadOfflineCoursePackage({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadOfflineCoursePackage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadOfflineCoursePackageQueryResult = NonNullable<Awaited<ReturnType<typeof downloadOfflineCoursePackage>>>
+export type DownloadOfflineCoursePackageQueryError = ErrorType<void | DictionaryAssetError>
+
+
+/**
+ * @summary Download the versioned public offline course package
+ */
+
+export function useDownloadOfflineCoursePackage<TData = Awaited<ReturnType<typeof downloadOfflineCoursePackage>>, TError = ErrorType<void | DictionaryAssetError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadOfflineCoursePackage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadOfflineCoursePackageQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getMergeUserSyncDataUrl = () => {
 
 

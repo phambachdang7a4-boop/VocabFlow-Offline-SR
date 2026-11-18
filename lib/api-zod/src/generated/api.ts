@@ -29,6 +29,25 @@ export const DownloadUkIpaSupplement503Response = zod.object({
 
 
 /**
+ * Supports byte ranges so interrupted downloads can resume safely.
+ * @summary Download the versioned public offline course package
+ */
+export const DownloadOfflineCoursePackageHeader = zod.object({
+  "Range": zod.string().optional()
+})
+
+export const DownloadOfflineCoursePackage200Response = zod.unknown()
+
+export const DownloadOfflineCoursePackage206Response = zod.unknown()
+
+export const DownloadOfflineCoursePackage416Response = zod.unknown()
+
+export const DownloadOfflineCoursePackage503Response = zod.object({
+  "error": zod.string()
+})
+
+
+/**
  * @summary Merge the signed-in user's offline learning data
  */
 export const mergeUserSyncDataBodyRevisionMin = 0;

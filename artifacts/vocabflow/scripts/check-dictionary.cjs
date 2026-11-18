@@ -79,11 +79,12 @@ function adapter(filename, readOnly = false) {
     { "../domain/dictionary-local-additions": localAdditionData },
   );
   const courseIndexData = require("../domain/course-dictionary-index.json");
+  const courseIds = loadTs(join(__dirname, "../domain/course-ids.ts"));
   const courseIndexModule = loadTs(
     join(__dirname, "../data/dictionary-course-index.ts"),
     {
       "../domain/dictionary": domain,
-      "../domain/course-dictionary-index.json": courseIndexData,
+      "../domain/course-ids": courseIds,
     },
   );
   const spelling = loadTs(

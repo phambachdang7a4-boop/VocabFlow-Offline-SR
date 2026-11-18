@@ -5,7 +5,7 @@ import {
 } from '../domain/dictionary';
 import { canSuggest, rankSuggestions, spellingVariants, suggestionTerm } from '../domain/dictionary-suggestions';
 import { explicitInflectionLemmas } from '../domain/dictionary-inflections';
-import { COURSE_DICTIONARY_COURSES } from './dictionary-course-index';
+import { COURSE_DICTIONARY_COURSES } from '../domain/course-ids';
 
 const courseTagTableExists = new WeakMap<object, Promise<boolean>>();
 
@@ -294,5 +294,9 @@ export async function draftInDictionary(db: SQLiteDatabase, id: number, senseId:
   const pronunciations = await db.getAllAsync<DictionaryPronunciation>(
     'SELECT ipa, region FROM pronunciations WHERE word_id = ? ORDER BY id LIMIT 1', id,
   );
-  return dictionaryDraft({ ...word, pronunciations }, sense);
+  const courseTags = (await courseTagsForWordIds(db, [id])).get(id);
+  return dictionaryDraft(
+    { ...word, pronunciations, ...(courseTags?.length ? { courseTags } : {}) },
+    sense,
+  );
 }

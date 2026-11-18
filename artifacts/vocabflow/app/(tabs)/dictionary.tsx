@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getRandomUnlearnedDictionaryWord, searchDictionary, suggestDictionary } from '@/data/dictionary';
-import { COURSE_DICTIONARY_COURSES } from '@/data/dictionary-course-index';
+import { COURSE_DICTIONARY_COURSES } from '@/domain/course-ids';
 import {
   DICTIONARY_PARTS,
   type DictionaryMatch,

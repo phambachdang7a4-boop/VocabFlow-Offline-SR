@@ -68,6 +68,12 @@ import {
 import { DICTIONARY } from "@/domain/dictionary";
 import { OFFLINE_AUDIO_DICTIONARY } from "@/domain/offline-audio";
 import { REGIONAL_IPA_DICTIONARY } from "@/domain/regional-pronunciations";
+import {
+  deleteOfflineCourseData,
+  downloadOfflineCourseData,
+  getOfflineCourseDataStatus,
+} from "@/data/offline-course-data";
+import { OFFLINE_COURSE_DATA } from "@/domain/course-data-package";
 
 export default function SettingsScreen() {
   const c = useColors();
@@ -96,6 +102,10 @@ export default function SettingsScreen() {
   const [audioStatus, setAudioStatus] = React.useState<
     "checking" | "missing" | "installed" | "damaged" | "unavailable"
   >("checking");
+  const [courseDataStatus, setCourseDataStatus] = React.useState<
+    "checking" | "missing" | "installed" | "damaged" | "unavailable"
+  >("checking");
+  const [courseDataBytes, setCourseDataBytes] = React.useState(0);
   const [regionalIpaStatus, setRegionalIpaStatus] = React.useState<
     "checking" | "missing" | "installed" | "damaged"
   >("checking");
@@ -115,6 +125,8 @@ export default function SettingsScreen() {
     | "dictionary-delete"
     | "audio-download"
     | "audio-delete"
+    | "course-data-download"
+    | "course-data-delete"
     | "regional-ipa-us-download"
     | "regional-ipa-uk-download"
     | "regional-ipa-delete"
@@ -140,18 +152,27 @@ export default function SettingsScreen() {
     : null;
   const refreshOfflineStatus = React.useCallback(async () => {
     try {
-      const [dictionary, audio, regionalIpa, regionalIpaPartsStatus] =
+      const [
+        dictionary,
+        audio,
+        regionalIpa,
+        regionalIpaPartsStatus,
+        courseData,
+      ] =
         await Promise.all([
           getOfflineDictionaryStatus(),
           getOfflineAudioStatus(),
           getOfflineRegionalIpaStatus(),
           getOfflineRegionalIpaPartsStatus(),
+          getOfflineCourseDataStatus(),
         ]);
       setDictionaryStatus(dictionary.state);
       setAudioStatus(audio.state);
       setRegionalIpaStatus(regionalIpa.state);
       setRegionalIpaEntryCount(regionalIpa.entryCount);
       setRegionalIpaParts(regionalIpaPartsStatus);
+      setCourseDataStatus(courseData.state);
+      setCourseDataBytes(courseData.bytes);
     } catch {
       setDictionaryStatus("unavailable");
       setAudioStatus("damaged");
@@ -161,6 +182,8 @@ export default function SettingsScreen() {
         uk: "missing",
         ukSupplement: "missing",
       });
+      setCourseDataStatus("damaged");
+      setCourseDataBytes(0);
     }
   }, []);
   React.useEffect(() => {
@@ -240,6 +263,40 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleDownloadCourseData = async () => {
+    if (offlineAction || syncBusy) return;
+    setOfflineError(null);
+    setOfflineAction("course-data-download");
+    setOfflineStage("Đang tải gói khóa học");
+    setOfflineProgress({
+      bytesWritten: 0,
+      totalBytes: OFFLINE_COURSE_DATA.bytes,
+    });
+    try {
+      await downloadOfflineCourseData((bytesWritten, totalBytes) =>
+        setOfflineProgress({ bytesWritten, totalBytes }),
+      );
+      setOfflineStage("Đã cài xong gói khóa học");
+      if (dictionaryStatus === "installed") {
+        setOfflineStage("Đang cập nhật nhãn khóa học trong từ điển");
+        await openDictionary((stage) => {
+          if (stage === "indexing-courses") {
+            setOfflineStage("Đang cập nhật nhãn khóa học trong từ điển");
+          }
+        }, { allowDownload: false });
+      }
+    } catch (cause) {
+      setOfflineError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể cài gói khóa học offline.",
+      );
+    } finally {
+      setOfflineAction(null);
+      await refreshOfflineStatus();
+    }
+  };
+
   const handleDownloadRegionalIpaParts = async (
     rowId: "us" | "uk",
     sourceIds: readonly RegionalIpaSourceId[],
@@ -304,7 +361,7 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteOfflineResource = async (
-    resource: "dictionary" | "audio" | "regional-ipa",
+    resource: "dictionary" | "audio" | "regional-ipa" | "course-data",
   ) => {
     if (offlineAction || syncBusy) return;
     setOfflineError(null);
@@ -313,19 +370,24 @@ export default function SettingsScreen() {
         ? "dictionary-delete"
         : resource === "audio"
           ? "audio-delete"
-          : "regional-ipa-delete",
+          : resource === "regional-ipa"
+            ? "regional-ipa-delete"
+            : "course-data-delete",
     );
     setOfflineStage(
       resource === "dictionary"
         ? "Đang xóa từ điển"
         : resource === "audio"
           ? "Đang xóa audio"
-          : "Đang xóa dữ liệu IPA",
+          : resource === "regional-ipa"
+            ? "Đang xóa dữ liệu IPA"
+            : "Đang xóa gói khóa học · tiến độ vẫn được giữ",
     );
     try {
       if (resource === "dictionary") await deleteOfflineDictionary();
       else if (resource === "audio") await deleteOfflineAudio();
-      else await deleteOfflineRegionalIpa();
+      else if (resource === "regional-ipa") await deleteOfflineRegionalIpa();
+      else await deleteOfflineCourseData();
     } catch (cause) {
       setOfflineError(
         cause instanceof Error ? cause.message : "Không thể xóa gói offline.",
@@ -357,6 +419,7 @@ export default function SettingsScreen() {
         await deleteOfflineAudio();
         await deleteOfflineRegionalIpa();
         await deleteOfflineDictionary();
+        await deleteOfflineCourseData();
       };
       if (resetDialog === "cloud") {
         await sync.resetAccountData(clearOfflineResources);
@@ -369,7 +432,7 @@ export default function SettingsScreen() {
       setResetNotice(
         resetDialog === "cloud"
           ? "Đã xóa dữ liệu học trên cloud và thiết bị này."
-          : "Đã xóa dữ liệu học và tài nguyên offline trên thiết bị này. Dữ liệu cloud không bị xóa.",
+          : "Đã xóa dữ liệu học và tài nguyên offline, gồm gói khóa học, trên thiết bị này. Dữ liệu cloud không bị xóa.",
       );
     } catch (cause) {
       setResetError(
@@ -1209,8 +1272,8 @@ Nội dung tệp:
           }
           message={
             resetDialog === "cloud"
-              ? "Sẽ xóa vĩnh viễn sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, IPA và audio offline cũng bị xóa khỏi thiết bị này. Cần Internet. Nếu máy chủ không xác nhận, dữ liệu trên thiết bị và tài nguyên offline vẫn được giữ nguyên. Không thể hoàn tác."
-              : "Sẽ xóa sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và tài nguyên offline chỉ trên thiết bị này. Dữ liệu cloud không bị xóa và có thể đồng bộ lại sau đó. Không thể hoàn tác."
+              ? "Sẽ xóa vĩnh viễn sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, khóa học, IPA và audio offline cũng bị xóa khỏi thiết bị này. Cần Internet. Nếu máy chủ không xác nhận, dữ liệu trên thiết bị và tài nguyên offline vẫn được giữ nguyên. Không thể hoàn tác."
+              : "Sẽ xóa sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và tài nguyên offline (gồm gói khóa học) chỉ trên thiết bị này. Dữ liệu cloud không bị xóa và có thể đồng bộ lại sau đó. Không thể hoàn tác."
           }
           confirmLabel={
             resetDialog === "cloud"
@@ -1450,6 +1513,84 @@ Nội dung tệp:
                 dictionaryStatus === "missing" ||
                 dictionaryStatus === "unavailable" ||
                 dictionaryStatus === "checking"
+              }
+              style={{ flex: 1 }}
+            />
+          </View>
+          <View style={[styles.offlineDivider, { borderColor: c.border }]} />
+          <View style={styles.offlineResource}>
+            <View
+              style={[styles.offlineIcon, { backgroundColor: c.secondary }]}
+            >
+              <Feather name="layers" size={19} color={c.primary} />
+            </View>
+            <View style={styles.offlineResourceText}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Khóa học offline
+              </Text>
+              <Text
+                testID="offline-course-data-status"
+                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
+              >
+                {courseDataStatus === "installed"
+                  ? `Đã tải · ${sizeLabel(courseDataBytes)} · ${OFFLINE_COURSE_DATA.courseCount} khóa học`
+                  : courseDataStatus === "damaged"
+                    ? "Gói bị lỗi hoặc thiếu · cần tải lại"
+                    : courseDataStatus === "unavailable"
+                      ? "Không thể lưu khóa học offline trên nền tảng này"
+                      : courseDataStatus === "checking"
+                        ? "Đang kiểm tra…"
+                        : courseDataBytes > 0
+                          ? `Đã tải một phần · ${sizeLabel(courseDataBytes)} / ${sizeLabel(OFFLINE_COURSE_DATA.bytes)}`
+                          : `Chưa tải · ${sizeLabel(OFFLINE_COURSE_DATA.bytes)} · ${OFFLINE_COURSE_DATA.courseCount} khóa học`}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
+            Tải một lần để học ngoại tuyến. Xóa gói này không xóa tiến độ bài
+            học, từ đã lưu hay lịch ôn.
+          </Text>
+          <View style={styles.offlineActions}>
+            <Button
+              testID="offline-course-data-download"
+              label={
+                courseDataStatus === "installed"
+                  ? "Đã cài"
+                  : courseDataStatus === "damaged"
+                    ? "Tải lại"
+                    : courseDataBytes > 0
+                      ? "Tiếp tục tải"
+                      : "Tải gói"
+              }
+              icon={courseDataStatus === "damaged" ? "refresh-cw" : "download"}
+              onPress={() => {
+                void handleDownloadCourseData();
+              }}
+              loading={offlineAction === "course-data-download"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                courseDataStatus === "installed" ||
+                courseDataStatus === "checking" ||
+                courseDataStatus === "unavailable"
+              }
+              style={{ flex: 1 }}
+            />
+            <Button
+              testID="offline-course-data-delete"
+              label="Xóa gói"
+              icon="trash-2"
+              variant="ghost"
+              onPress={() => {
+                void handleDeleteOfflineResource("course-data");
+              }}
+              loading={offlineAction === "course-data-delete"}
+              disabled={
+                Boolean(offlineAction) ||
+                syncBusy ||
+                (courseDataStatus === "missing" && courseDataBytes === 0) ||
+                courseDataStatus === "checking" ||
+                courseDataStatus === "unavailable"
               }
               style={{ flex: 1 }}
             />

@@ -18,79 +18,25 @@ import { useBottomPad } from "@/components/ScreenHeader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, F, MaterialSheen } from "@/components/ui";
 import {
-  CONJUNCTION_COURSE_ENTRY_BY_TERM,
-  CONJUNCTION_COURSE_ID,
-  CONJUNCTION_COURSE_LESSONS,
-  CONJUNCTION_COURSE_TITLE,
-} from "@/domain/conjunction-course";
-import {
-  LINKING_ADVERB_COURSE_ENTRIES,
-  LINKING_ADVERB_COURSE_ID,
-  LINKING_ADVERB_COURSE_LESSONS,
-} from "@/domain/linking-adverb-course";
-import {
-  SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
-  SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS,
-  SENTENCE_STRUCTURE_PATTERN_ENTRIES,
-  SENTENCE_STRUCTURE_PATTERN_LESSONS,
-} from "@/domain/sentence-structure-patterns";
-import {
-  IELTS_ADVANCED_COURSE_ENTRIES,
-  IELTS_ADVANCED_COURSE_ID,
-  IELTS_ADVANCED_COURSE_LESSONS,
-  IELTS_ADVANCED_COURSE_TITLE,
-  IELTS_ADVANCED_COURSE_WORD_COUNT,
-  IELTS_ADVANCED_SOURCE_LESSON_IDS_BY_LESSON,
-  IELTS_ADVANCED_TOPIC_WORD_LIST,
-  IELTS_TOPIC_COURSE_ENTRIES,
-  IELTS_TOPIC_COURSE_ID,
-  IELTS_TOPIC_COURSE_LESSONS,
-  IELTS_TOPIC_COURSE_SPELLING_CONVENTION,
-  IELTS_TOPIC_COURSE_TITLE,
-  IELTS_TOPIC_COURSE_WORD_COUNT,
-  IELTS_TOPIC_WORD_LIST,
-  mapIeltsStandardAttempt,
-} from "@/domain/ielts-topic-course";
-import {
-  TOEIC_TOPIC_COURSE_ENTRIES,
-  TOEIC_TOPIC_COURSE_ID,
-  TOEIC_TOPIC_COURSE_LESSONS,
-  TOEIC_TOPIC_COURSE_SPELLING_CONVENTION,
-  TOEIC_TOPIC_COURSE_TITLE,
-  TOEIC_TOPIC_COURSE_WORD_COUNT,
-  TOEIC_TOPIC_WORD_LIST,
-} from "@/domain/toeic-topic-course";
-import {
-  OFFICE_APPS_COURSE_ENTRIES,
-  OFFICE_APPS_COURSE_ID,
-  OFFICE_APPS_COURSE_LESSONS,
-  OFFICE_APPS_COURSE_TITLE,
-  OFFICE_APPS_COURSE_TOPIC_COUNT,
-  OFFICE_APPS_COURSE_WORD_COUNT,
-} from "@/domain/office-apps-course";
-import {
-  IDIOM_COURSE_ENTRIES,
-  IDIOM_COURSE_ID,
-  IDIOM_COURSE_LESSONS,
-  IDIOM_COURSE_TITLE,
-  IDIOM_COURSE_WORD_COUNT,
-} from "@/domain/idiom-course";
-import {
-  PHRASAL_VERB_COURSE_ENTRIES,
-  PHRASAL_VERB_COURSE_ID,
-  PHRASAL_VERB_COURSE_LESSONS,
-  PHRASAL_VERB_COURSE_TOPIC_COUNT,
-  PHRASAL_VERB_COURSE_TITLE,
-  PHRASAL_VERB_COURSE_WORD_COUNT,
-} from "@/domain/phrasal-verb-course";
-import {
-  BASIC_VOCABULARY_COURSE_ENTRIES,
   BASIC_VOCABULARY_COURSE_ID,
-  BASIC_VOCABULARY_COURSE_LESSONS,
-  BASIC_VOCABULARY_COURSE_TITLE,
-  BASIC_VOCABULARY_COURSE_TOPIC_COUNT,
-  BASIC_VOCABULARY_COURSE_WORD_COUNT,
-} from "@/domain/basic-vocabulary-course";
+  CONJUNCTION_COURSE_ID,
+  IDIOM_COURSE_ID,
+  IELTS_ADVANCED_COURSE_ID,
+  IELTS_TOPIC_COURSE_ID,
+  LINKING_ADVERB_COURSE_ID,
+  OFFICE_APPS_COURSE_ID,
+  PHRASAL_VERB_COURSE_ID,
+  SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
+  TOEIC_TOPIC_COURSE_ID,
+} from "@/domain/course-ids";
+import {
+  getOfflineCourseBundle,
+  type OfflineCourseBundle,
+  type OfflineCourseEntry,
+  type OfflineCourseLesson,
+  type OfflineCourseQuestion,
+} from "@/data/offline-course-data";
+import { mapIeltsStandardAttempt } from "@/domain/course-attempt-migration";
 import {
   getCourseLessonAttempts,
   getCourseLessonCompletions,
@@ -118,12 +64,7 @@ import {
 import { findCourseLessonsForTerm } from "@/domain/course-lesson-links";
 import { useColors } from "@/hooks/useColors";
 
-type CourseQuestion = {
-  term: string;
-  dialoguePrompt?: string;
-  prompt: string;
-  choices: readonly string[];
-};
+type CourseQuestion = OfflineCourseQuestion;
 
 export function shuffleLessonChoices(
   questions: readonly Pick<CourseQuestion, "term" | "choices">[],
@@ -159,25 +100,8 @@ export function shuffleLessonChoices(
   });
 }
 
-type CourseLesson = {
-  id: string;
-  title: string;
-  focus: string;
-  topicId?: string;
-  topicTitle?: string;
-  chapterId?: string;
-  chapterTitle?: string;
-  chapterNumber?: number;
-  questions: readonly CourseQuestion[];
-};
-
-type CourseAnswer = {
-  definition: string;
-  example: string;
-  exampleTranslation?: string;
-  spellingNote?: string;
-  partOfSpeech?: string;
-};
+type CourseLesson = OfflineCourseLesson;
+type CourseAnswer = OfflineCourseEntry;
 
 function toCourseWordSaveInput(candidate: CourseWordCandidate) {
   return {
@@ -216,126 +140,62 @@ function firstSearchParam(value?: string | string[]) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-const COURSE_CATALOG: readonly CourseCatalogItem[] = [
+const COURSE_PRESENTATION: readonly Pick<
+  CourseCatalogItem,
+  "id" | "icon" | "catalogArtwork" | "testIdPrefix" | "progressPrefixes"
+>[] = [
   {
     id: BASIC_VOCABULARY_COURSE_ID,
-    title: BASIC_VOCABULARY_COURSE_TITLE,
-    description:
-      `Học ${BASIC_VOCABULARY_COURSE_WORD_COUNT} từ A1–A2 qua ${BASIC_VOCABULARY_COURSE_LESSONS.length} bài ngắn, luyện chọn từ theo nghĩa tiếng Việt.`,
-    lessons: BASIC_VOCABULARY_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(BASIC_VOCABULARY_COURSE_ENTRIES)),
     icon: "book-open",
     catalogArtwork: require("../../assets/navigation/courses.png"),
     testIdPrefix: "basic-vocabulary",
-    wordCount: BASIC_VOCABULARY_COURSE_WORD_COUNT,
-    topicCount: BASIC_VOCABULARY_COURSE_TOPIC_COUNT,
   },
   {
     id: IDIOM_COURSE_ID,
-    title: IDIOM_COURSE_TITLE,
-    description:
-      `Học ${IDIOM_COURSE_WORD_COUNT.toLocaleString("vi-VN")} thành ngữ có nghĩa tiếng Việt từ từ điển offline, qua câu ví dụ và bài chọn cụm phù hợp.`,
-    lessons: IDIOM_COURSE_LESSONS,
-    entriesByTerm: new Map<string, CourseAnswer>(
-      Object.entries(IDIOM_COURSE_ENTRIES).map(([term, entry]) => [
-        term,
-        { ...entry, partOfSpeech: "idiom" },
-      ]),
-    ),
     icon: "book-open",
     catalogArtwork: require("../../assets/courses/idioms.png"),
     testIdPrefix: "idioms",
-    wordCount: IDIOM_COURSE_WORD_COUNT,
   },
   {
     id: PHRASAL_VERB_COURSE_ID,
-    title: PHRASAL_VERB_COURSE_TITLE,
-    description:
-      `Học ${PHRASAL_VERB_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm động từ đã lọc từ từ điển offline, có nghĩa và câu ví dụ; sắp xếp theo ${PHRASAL_VERB_COURSE_TOPIC_COUNT} nhóm chủ đề và động từ gốc.`,
-    lessons: PHRASAL_VERB_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(PHRASAL_VERB_COURSE_ENTRIES)),
     icon: "message-circle",
     catalogArtwork: require("../../assets/courses/phrasal-verbs.png"),
     testIdPrefix: "phrasal-verbs",
-    wordCount: PHRASAL_VERB_COURSE_WORD_COUNT,
-    topicCount: PHRASAL_VERB_COURSE_TOPIC_COUNT,
   },
   {
     id: CONJUNCTION_COURSE_ID,
-    title: CONJUNCTION_COURSE_TITLE,
-    description:
-      `Tổng hợp ${CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(LINKING_ADVERB_COURSE_ENTRIES).length + Object.keys(SENTENCE_STRUCTURE_PATTERN_ENTRIES).length} mục gồm liên từ, trạng từ liên kết, mẫu giới từ và các mẫu cấu trúc câu; học qua ví dụ và bài chọn đáp án.`,
-    lessons: [
-      ...CONJUNCTION_COURSE_LESSONS,
-      ...LINKING_ADVERB_COURSE_LESSONS,
-      ...SENTENCE_STRUCTURE_PATTERN_LESSONS,
-    ],
-    entriesByTerm: new Map<string, CourseAnswer>([
-      ...CONJUNCTION_COURSE_ENTRY_BY_TERM.entries(),
-      ...Object.entries(LINKING_ADVERB_COURSE_ENTRIES),
-      ...Object.entries(SENTENCE_STRUCTURE_PATTERN_ENTRIES),
-    ]),
+    icon: "git-merge",
+    catalogArtwork: require("../../assets/courses/sentence-structures.png"),
+    testIdPrefix: "conjunction",
     progressPrefixes: [
       CONJUNCTION_COURSE_ID,
       LINKING_ADVERB_COURSE_ID,
       SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
     ],
-    icon: "git-merge",
-    catalogArtwork: require("../../assets/courses/sentence-structures.png"),
-    testIdPrefix: "conjunction",
   },
   {
     id: IELTS_TOPIC_COURSE_ID,
-    title: IELTS_TOPIC_COURSE_TITLE,
-    description:
-      `Học ${IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ vựng phổ biến và học thuật qua ${IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS. ${IELTS_TOPIC_COURSE_SPELLING_CONVENTION}`,
-    lessons: IELTS_TOPIC_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(IELTS_TOPIC_COURSE_ENTRIES)),
     icon: "globe",
     catalogArtwork: require("../../assets/courses/ielts.png"),
     testIdPrefix: "ielts",
-    wordCount: IELTS_TOPIC_COURSE_WORD_COUNT,
-    topicCount: IELTS_TOPIC_WORD_LIST.length,
   },
   {
     id: IELTS_ADVANCED_COURSE_ID,
-    title: IELTS_ADVANCED_COURSE_TITLE,
-    description:
-      `Luyện ${IELTS_ADVANCED_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ học thuật khó và thuật ngữ chuyên sâu qua ${IELTS_ADVANCED_TOPIC_WORD_LIST.length} chủ đề.`,
-    lessons: IELTS_ADVANCED_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(IELTS_ADVANCED_COURSE_ENTRIES)),
     icon: "globe",
     catalogArtwork: require("../../assets/courses/ielts.png"),
     testIdPrefix: "ielts-advanced",
-    wordCount: IELTS_ADVANCED_COURSE_WORD_COUNT,
-    topicCount: IELTS_ADVANCED_TOPIC_WORD_LIST.length,
   },
   {
     id: TOEIC_TOPIC_COURSE_ID,
-    title: TOEIC_TOPIC_COURSE_TITLE,
-    description:
-      `Học ${TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm từ thực tế qua ${TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC. Mỗi cụm có nghĩa tiếng Việt, câu ví dụ và bản dịch. ${TOEIC_TOPIC_COURSE_SPELLING_CONVENTION}`,
-    lessons: TOEIC_TOPIC_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(TOEIC_TOPIC_COURSE_ENTRIES)),
     icon: "briefcase",
     catalogArtwork: require("../../assets/courses/toeic.png"),
     testIdPrefix: "toeic",
-    wordCount: TOEIC_TOPIC_COURSE_WORD_COUNT,
-    unitLabel: "cụm từ",
-    topicCount: TOEIC_TOPIC_WORD_LIST.length,
   },
   {
     id: OFFICE_APPS_COURSE_ID,
-    title: OFFICE_APPS_COURSE_TITLE,
-    description:
-      `Học ${OFFICE_APPS_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ và cụm từ thường gặp trong Excel, Word và PowerPoint, chia theo 3 ứng dụng.`,
-    lessons: OFFICE_APPS_COURSE_LESSONS,
-    entriesByTerm: new Map(Object.entries(OFFICE_APPS_COURSE_ENTRIES)),
     icon: "monitor",
     catalogArtwork: require("../../assets/courses/office-apps.png"),
     testIdPrefix: "office-apps",
-    wordCount: OFFICE_APPS_COURSE_WORD_COUNT,
-    topicCount: OFFICE_APPS_COURSE_TOPIC_COUNT,
   },
 ];
 
@@ -369,6 +229,11 @@ export default function CoursesScreen() {
   const [finishedLessonId, setFinishedLessonId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [courseBundle, setCourseBundle] =
+    useState<OfflineCourseBundle | null>(null);
+  const [courseDataStatus, setCourseDataStatus] = useState<
+    "checking" | "missing" | "installed" | "damaged"
+  >("checking");
   const [error, setError] = useState<string | null>(null);
   const [selectedCourseWordKeys, setSelectedCourseWordKeys] = useState<
     string[]
@@ -391,11 +256,33 @@ export default function CoursesScreen() {
   >([]);
   const { words: savedWords, saveWords } = useVocabulary();
 
+  const courseCatalog = useMemo(
+    () =>
+      courseBundle
+        ? courseBundle.courses.flatMap((course) => {
+            const presentation = COURSE_PRESENTATION.find(
+              (item) => item.id === course.id,
+            );
+            return presentation
+              ? [
+                  {
+                    ...course,
+                    ...presentation,
+                    entriesByTerm: new Map(
+                      Object.entries(course.entriesByTerm),
+                    ),
+                  } satisfies CourseCatalogItem,
+                ]
+              : [];
+          })
+        : [],
+    [courseBundle],
+  );
   const activeCourse =
-    COURSE_CATALOG.find((course) => course.id === activeCourseId) ?? null;
+    courseCatalog.find((course) => course.id === activeCourseId) ?? null;
   const learningGoal = getLearningGoalOption(learningGoalId);
   const learningGoalCourse = learningGoal
-    ? COURSE_CATALOG.find((course) => course.id === learningGoal.courseId) ?? null
+    ? courseCatalog.find((course) => course.id === learningGoal.courseId) ?? null
     : null;
   const inProgressGoalLesson = learningGoalCourse?.lessons.find(
     (lesson) =>
@@ -443,7 +330,7 @@ export default function CoursesScreen() {
   const loadProgress = useCallback(async () => {
     setLoading(true);
     try {
-      const progressPrefixes = COURSE_CATALOG.flatMap(
+      const progressPrefixes = COURSE_PRESENTATION.flatMap(
         (course) => course.progressPrefixes ?? [course.id],
       );
       const progress = await Promise.all(
@@ -454,7 +341,7 @@ export default function CoursesScreen() {
       );
       const completedIds = new Set(progress.flat());
       for (const [advancedLessonId, sourceLessonIds] of Object.entries(
-        IELTS_ADVANCED_SOURCE_LESSON_IDS_BY_LESSON,
+        courseBundle?.ieltsAttemptMigration.advancedSourceLessonIds ?? {},
       )) {
         if (
           sourceLessonIds.length > 0 &&
@@ -464,7 +351,19 @@ export default function CoursesScreen() {
         }
       }
       setCompletedLessons([...completedIds]);
-      setLessonAttempts(attempts.flat().map(mapIeltsStandardAttempt));
+      const standardLessons =
+        courseBundle?.courses.find(
+          (course) => course.id === IELTS_TOPIC_COURSE_ID,
+        )?.lessons ?? [];
+      setLessonAttempts(
+        attempts.flat().map((attempt) =>
+          mapIeltsStandardAttempt(
+            attempt,
+            courseBundle?.ieltsAttemptMigration,
+            standardLessons,
+          ),
+        ),
+      );
       setError(null);
     } catch (failure) {
       setError(
@@ -474,6 +373,18 @@ export default function CoursesScreen() {
       );
     } finally {
       setLoading(false);
+    }
+  }, [courseBundle]);
+
+  const refreshCourseBundle = useCallback(async () => {
+    setCourseDataStatus("checking");
+    try {
+      const bundle = await getOfflineCourseBundle();
+      setCourseBundle(bundle);
+      setCourseDataStatus(bundle ? "installed" : "missing");
+    } catch {
+      setCourseBundle(null);
+      setCourseDataStatus("damaged");
     }
   }, []);
 
@@ -504,6 +415,12 @@ export default function CoursesScreen() {
     useCallback(() => {
       void loadProgress();
     }, [loadProgress]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshCourseBundle();
+    }, [refreshCourseBundle]),
   );
 
   const chooseLearningGoal = async (
@@ -537,8 +454,16 @@ export default function CoursesScreen() {
       const storedAttempt = (await getCourseLessonAttempts(lesson.id)).find(
         (attempt) => attempt.lessonId === lesson.id,
       );
+      const standardLessons =
+        courseBundle?.courses.find(
+          (course) => course.id === IELTS_TOPIC_COURSE_ID,
+        )?.lessons ?? [];
       const savedAttempt = storedAttempt
-        ? mapIeltsStandardAttempt(storedAttempt)
+        ? mapIeltsStandardAttempt(
+            storedAttempt,
+            courseBundle?.ieltsAttemptMigration,
+            standardLessons,
+          )
         : undefined;
       const validAttempt =
         savedAttempt &&
@@ -601,11 +526,12 @@ export default function CoursesScreen() {
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [courseBundle]);
 
   useEffect(() => {
     if (!requestedCourseId || !requestedTerm) return;
-    const course = COURSE_CATALOG.find(
+    if (courseDataStatus === "checking") return;
+    const course = courseCatalog.find(
       (candidate) => candidate.id === requestedCourseId,
     );
     const lessonIds = new Set(
@@ -639,11 +565,15 @@ export default function CoursesScreen() {
       setRelatedLessonChoices(choices);
     } else {
       setError(
-        `Không tìm thấy bài học cho “${requestedTerm}” trong khóa học này.`,
+        courseDataStatus === "missing" || courseDataStatus === "damaged"
+          ? "Hãy cài dữ liệu khóa học trong Cài đặt để mở mục này."
+          : `Không tìm thấy bài học cho “${requestedTerm}” trong khóa học này.`,
       );
     }
   }, [
     requestedCourseId,
+    courseCatalog,
+    courseDataStatus,
     requestedLessonIds,
     requestedTerm,
     startLesson,
@@ -1084,6 +1014,49 @@ export default function CoursesScreen() {
           </View>
         ) : null}
 
+        {!courseBundle && !activeLesson ? (
+          <View
+            testID="course-data-required"
+            style={[
+              styles.courseDataNotice,
+              { backgroundColor: c.card, borderColor: c.border },
+            ]}
+          >
+            <View style={[styles.heroIcon, { backgroundColor: c.accent }]}>
+              {courseDataStatus === "checking" ? (
+                <ActivityIndicator color={c.accentForeground} />
+              ) : (
+                <Feather
+                  name={courseDataStatus === "damaged" ? "alert-circle" : "download"}
+                  size={23}
+                  color={c.accentForeground}
+                />
+              )}
+            </View>
+            <View style={styles.courseDataNoticeCopy}>
+              <Text style={[styles.lessonTitle, { color: c.foreground }]}>
+                {courseDataStatus === "checking"
+                  ? "Đang kiểm tra dữ liệu khóa học"
+                  : courseDataStatus === "damaged"
+                    ? "Gói khóa học cần được tải lại"
+                    : "Tải dữ liệu khóa học để bắt đầu"}
+              </Text>
+              <Text style={[styles.lessonFocus, { color: c.mutedForeground }]}>
+                Tám khóa học được lưu thành gói riêng, không làm tăng bộ cài ứng dụng.
+              </Text>
+              {courseDataStatus !== "checking" ? (
+                <Button
+                  testID="course-data-open-settings"
+                  label="Mở Cài đặt"
+                  icon="settings"
+                  onPress={() => router.push("/settings")}
+                  style={styles.courseDataSettingsButton}
+                />
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
         {activeLesson && currentQuestion ? (
           isLessonFinished ? (
             <LessonComplete
@@ -1117,7 +1090,7 @@ export default function CoursesScreen() {
               entriesByTerm={activeCourse?.entriesByTerm ?? new Map()}
               distractorExplanations={
                 activeCourse?.id === CONJUNCTION_COURSE_ID
-                  ? SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS
+                  ? courseBundle?.sentenceStructureDistractorExplanations
                   : undefined
               }
               questionIndex={questionIndex}
@@ -1471,7 +1444,7 @@ export default function CoursesScreen() {
           </View>
         ) : (
           <View style={styles.courseIntro}>
-            <LearningGoalCard
+            {courseBundle ? <LearningGoalCard
               goal={learningGoal}
               courseTitle={learningGoalCourse?.title ?? null}
               recommendation={
@@ -1491,8 +1464,8 @@ export default function CoursesScreen() {
                   setActiveCourseId(learningGoalCourse.id);
                 }
               }}
-            />
-            {COURSE_CATALOG.map((course) => {
+            /> : null}
+            {courseCatalog.map((course) => {
               const completedCount = completedLessons.filter((lessonId) =>
                 course.lessons.some((lesson) => lesson.id === lessonId),
               ).length;
@@ -2685,6 +2658,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  courseDataNotice: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 13,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+  },
+  courseDataNoticeCopy: { flex: 1, gap: 8 },
+  courseDataSettingsButton: { alignSelf: "flex-start", marginTop: 2 },
   heroDescription: { fontFamily: F.r, fontSize: 14, lineHeight: 21 },
   courseStats: { flexDirection: "row", alignItems: "center", gap: 7 },
   courseStatsText: { fontFamily: F.s, fontSize: 12 },

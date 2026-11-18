@@ -1,10 +1,12 @@
-import { CONJUNCTION_COURSE_ID } from "./conjunction-course";
-import { BASIC_VOCABULARY_COURSE_ID } from "./basic-vocabulary-course";
-import { IDIOM_COURSE_ID } from "./idiom-course";
-import { IELTS_TOPIC_COURSE_ID } from "./ielts-topic-course";
-import { OFFICE_APPS_COURSE_ID } from "./office-apps-course";
-import { PHRASAL_VERB_COURSE_ID } from "./phrasal-verb-course";
-import { TOEIC_TOPIC_COURSE_ID } from "./toeic-topic-course";
+import {
+  BASIC_VOCABULARY_COURSE_ID,
+  CONJUNCTION_COURSE_ID,
+  IDIOM_COURSE_ID,
+  IELTS_TOPIC_COURSE_ID,
+  OFFICE_APPS_COURSE_ID,
+  PHRASAL_VERB_COURSE_ID,
+  TOEIC_TOPIC_COURSE_ID,
+} from "./course-ids";
 
 export type LearningGoalId =
   | "basic-vocabulary"

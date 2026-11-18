@@ -48,6 +48,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DictionaryAssetError"
+  /courses/asset:
+    get:
+      operationId: downloadOfflineCoursePackage
+      tags: [courses]
+      summary: Download the versioned public offline course package
+      description: Supports byte ranges so interrupted downloads can resume safely.
+      parameters:
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+          example: bytes=0-1048575
+      responses:
+        "200":
+          description: Complete offline course package
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                description: Raw UTF-8 JSON package bytes
+          headers:
+            Accept-Ranges:
+              schema:
+                type: string
+            X-Course-Data-Version:
+              schema:
+                type: string
+            X-Course-Data-SHA256:
+              schema:
+                type: string
+        "206":
+          description: Requested byte range of the course package
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                description: Raw UTF-8 JSON package bytes
+          headers:
+            Content-Range:
+              schema:
+                type: string
+            Accept-Ranges:
+              schema:
+                type: string
+        "416":
+          description: Requested byte range is invalid
+        "503":
+          description: Course package storage is temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DictionaryAssetError"
   /sync:
     post:
       operationId: mergeUserSyncData

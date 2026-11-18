@@ -8,6 +8,10 @@ const { loadDictionaryDomain } = require("./test-support.cjs");
 
 const domainPath = join(__dirname, "../domain");
 const outputPath = join(domainPath, "course-dictionary-index.json");
+const reviewExcludedTermsPath = join(
+  domainPath,
+  "review-excluded-course-terms.json",
+);
 const sourcePath = resolve(
   __dirname,
   "../../../generated-artifacts/dictionary/dictionary_en_vi.db",
@@ -263,25 +267,51 @@ function buildIndex() {
   return {
     index: { ...payload, contentSha256 },
     missingTerms: terms.filter((term) => term.senses).length,
+    reviewExcludedTerms: [
+      ...new Set([
+        ...entriesOf(conjunctions.CONJUNCTION_COURSE_ENTRY_BY_TERM).map(
+          ([term]) => term,
+        ),
+        ...entriesOf(linkingAdverbs.LINKING_ADVERB_COURSE_ENTRIES).map(
+          ([term]) => term,
+        ),
+        ...entriesOf(sentencePatterns.SENTENCE_STRUCTURE_PATTERN_ENTRIES).map(
+          ([term]) => term,
+        ),
+      ]),
+    ].sort((left, right) => left.localeCompare(right, "en")),
   };
 }
 
-const { index, missingTerms } = buildIndex();
+const { index, missingTerms, reviewExcludedTerms } = buildIndex();
 const output = `${JSON.stringify(index)}\n`;
+const reviewExcludedTermsOutput = `${JSON.stringify(reviewExcludedTerms, null, 2)}\n`;
 if (process.argv.includes("--check")) {
   let current = "";
+  let currentReviewExcludedTerms = "";
   try {
     current = readFileSync(outputPath, "utf8");
   } catch {
     // The check reports a missing generated index below.
+  }
+  try {
+    currentReviewExcludedTerms = readFileSync(reviewExcludedTermsPath, "utf8");
+  } catch {
+    // The check reports missing generated review terms below.
   }
   assert.equal(
     current,
     output,
     "course-dictionary-index.json đã cũ; chạy course:build-dictionary-index.",
   );
+  assert.equal(
+    currentReviewExcludedTerms,
+    reviewExcludedTermsOutput,
+    "review-excluded-course-terms.json đã cũ; chạy course:build-dictionary-index.",
+  );
 } else {
   writeFileSync(outputPath, output);
+  writeFileSync(reviewExcludedTermsPath, reviewExcludedTermsOutput);
 }
 
 console.log(

@@ -31,6 +31,7 @@ import {
   type DictionaryPartOfSpeech,
   type DictionarySense,
 } from "@/domain/dictionary";
+import { COURSE_DICTIONARY_COURSES } from "@/domain/course-ids";
 import { useColors } from "@/hooks/useColors";
 import {
   Button,
@@ -43,18 +44,9 @@ import { PartOfSpeechFilter } from "@/components/PartOfSpeechFilter";
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
 import { soundCueFor, withSoundOutcome } from "@/domain/sound-cues";
-import courseDictionaryIndex from "@/domain/course-dictionary-index.json";
 
-const normalizeCourseTerm = (term: string) =>
-  term.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase("en");
 const COURSE_ID_BY_TITLE = new Map(
-  courseDictionaryIndex.courses.map(({ id, title }) => [title, id]),
-);
-const COURSE_TERM_INDEX = new Map(
-  courseDictionaryIndex.terms.map((term) => [
-    normalizeCourseTerm(term.term),
-    term,
-  ]),
+  COURSE_DICTIONARY_COURSES.map(({ id, title }) => [title, id] as [string, string]),
 );
 
 /** Shared reading view for one dictionary entry. Caller guarantees a valid id and a ready dictionary. */
@@ -449,12 +441,6 @@ export function DictionaryEntryView({
           >
             {entry.courseTags.map((tag) => {
               const courseId = COURSE_ID_BY_TITLE.get(tag);
-              const indexedTerm = COURSE_TERM_INDEX.get(
-                normalizeCourseTerm(entry.term),
-              );
-              const lessonIds = courseId
-                ? indexedTerm?.lessonIdsByCourse?.[courseId]
-                : undefined;
               const tagStyle = [
                 styles.courseTag,
                 { backgroundColor: c.dictChip, borderColor: c.dictLine },
@@ -463,7 +449,7 @@ export function DictionaryEntryView({
                 styles.courseTagText,
                 { color: c.dictHead },
               ];
-              return courseId && lessonIds?.length ? (
+              return courseId ? (
                 <Pressable
                   key={tag}
                   testID={`entry-course-${courseId}`}
@@ -475,7 +461,6 @@ export function DictionaryEntryView({
                       params: {
                         courseId,
                         term: entry.term,
-                        lessonIds: lessonIds.join(","),
                       },
                     })
                   }

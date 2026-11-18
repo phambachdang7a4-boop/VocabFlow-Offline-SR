@@ -10,6 +10,7 @@ const {
 const root = join(__dirname, "..");
 const index = require("../domain/course-dictionary-index.json");
 const domain = loadDictionaryDomain();
+const courseIds = loadTs(join(root, "domain/course-ids.ts"));
 const courseLessonLinks = loadTs(
   join(root, "domain/course-lesson-links.ts"),
 );
@@ -17,7 +18,7 @@ const courseIndexModule = loadTs(
   join(root, "data/dictionary-course-index.ts"),
   {
     "../domain/dictionary": domain,
-    "../domain/course-dictionary-index.json": index,
+    "../domain/course-ids": courseIds,
   },
 );
 const spelling = loadTs(join(root, "domain/dictionary-suggestions.ts"));
@@ -160,7 +161,17 @@ function normalizeTerm(term) {
       .run(...chunk.map((term) => term.term));
   }
 
-  await courseIndexModule.applyCourseDictionaryIndex(db);
+  const toeicTerm = index.terms.find((term) =>
+    term.courseIds.includes(courseIds.TOEIC_TOPIC_COURSE_ID),
+  );
+  assert.ok(toeicTerm, "The index includes a tagged TOEIC entry.");
+  const toeicEntries = {
+    [toeicTerm.term]: {
+      definition: "A course-authored TOEIC phrase sense.",
+      example: "The example remains part of the course package.",
+    },
+  };
+  await courseIndexModule.applyCourseDictionaryIndex(db, index, toeicEntries);
   const addedWord = handle
     .prepare("SELECT id FROM words WHERE word = ? AND lang_code = 'en'")
     .get(addedTerm.term);
@@ -249,6 +260,19 @@ function normalizeTerm(term) {
   const detail = await queries.entryInDictionary(db, match.id);
   assert.deepEqual(detail.courseTags, match.courseTags);
   assert.equal(detail.senses.length, addedTerm.senses.length);
+  const toeicWord = handle
+    .prepare("SELECT id FROM words WHERE word = ? AND lang_code = 'en'")
+    .get(toeicTerm.term);
+  assert.ok(toeicWord);
+  assert.equal(
+    handle.prepare(
+      `SELECT COUNT(*) AS count FROM word_definitions wd
+       JOIN definitions d ON d.id = wd.definition_id
+       WHERE wd.word_id = ? AND d.definition = ?`,
+    ).get(toeicWord.id, toeicEntries[toeicTerm.term].definition).count,
+    1,
+    "Existing dictionary words receive their TOEIC course sense.",
+  );
 
   const firstTagCount = handle
     .prepare("SELECT COUNT(*) AS count FROM vocabflow_course_tags")
@@ -256,7 +280,7 @@ function normalizeTerm(term) {
   const firstWordCount = handle
     .prepare("SELECT COUNT(*) AS count FROM words")
     .get().count;
-  await courseIndexModule.applyCourseDictionaryIndex(db);
+  await courseIndexModule.applyCourseDictionaryIndex(db, index, toeicEntries);
   assert.equal(
     handle.prepare("SELECT COUNT(*) AS count FROM vocabflow_course_tags").get()
       .count,
@@ -267,6 +291,15 @@ function normalizeTerm(term) {
     handle.prepare("SELECT COUNT(*) AS count FROM words").get().count,
     firstWordCount,
     "Reapplying the index does not duplicate words.",
+  );
+  assert.equal(
+    handle.prepare(
+      `SELECT COUNT(*) AS count FROM word_definitions wd
+       JOIN definitions d ON d.id = wd.definition_id
+       WHERE wd.word_id = ? AND d.definition = ?`,
+    ).get(toeicWord.id, toeicEntries[toeicTerm.term].definition).count,
+    1,
+    "Reapplying the index does not duplicate TOEIC course senses.",
   );
   handle.close();
   console.log("Course dictionary index checks passed.");
