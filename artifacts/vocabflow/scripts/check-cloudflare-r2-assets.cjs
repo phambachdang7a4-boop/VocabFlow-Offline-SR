@@ -51,8 +51,18 @@ assert.equal(
     "vocabflow/file.db",
     "https://api.test/file",
   ),
+  "https://pub-test.r2.dev/vocabflow/file.db",
+  "Use R2 in browsers once its CORS policy is confirmed.",
+);
+const webFallbackUrls = loadTs(
+  join(domainRoot, "public-data-asset-url.ts"),
+  { "react-native": { Platform: { OS: "web" } } },
+  { process: { env: {} } },
+);
+assert.equal(
+  webFallbackUrls.publicDataAssetUrl("vocabflow/file.db", "https://api.test/file"),
   "https://api.test/file",
-  "Keep the web app on its existing source until R2 CORS is verified.",
+  "Retain the existing fallback when the public R2 URL is not configured.",
 );
 
 const dictionary = loadTs(join(domainRoot, "dictionary.ts"), {
