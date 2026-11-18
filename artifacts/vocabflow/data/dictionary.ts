@@ -75,6 +75,102 @@ async function applyInstalledCourseIndex(
   );
 }
 let connection: Promise<SQLiteDatabase> | undefined;
+export type OfflineDictionaryDownloadSnapshot = {
+  state: "idle" | "downloading" | "completed" | "failed";
+  stage: DictionaryStage | null;
+  bytesWritten: number;
+  totalBytes: number;
+  error: string | null;
+};
+
+const EMPTY_DICTIONARY_DOWNLOAD: OfflineDictionaryDownloadSnapshot = {
+  state: "idle",
+  stage: null,
+  bytesWritten: 0,
+  totalBytes: DICTIONARY.bytes,
+  error: null,
+};
+let dictionaryDownloadSnapshot = EMPTY_DICTIONARY_DOWNLOAD;
+let dictionaryDownloadTask: Promise<void> | null = null;
+const dictionaryDownloadListeners = new Set<() => void>();
+
+function publishDictionaryDownload(
+  snapshot: OfflineDictionaryDownloadSnapshot,
+): void {
+  dictionaryDownloadSnapshot = snapshot;
+  for (const listener of dictionaryDownloadListeners) listener();
+}
+
+export function getOfflineDictionaryDownloadSnapshot(): OfflineDictionaryDownloadSnapshot {
+  return dictionaryDownloadSnapshot;
+}
+
+export function subscribeToOfflineDictionaryDownload(
+  listener: () => void,
+): () => void {
+  dictionaryDownloadListeners.add(listener);
+  return () => dictionaryDownloadListeners.delete(listener);
+}
+
+/**
+ * Keep the installation task outside any screen so navigating away does not
+ * lose its progress or start a second download when Settings is reopened.
+ */
+export function downloadOfflineDictionary(
+  allowDownload = true,
+): Promise<void> {
+  if (dictionaryDownloadTask) return dictionaryDownloadTask;
+
+  publishDictionaryDownload({
+    state: "downloading",
+    stage: "checking",
+    bytesWritten: 0,
+    totalBytes: DICTIONARY.bytes,
+    error: null,
+  });
+
+  const task = openDictionary(
+    (stage) =>
+      publishDictionaryDownload({
+        ...dictionaryDownloadSnapshot,
+        state: "downloading",
+        stage,
+      }),
+    {
+      allowDownload,
+      onProgress: (bytesWritten, totalBytes) =>
+        publishDictionaryDownload({
+          ...dictionaryDownloadSnapshot,
+          state: "downloading",
+          bytesWritten,
+          totalBytes,
+        }),
+    },
+  )
+    .then(() => {
+      publishDictionaryDownload({
+        state: "completed",
+        stage: "ready",
+        bytesWritten: DICTIONARY.bytes,
+        totalBytes: DICTIONARY.bytes,
+        error: null,
+      });
+    })
+    .catch((failure) => {
+      publishDictionaryDownload({
+        ...dictionaryDownloadSnapshot,
+        state: "failed",
+        error: failure instanceof Error ? failure.message : String(failure),
+      });
+      throw failure;
+    })
+    .finally(() => {
+      if (dictionaryDownloadTask === task) dictionaryDownloadTask = null;
+    });
+
+  dictionaryDownloadTask = task;
+  return task;
+}
 
 function sha256Hex(bytes: Uint8Array): string {
   return Array.from(sha256(bytes), (byte) => byte.toString(16).padStart(2, "0"))
@@ -426,37 +522,21 @@ export async function getOfflineDictionaryStatus(): Promise<{
   state: "missing" | "installed" | "damaged" | "unavailable";
   bytes: number;
 }> {
-  if (Platform.OS === "web") {
-    try {
-      const db = await openDictionary();
-      if (!(await hasExpectedDictionaryWordCount(db))) {
-        return { state: "damaged", bytes: DICTIONARY.bytes };
-      }
-      return { state: "installed", bytes: DICTIONARY.bytes };
-    } catch (error) {
-      if (error instanceof DictionaryDownloadConsentRequired)
-        return { state: "missing", bytes: 0 };
-      return {
-        state: isDictionaryIntegrityFailure(error) ? "damaged" : "unavailable",
-        bytes: DICTIONARY.bytes,
-      };
-    }
+  if (dictionaryDownloadTask) {
+    return { state: "missing", bytes: dictionaryDownloadSnapshot.bytesWritten };
   }
-  const file = new File(Paths.document, "SQLite", filename);
-  if (!file.exists) return { state: "missing", bytes: 0 };
-  const bytes = file.size ?? 0;
-  if (bytes < DICTIONARY.bytes) return { state: "damaged", bytes };
+
   try {
     const db = await openDictionary();
     if (!(await hasExpectedDictionaryWordCount(db)))
-      return { state: "damaged", bytes };
-    return { state: "installed", bytes };
+      return { state: "damaged", bytes: DICTIONARY.bytes };
+    return { state: "installed", bytes: DICTIONARY.bytes };
   } catch (error) {
     if (error instanceof DictionaryDownloadConsentRequired)
       return { state: "missing", bytes: 0 };
     return {
       state: isDictionaryIntegrityFailure(error) ? "damaged" : "unavailable",
-      bytes,
+      bytes: DICTIONARY.bytes,
     };
   }
 }
@@ -471,12 +551,9 @@ export async function deleteOfflineDictionary(): Promise<void> {
       // The database may already have closed after a failed download.
     }
   }
-  if (Platform.OS === "web") {
-    await deleteDatabaseAsync(filename);
-    return;
-  }
-  const file = new File(Paths.document, "SQLite", filename);
-  if (file.exists) await deleteDatabaseAsync(filename);
+  await deleteDatabaseAsync(filename);
+  dictionaryDownloadTask = null;
+  publishDictionaryDownload(EMPTY_DICTIONARY_DOWNLOAD);
 }
 
 export async function searchDictionary(

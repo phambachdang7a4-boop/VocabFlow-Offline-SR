@@ -929,23 +929,29 @@ function adapter(filename, readOnly = false) {
     nativeRangeRequests++;
     return rangeResponse(bytes, options);
   });
-  const nativeStages = [];
-  const nativeDictionary = await repo.openDictionary(
-    (stage) => nativeStages.push(stage),
-    { allowDownload: true },
+  const unsubscribeFromDownload = repo.subscribeToOfflineDictionaryDownload(
+    () => {},
   );
-  assert.deepEqual(nativeStages, [
-    "checking",
+  const nativeDownloadTask = repo.downloadOfflineDictionary();
+  assert.equal(
+    repo.getOfflineDictionaryDownloadSnapshot().state,
     "downloading",
-    "verifying",
-    "importing",
-    "validating-import",
-    "updating-content",
-    "saving",
-    "indexing-courses",
-    "ready",
-  ]);
+    "The transfer state is published outside the Settings screen.",
+  );
+  unsubscribeFromDownload();
+  assert.strictEqual(
+    repo.downloadOfflineDictionary(),
+    nativeDownloadTask,
+    "Reopening Settings reuses the active transfer instead of starting another.",
+  );
+  await nativeDownloadTask;
+  assert.equal(
+    repo.getOfflineDictionaryDownloadSnapshot().state,
+    "completed",
+    "The transfer completes after its screen subscriber unmounts.",
+  );
   assert.equal(nativeRangeRequests, expectedDownloadChunks);
+  const nativeDictionary = await repo.openDictionary();
   const baseTerms = new Set(
     reference.handle
       .prepare("SELECT word FROM words WHERE lang_code = 'en'")
@@ -978,6 +984,11 @@ function adapter(filename, readOnly = false) {
     ).count,
     expectedFinalWordCount,
     "The Expo Go file writer imports the complete ranged download",
+  );
+  assert.deepEqual(
+    await repo.getOfflineDictionaryStatus(),
+    { state: "installed", bytes: DICTIONARY.bytes },
+    "A valid SQLite dictionary is reported installed even if file-system metadata disagrees.",
   );
   await nativeDictionary.closeAsync();
 

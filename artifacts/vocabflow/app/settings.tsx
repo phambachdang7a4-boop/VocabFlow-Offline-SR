@@ -50,9 +50,12 @@ import {
 } from "@/data/vocabulary-sync";
 import {
   deleteOfflineDictionary,
+  downloadOfflineDictionary,
+  getOfflineDictionaryDownloadSnapshot,
   downloadOfflineRegionalPronunciationPart,
   getOfflineDictionaryStatus,
   openDictionary,
+  subscribeToOfflineDictionaryDownload,
 } from "@/data/dictionary";
 import {
   deleteOfflineRegionalIpa,
@@ -155,6 +158,13 @@ export default function SettingsScreen() {
   const [resetBusy, setResetBusy] = React.useState(false);
   const [resetError, setResetError] = React.useState<string | null>(null);
   const [resetNotice, setResetNotice] = React.useState<string | null>(null);
+  const dictionaryDownload = React.useSyncExternalStore(
+    subscribeToOfflineDictionaryDownload,
+    getOfflineDictionaryDownloadSnapshot,
+    getOfflineDictionaryDownloadSnapshot,
+  );
+  const dictionaryDownloadActive = dictionaryDownload.state === "downloading";
+  const offlineBusy = Boolean(offlineAction) || dictionaryDownloadActive;
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === "web" ? 34 : insets.bottom) + 24;
   const syncBusy = sync.state === "checking" || sync.state === "syncing";
@@ -211,52 +221,47 @@ export default function SettingsScreen() {
   const offlineProgressText = offlineAction
     ? `${offlineStage ?? "Đang xử lý"}${offlineAction.endsWith("download") && !(offlineAction === "dictionary-download" && dictionaryStatus === "unavailable") ? ` · ${progressLabel}` : "…"}`
     : null;
+  const dictionaryProgressPercent =
+    dictionaryDownload.totalBytes > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (dictionaryDownload.bytesWritten / dictionaryDownload.totalBytes) *
+              100,
+          ),
+        )
+      : 0;
+  const dictionaryStageLabel = {
+    checking: "Đang kiểm tra từ điển",
+    "awaiting-consent": "Chờ xác nhận",
+    downloading: "Đang tải từ điển",
+    verifying: "Đang xác minh tệp",
+    importing: "Đang mở dữ liệu từ điển",
+    "validating-import": "Đang kiểm tra dữ liệu SQLite",
+    "updating-content": "Đang cập nhật nội dung",
+    saving: "Đang lưu từ điển",
+    "indexing-courses": "Đang thêm nhãn khóa học",
+    ready: "Đã cài từ điển",
+  } as const;
+  const dictionaryProgressText =
+    dictionaryDownload.state === "downloading"
+      ? `${dictionaryStageLabel[dictionaryDownload.stage ?? "checking"]} · ${dictionaryProgressPercent}% · ${sizeLabel(dictionaryDownload.bytesWritten)} / ${sizeLabel(dictionaryDownload.totalBytes)}`
+      : null;
 
   const handleDownloadDictionary = async () => {
-    if (offlineAction || syncBusy) return;
+    if (offlineBusy || syncBusy) return;
     setOfflineError(null);
-    setOfflineAction("dictionary-download");
-    setOfflineStage("Đang chuẩn bị từ điển");
-    setOfflineProgress({ bytesWritten: 0, totalBytes: DICTIONARY.bytes });
     try {
-      await openDictionary(
-        (stage) => {
-          setOfflineStage(
-            {
-              checking: "Đang kiểm tra",
-              "awaiting-consent": "Chờ xác nhận",
-              downloading: "Đang tải từ điển",
-              verifying: "Đang xác minh tệp",
-              importing: "Đang mở dữ liệu từ điển",
-              "validating-import": "Đang kiểm tra dữ liệu SQLite",
-              "updating-content": "Đang cập nhật ví dụ và từ khóa học",
-              saving: "Đang lưu từ điển vào máy",
-              "indexing-courses": "Đang thêm nội dung khóa học",
-              ready: "Đã cài xong",
-            }[stage],
-          );
-        },
-        {
-          allowDownload: dictionaryStatus !== "unavailable",
-          onProgress: (bytesWritten, totalBytes) =>
-            setOfflineProgress({ bytesWritten, totalBytes }),
-        },
-      );
-      setOfflineStage("Đã cài xong");
-    } catch (cause) {
-      setOfflineError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể cài từ điển offline.",
-      );
+      await downloadOfflineDictionary(dictionaryStatus !== "unavailable");
+    } catch {
+      // The module-level download snapshot keeps the error if this screen unmounts.
     } finally {
-      setOfflineAction(null);
       await refreshOfflineStatus();
     }
   };
 
   const handleDownloadAudio = async () => {
-    if (offlineAction || syncBusy) return;
+    if (offlineBusy || syncBusy) return;
     setOfflineError(null);
     setOfflineAction("audio-download");
     setOfflineStage("Đang tải gói audio");
@@ -304,7 +309,7 @@ export default function SettingsScreen() {
   };
 
   const handleDownloadCourseData = async () => {
-    if (offlineAction || syncBusy) return;
+    if (offlineBusy || syncBusy) return;
     setOfflineError(null);
     setOfflineAction("course-data-download");
     setOfflineStage("Đang tải gói khóa học");
@@ -374,7 +379,7 @@ export default function SettingsScreen() {
     rowId: "us" | "uk",
     sourceIds: readonly RegionalIpaSourceId[],
   ) => {
-    if (offlineAction || syncBusy) return;
+    if (offlineBusy || syncBusy) return;
     setOfflineError(null);
     setOfflineAction(`regional-ipa-${rowId}-download`);
     setOfflineStage("Đang chuẩn bị dữ liệu IPA");
@@ -436,7 +441,7 @@ export default function SettingsScreen() {
   const handleDeleteOfflineResource = async (
     resource: "dictionary" | "audio" | "regional-ipa" | "course-data",
   ) => {
-    if (offlineAction || syncBusy) return;
+    if (offlineBusy || syncBusy) return;
     setOfflineError(null);
     setOfflineAction(
       resource === "dictionary"
@@ -472,7 +477,7 @@ export default function SettingsScreen() {
   };
 
   const handleResetAppData = async () => {
-    if (!resetDialog || resetBusy || offlineAction || transferState || syncBusy)
+    if (!resetDialog || resetBusy || offlineBusy || transferState || syncBusy)
       return;
     if (!userLoaded) {
       setResetError("Đang kiểm tra tài khoản. Hãy thử lại sau giây lát.");
@@ -1296,7 +1301,7 @@ Nội dung tệp:
             disabled={
               !userLoaded ||
               syncBusy ||
-              Boolean(offlineAction) ||
+                offlineBusy ||
               transferState !== null ||
               resetBusy
             }
@@ -1319,7 +1324,7 @@ Nội dung tệp:
                 disabled={
                   !userLoaded ||
                   syncBusy ||
-                  Boolean(offlineAction) ||
+                  offlineBusy ||
                   transferState !== null ||
                   resetBusy
                 }
@@ -1536,6 +1541,10 @@ Nội dung tệp:
               >
                 {dictionaryStatus === "installed"
                   ? `Đã cài · ${sizeLabel(DICTIONARY.bytes)}`
+                  : dictionaryDownload.state === "completed"
+                    ? `Đã cài · ${sizeLabel(DICTIONARY.bytes)}`
+                    : dictionaryDownloadActive
+                      ? dictionaryProgressText
                   : dictionaryStatus === "damaged"
                     ? "Tệp bị thiếu hoặc lỗi · cần tải lại"
                     : dictionaryStatus === "unavailable"
@@ -1550,7 +1559,9 @@ Nội dung tệp:
             <Button
               testID="offline-dictionary-download"
               label={
-                dictionaryStatus === "damaged"
+                dictionaryDownloadActive
+                  ? "Đang tải…"
+                  : dictionaryStatus === "damaged"
                   ? "Tải lại"
                   : dictionaryStatus === "unavailable"
                     ? "Thử lại"
@@ -1562,11 +1573,12 @@ Nội dung tệp:
               onPress={() => {
                 void handleDownloadDictionary();
               }}
-              loading={offlineAction === "dictionary-download"}
+              loading={dictionaryDownloadActive}
               disabled={
-                Boolean(offlineAction) ||
+                offlineBusy ||
                 syncBusy ||
                 dictionaryStatus === "installed" ||
+                dictionaryDownload.state === "completed" ||
                 dictionaryStatus === "checking"
               }
               style={{ flex: 1 }}
@@ -1581,7 +1593,7 @@ Nội dung tệp:
               }}
               loading={offlineAction === "dictionary-delete"}
               disabled={
-                Boolean(offlineAction) ||
+                offlineBusy ||
                 syncBusy ||
                 dictionaryStatus === "missing" ||
                 dictionaryStatus === "unavailable" ||
@@ -1590,6 +1602,44 @@ Nội dung tệp:
               style={{ flex: 1 }}
             />
           </View>
+          {dictionaryDownloadActive ? (
+            <View style={styles.courseDownloadProgress}>
+              <View
+                accessibilityRole="progressbar"
+                accessibilityLabel="Tiến độ tải từ điển"
+                accessibilityValue={{
+                  min: 0,
+                  max: 100,
+                  now: dictionaryProgressPercent,
+                }}
+                style={[
+                  styles.courseDownloadTrack,
+                  { backgroundColor: c.secondary },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.courseDownloadFill,
+                    {
+                      backgroundColor: c.primary,
+                      width: `${dictionaryProgressPercent}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text
+                testID="offline-dictionary-progress"
+                accessibilityLiveRegion="polite"
+                style={[styles.appearanceDetail, { color: c.primary }]}
+              >
+                {dictionaryProgressText}
+              </Text>
+            </View>
+          ) : null}
+          {dictionaryDownload.state === "failed" &&
+          dictionaryDownload.error ? (
+            <ErrorBanner message={dictionaryDownload.error} />
+          ) : null}
           <View style={[styles.offlineDivider, { borderColor: c.border }]} />
           <View style={styles.offlineResource}>
             <View
@@ -1658,7 +1708,7 @@ Nội dung tệp:
               }}
               loading={false}
               disabled={
-                (Boolean(offlineAction) &&
+                (offlineBusy &&
                   offlineAction !== "course-data-download") ||
                 (syncBusy && offlineAction !== "course-data-download") ||
                 (offlineAction !== "course-data-download" &&
@@ -1678,7 +1728,7 @@ Nội dung tệp:
               }}
               loading={offlineAction === "course-data-delete"}
               disabled={
-                Boolean(offlineAction) ||
+                offlineBusy ||
                 syncBusy ||
                 (courseDataStatus === "missing" && courseDataBytes === 0) ||
                 courseDataStatus === "checking" ||
@@ -1860,7 +1910,7 @@ Nội dung tệp:
                   }}
                   loading={offlineAction === action}
                   disabled={
-                    Boolean(offlineAction) ||
+                    offlineBusy ||
                     syncBusy ||
                     dictionaryStatus !== "installed" ||
                     !canDownloadRow ||
@@ -1881,7 +1931,7 @@ Nội dung tệp:
             }}
             loading={offlineAction === "regional-ipa-delete"}
             disabled={
-              Boolean(offlineAction) ||
+              offlineBusy ||
               syncBusy ||
               (regionalIpaStatus === "missing" &&
                 regionalIpaParts.us === "missing" &&
@@ -1950,7 +2000,7 @@ Nội dung tệp:
               }}
               loading={false}
               disabled={
-                (Boolean(offlineAction) &&
+                (offlineBusy &&
                   (offlineAction !== "audio-download" ||
                     audioDownloadStage !== "downloading")) ||
                 (syncBusy && offlineAction !== "audio-download") ||
@@ -1971,7 +2021,7 @@ Nội dung tệp:
               }}
               loading={offlineAction === "audio-delete"}
               disabled={
-                Boolean(offlineAction) ||
+                offlineBusy ||
                 syncBusy ||
                 audioStatus === "missing" ||
                 audioStatus === "checking" ||
