@@ -33,3 +33,9 @@ externalPort = 8080
 [[ports]]
 localPort = 8081
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+CLOUDFLARE_R2_ACCOUNT_ID = "6ceb4a10c8ad2e4879888af9eafb9837"
+CLOUDFLARE_R2_BUCKET_NAME = "vocabflowdata-18-11"
