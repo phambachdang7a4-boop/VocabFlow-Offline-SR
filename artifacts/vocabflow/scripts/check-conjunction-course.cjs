@@ -2389,8 +2389,8 @@ async function checkCourseContentAndProgress() {
     "Standard IELTS lessons keep their numbered topic labels.",
   );
   assert.ok(ieltsTerms.length > 6000);
-  assert.equal(ieltsTerms.length, 6369);
-  assert.equal(ieltsAdvancedTerms.length, 1239);
+  assert.equal(ieltsTerms.length, 6432);
+  assert.equal(ieltsAdvancedTerms.length, 1176);
   assert.equal(new Set(ieltsTerms).size, ieltsTerms.length);
   assert.equal(new Set(ieltsAdvancedTerms).size, ieltsAdvancedTerms.length);
   assert.equal(

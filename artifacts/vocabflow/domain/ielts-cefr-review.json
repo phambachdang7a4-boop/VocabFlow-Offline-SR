@@ -1,0 +1,7031 @@
+{
+  "title": "IELTS Advanced CEFR-J comparison",
+  "reviewedOn": "2026-11-18",
+  "reviewedTermCount": 777,
+  "scopeNote": "The task brief named 694 terms; the file contained 777 distinct terms when reviewed, so the comparison covers all 777 present at that time.",
+  "source": {
+    "name": "CEFR-J Wordlist Version 1.6",
+    "compiler": "Yukio Tono, Tokyo University of Foreign Studies",
+    "retrievedFrom": "https://www.cefr-j.org/download.html",
+    "citation": "The CEFR-J Wordlist Version 1.6. Compiled by Yukio Tono, Tokyo University of Foreign Studies. Retrieved from https://www.cefr-j.org/download.html on 2026-11-18.",
+    "rights": "The source page identifies Tono Laboratory at TUFS as copyright holder and permits research and commercial use with proper acknowledgement.",
+    "coverage": "The published vocabulary levels cover A1 through B2, with headwords and parts of speech. The source describes its list as textbook-corpus-based and notes it may contain errors."
+  },
+  "method": {
+    "matching": "Compared case-insensitive exact headwords and the course entry's part of speech against the CEFR-J v1.6 ALL sheet. No inflection, spelling, or phrase-component matching was used.",
+    "reassignment": "Exact headword-and-part-of-speech matches reported at A1–B2 were moved to the standard IELTS course. A headword match with a different part of speech was not assigned that source level and remains in IELTS Advanced.",
+    "limits": "CEFR-J v1.6 stops at B2. A missing or part-of-speech-mismatched entry does not establish C1 or C2 and receives no CEFR label.",
+    "labels": "Levels in sourceLevel reproduce the CEFR-J source entry only; they are not presented as an official CEFR certification for the learner or the course."
+  },
+  "summary": {
+    "exactHeadwordAndPartOfSpeechMatches": 63,
+    "exactMatchesBySourceLevel": {
+      "B1": 12,
+      "B2": 51
+    },
+    "headwordFoundButPartOfSpeechDiffers": 4,
+    "noExactHeadword": 710,
+    "movedToStandardIelts": 63,
+    "alreadyStandardByLegacyCourseRule": 2,
+    "retainedInIeltsAdvanced": 712
+  },
+  "items": [
+    {
+      "topic": "education",
+      "term": "pedagogic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "pedagogical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "pedagogy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "accredit",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "erudite",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "inculcate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "mnemonic",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "prerequisite",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "prospectus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "rubric",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "tutelage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "academia",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "accreditation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "didactic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "extracurricular",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "co-curricular",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "education",
+      "term": "holistic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "biodiversity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "environment",
+      "term": "contaminant",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "erosion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "biodegradable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "canopy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "degradation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "deplete",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "detritus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "dieback",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "ecocide",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "eradicate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "exuberance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "infiltration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "inhospitable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "mitigation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "perish",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "sanctuary",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "stewardship",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "sustainability",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "taint",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "fossil fuel",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "environment",
+      "term": "ecological",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "environment",
+      "term": "deforestation",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "environment",
+      "term": "debris",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "environment",
+      "term": "devastate",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "environment",
+      "term": "climate change",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "environment",
+      "term": "carbon footprint",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "technology",
+      "term": "computation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "automatize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "innovatory",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "electromechanical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "filtration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "synchronize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "stylus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "simulation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "cybersecurity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "technology",
+      "term": "circuitry",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "health",
+      "term": "sedentary",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "health",
+      "term": "diagnosable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "treatise",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "pharmaceutical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "epidemic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "alleviate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "cardiovascular",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "dementia",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "detriment",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "dysentery",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "dysfunction",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "efficacy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "emollient",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "hypothermia",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "immunologist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "incontinence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "invigorate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "malnourished",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "mortality",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "mycosis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "neurophysiology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "osteoporosis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "pathogen",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "prognosis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "schizophrenia",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "strenuous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "succumb",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "susceptible",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "sustenance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "tinnitus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "trimester",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "virulent",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "vulnerable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "mental health",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "placebo",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "immunity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "antioxidant",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "hydration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "rehabilitation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "allergen",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "pharmacology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "calorie",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "health",
+      "term": "probiotic",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "hierarchical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "inductee",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "subordination",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "freelancer",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "networking",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "layoff",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "subordinate",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "competency",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "remuneration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "delegation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "work-life balance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "proficiency",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "maternity leave",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "severance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "redundancy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society-work",
+      "term": "resignation",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "society",
+      "term": "demographer",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "demographic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "ethicize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "deference",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "denigration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "denizen",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "dignitary",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "cosmopolitan",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "interloper",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "loggerhead",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "proletariat",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "rustication",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "salacious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "advocacy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "autonomy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "cohesion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "society",
+      "term": "diversion",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "work",
+      "term": "careerist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "laborious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "entrepreneurship",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "ergonomics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "industrious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "versatile",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "versatility",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "work",
+      "term": "redundant",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "economisation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "economization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "investable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "investible",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "recessional",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "recessionary",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "bankable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "productible",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "capitalise",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "capitalization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "capitalize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "accrue",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "accumulative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "affluent",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "allocate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "appraisal",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "appraise",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "barter",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "consolidate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "consortium",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "diversification",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "diversify",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "earmark",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "entrepreneurial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "exploitation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "fluctuation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "intangible",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "liability",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "liquidation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "maximize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "minimize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "mismanagement",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "niche",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "outperform",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "privatization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "procurement",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "remunerative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "repossession",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "scarce",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "solicit",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "speculator",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "subsidy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "surplus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "takeover",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "tycoon",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "undervalue",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "utilisation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "utilise",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "utilization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "utilize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "valuation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "monopoly",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "commodity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "gross domestic product",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "liquidity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "leverage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "economy",
+      "term": "accumulate",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "deficit",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "lucrative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "offshore",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "fiscal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "bankruptcy",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "economy",
+      "term": "exchange rate",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "transport",
+      "term": "aviation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "transport",
+      "term": "congestion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "transport",
+      "term": "nautical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "transport",
+      "term": "propulsion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "transport",
+      "term": "transitory",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "derelict",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "deteriorate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "deterioration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "dilapidated",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "larder",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "occupancy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "redevelopment",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "uninhabitable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "housing",
+      "term": "upkeep",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "tourism",
+      "term": "seafarer",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "tourism",
+      "term": "seafaring",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "tourism",
+      "term": "tavern",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "tourism",
+      "term": "voyager",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "tourism",
+      "term": "itinerary",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "tourism",
+      "term": "excursion",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "tourism",
+      "term": "trek",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "tourism",
+      "term": "voyage",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "tourism",
+      "term": "souvenir",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "culture",
+      "term": "apotheosis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "artisan",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "austere",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "burlesque",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "curate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "esoteric",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "extol",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "glyph",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "impaste",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "museology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "pantomime",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "prolific",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "prosaic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "sublime",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "transcendental",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "vaudeville",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "canvas",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "curator",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "renaissance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "depict",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "motif",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "culture",
+      "term": "impressionism",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "media",
+      "term": "mediation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "media",
+      "term": "propaganda",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "media",
+      "term": "censorship",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "media",
+      "term": "circular",
+      "localPartOfSpeech": "noun",
+      "comparison": "headword_found_part_of_speech_differs",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS Nâng cao",
+      "sourceLevelObserved": "B1"
+    },
+    {
+      "topic": "media",
+      "term": "preface",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "media",
+      "term": "tout",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "politic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "democratization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "absolutist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "allegiance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "appease",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "codify",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "compliance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "constituency",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "devolve",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "imperative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "headword_found_part_of_speech_differs",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS Nâng cao",
+      "sourceLevelObserved": "B2"
+    },
+    {
+      "topic": "government",
+      "term": "prerogative",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "stringent",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "subvert",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "veto",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "sovereignty",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "diplomacy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "constituent",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "citizenry",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "sanction",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "referendum",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "electorate",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "government",
+      "term": "legislation",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "legislative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "legislator",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "abolish",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "consensus",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "enforce",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "invoke",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "regime",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "coalition",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "government",
+      "term": "bureaucracy",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "crime",
+      "term": "criminality",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "criminalization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "detain",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "culprit",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "defuse",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "delinquency",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "deterrent",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "flagrant",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "implicate",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "inadmissible",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "incendiary",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "instigate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "pillage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "prosecution",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "tribunal",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "unscrupulous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "vandalism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "vindicate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "crime",
+      "term": "notorious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "crime",
+      "term": "surveillance",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "science",
+      "term": "hypotheses",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "hypothesise",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "hypothesize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "analysable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "anomalous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "anomaly",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "calibrate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "chromatic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "chromatograph",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "chronometer",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "coalesce",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "continuum",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "converge",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "convergence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "deflect",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "diffuse",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "diffusion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "dispersal",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "disperse",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "displacement",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "distort",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "divergence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "emulsify",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "emulsifier",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "emulsion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "galvanism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "infrasonic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "isotope",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "luminance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "oscillation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "paleontologist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "polarization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "polarize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "polygraph",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "porosity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "porous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "precursor",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "rectilinear",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "refraction",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "resonance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "resonate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "reverberate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "sextant",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "spatial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "spatially",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "trajectory",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "science",
+      "term": "catalyst",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "science",
+      "term": "microscopic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "science",
+      "term": "resonant",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "energy",
+      "term": "solarisation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "solarization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "fossilise",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "fossilization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "fossilize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "naturalise",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "mineralisation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "mineralization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "conservationist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "geothermal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "bituminous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "energy",
+      "term": "untapped",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "agriculturist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "aquaculture",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "arable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "blight",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "cucurbit",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "domesticate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "horticulture",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "husbandry",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "monoculture",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "pesticide",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "propagate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "agriculture",
+      "term": "sainfoin",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "transnational",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "manufacturable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "outsourcing",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "interdependence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "reciprocity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "supply chain",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "globalization",
+      "term": "trade surplus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "maternal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "paternal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "paternalism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "adolescence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "descendant",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "espouse",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "matriarch",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "family",
+      "term": "parentage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "discourse",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "morphology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "phonetic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "phonetics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "pragmatic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "semantic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "semantics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "syntax",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "anecdotal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "aphorism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "articulate",
+      "localPartOfSpeech": "adjective",
+      "comparison": "headword_found_part_of_speech_differs",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS Nâng cao",
+      "sourceLevelObserved": "B2"
+    },
+    {
+      "topic": "language",
+      "term": "colloquial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "dialectic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "dialectical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "eloquently",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "explicit",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "haplology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "logogram",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "logographic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "obfuscation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "pictogram",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "pidgin",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "plosive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "rebus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "reiteration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "tacit",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "vernacular",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "language",
+      "term": "acquisition",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "sports",
+      "term": "prowess",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "sports",
+      "term": "spelunking",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "sports",
+      "term": "treadmill",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "sports",
+      "term": "endurance",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "history",
+      "term": "anthropological",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "anthropologist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "anthropology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "dynastic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "antediluvian",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "cuneiform",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "enshrine",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "extant",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "hieroglyph",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "hieroglyphics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "hitherto",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "lineage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "history",
+      "term": "perpetuate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "feminize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "disparity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "egalitarian",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "egalitarianism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "harassment",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "inhumane",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "equality",
+      "term": "oppression",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "development",
+      "term": "humanitarian",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "development",
+      "term": "humanitarianism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "development",
+      "term": "dwindle",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "development",
+      "term": "meager",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "development",
+      "term": "meliorate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "development",
+      "term": "subsistence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "development",
+      "term": "sanitation",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "consumerism",
+      "term": "consumerism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "consumerism",
+      "term": "commercialism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "consumerism",
+      "term": "entice",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "consumerism",
+      "term": "extravagance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "consumerism",
+      "term": "luxuriance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "consumerism",
+      "term": "splurge",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "consumerism",
+      "term": "utilitarian",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "designate",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "aesthetic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "aestheticism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "aesthetics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "functionary",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "ashlar",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "atrium",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "buttress",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "corbel",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "edifice",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "facade",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "forecourt",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "lintel",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "pediment",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "prefabricated",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "terracotta",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "turret",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "undergird",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "underpin",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "architecture",
+      "term": "vault",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "predator",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "predatory",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "aquatic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "migratory",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "biologically",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "botanical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "zoological",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "zoologist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "zoology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "arboreal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "bivalve",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "conifer",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "endemic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "fauna",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "faunal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "ferocious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "flora",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "foliage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "herbivore",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "indigenous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "marsupial",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "megafauna",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "monotreme",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "pachyderm",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "plumage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "reptilian",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "wildfowl",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biodiversity",
+      "term": "ecologically",
+      "localPartOfSpeech": "adverb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adverb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "water",
+      "term": "sewage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "scarcity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "purification",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "barrage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "catchment",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "cistern",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "dredge",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "dyke",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "effluent",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "fathom",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "reservoir",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "scour",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "seep",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "sewerage",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "sluice",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "submerge",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "torrent",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "trickle",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "watershed",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "water",
+      "term": "reclamation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "abhor",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "allure",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "animosity",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "astute",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "avid",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "blandishment",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "choleric",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "compel",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "compulsive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "countenance",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "covet",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "cynical",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "daunt",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "deceit",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "delude",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "demeanour",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "demonstrative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "demoralize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "depersonalization",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "desensitize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "devious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "disillusion",
+      "localPartOfSpeech": "noun",
+      "comparison": "headword_found_part_of_speech_differs",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS Nâng cao",
+      "sourceLevelObserved": "B2"
+    },
+    {
+      "topic": "psychology",
+      "term": "dismay",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "dismissive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "dissembler",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "dissociation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "dogged",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "eccentric",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "egocentric",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "embolden",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "enliven",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "erratic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "frenetically",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "gaga",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "gush",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "harry",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "huffy",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "hypnotize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "hysteria",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "idealize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "insidious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "insincere",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "intimidating",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "languish",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "lascivious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "manifest",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "melancholic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "misapprehension",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "misgiving",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "nous",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "oblivious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "obstinate",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "phlegmatic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "predispose",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "prescience",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "prodigy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "provocative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "psycho",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "psychometrics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "rapport",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "rapture",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "reminiscence",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "resilience",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "resilient",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "sanguine",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "seductive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "solace",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "staid",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "stoic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "subliminal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "surly",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "unhinge",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "unprepossessing",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "vagary",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "voyeurism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "waver",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "empathy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "psychoanalysis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "conditioning",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "introspection",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "arousal",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "defense mechanism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "psychometric",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "hallucination",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "self-efficacy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "psychology",
+      "term": "adversity",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "aspiration",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "aspire",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "conceivable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "despair",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "folly",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "grim",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "meditate",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "mystify",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "obsessive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "procrastination",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "psychology",
+      "term": "subconscious",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B1",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "biology",
+      "term": "anatomical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "enzyme",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "physiological",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "alkaloid",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "anthropomorphic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "assimilate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "assimilation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cambium",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "carapace",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "carnivorous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cellulose",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cerebral",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "chlorophyll",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "circulatory",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cochlea",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cortex",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "costal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cranial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "cuticle",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "degeneration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "degenerative",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "dendrite",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "dimorphic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "dissect",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "dissection",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "entomologist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "entomology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "fibril",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "hereditary",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "hippocampus",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "implantation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "incubation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "innervate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "locomotion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "metabolic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "metabolism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "musculature",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "olfactory",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "osmosis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "palaeobiology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "parasite",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "photosynthesis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "photosynthesize",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "photosynthetic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "procreation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "proliferate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "regenerate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "regeneration",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "salivation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "secrete",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "symbiosis",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "synapse",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "synaptic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "taxonomist",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "taxonomy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "unviable",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "vasomotor",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "vertebrate",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "biology",
+      "term": "microorganism",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "biology",
+      "term": "biotechnology",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "earth-science",
+      "term": "lithosphere",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "oceanography",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "sedimentary",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "seismology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "albedo",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "barometric",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "caldera",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "cataclysm",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "geochemical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "geophysics",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "katabatic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "magnetite",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "stratification",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "stratosphere",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "terrestrial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "earth-science",
+      "term": "undulation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "astronomy",
+      "term": "celestial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "astronomy",
+      "term": "extraterrestrial",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "astronomy",
+      "term": "zenith",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "empirical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "empirically",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "metaphysical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "rationalism",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "analogous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "corroborate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "decry",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "elicit",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "emulate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "ethnographic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "exhaustive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "monograph",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "peruse",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "postulate",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "rebut",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "rhetoric",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "seminal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "dissertation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "peer review",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "metacognition",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "paradigm",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "epistemology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "deduce",
+      "localPartOfSpeech": "verb",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "verb",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "academic-methods",
+      "term": "paradox",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "geography",
+      "term": "abyssal",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "archipelago",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "cartographer",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "cartographic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "contiguous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "demarcation",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "estuarine",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "geodetic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "intercontinental",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "meander",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "oxbow",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "periphery",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "plateau",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "topographic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "topographical",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "uninhabited",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "cartography",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "vista",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "islet",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "hinterland",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "estuary",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "geography",
+      "term": "picturesque",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "geography",
+      "term": "proximity",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "geography",
+      "term": "subcontinent",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "geography",
+      "term": "nomad",
+      "localPartOfSpeech": "noun",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "noun",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "materials-science",
+      "term": "alloy",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "corrosion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "decanted",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "disintegrate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "hygroscopic",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "lamination",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "molten",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "obsidian",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "substrate",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "volatile",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "nanotechnology",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "quantum",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "materials-science",
+      "term": "inert",
+      "localPartOfSpeech": "adjective",
+      "comparison": "exact_headword_and_part_of_speech",
+      "sourceLevel": "B2",
+      "sourcePartOfSpeech": "adjective",
+      "assignment": "IELTS"
+    },
+    {
+      "topic": "general-reading",
+      "term": "albeit",
+      "localPartOfSpeech": "conjunction",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "arduous",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "circumvent",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "conducive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "culminate",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "demise",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "eschew",
+      "localPartOfSpeech": "verb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "inextricably",
+      "localPartOfSpeech": "adverb",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "myriad",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "paramount",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "paraphernalia",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "pervasive",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "profound",
+      "localPartOfSpeech": "adjective",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    },
+    {
+      "topic": "general-reading",
+      "term": "profusion",
+      "localPartOfSpeech": "noun",
+      "comparison": "not_listed",
+      "sourceLevel": null,
+      "sourcePartOfSpeech": null,
+      "assignment": "IELTS Nâng cao"
+    }
+  ]
+}

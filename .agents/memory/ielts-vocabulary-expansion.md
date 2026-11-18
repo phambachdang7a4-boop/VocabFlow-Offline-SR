@@ -14,3 +14,9 @@ Phân chia “IELTS” và “IELTS Nâng cao” hiện là phân loại biên s
 **Why:** Dữ liệu từ vựng offline không có nhãn CEFR hoặc điểm tần suất chuẩn; tên “Nâng cao” mô tả mục tiêu học, không xác nhận cấp độ chính thức.
 
 **How to apply:** Khi nhắc đến hai khóa, gọi đây là nhóm học thường/nâng cao theo biên soạn; giữ lại nguồn và nghĩa từ, và rà lại cấp độ bằng nguồn CEFR hoặc chuyên gia trước khi công bố nhãn chính thức.
+
+CEFR-J Wordlist v1.6 chỉ bao phủ A1–B2. Đối chiếu phải khớp cả headword và từ loại; mục không có hoặc lệch từ loại không chứng minh C1/C2 và không được gán nhãn từ nguồn đó.
+
+**Why:** Danh sách CEFR-J ghi rõ các cấp đến B2, và từ cùng dạng chữ có thể nhận cấp khác nhau theo từ loại.
+
+**How to apply:** Ghi cấp là kết quả của nguồn cụ thể, trích dẫn CEFR-J khi dùng; giữ mục không khớp dưới nhãn biên soạn cho tới khi có bằng chứng khác.

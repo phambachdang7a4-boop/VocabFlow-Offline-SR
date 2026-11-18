@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { join } = require("node:path");
 const courseData = require("../domain/ielts-topic-course-data.json");
+const cefrReview = require("../domain/ielts-cefr-review.json");
 const expansionContent = require("../domain/ielts-ai-expansion-content.json");
 const bookImportCandidates = require("../domain/ielts-book-c1-c2-candidates.json");
 const bookImportContent = require("../domain/ielts-book-c1-c2-ai-content.json");
@@ -465,6 +466,59 @@ const ieltsCourseDomain = loadTs(
     "./ielts-book-c1-c2-candidates.json": bookImportCandidates,
   },
 );
+const reviewedStandardTerms = new Set(
+  ieltsCourseDomain.IELTS_TOPIC_WORD_LIST.flatMap((topic) => topic.terms),
+);
+const reviewedAdvancedTerms = new Set(
+  ieltsCourseDomain.IELTS_ADVANCED_TOPIC_WORD_LIST.flatMap(
+    (topic) => topic.terms,
+  ),
+);
+assert.equal(cefrReview.reviewedTermCount, 777);
+assert.equal(cefrReview.items.length, cefrReview.reviewedTermCount);
+assert.equal(
+  new Set(cefrReview.items.map((item) => item.term.toLocaleLowerCase("en")))
+    .size,
+  cefrReview.reviewedTermCount,
+  "The CEFR comparison must contain one row for every distinct reviewed term.",
+);
+assert.equal(cefrReview.summary.exactHeadwordAndPartOfSpeechMatches, 63);
+assert.equal(cefrReview.summary.exactMatchesBySourceLevel.B1, 12);
+assert.equal(cefrReview.summary.exactMatchesBySourceLevel.B2, 51);
+assert.equal(cefrReview.summary.headwordFoundButPartOfSpeechDiffers, 4);
+assert.equal(cefrReview.summary.noExactHeadword, 710);
+assert.equal(
+  cefrReview.source.name,
+  "CEFR-J Wordlist Version 1.6",
+  "The source and its version must be recorded.",
+);
+assert.match(cefrReview.source.citation, /Retrieved from https:\/\/www\.cefr-j\.org/);
+assert.match(cefrReview.source.rights, /proper acknowledgement/);
+assert.match(cefrReview.method.limits, /does not establish C1 or C2/);
+for (const item of cefrReview.items) {
+  const inStandard = reviewedStandardTerms.has(item.term);
+  const inAdvanced = reviewedAdvancedTerms.has(item.term);
+  assert.equal(
+    Number(inStandard) + Number(inAdvanced),
+    1,
+    `${item.term} remains in exactly one IELTS course.`,
+  );
+  assert.equal(
+    item.assignment === "IELTS" ? inStandard : inAdvanced,
+    true,
+    `${item.term} remains in its reviewed IELTS course.`,
+  );
+  if (item.comparison === "exact_headword_and_part_of_speech") {
+    assert.ok(["B1", "B2"].includes(item.sourceLevel));
+    assert.equal(item.assignment, "IELTS");
+  } else {
+    assert.equal(
+      item.sourceLevel,
+      null,
+      `${item.term} must not receive a source level without an exact POS match.`,
+    );
+  }
+}
 const expectedReadingLessonCounts = {
   education: 5,
   environment: 3,
