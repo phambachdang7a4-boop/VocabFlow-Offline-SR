@@ -18,6 +18,7 @@ let activeAudioFile: File | null = null;
 let playbackGeneration = 0;
 let activeDownload: AbortController | null = null;
 let activeDownloadTask: Promise<void> | null = null;
+const AUDIO_CHUNK_TIMEOUT_MS = 20_000;
 
 function databaseFile(): File {
   return new File(Paths.document, "SQLite", OFFLINE_AUDIO_DICTIONARY.filename);
@@ -64,10 +65,20 @@ async function downloadAudioChunk(
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     if (signal.aborted) throw new Error("Đã hủy tải gói audio.");
+    const requestController = new AbortController();
+    let timedOut = false;
+    const abortRequest = () => requestController.abort();
+    signal.addEventListener("abort", abortRequest, { once: true });
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      requestController.abort();
+    }, AUDIO_CHUNK_TIMEOUT_MS);
     try {
       const response = await fetch(url, {
         headers: { Range: `bytes=${start}-${end}` },
-        signal,
+        credentials: "omit",
+        cache: "no-store",
+        signal: requestController.signal,
       });
       if (response.status !== 206) {
         await response.body?.cancel().catch(() => undefined);
@@ -85,9 +96,17 @@ async function downloadAudioChunk(
       return chunk;
     } catch (error) {
       if (signal.aborted) throw new Error("Đã hủy tải gói audio.");
-      lastError = error instanceof Error ? error.message : String(error);
-      if (attempt < 2) await waitBeforeRetry(400 * 2 ** attempt, signal);
+      lastError = timedOut
+        ? `hết thời gian chờ ${AUDIO_CHUNK_TIMEOUT_MS / 1000} giây`
+        : error instanceof Error
+          ? error.message
+          : String(error);
+    } finally {
+      clearTimeout(timeout);
+      signal.removeEventListener("abort", abortRequest);
+      if (!requestController.signal.aborted) requestController.abort();
     }
+    if (attempt < 2) await waitBeforeRetry(400 * 2 ** attempt, signal);
   }
 
   throw new Error(
@@ -127,7 +146,18 @@ export async function getOfflineAudioStatus(): Promise<{
 }> {
   if (Platform.OS === "web") return { state: "unavailable", bytes: 0 };
   const file = databaseFile();
-  if (!file.exists) return { state: "missing", bytes: 0 };
+  if (!file.exists) {
+    const partial = partialDatabaseFile();
+    return {
+      state: "missing",
+      bytes: partial.exists
+        ? offlineAudioResumeOffset(
+            partial.size ?? 0,
+            OFFLINE_AUDIO_DICTIONARY.bytes,
+          )
+        : 0,
+    };
+  }
   const bytes = file.size ?? 0;
   if (bytes !== OFFLINE_AUDIO_DICTIONARY.bytes)
     return { state: "damaged", bytes };
@@ -141,6 +171,8 @@ export async function getOfflineAudioStatus(): Promise<{
 
 export async function downloadOfflineAudio(
   onProgress?: (bytesWritten: number, totalBytes: number) => void,
+  signal?: AbortSignal,
+  onStage?: (stage: "downloading" | "verifying" | "saving") => void,
 ): Promise<void> {
   if (Platform.OS === "web")
     throw new Error("Tải audio offline khả dụng trong ứng dụng Android.");
@@ -149,7 +181,10 @@ export async function downloadOfflineAudio(
   const downloadFile = partialDatabaseFile();
   const controller = new AbortController();
   activeDownload = controller;
+  const abortDownload = () => controller.abort();
+  signal?.addEventListener("abort", abortDownload, { once: true });
   const task = (async () => {
+    if (signal?.aborted) controller.abort();
     const sqliteDirectory = new Directory(Paths.document, "SQLite");
     if (!sqliteDirectory.exists)
       sqliteDirectory.create({ intermediates: true, idempotent: true });
@@ -167,6 +202,7 @@ export async function downloadOfflineAudio(
     onProgress?.(downloadedBytes, OFFLINE_AUDIO_DICTIONARY.bytes);
     try {
       const url = getDownloadUrl();
+      onStage?.("downloading");
       while (downloadedBytes < OFFLINE_AUDIO_DICTIONARY.bytes) {
         const start = downloadedBytes;
         const end = Math.min(
@@ -187,11 +223,13 @@ export async function downloadOfflineAudio(
     } finally {
       destinationHandle.close();
     }
+    if (controller.signal.aborted) throw new Error("Đã hủy tải gói audio.");
     if (downloadFile.size !== OFFLINE_AUDIO_DICTIONARY.bytes) {
       throw new Error(
         "Gói audio tải chưa đủ. Phần đã tải được giữ lại; hãy thử tải tiếp.",
       );
     }
+    onStage?.("verifying");
     if (
       (await downloadFile.digest("SHA-256")).toLowerCase() !==
       OFFLINE_AUDIO_DICTIONARY.sha256
@@ -201,6 +239,8 @@ export async function downloadOfflineAudio(
         "Gói audio không đúng phiên bản hoặc bị hỏng. Hãy tải lại.",
       );
     }
+    if (controller.signal.aborted) throw new Error("Đã hủy tải gói audio.");
+    onStage?.("saving");
     if (destination.exists) destination.delete();
     await downloadFile.move(destination);
     databaseConnection = undefined;
@@ -213,6 +253,7 @@ export async function downloadOfflineAudio(
     databaseConnection = undefined;
     throw error;
   } finally {
+    signal?.removeEventListener("abort", abortDownload);
     if (activeDownload === controller) {
       activeDownload = null;
       activeDownloadTask = null;

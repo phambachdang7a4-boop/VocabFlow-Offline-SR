@@ -102,6 +102,7 @@ export default function SettingsScreen() {
   const [audioStatus, setAudioStatus] = React.useState<
     "checking" | "missing" | "installed" | "damaged" | "unavailable"
   >("checking");
+  const [audioBytes, setAudioBytes] = React.useState(0);
   const [courseDataStatus, setCourseDataStatus] = React.useState<
     | "checking"
     | "missing"
@@ -138,11 +139,15 @@ export default function SettingsScreen() {
     | null
   >(null);
   const [offlineStage, setOfflineStage] = React.useState<string | null>(null);
+  const [audioDownloadStage, setAudioDownloadStage] = React.useState<
+    "downloading" | "verifying" | "saving" | null
+  >(null);
   const [offlineProgress, setOfflineProgress] = React.useState({
     bytesWritten: 0,
     totalBytes: 0,
   });
   const courseDownloadController = React.useRef<AbortController | null>(null);
+  const audioDownloadController = React.useRef<AbortController | null>(null);
   const [offlineError, setOfflineError] = React.useState<string | null>(null);
   const [resetDialog, setResetDialog] = React.useState<
     "local" | "cloud" | null
@@ -174,6 +179,7 @@ export default function SettingsScreen() {
         ]);
       setDictionaryStatus(dictionary.state);
       setAudioStatus(audio.state);
+      setAudioBytes(audio.bytes);
       setRegionalIpaStatus(regionalIpa.state);
       setRegionalIpaEntryCount(regionalIpa.entryCount);
       setRegionalIpaParts(regionalIpaPartsStatus);
@@ -182,6 +188,7 @@ export default function SettingsScreen() {
     } catch {
       setDictionaryStatus("unavailable");
       setAudioStatus("damaged");
+      setAudioBytes(0);
       setRegionalIpaStatus("damaged");
       setRegionalIpaParts({
         us: "missing",
@@ -253,20 +260,44 @@ export default function SettingsScreen() {
     setOfflineError(null);
     setOfflineAction("audio-download");
     setOfflineStage("Đang tải gói audio");
+    setAudioDownloadStage("downloading");
+    const controller = new AbortController();
+    audioDownloadController.current = controller;
     setOfflineProgress({
-      bytesWritten: 0,
+      bytesWritten: audioBytes,
       totalBytes: OFFLINE_AUDIO_DICTIONARY.bytes,
     });
     try {
-      await downloadOfflineAudio((bytesWritten, totalBytes) =>
-        setOfflineProgress({ bytesWritten, totalBytes }),
+      await downloadOfflineAudio(
+        (bytesWritten, totalBytes) =>
+          setOfflineProgress({ bytesWritten, totalBytes }),
+        controller.signal,
+        (stage) => {
+          setAudioDownloadStage(stage);
+          setOfflineStage(
+            {
+              downloading: "Đang tải gói audio",
+              verifying: "Đang xác minh gói audio",
+              saving: "Đang lưu gói audio vào máy",
+            }[stage],
+          );
+        },
       );
       setOfflineStage("Đã cài xong");
     } catch (cause) {
-      setOfflineError(
-        cause instanceof Error ? cause.message : "Không thể cài audio offline.",
-      );
+      if (controller.signal.aborted) {
+        setOfflineError(null);
+        setOfflineStage("Đã dừng tải audio; phần đã tải vẫn được giữ lại");
+      } else {
+        setOfflineError(
+          cause instanceof Error ? cause.message : "Không thể cài audio offline.",
+        );
+      }
     } finally {
+      if (audioDownloadController.current === controller) {
+        audioDownloadController.current = null;
+      }
+      setAudioDownloadStage(null);
       setOfflineAction(null);
       await refreshOfflineStatus();
     }
@@ -1882,25 +1913,51 @@ Nội dung tệp:
                       ? "Tải offline chỉ hỗ trợ trên ứng dụng Android"
                       : audioStatus === "checking"
                         ? "Đang kiểm tra…"
-                        : `Chưa cài · ${sizeLabel(OFFLINE_AUDIO_DICTIONARY.bytes)} · ${OFFLINE_AUDIO_DICTIONARY.entryCount.toLocaleString("vi-VN")} từ`}
+                        : audioBytes > 0
+                          ? `Đã tải ${sizeLabel(audioBytes)} / ${sizeLabel(OFFLINE_AUDIO_DICTIONARY.bytes)} · có thể tiếp tục`
+                          : `Chưa cài · ${sizeLabel(OFFLINE_AUDIO_DICTIONARY.bytes)} · ${OFFLINE_AUDIO_DICTIONARY.entryCount.toLocaleString("vi-VN")} từ`}
               </Text>
             </View>
           </View>
           <View style={styles.offlineActions}>
             <Button
               testID="offline-audio-download"
-              label={audioStatus === "damaged" ? "Tải lại" : "Tải audio"}
-              icon="download"
+              label={
+                offlineAction === "audio-download"
+                  ? audioDownloadStage === "downloading"
+                    ? "Dừng tải"
+                    : audioDownloadStage === "verifying"
+                      ? "Đang xác minh"
+                      : "Đang lưu"
+                  : audioStatus === "damaged"
+                    ? "Tải lại"
+                    : audioBytes > 0
+                      ? "Tiếp tục tải"
+                      : "Tải audio"
+              }
+              icon={
+                offlineAction === "audio-download" &&
+                audioDownloadStage === "downloading"
+                  ? "x-circle"
+                  : "download"
+              }
               onPress={() => {
-                void handleDownloadAudio();
+                if (offlineAction === "audio-download") {
+                  audioDownloadController.current?.abort();
+                } else {
+                  void handleDownloadAudio();
+                }
               }}
-              loading={offlineAction === "audio-download"}
+              loading={false}
               disabled={
-                Boolean(offlineAction) ||
-                syncBusy ||
-                audioStatus === "installed" ||
-                audioStatus === "checking" ||
-                audioStatus === "unavailable"
+                (Boolean(offlineAction) &&
+                  (offlineAction !== "audio-download" ||
+                    audioDownloadStage !== "downloading")) ||
+                (syncBusy && offlineAction !== "audio-download") ||
+                (offlineAction !== "audio-download" &&
+                  (audioStatus === "installed" ||
+                    audioStatus === "checking" ||
+                    audioStatus === "unavailable"))
               }
               style={{ flex: 1 }}
             />

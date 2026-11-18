@@ -191,9 +191,12 @@ function response(start, end, status = 206) {
   };
 
   const progressAfterFailure = [];
+  const stages = [];
   await assert.rejects(
-    downloadModule.downloadOfflineAudio((current) =>
-      progressAfterFailure.push(current),
+    downloadModule.downloadOfflineAudio(
+      (current) => progressAfterFailure.push(current),
+      undefined,
+      (stage) => stages.push(stage),
     ),
     /sau 3 lần thử.*giữ lại/u,
   );
@@ -204,20 +207,72 @@ function response(start, end, status = 206) {
     "Retry a failed chunk without re-downloading already completed chunks.",
   );
   assert.equal(progressAfterFailure.at(-1), chunkBytes);
+  assert.deepEqual(stages, ["downloading"]);
 
-  fs.appendFileSync(partialPath, Buffer.alloc(100, 255));
+  const cancelController = new AbortController();
+  requestedRanges.length = 0;
+  await assert.rejects(
+    downloadModule.downloadOfflineAudio(
+      (current) => {
+        if (current >= chunkBytes * 2) cancelController.abort();
+      },
+      cancelController.signal,
+    ),
+    /Đã hủy tải gói audio/u,
+  );
+  assert.deepEqual(
+    requestedRanges.map(([start]) => start),
+    [chunkBytes],
+    "Stopping preserves complete chunks already received.",
+  );
+  assert.equal(fs.statSync(partialPath).size, chunkBytes * 2);
+  assert.deepEqual(await downloadModule.getOfflineAudioStatus(), {
+    state: "missing",
+    bytes: chunkBytes * 2,
+  });
+
+  const rangeFetch = global.fetch;
+  global.fetch = async (_url, options) =>
+    new Promise((_resolve, reject) => {
+      options.signal.addEventListener(
+        "abort",
+        () => reject(new Error("connection stopped by user")),
+        { once: true },
+      );
+    });
+  const stalledController = new AbortController();
+  const stalledDownload = downloadModule.downloadOfflineAudio(
+    undefined,
+    stalledController.signal,
+  );
+  setTimeout(() => stalledController.abort(), 10);
+  await assert.rejects(
+    stalledDownload,
+    /Đã hủy tải gói audio/u,
+    "Stopping a stalled request aborts it immediately.",
+  );
+  assert.equal(fs.statSync(partialPath).size, chunkBytes * 2);
+  global.fetch = rangeFetch;
+
+  fs.appendFileSync(partialPath, Buffer.alloc(8, 255));
   assert.equal(
     domain.offlineAudioResumeOffset(fs.statSync(partialPath).size, totalBytes),
-    chunkBytes,
+    chunkBytes * 2,
     "Ignore an incomplete tail and overwrite it from the last complete chunk.",
   );
   requestedRanges.length = 0;
-  await downloadModule.downloadOfflineAudio();
+  stages.length = 0;
+  await downloadModule.downloadOfflineAudio(
+    undefined,
+    undefined,
+    (stage) => stages.push(stage),
+  );
   assert.deepEqual(
     requestedRanges.map(([start]) => start),
-    [chunkBytes, chunkBytes * 2],
+    [chunkBytes * 2],
     "A later tap resumes at the first missing chunk.",
   );
+  assert.deepEqual(stages, ["downloading", "verifying", "saving"]);
   assert.equal(fs.existsSync(partialPath), false);
   assert.equal(fs.statSync(sqlitePath).size, totalBytes);
   assert.equal(
@@ -229,6 +284,29 @@ function response(start, end, status = 206) {
     state: "installed",
     bytes: totalBytes,
   });
+
+  const originalSetTimeout = global.setTimeout;
+  global.setTimeout = (callback, delay, ...args) =>
+    originalSetTimeout(callback, delay === 20_000 ? 0 : delay, ...args);
+  requestedRanges.length = 0;
+  global.fetch = async (_url, options) =>
+    new Promise((_resolve, reject) => {
+      options.signal.addEventListener(
+        "abort",
+        () => reject(new Error("connection stalled")),
+        { once: true },
+      );
+    });
+  try {
+    await assert.rejects(
+      downloadModule.downloadOfflineAudio(),
+      /hết thời gian chờ 20 giây/u,
+      "A stalled request times out and reports a useful error.",
+    );
+    assert.equal(requestedRanges.length, 0);
+  } finally {
+    global.setTimeout = originalSetTimeout;
+  }
 
   await downloadModule.deleteOfflineAudio();
   assert.equal(fs.existsSync(sqlitePath), false);
@@ -265,7 +343,7 @@ function response(start, end, status = 206) {
     "Web reset removes the audio database without constructing unsupported FileSystem objects.",
   );
   console.log(
-    "PASS: ranged audio downloads resume, verify, clean up, and reset safely on web.",
+    "PASS: audio downloads resume by complete chunk, stop safely, time out, verify, and reset.",
   );
 })()
   .catch((error) => {
