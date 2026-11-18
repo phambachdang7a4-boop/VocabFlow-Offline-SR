@@ -269,6 +269,11 @@ for (const [rarity, source] of [
     assert.equal(image.props.style.width, 64);
     assert.equal(image.props.style.height, 64);
     assert.equal(image.props.style.imageRendering, "pixelated");
+    assert.deepEqual(
+      image.props.style.transform,
+      [{ scale: rarity === "rare" ? 1.15 : 1 }],
+      `${rarity} chest artwork uses the matching visual scale.`,
+    );
   }
 }
 
