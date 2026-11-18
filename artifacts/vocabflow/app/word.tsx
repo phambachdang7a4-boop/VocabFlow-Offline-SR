@@ -24,8 +24,8 @@ import {
 import type { DictionaryPronunciation } from '@/domain/dictionary';
 import {
   groupReviewPronunciations,
-  reviewExampleTranslation,
 } from '@/domain/review-result-details';
+import { useReviewExampleTranslation } from '@/hooks/useReviewExampleTranslation';
 
 function goBack() {
   if (router.canGoBack()) router.back();
@@ -82,7 +82,7 @@ function SavedWordInfoCard({ word }: { word: VocabularyWord }) {
       : [],
     word.ipa,
   );
-  const exampleTranslation = reviewExampleTranslation(word.example);
+  const exampleTranslation = useReviewExampleTranslation(word.example);
   const partOfSpeech = getSavedWordPartOfSpeech(word.note);
 
   useEffect(() => {

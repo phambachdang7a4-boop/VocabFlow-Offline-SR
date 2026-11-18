@@ -3,18 +3,10 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const { loadTs } = require("./test-support.cjs");
 
-const courseIds = {
-  "./conjunction-course": { CONJUNCTION_COURSE_ID: "sentence-structure" },
-  "./basic-vocabulary-course": {
-    BASIC_VOCABULARY_COURSE_ID: "basic-vocabulary-a1-a2-v1",
-  },
-  "./idiom-course": { IDIOM_COURSE_ID: "idioms" },
-  "./ielts-topic-course": { IELTS_TOPIC_COURSE_ID: "ielts" },
-  "./office-apps-course": { OFFICE_APPS_COURSE_ID: "office-apps" },
-  "./phrasal-verb-course": { PHRASAL_VERB_COURSE_ID: "phrasal-verbs" },
-  "./toeic-topic-course": { TOEIC_TOPIC_COURSE_ID: "toeic" },
-};
-const goals = loadTs(join(__dirname, "../domain/learning-goals.ts"), courseIds);
+const courseIds = loadTs(join(__dirname, "../domain/course-ids.ts"));
+const goals = loadTs(join(__dirname, "../domain/learning-goals.ts"), {
+  "./course-ids": courseIds,
+});
 assert.equal(goals.LEARNING_GOAL_OPTIONS.length, 7);
 assert.equal(
   new Set(goals.LEARNING_GOAL_OPTIONS.map((goal) => goal.id)).size,
@@ -27,11 +19,11 @@ assert.equal(
 );
 assert.equal(
   goals.getLearningGoalOption("ielts-reading").courseId,
-  "ielts",
+  "ielts-topic-vocabulary-v1",
 );
 assert.equal(
   goals.getLearningGoalOption("sentence-structures").courseId,
-  "sentence-structure",
+  "subordinating-conjunctions-v1",
 );
 assert.equal(goals.getLearningGoalOption("not-a-goal"), null);
 assert.equal(goals.isLearningGoalId("toeic"), true);

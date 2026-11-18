@@ -5,21 +5,14 @@ const { join } = require('node:path');
 const { loadTs, loadDictionaryDomain, loadLocalDictionaryAdditions, srs, createRepository } = require('./test-support.cjs');
 const dictionary = loadDictionaryDomain();
 const localDictionaryAdditions = loadLocalDictionaryAdditions();
-const conjunctionCourse = loadTs(
-  join(__dirname, '../domain/conjunction-course.ts'),
-  { './dictionary-local-additions': localDictionaryAdditions },
-);
-const linkingAdverbCourse = loadTs(
-  join(__dirname, '../domain/linking-adverb-course.ts'),
-);
 const sentenceStructurePatterns = loadTs(
   join(__dirname, '../domain/sentence-structure-patterns.ts'),
 );
 const exercises = loadTs(join(__dirname, '../domain/review-exercises.ts'), {
   './dictionary': dictionary,
-  './conjunction-course': conjunctionCourse,
-  './linking-adverb-course': linkingAdverbCourse,
-  './sentence-structure-patterns': sentenceStructurePatterns,
+  './review-excluded-course-terms.json': require(
+    '../domain/review-excluded-course-terms.json',
+  ),
 });
 const resultDetails = loadTs(
   join(__dirname, '../domain/review-result-details.ts'),
@@ -90,6 +83,15 @@ assert.equal(
   null,
   'Keep unsupported examples untranslated rather than guessing.',
 );
+resultDetails.setOfflineCourseExampleTranslations([
+  ['A learner studies a new idiom.', 'Người học luyện một thành ngữ mới.'],
+]);
+assert.equal(
+  resultDetails.reviewExampleTranslation('A learner studies a new idiom.'),
+  'Người học luyện một thành ngữ mới.',
+  'Use Vietnamese examples from the installed offline course package.',
+);
+resultDetails.setOfflineCourseExampleTranslations(null);
 const familyExamples = require('../data/basic-family-example-overrides.json');
 for (const examples of Object.values(familyExamples)) {
   for (const example of Object.values(examples)) {

@@ -66,13 +66,8 @@ function loadToeicTopicCourseDomain(dataLoader = loadToeicTopicCourseDataLoader(
   });
 }
 
-function loadLocalDictionaryAdditions(
-  dataLoader = loadToeicTopicCourseDataLoader(),
-) {
-  return loadTs(
-    join(__dirname, "../domain/dictionary-local-additions.ts"),
-    { "./toeic-topic-course-data-loader": dataLoader },
-  );
+function loadLocalDictionaryAdditions() {
+  return loadTs(join(__dirname, "../domain/dictionary-local-additions.ts"));
 }
 
 function loadDictionaryDomain() {

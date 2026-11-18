@@ -20,8 +20,8 @@ import {
 import type { DictionaryPronunciation } from "@/domain/dictionary";
 import {
   groupReviewPronunciations,
-  reviewExampleTranslation,
 } from "@/domain/review-result-details";
+import { useReviewExampleTranslation } from "@/hooks/useReviewExampleTranslation";
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
 import { useColors } from "@/hooks/useColors";
 import { Button, ErrorBanner, F, MaterialSheen } from "@/components/ui";
@@ -162,7 +162,7 @@ export function NotebookWordInfoSheet({
             : pronunciationState === "not-needed"
               ? "Chưa có dữ liệu Anh-Anh"
               : "Chưa cài gói IPA Anh-Anh · tải gói trong Cài đặt");
-  const exampleTranslation = reviewExampleTranslation(word.example);
+  const exampleTranslation = useReviewExampleTranslation(word.example);
   const sheetHeight = Math.min(Math.round(height * 0.66), 620);
   const bottomInset = Math.max(insets.bottom, Platform.OS === "web" ? 34 : 8);
 

@@ -66,6 +66,116 @@ const basicVocabularyCourseDomain = loadTs(
     ),
   },
 );
+const courseIds = loadTs(join(__dirname, "../domain/course-ids.ts"));
+const entriesOf = (value) =>
+  value instanceof Map ? Object.fromEntries(value) : value;
+const offlineCourseBundle = {
+  formatVersion: 1,
+  dictionaryIndex: { contentSha256: "test" },
+  ieltsAttemptMigration: {
+    originalLessonTerms:
+      ieltsTopicDomain.IELTS_PRE_SPLIT_LESSON_QUESTION_TERMS,
+    standardTerms: ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS.flatMap(
+      (lesson) => lesson.questions.map((question) => question.term),
+    ),
+    advancedSourceLessonIds:
+      ieltsTopicDomain.IELTS_ADVANCED_SOURCE_LESSON_IDS_BY_LESSON,
+  },
+  sentenceStructureDistractorExplanations:
+    sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_DISTRACTOR_EXPLANATIONS,
+  courses: [
+    {
+      id: basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_ID,
+      title: basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_TITLE,
+      description: `Học ${basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_WORD_COUNT} từ A1–A2 qua ${basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_LESSONS.length} bài ngắn, luyện chọn từ theo nghĩa tiếng Việt.`,
+      lessons: basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_LESSONS,
+      entriesByTerm:
+        basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_ENTRIES,
+      wordCount: basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_WORD_COUNT,
+      topicCount:
+        basicVocabularyCourseDomain.BASIC_VOCABULARY_COURSE_TOPIC_COUNT,
+    },
+    {
+      id: idiomCourseDomain.IDIOM_COURSE_ID,
+      title: idiomCourseDomain.IDIOM_COURSE_TITLE,
+      description: `Học ${idiomCourseDomain.IDIOM_COURSE_WORD_COUNT.toLocaleString("vi-VN")} thành ngữ có nghĩa tiếng Việt từ từ điển offline, qua câu ví dụ và bài chọn cụm phù hợp.`,
+      lessons: idiomCourseDomain.IDIOM_COURSE_LESSONS,
+      entriesByTerm: Object.fromEntries(
+        Object.entries(idiomCourseDomain.IDIOM_COURSE_ENTRIES).map(
+          ([term, entry]) => [term, { ...entry, partOfSpeech: "idiom" }],
+        ),
+      ),
+      wordCount: idiomCourseDomain.IDIOM_COURSE_WORD_COUNT,
+    },
+    {
+      id: phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_ID,
+      title: phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_TITLE,
+      description: `Học ${phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm động từ đã lọc từ từ điển offline, có nghĩa và câu ví dụ; sắp xếp theo ${phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_TOPIC_COUNT} nhóm chủ đề và động từ gốc.`,
+      lessons: phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_LESSONS,
+      entriesByTerm: phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_ENTRIES,
+      wordCount: phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_WORD_COUNT,
+      topicCount:
+        phrasalVerbCourseDomain.PHRASAL_VERB_COURSE_TOPIC_COUNT,
+    },
+    {
+      id: courseDomain.CONJUNCTION_COURSE_ID,
+      title: courseDomain.CONJUNCTION_COURSE_TITLE,
+      description: `Tổng hợp ${courseDomain.CONJUNCTION_COURSE_ENTRY_BY_TERM.size + Object.keys(linkingAdverbDomain.LINKING_ADVERB_COURSE_ENTRIES).length + Object.keys(sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_ENTRIES).length} mục gồm liên từ, trạng từ liên kết, mẫu giới từ và các mẫu cấu trúc câu; học qua ví dụ và bài chọn đáp án.`,
+      lessons: [
+        ...courseDomain.CONJUNCTION_COURSE_LESSONS,
+        ...linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS,
+        ...sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_LESSONS,
+      ],
+      entriesByTerm: {
+        ...entriesOf(courseDomain.CONJUNCTION_COURSE_ENTRY_BY_TERM),
+        ...linkingAdverbDomain.LINKING_ADVERB_COURSE_ENTRIES,
+        ...sentenceStructurePatternDomain.SENTENCE_STRUCTURE_PATTERN_ENTRIES,
+      },
+      progressPrefixes: [
+        courseIds.CONJUNCTION_COURSE_ID,
+        courseIds.LINKING_ADVERB_COURSE_ID,
+        courseIds.SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
+      ],
+    },
+    {
+      id: ieltsTopicDomain.IELTS_TOPIC_COURSE_ID,
+      title: ieltsTopicDomain.IELTS_TOPIC_COURSE_TITLE,
+      description: `Học ${ieltsTopicDomain.IELTS_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ vựng phổ biến và học thuật qua ${ieltsTopicDomain.IELTS_TOPIC_WORD_LIST.length} chủ đề IELTS. ${ieltsTopicDomain.IELTS_TOPIC_COURSE_SPELLING_CONVENTION}`,
+      lessons: ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS,
+      entriesByTerm: ieltsTopicDomain.IELTS_TOPIC_COURSE_ENTRIES,
+      wordCount: ieltsTopicDomain.IELTS_TOPIC_COURSE_WORD_COUNT,
+      topicCount: ieltsTopicDomain.IELTS_TOPIC_WORD_LIST.length,
+    },
+    {
+      id: ieltsTopicDomain.IELTS_ADVANCED_COURSE_ID,
+      title: ieltsTopicDomain.IELTS_ADVANCED_COURSE_TITLE,
+      description: `Luyện ${ieltsTopicDomain.IELTS_ADVANCED_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ học thuật khó và thuật ngữ chuyên sâu qua ${ieltsTopicDomain.IELTS_ADVANCED_TOPIC_WORD_LIST.length} chủ đề.`,
+      lessons: ieltsTopicDomain.IELTS_ADVANCED_COURSE_LESSONS,
+      entriesByTerm: ieltsTopicDomain.IELTS_ADVANCED_COURSE_ENTRIES,
+      wordCount: ieltsTopicDomain.IELTS_ADVANCED_COURSE_WORD_COUNT,
+      topicCount: ieltsTopicDomain.IELTS_ADVANCED_TOPIC_WORD_LIST.length,
+    },
+    {
+      id: toeicTopicDomain.TOEIC_TOPIC_COURSE_ID,
+      title: toeicTopicDomain.TOEIC_TOPIC_COURSE_TITLE,
+      description: `Học ${toeicTopicDomain.TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm từ thực tế qua ${toeicTopicDomain.TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC. Mỗi cụm có nghĩa tiếng Việt, câu ví dụ và bản dịch. ${toeicTopicDomain.TOEIC_TOPIC_COURSE_SPELLING_CONVENTION}`,
+      lessons: toeicTopicDomain.TOEIC_TOPIC_COURSE_LESSONS,
+      entriesByTerm: toeicTopicDomain.TOEIC_TOPIC_COURSE_ENTRIES,
+      wordCount: toeicTopicDomain.TOEIC_TOPIC_COURSE_WORD_COUNT,
+      unitLabel: "cụm từ",
+      topicCount: toeicTopicDomain.TOEIC_TOPIC_WORD_LIST.length,
+    },
+    {
+      id: officeAppsDomain.OFFICE_APPS_COURSE_ID,
+      title: officeAppsDomain.OFFICE_APPS_COURSE_TITLE,
+      description: `Học ${officeAppsDomain.OFFICE_APPS_COURSE_WORD_COUNT.toLocaleString("vi-VN")} từ và cụm từ thường gặp trong Excel, Word và PowerPoint, chia theo 3 ứng dụng.`,
+      lessons: officeAppsDomain.OFFICE_APPS_COURSE_LESSONS,
+      entriesByTerm: officeAppsDomain.OFFICE_APPS_COURSE_ENTRIES,
+      wordCount: officeAppsDomain.OFFICE_APPS_COURSE_WORD_COUNT,
+      topicCount: officeAppsDomain.OFFICE_APPS_COURSE_TOPIC_COUNT,
+    },
+  ],
+};
 const combinedLessonCount =
   courseDomain.CONJUNCTION_COURSE_LESSONS.length +
   linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS.length +
@@ -75,6 +185,9 @@ const courseWordSelectionDomain = loadTs(
 );
 const courseLessonLinksDomain = loadTs(
   join(__dirname, "../domain/course-lesson-links.ts"),
+);
+const courseAttemptMigration = loadTs(
+  join(__dirname, "../domain/course-attempt-migration.ts"),
 );
 const savedWordMetadataDomain = loadTs(
   join(__dirname, "../domain/saved-word-metadata.ts"),
@@ -157,7 +270,7 @@ function mount(initialSavedWords = [], options = {}) {
     "react-native": native,
     "@expo/vector-icons": { Feather: "Feather" },
     "expo-router": {
-      router: { setParams() {} },
+      router: { setParams() {}, push() {} },
       useFocusEffect: (callback) => focusCallbacks.push(callback),
       useLocalSearchParams: () => options.searchParams ?? {},
     },
@@ -171,6 +284,11 @@ function mount(initialSavedWords = [], options = {}) {
       MaterialSheen: "MaterialSheen",
     },
     "@/components/LearningGoalCard": "LearningGoalCard",
+    "@/domain/course-ids": courseIds,
+    "@/domain/course-attempt-migration": courseAttemptMigration,
+    "@/data/offline-course-data": {
+      getOfflineCourseBundle: async () => offlineCourseBundle,
+    },
     "@/domain/conjunction-course": courseDomain,
     "@/domain/basic-vocabulary-course": basicVocabularyCourseDomain,
     "@/domain/linking-adverb-course": linkingAdverbDomain,
@@ -288,7 +406,7 @@ function mount(initialSavedWords = [], options = {}) {
     },
     async focus() {
       render();
-      focusCallbacks.at(-1)?.();
+      focusCallbacks.forEach((callback) => callback());
       await this.settle();
     },
     savedWords,

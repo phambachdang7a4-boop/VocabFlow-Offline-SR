@@ -291,8 +291,7 @@ async function initialize(
         await imported.closeAsync();
       }
       buffer = new Uint8Array(0);
-      onStage?.("indexing-courses");
-        await applyInstalledCourseIndex(db, courseBundle, onStage);
+      await applyInstalledCourseIndex(db, courseBundle, onStage);
       await db.execAsync(
         "CREATE INDEX IF NOT EXISTS idx_vocabflow_words_nocase ON words(word COLLATE NOCASE, id);",
       );

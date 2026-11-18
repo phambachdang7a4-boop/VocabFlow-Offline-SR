@@ -103,7 +103,12 @@ export default function SettingsScreen() {
     "checking" | "missing" | "installed" | "damaged" | "unavailable"
   >("checking");
   const [courseDataStatus, setCourseDataStatus] = React.useState<
-    "checking" | "missing" | "installed" | "damaged" | "unavailable"
+    | "checking"
+    | "missing"
+    | "installed"
+    | "updateAvailable"
+    | "damaged"
+    | "unavailable"
   >("checking");
   const [courseDataBytes, setCourseDataBytes] = React.useState(0);
   const [regionalIpaStatus, setRegionalIpaStatus] = React.useState<
@@ -277,13 +282,25 @@ export default function SettingsScreen() {
         setOfflineProgress({ bytesWritten, totalBytes }),
       );
       setOfflineStage("Đã cài xong gói khóa học");
-      if (dictionaryStatus === "installed") {
-        setOfflineStage("Đang cập nhật nhãn khóa học trong từ điển");
-        await openDictionary((stage) => {
-          if (stage === "indexing-courses") {
-            setOfflineStage("Đang cập nhật nhãn khóa học trong từ điển");
-          }
-        }, { allowDownload: false });
+      const latestDictionaryStatus = await getOfflineDictionaryStatus().catch(
+        () => null,
+      );
+      if (latestDictionaryStatus?.state === "installed") {
+        try {
+          setOfflineStage("Đang cập nhật nhãn khóa học trong từ điển");
+          await openDictionary((stage) => {
+            if (stage === "indexing-courses") {
+              setOfflineStage("Đang cập nhật nhãn khóa học trong từ điển");
+            }
+          }, { allowDownload: false });
+          setOfflineStage("Đã cài xong gói khóa học");
+        } catch (cause) {
+          setOfflineError(
+            `Gói khóa học đã cài, nhưng chưa thể cập nhật nhãn khóa học trong từ điển: ${
+              cause instanceof Error ? cause.message : "Hãy thử lại."
+            }`,
+          );
+        }
       }
     } catch (cause) {
       setOfflineError(
@@ -1536,6 +1553,8 @@ Nội dung tệp:
                   ? `Đã tải · ${sizeLabel(courseDataBytes)} · ${OFFLINE_COURSE_DATA.courseCount} khóa học`
                   : courseDataStatus === "damaged"
                     ? "Gói bị lỗi hoặc thiếu · cần tải lại"
+                    : courseDataStatus === "updateAvailable"
+                      ? "Có phiên bản mới · cập nhật gói khóa học"
                     : courseDataStatus === "unavailable"
                       ? "Không thể lưu khóa học offline trên nền tảng này"
                       : courseDataStatus === "checking"
@@ -1556,13 +1575,20 @@ Nội dung tệp:
               label={
                 courseDataStatus === "installed"
                   ? "Đã cài"
-                  : courseDataStatus === "damaged"
-                    ? "Tải lại"
+                   : courseDataStatus === "damaged"
+                     ? "Tải lại"
+                     : courseDataStatus === "updateAvailable"
+                       ? "Cập nhật"
                     : courseDataBytes > 0
                       ? "Tiếp tục tải"
                       : "Tải gói"
               }
-              icon={courseDataStatus === "damaged" ? "refresh-cw" : "download"}
+              icon={
+                courseDataStatus === "damaged" ||
+                courseDataStatus === "updateAvailable"
+                  ? "refresh-cw"
+                  : "download"
+              }
               onPress={() => {
                 void handleDownloadCourseData();
               }}

@@ -27,6 +27,7 @@ const queries = loadTs(join(root, "data/dictionary-queries.ts"), {
   "../domain/dictionary": domain,
   "../domain/dictionary-suggestions": spelling,
   "../domain/dictionary-inflections": inflections,
+  "../domain/course-ids": courseIds,
   "./dictionary-course-index": courseIndexModule,
 });
 
@@ -116,7 +117,11 @@ function normalizeTerm(term) {
     buildCheck.stderr || buildCheck.stdout,
   );
 
-  const addedTerm = index.terms.find((term) => term.senses?.length);
+  const addedTerm = index.terms.find(
+    (term) =>
+      term.senses?.length &&
+      !term.courseIds.includes(courseIds.TOEIC_TOPIC_COURSE_ID),
+  );
   assert.ok(addedTerm, "The index contains course-only dictionary entries.");
   const handle = new DatabaseSync(":memory:");
   const db = adapter(handle);

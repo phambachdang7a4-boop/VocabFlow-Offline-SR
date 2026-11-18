@@ -10,6 +10,21 @@ export interface ReviewPronunciationLines {
   unspecified: string[];
 }
 
+let offlineCourseExampleTranslations = new Map<string, string>();
+
+export function setOfflineCourseExampleTranslations(
+  translations: readonly [string, string][] | null,
+): void {
+  offlineCourseExampleTranslations = new Map(
+    (translations ?? [])
+      .map(([example, translation]) => [
+        normalizeExample(example),
+        translation.trim(),
+      ] as const)
+      .filter(([example, translation]) => Boolean(example && translation)),
+  );
+}
+
 function uniqueIpa(values: string[]): string[] {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
 }
@@ -285,5 +300,10 @@ const REVIEW_EXAMPLE_TRANSLATIONS = new Map<string, string>([
 ]);
 
 export function reviewExampleTranslation(example: string): string | null {
-  return REVIEW_EXAMPLE_TRANSLATIONS.get(normalizeExample(example)) ?? null;
+  const key = normalizeExample(example);
+  return (
+    offlineCourseExampleTranslations.get(key) ??
+    REVIEW_EXAMPLE_TRANSLATIONS.get(key) ??
+    null
+  );
 }

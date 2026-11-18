@@ -169,6 +169,7 @@ function adapter(filename, readOnly = false) {
     "../domain/dictionary": domain,
     "../domain/dictionary-suggestions": spelling,
     "../domain/dictionary-inflections": inflections,
+    "../domain/course-ids": courseIds,
     "./dictionary-course-index": courseIndexModule,
   });
   const reference = adapter(source, true);
@@ -696,6 +697,10 @@ function adapter(filename, readOnly = false) {
         document: new MockDirectory("document"),
       },
     };
+    const offlineCourseBundle = {
+      dictionaryIndex: courseIndexData,
+      courses: [],
+    };
     return loadTs(
       join(__dirname, "../data/dictionary.ts"),
       {
@@ -709,6 +714,10 @@ function adapter(filename, readOnly = false) {
         "../domain/dictionary-local-additions": localAdditionData,
         "./dictionary-local-additions": localAdditions,
         "./dictionary-course-index": courseIndexModule,
+        "./offline-course-data": {
+          getOfflineCourseBundle: async () => offlineCourseBundle,
+        },
+        "../domain/course-ids": courseIds,
         "./offline-regional-pronunciations": {
           getRegionalIpaForTerm: async () => [],
           getRegionalIpaForTerms: async (terms) =>

@@ -34,8 +34,8 @@ import {
 } from "@/domain/review-exercises";
 import {
   groupReviewPronunciations,
-  reviewExampleTranslation,
 } from "@/domain/review-result-details";
+import { useReviewExampleTranslation } from "@/hooks/useReviewExampleTranslation";
 import { Button, ErrorBanner, F, MaterialSheen } from "@/components/ui";
 import { useSpeechPreferences } from "@/contexts/SpeechPreferencesContext";
 import { useSoundEffects } from "@/contexts/SoundEffectsContext";
@@ -137,7 +137,7 @@ export function ReviewCard({
       : [],
     word.ipa,
   );
-  const exampleTranslation = reviewExampleTranslation(word.example);
+  const exampleTranslation = useReviewExampleTranslation(word.example);
 
   useEffect(() => {
     if (!answered) return;

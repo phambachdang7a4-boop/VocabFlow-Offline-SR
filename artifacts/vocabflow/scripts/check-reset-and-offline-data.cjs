@@ -271,8 +271,20 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
     join(__dirname, "../data/offline-regional-pronunciations.ts"),
     "utf8",
   );
+  const courseData = readFileSync(
+    join(__dirname, "../data/offline-course-data.ts"),
+    "utf8",
+  );
   assert.match(settings, /testID="offline-dictionary-download"/);
   assert.match(settings, /testID="offline-audio-download"/);
+  assert.match(settings, /testID="offline-course-data-status"/);
+  assert.match(settings, /testID="offline-course-data-download"/);
+  assert.match(settings, /testID="offline-course-data-delete"/);
+  assert.match(settings, /Khóa học offline/);
+  assert.match(
+    settings,
+    /Xóa gói này không xóa tiến độ bài\s*học, từ đã lưu hay lịch ôn/,
+  );
   assert.match(settings, /"offline-regional-ipa-download"/);
   assert.match(settings, /offline-regional-ipa-download-\$\{id\}/);
   assert.match(settings, /deleteOfflineRegionalIpa/);
@@ -305,6 +317,10 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(regionalIpa, /sourceCacheTable/);
   assert.match(regionalIpa, /downloadOfflineRegionalIpaPart/);
   assert.match(regionalIpa, /getOfflineRegionalIpaPartsStatus/);
+  assert.match(courseData, /content-range/i);
+  assert.match(courseData, /sha256Hex/);
+  assert.match(courseData, /indexedDB/);
+  assert.match(courseData, /deleteOfflineCourseData/);
 
   await sync.activateGuestDatabase();
   harness.db.close();

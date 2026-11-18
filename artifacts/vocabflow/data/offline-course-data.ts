@@ -2,6 +2,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { Directory, File, FileMode, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 import type { DictionaryCourseIndex } from "../domain/dictionary";
+import { setOfflineCourseExampleTranslations } from "../domain/review-result-details";
 import {
   OFFLINE_COURSE_DATA,
   OFFLINE_COURSE_DATA_CHUNK_BYTES,
@@ -192,6 +193,21 @@ async function clearWebChunks(): Promise<void> {
   await transactionDone(transaction);
 }
 
+async function discardWebChunksFrom(offset: number): Promise<void> {
+  const database = await getIndexedDb();
+  const transaction = database.transaction("chunks", "readwrite");
+  const store = transaction.objectStore("chunks");
+  const request = store.getAll();
+  request.onsuccess = () => {
+    for (const chunk of request.result as CourseChunkRecord[]) {
+      if (chunk.offset + chunk.bytes.byteLength > offset) {
+        store.delete(chunk.offset);
+      }
+    }
+  };
+  await transactionDone(transaction);
+}
+
 async function readWebBundleBytes(): Promise<Uint8Array | null> {
   const database = await getIndexedDb();
   const transaction = database.transaction("bundle", "readonly");
@@ -233,7 +249,17 @@ async function readInstalledBundle(
   if (sha256Hex(bytes) !== OFFLINE_COURSE_DATA.sha256) {
     throw new Error("Gói khóa học không đúng phiên bản. Hãy tải lại.");
   }
-  return parseOfflineCourseBundle(new TextDecoder().decode(bytes));
+  const bundle = parseOfflineCourseBundle(new TextDecoder().decode(bytes));
+  const translations: [string, string][] = [];
+  for (const course of bundle.courses) {
+    for (const entry of Object.values(course.entriesByTerm)) {
+      if (entry.example?.trim() && entry.exampleTranslation?.trim()) {
+        translations.push([entry.example, entry.exampleTranslation]);
+      }
+    }
+  }
+  setOfflineCourseExampleTranslations(translations);
+  return bundle;
 }
 
 export async function getOfflineCourseBundle(): Promise<OfflineCourseBundle | null> {
@@ -264,7 +290,12 @@ export async function getOfflineCourseBundle(): Promise<OfflineCourseBundle | nu
 }
 
 export async function getOfflineCourseDataStatus(): Promise<{
-  state: "missing" | "installed" | "damaged" | "unavailable";
+  state:
+    | "missing"
+    | "installed"
+    | "updateAvailable"
+    | "damaged"
+    | "unavailable";
   bytes: number;
 }> {
   try {
@@ -284,7 +315,17 @@ export async function getOfflineCourseDataStatus(): Promise<{
           bytes: Math.min(contiguousBytes, OFFLINE_COURSE_DATA.bytes),
         };
       }
-      await readInstalledBundle(bundle);
+      try {
+        await readInstalledBundle(bundle);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message.includes("không đúng phiên bản")
+        ) {
+          return { state: "updateAvailable", bytes: bundle.byteLength };
+        }
+        throw error;
+      }
       return { state: "installed", bytes: bundle.byteLength };
     }
 
@@ -293,10 +334,20 @@ export async function getOfflineCourseDataStatus(): Promise<{
       const partial = nativePartialFile();
       return { state: "missing", bytes: partial.exists ? partial.size ?? 0 : 0 };
     }
-    const data = await getOfflineCourseBundle();
-    return data
-      ? { state: "installed", bytes: OFFLINE_COURSE_DATA.bytes }
-      : { state: "damaged", bytes: file.size ?? 0 };
+    try {
+      const data = await getOfflineCourseBundle();
+      return data
+        ? { state: "installed", bytes: OFFLINE_COURSE_DATA.bytes }
+        : { state: "damaged", bytes: file.size ?? 0 };
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("không đúng phiên bản")
+      ) {
+        return { state: "updateAvailable", bytes: file.size ?? 0 };
+      }
+      throw error;
+    }
   } catch (error) {
     return {
       state:
@@ -373,14 +424,19 @@ async function assembleWebBundle(
   chunks: CourseChunkRecord[],
 ): Promise<Uint8Array> {
   const bytes = new Uint8Array(OFFLINE_COURSE_DATA.bytes);
-  for (const chunk of chunks) {
+  let expectedOffset = 0;
+  for (const chunk of chunks.sort((left, right) => left.offset - right.offset)) {
     if (
-      chunk.offset < 0 ||
+      chunk.offset !== expectedOffset ||
       chunk.offset + chunk.bytes.byteLength > bytes.byteLength
     ) {
-      throw new Error("Phần tải khóa học không hợp lệ. Hãy thử tải lại.");
+      throw new Error("Gói khóa học tải chưa đủ hoặc bị trùng đoạn. Hãy thử lại.");
     }
     bytes.set(chunk.bytes, chunk.offset);
+    expectedOffset += chunk.bytes.byteLength;
+  }
+  if (expectedOffset !== bytes.byteLength) {
+    throw new Error("Gói khóa học tải chưa đủ. Hãy thử lại.");
   }
   return bytes;
 }
@@ -411,6 +467,7 @@ export async function downloadOfflineCourseData(
     if (Platform.OS === "web") {
       webChunks = await readWebChunks();
       downloadedBytes = contiguousWebBytes(webChunks);
+      await discardWebChunksFrom(downloadedBytes);
       webChunks = webChunks.filter(
         (chunk) => chunk.offset + chunk.bytes.byteLength <= downloadedBytes,
       );
@@ -486,7 +543,9 @@ export async function downloadOfflineCourseData(
   } catch (error) {
     if (
       error instanceof Error &&
-      error.message.includes("không đúng phiên bản")
+      /phiên bản|tải chưa đủ|bị trùng đoạn|JSON hợp lệ|thiếu dữ liệu/i.test(
+        error.message,
+      )
     ) {
       if (Platform.OS === "web") {
         await clearWebChunks().catch(() => undefined);
@@ -503,6 +562,7 @@ export async function downloadOfflineCourseData(
 
 export async function deleteOfflineCourseData(): Promise<void> {
   installedBundle = undefined;
+  setOfflineCourseExampleTranslations(null);
   if (Platform.OS === "web") {
     const database = await getIndexedDb();
     const transaction = database.transaction(
@@ -522,4 +582,5 @@ export async function deleteOfflineCourseData(): Promise<void> {
 
 export function clearOfflineCourseDataMemoryCache(): void {
   installedBundle = undefined;
+  setOfflineCourseExampleTranslations(null);
 }

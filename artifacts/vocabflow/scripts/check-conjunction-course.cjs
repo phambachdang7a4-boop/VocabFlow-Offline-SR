@@ -1512,44 +1512,6 @@ async function checkDictionaryOverlay() {
       example TEXT
     );
   `);
-  const existingToeicEntry = additions.TOEIC_TOPIC_DICTIONARY_ADDITIONS[0];
-  const existingWordId = sqlite
-    .prepare("INSERT INTO words (word, lang_code) VALUES (?, 'en')")
-    .run(existingToeicEntry.term).lastInsertRowid;
-  const existingDefinitionId = sqlite
-    .prepare(
-      "INSERT INTO definitions (definition, pos, sub_pos, definition_lang) VALUES (?, 'n', NULL, 'vi')",
-    )
-    .run("Nghĩa đã có trong từ điển gốc.").lastInsertRowid;
-  sqlite
-    .prepare(
-      "INSERT INTO word_definitions (word_id, definition_id, example) VALUES (?, ?, ?)",
-    )
-    .run(existingWordId, existingDefinitionId, "An existing dictionary example.");
-  const priorConjunction = additions.LOCAL_DICTIONARY_ADDITIONS.find(
-    (entry) => entry.term === "even if",
-  );
-  const priorConjunctionWordId = sqlite
-    .prepare("INSERT INTO words (word, lang_code) VALUES (?, 'en')")
-    .run(priorConjunction.term).lastInsertRowid;
-  const priorConjunctionDefinitionId = sqlite
-    .prepare(
-      "INSERT INTO definitions (definition, pos, sub_pos, definition_lang) VALUES (?, ?, ?, 'vi')",
-    )
-    .run(
-      "Ngay cả khi; nêu một điều kiện giả định nhưng kết quả vẫn không đổi.",
-      priorConjunction.pos,
-      priorConjunction.subPos,
-    ).lastInsertRowid;
-  sqlite
-    .prepare(
-      "INSERT INTO word_definitions (word_id, definition_id, example) VALUES (?, ?, ?)",
-    )
-    .run(
-      priorConjunctionWordId,
-      priorConjunctionDefinitionId,
-      priorConjunction.example,
-    );
   const db = {
     getFirstAsync: async (sql, ...params) =>
       sqlite.prepare(sql).get(...params) ?? null,
@@ -1588,8 +1550,8 @@ async function checkDictionaryOverlay() {
     .all();
   assert.equal(
     rows.length,
-    additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length + 1,
-    "Overlay preserves an existing dictionary meaning and adds the course meaning.",
+    additions.ALL_LOCAL_DICTIONARY_ADDITIONS.length,
+    "Local dictionary additions are installed without course payload data.",
   );
   assert.equal(
     new Set(rows.map((row) => row.word)).size,
@@ -1609,23 +1571,6 @@ async function checkDictionaryOverlay() {
     assert.equal(row.subPos, entry.subPos);
     assert.equal(row.langCode, "en");
   }
-  assert.ok(
-    rows.some(
-      (row) =>
-        row.word === existingToeicEntry.term &&
-        row.definition === "Nghĩa đã có trong từ điển gốc.",
-    ),
-    "Adding a course sense does not replace an existing dictionary meaning.",
-  );
-  assert.ok(
-    rows.some(
-      (row) =>
-        row.word === priorConjunction.term &&
-        row.definition === priorConjunction.definition &&
-        row.example === priorConjunction.example,
-    ),
-    "An updated local conjunction meaning replaces the prior meaning for its own example.",
-  );
   assert.equal(dictionaryDomain.dictionaryPartOfSpeech("conj"), "conjunction");
   const draft = dictionaryDomain.dictionaryDraft(
     {
@@ -2600,7 +2545,7 @@ async function checkCourseContentAndProgress() {
     (lesson) => lesson.questions,
   );
   const toeicDictionaryTerms = new Set(
-    additions.TOEIC_TOPIC_DICTIONARY_ADDITIONS.map((entry) => entry.term),
+    Object.keys(toeicTopicCourse.TOEIC_TOPIC_COURSE_ENTRIES),
   );
   assert.equal(
     toeicTopicCourse.TOEIC_TOPIC_COURSE_TITLE,
@@ -2618,9 +2563,9 @@ async function checkCourseContentAndProgress() {
   assert.equal(toeicTerms.length, 3000);
   assert.equal(new Set(toeicTerms).size, toeicTerms.length);
   assert.equal(
-    additions.TOEIC_TOPIC_DICTIONARY_ADDITIONS.length,
+    toeicDictionaryTerms.size,
     toeicTerms.length,
-    "Every TOEIC course phrase is also installed in the offline dictionary.",
+    "Every TOEIC course phrase is included in the downloaded course package.",
   );
   assert.ok(
     toeicTerms.every((term) => toeicDictionaryTerms.has(term)),
