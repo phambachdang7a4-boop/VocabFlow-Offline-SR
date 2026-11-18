@@ -42,7 +42,7 @@
     "check:idiom-course": "node scripts/check-idiom-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "check:phrasal-verbs": "node scripts/check-phrasal-verb-course.cjs && node scripts/check-conjunction-course-ui.cjs",
     "check:vocabulary-extraction": "node scripts/check-vocabulary-extraction.cjs",
-    "check:ielts-topic-course-data": "node scripts/check-ielts-topic-course-data.cjs",
+    "check:ielts-topic-course-data": "node scripts/check-ielts-topic-course-data.cjs && node scripts/check-conjunction-course-ui.cjs",
     "check:toeic-topic-course-data": "node scripts/check-toeic-topic-course-data.cjs",
     "check:historical-portrait-labels": "node scripts/check-historical-portrait-labels.cjs",
     "check:collection-biographies": "node scripts/check-collection-biographies.cjs",

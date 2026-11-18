@@ -1,6 +1,9 @@
 const assert = require("node:assert/strict");
+const { mkdtempSync, rmSync } = require("node:fs");
 const { join } = require("node:path");
+const { tmpdir } = require("node:os");
 const {
+  createRepository,
   loadLocalDictionaryAdditions,
   loadToeicTopicCourseDomain,
   loadTs,
@@ -182,7 +185,9 @@ function mount(initialSavedWords = [], options = {}) {
     "../../assets/images/baron-dialogue-avatar.png": "baron-dialogue-avatar-asset",
     "@/data/vocabulary": {
       getCourseLessonCompletions: async (courseId) =>
-        completed.filter((lessonId) => lessonId.startsWith(courseId)),
+        options.getCourseLessonCompletions
+          ? options.getCourseLessonCompletions(courseId)
+          : completed.filter((lessonId) => lessonId.startsWith(courseId)),
       getCourseLessonAttempts: async (courseId) =>
         attempts.filter((attempt) => attempt.lessonId.startsWith(courseId)),
       saveCourseLessonAttempt: async (attempt) => {
@@ -279,6 +284,75 @@ function mount(initialSavedWords = [], options = {}) {
 }
 
 (async () => {
+  const readingStorageRoot = mkdtempSync(
+    join(tmpdir(), "vocabflow-ielts-reading-progress-"),
+  );
+  const readingProgressStorage = createRepository(readingStorageRoot);
+  try {
+    const preservedReadingLessonId =
+      `${ieltsTopicDomain.IELTS_TOPIC_COURSE_ID}-general-reading-reading-lesson-46`;
+    const newTopicReadingLessonId =
+      `${ieltsTopicDomain.IELTS_TOPIC_COURSE_ID}-time-sequence-reading-lesson-1`;
+    const preservedReadingLesson =
+      ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS.find(
+        (lesson) => lesson.id === preservedReadingLessonId,
+      );
+    const newTopicReadingLesson =
+      ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS.find(
+        (lesson) => lesson.id === newTopicReadingLessonId,
+      );
+    assert.ok(
+      preservedReadingLesson,
+      "The generated topic course keeps the existing final general Reading lesson ID.",
+    );
+    assert.ok(
+      newTopicReadingLesson,
+      "The generated topic course includes the new time and sequence Reading lesson.",
+    );
+
+    await readingProgressStorage.repo.markCourseLessonCompleted(
+      preservedReadingLessonId,
+    );
+    await readingProgressStorage.repo.markCourseLessonCompleted(
+      newTopicReadingLessonId,
+    );
+    const readingProgressScreen = mount([], {
+      getCourseLessonCompletions: (prefix) =>
+        readingProgressStorage.repo.getCourseLessonCompletions(prefix),
+    });
+    await readingProgressScreen.focus();
+
+    const readingCourseCard = readingProgressScreen.byId("ielts-course-card");
+    assert.match(
+      readingCourseCard.props.accessibilityLabel,
+      /^IELTS, 2 trên \d+ bài hoàn thành,/,
+      "Saved Reading completion records contribute to the rebuilt IELTS course progress.",
+    );
+    assert.equal(
+      readingProgressScreen.byId("ielts-course-progress").props
+        .accessibilityValue.now,
+      2,
+      "Both the preserved and new Reading lessons count in the course progress bar.",
+    );
+    readingCourseCard.props.onPress();
+    await readingProgressScreen.settle();
+    for (const lesson of [preservedReadingLesson, newTopicReadingLesson]) {
+      const lessonIndex =
+        ieltsTopicDomain.IELTS_TOPIC_COURSE_LESSONS.findIndex(
+          (candidate) => candidate.id === lesson.id,
+        );
+      assert.match(
+        readingProgressScreen.byId(`ielts-lesson-${lessonIndex + 1}`).props
+          .accessibilityLabel,
+        /, đã hoàn thành$/,
+        `${lesson.id} is displayed as completed after course data is rebuilt.`,
+      );
+    }
+  } finally {
+    readingProgressStorage.db?.close();
+    rmSync(readingStorageRoot, { recursive: true, force: true });
+  }
+
   const retainedLinkingProgress = mount([], {
     completedLessons: [
       linkingAdverbDomain.LINKING_ADVERB_COURSE_LESSONS[0].id,
