@@ -54,3 +54,6 @@ Thumbs.db
 .cache/
 .local/
 /generated-artifacts/
+!/generated-artifacts/
+/generated-artifacts/*
+!/generated-artifacts/ielts-advanced-cefr-audit.csv
