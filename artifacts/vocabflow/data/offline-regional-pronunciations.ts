@@ -15,6 +15,7 @@ import {
   type RegionalIpaRecord,
   type RegionalIpaSource,
 } from "../domain/regional-pronunciations";
+import { publicDataAssetUrl } from "../domain/public-data-asset-url";
 
 const filename = REGIONAL_IPA_DICTIONARY.filename;
 const metadataTable = "vocabflow_regional_ipa_meta";
@@ -42,7 +43,17 @@ function sha256Hex(bytes: Uint8Array): string {
 }
 
 function sourceUrl(source: RegionalIpaSource): string {
-  if ("endpoint" in source) {
+  if ("objectKey" in source) {
+    const domain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
+    const fallbackUrl =
+      domain && "endpoint" in source && typeof source.endpoint === "string"
+        ? `https://${domain}${source.endpoint}`
+        : "";
+    const url = publicDataAssetUrl(source.objectKey, fallbackUrl);
+    if (!url) throw new Error("Không xác định được máy chủ tải IPA.");
+    return url;
+  }
+  if ("endpoint" in source && typeof source.endpoint === "string") {
     const domain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
     if (!domain) throw new Error("Không xác định được máy chủ tải IPA.");
     return new URL(source.endpoint, `https://${domain}`).toString();

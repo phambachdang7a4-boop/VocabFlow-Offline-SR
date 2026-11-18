@@ -39,3 +39,4 @@ externalPort = 80
 [userenv.shared]
 CLOUDFLARE_R2_ACCOUNT_ID = "6ceb4a10c8ad2e4879888af9eafb9837"
 CLOUDFLARE_R2_BUCKET_NAME = "vocabflowdata-18-11"
+CLOUDFLARE_R2_PUBLIC_BASE_URL = "https://pub-48eed62f98c44487841ad2069da22829.r2.dev"

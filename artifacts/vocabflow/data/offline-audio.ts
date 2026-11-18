@@ -11,6 +11,7 @@ import {
   OFFLINE_AUDIO_DICTIONARY,
   offlineAudioResumeOffset,
 } from "../domain/offline-audio";
+import { publicDataAssetUrl } from "../domain/public-data-asset-url";
 
 let databaseConnection: Promise<SQLiteDatabase> | undefined;
 let activePlayer: AudioPlayer | null = null;
@@ -33,9 +34,16 @@ function partialDatabaseFile(): File {
 }
 
 function getDownloadUrl(): string {
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-  if (!domain) throw new Error("Không tìm thấy địa chỉ máy chủ để tải audio.");
-  return `https://${domain}${OFFLINE_AUDIO_DICTIONARY.assetPath}`;
+  const domain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
+  const fallbackUrl = domain
+    ? `https://${domain}${OFFLINE_AUDIO_DICTIONARY.assetPath}`
+    : "";
+  const url = publicDataAssetUrl(
+    OFFLINE_AUDIO_DICTIONARY.objectKey,
+    fallbackUrl,
+  );
+  if (!url) throw new Error("Không tìm thấy địa chỉ máy chủ để tải audio.");
+  return url;
 }
 
 function waitBeforeRetry(milliseconds: number, signal: AbortSignal): Promise<void> {

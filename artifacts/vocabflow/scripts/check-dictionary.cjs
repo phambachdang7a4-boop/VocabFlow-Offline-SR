@@ -62,8 +62,14 @@ function adapter(filename, readOnly = false) {
 
 (async () => {
   const domain = loadDictionaryDomain();
+  const publicDataAssetUrls = loadTs(
+    join(__dirname, "../domain/public-data-asset-url.ts"),
+    {},
+    { process: { env: {} } },
+  );
   const download = loadTs(join(__dirname, "../domain/dictionary-download.ts"), {
     "./dictionary": domain,
+    "./public-data-asset-url": publicDataAssetUrls,
   });
   const importer = loadTs(join(__dirname, "../domain/dictionary-import.ts"));
   const familyExamples = require("../data/basic-family-example-overrides.json");

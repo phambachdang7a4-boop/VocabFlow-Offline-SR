@@ -25,6 +25,7 @@ export const REGIONAL_IPA_DICTIONARY = {
     label: "Anh-Anh bổ sung",
     file: "dictionary_en_uk_slim.tsv",
     endpoint: "/api/dictionary/ipa-uk",
+    objectKey: "vocabflow/uk-ipa-supplement-b3ae7040c0a2c7a4.txt",
     bytes: 3_023_499,
     sha256: "b3ae7040c0a2c7a479a93cd8be2cb0ae5c8d7dd58f84d54ad4d212d9983c9d9c",
     entryCount: 104_738,

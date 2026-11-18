@@ -14,6 +14,7 @@ export const DICTIONARY = {
   wordCount: 104829,
   definitionCount: 158307,
   linkCount: 175735,
+  objectKey: 'vocabflow/dictionary-2b65bea9577c2a41.db',
   repository: 'https://github.com/skypediacode/english-vietnamese-dictionary',
 } as const;
 

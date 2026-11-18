@@ -8,10 +8,13 @@
     "build": "node ./build.mjs",
     "upload:audio-dictionary": "node scripts/upload-audio-dictionary.mjs",
     "upload:course-data": "node scripts/upload-course-data.mjs",
+    "upload:cloudflare-r2": "node scripts/migrate-public-assets-to-r2.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1170.0",
+    "@aws-sdk/lib-storage": "^3.1170.0",
     "@clerk/express": "^2.1.88",
     "@clerk/shared": "^4.44.1",
     "@google-cloud/storage": "^8.4.0",

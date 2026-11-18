@@ -3,6 +3,7 @@ export const OFFLINE_AUDIO_DICTIONARY = {
   bytes: 321847296,
   entryCount: 104829,
   filename: "vocabflow-audio-dictionary-b3821cbbe15ee0e4.db",
+  objectKey: "vocabflow/audio-dictionary-b3821cbbe15ee0e4.db",
   assetPath: "/api/dictionary/audio",
 } as const;
 

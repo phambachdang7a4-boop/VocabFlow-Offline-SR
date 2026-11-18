@@ -3,6 +3,7 @@ import { Directory, File, FileMode, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 import type { DictionaryCourseIndex } from "../domain/dictionary";
 import { setOfflineCourseExampleTranslations } from "../domain/review-result-details";
+import { publicDataAssetUrl } from "../domain/public-data-asset-url";
 import {
   OFFLINE_COURSE_DATA,
   OFFLINE_COURSE_DATA_CHUNK_BYTES,
@@ -134,11 +135,15 @@ function sha256Hex(bytes: Uint8Array): string {
 
 function packageUrl(): string {
   const domain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
-  if (!domain) throw new Error("Không tìm thấy máy chủ tải khóa học.");
-  return new URL(
-    OFFLINE_COURSE_DATA.assetPath,
-    `https://${domain}`,
-  ).toString();
+  const fallbackUrl = domain
+    ? new URL(OFFLINE_COURSE_DATA.assetPath, `https://${domain}`).toString()
+    : "";
+  const url = publicDataAssetUrl(
+    OFFLINE_COURSE_DATA.objectKey,
+    fallbackUrl,
+  );
+  if (!url) throw new Error("Không tìm thấy máy chủ tải khóa học.");
+  return url;
 }
 
 function nativePackageFile(): File {

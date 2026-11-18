@@ -26,6 +26,11 @@ const databasePath = join(scratchDir, "regional-ipa.db");
 let failUkOnce = true;
 function createRuntime() {
   let native;
+  const publicDataAssetUrls = loadTs(
+    join(__dirname, "../domain/public-data-asset-url.ts"),
+    {},
+    { process: { env: {} } },
+  );
   const runtime = loadTs(
     join(__dirname, "../data/offline-regional-pronunciations.ts"),
     {
@@ -66,6 +71,7 @@ function createRuntime() {
         pronunciationAccent: () => null,
       },
       "../domain/regional-pronunciations": domain,
+      "../domain/public-data-asset-url": publicDataAssetUrls,
     },
     { process: { env: { EXPO_PUBLIC_DOMAIN: "vocabflow.test" } } },
   );

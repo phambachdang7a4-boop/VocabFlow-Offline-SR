@@ -179,6 +179,11 @@ assert.match(dictionary, /getRegionalIpaForTerm/);
 assert.match(sources, /sources-regional-ipa/);
 
 async function checkOfflineLookupStates() {
+  const publicDataAssetUrls = loadTs(
+    join(__dirname, "../domain/public-data-asset-url.ts"),
+    {},
+    { process: { env: {} } },
+  );
   const loadOfflineData = (database) => loadTs(
     join(__dirname, "../data/offline-regional-pronunciations.ts"),
     {
@@ -193,6 +198,7 @@ async function checkOfflineLookupStates() {
         pronunciationAccent: dictionaryDomain.pronunciationAccent,
       },
       "../domain/regional-pronunciations": domain,
+      "../domain/public-data-asset-url": publicDataAssetUrls,
     },
   );
   const validMetadata = {

@@ -35,6 +35,7 @@
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
     "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
     "check:offline-audio-download": "node scripts/check-offline-audio-download.cjs",
+    "check:cloudflare-r2-assets": "node scripts/check-cloudflare-r2-assets.cjs",
     "check:known-example-repair": "node scripts/check-known-example-repair.cjs",
     "check:regional-ipa": "node scripts/check-regional-pronunciations.cjs && node scripts/check-regional-ipa-parts.cjs",
     "check:conjunction-course": "node scripts/check-conjunction-course.cjs && node scripts/check-conjunction-course-ui.cjs",

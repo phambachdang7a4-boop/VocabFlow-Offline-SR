@@ -23,6 +23,11 @@ const domainForTest = {
   ...domain,
   OFFLINE_AUDIO_DICTIONARY: metadata,
 };
+const publicDataAssetUrls = loadTs(
+  join(__dirname, "../domain/public-data-asset-url.ts"),
+  {},
+  { process: { env: {} } },
+);
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "vocabflow-audio-test-"));
 const sqlitePath = path.join(root, "SQLite", metadata.filename);
 const partialPath = `${sqlitePath}.download`;
@@ -138,6 +143,7 @@ const downloadModule = loadTs(join(__dirname, "../data/offline-audio.ts"), {
   },
   "react-native": { Platform: { OS: "android" } },
   "../domain/offline-audio": domainForTest,
+  "../domain/public-data-asset-url": publicDataAssetUrls,
 });
 
 function response(start, end, status = 206) {
@@ -334,6 +340,7 @@ function response(start, end, status = 206) {
       },
       "react-native": { Platform: { OS: "web" } },
       "../domain/offline-audio": domainForTest,
+      "../domain/public-data-asset-url": publicDataAssetUrls,
     },
   );
   await webAudioModule.deleteOfflineAudio();
