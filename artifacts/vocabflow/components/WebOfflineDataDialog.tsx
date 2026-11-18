@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import {
   downloadOfflineCourseData,
   getOfflineCourseDataStatus,
+  type OfflineCourseDataDownloadStage,
 } from "@/data/offline-course-data";
 import { OFFLINE_COURSE_DATA } from "@/domain/course-data-package";
 import { useColors } from "@/hooks/useColors";
@@ -56,11 +57,18 @@ function formatMegabytes(bytes: number): string {
   return `${(bytes / 1_048_576).toFixed(1)} MB`;
 }
 
-function stateMessage(state: CourseDownloadState, percent: number): string {
+function stateMessage(
+  state: CourseDownloadState,
+  percent: number,
+  phase: OfflineCourseDataDownloadStage,
+): string {
   switch (state) {
     case "checking":
       return "Đang kiểm tra dữ liệu trên máy…";
     case "downloading":
+      if (phase === "verifying") return "Đang xác minh gói khóa học…";
+      if (phase === "validating") return "Đang kiểm tra nội dung khóa học…";
+      if (phase === "saving") return "Đang lưu gói khóa học…";
       return `Đang tải · ${percent}%`;
     case "installed":
       return "Đã sẵn sàng ngoại tuyến";
@@ -86,6 +94,8 @@ export function WebOfflineDataDialog() {
   const controller = useRef<AbortController | null>(null);
   const [visible, setVisible] = useState(Platform.OS === "web");
   const [state, setState] = useState<CourseDownloadState>("checking");
+  const [phase, setPhase] =
+    useState<OfflineCourseDataDownloadStage>("downloading");
   const [bytesWritten, setBytesWritten] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,6 +114,7 @@ export function WebOfflineDataDialog() {
     const nextController = new AbortController();
     controller.current = nextController;
     setError(null);
+    setPhase("downloading");
     setState("downloading");
 
     const task = downloadOfflineCourseData(
@@ -111,6 +122,9 @@ export function WebOfflineDataDialog() {
         if (mounted.current) setBytesWritten(written);
       },
       nextController.signal,
+      (nextPhase) => {
+        if (mounted.current) setPhase(nextPhase);
+      },
     );
     downloadPromise.current = task;
 
@@ -285,7 +299,7 @@ export function WebOfflineDataDialog() {
                   { color: error ? c.destructiveText : c.mutedForeground },
                 ]}
               >
-                {error ?? stateMessage(state, percent)}
+                {error ?? stateMessage(state, percent, phase)}
                 {state === "downloading"
                   ? ` · ${formatMegabytes(bytesWritten)} / ${formatMegabytes(COURSE_BYTES)}`
                   : ""}

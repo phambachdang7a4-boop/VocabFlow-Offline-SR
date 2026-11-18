@@ -9,6 +9,7 @@ export const OFFLINE_COURSE_DATA = {
 } as const;
 
 export const OFFLINE_COURSE_DATA_CHUNK_BYTES = 1024 * 1024;
+export const OFFLINE_COURSE_DATA_NATIVE_CHUNK_BYTES = 4 * 1024 * 1024;
 
 export function courseDataResumeOffset(
   fileSize: number,

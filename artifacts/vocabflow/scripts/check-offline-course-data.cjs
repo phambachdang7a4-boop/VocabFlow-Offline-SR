@@ -73,6 +73,11 @@ assert.equal(
   "A retry resumes from the last complete megabyte.",
 );
 assert.equal(
+  packageManifest.OFFLINE_COURSE_DATA_NATIVE_CHUNK_BYTES,
+  4 * 1024 * 1024,
+  "Native downloads use larger chunks to reduce network round trips.",
+);
+assert.equal(
   packageManifest.courseDataResumeOffset(
     packageManifest.OFFLINE_COURSE_DATA.bytes,
   ),

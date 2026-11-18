@@ -23,3 +23,4 @@
 - [Cập nhật nghĩa từ điển offline](offline-dictionary-meaning-updates.md) — Khi sửa nghĩa biên soạn, cập nhật riêng liên kết mục nghĩa để không làm đổi định nghĩa dùng chung.
 - [Từ khóa học trong từ điển](course-dictionary-index.md) — Sinh chỉ mục tag gọn từ dữ liệu khóa; chỉ thêm nghĩa cho mục chưa có trong từ điển nguồn.
 - [Tra cứu CEFR bằng Cambridge](cambridge-cefr-audit.md) — Trang Cambridge bị chặn không xác nhận nhãn; giữ Oxford và để từ chưa xác minh.
+- [Tải gói khóa học offline](offline-course-download.md) — Native dùng khối 4 MiB để giảm lượt mạng; web giữ 1 MiB để hạn chế bộ nhớ tạm.

@@ -142,6 +142,7 @@ export default function SettingsScreen() {
     bytesWritten: 0,
     totalBytes: 0,
   });
+  const courseDownloadController = React.useRef<AbortController | null>(null);
   const [offlineError, setOfflineError] = React.useState<string | null>(null);
   const [resetDialog, setResetDialog] = React.useState<
     "local" | "cloud" | null
@@ -276,13 +277,26 @@ export default function SettingsScreen() {
     setOfflineError(null);
     setOfflineAction("course-data-download");
     setOfflineStage("Đang tải gói khóa học");
+    const controller = new AbortController();
+    courseDownloadController.current = controller;
     setOfflineProgress({
       bytesWritten: 0,
       totalBytes: OFFLINE_COURSE_DATA.bytes,
     });
     try {
-      await downloadOfflineCourseData((bytesWritten, totalBytes) =>
-        setOfflineProgress({ bytesWritten, totalBytes }),
+      await downloadOfflineCourseData(
+        (bytesWritten, totalBytes) =>
+          setOfflineProgress({ bytesWritten, totalBytes }),
+        controller.signal,
+        (stage) => {
+          const stageText = {
+            downloading: "Đang tải gói khóa học",
+            verifying: "Đang xác minh gói khóa học",
+            validating: "Đang kiểm tra nội dung khóa học",
+            saving: "Đang lưu gói khóa học",
+          } as const;
+          setOfflineStage(stageText[stage]);
+        },
       );
       setOfflineStage("Đã cài xong gói khóa học");
       const latestDictionaryStatus = await getOfflineDictionaryStatus().catch(
@@ -306,12 +320,20 @@ export default function SettingsScreen() {
         }
       }
     } catch (cause) {
-      setOfflineError(
-        cause instanceof Error
-          ? cause.message
-          : "Không thể cài gói khóa học offline.",
-      );
+      if (controller.signal.aborted) {
+        setOfflineError(null);
+        setOfflineStage("Đã dừng tải gói khóa học");
+      } else {
+        setOfflineError(
+          cause instanceof Error
+            ? cause.message
+            : "Không thể cài gói khóa học offline.",
+        );
+      }
     } finally {
+      if (courseDownloadController.current === controller) {
+        courseDownloadController.current = null;
+      }
       setOfflineAction(null);
       await refreshOfflineStatus();
     }
@@ -1576,7 +1598,9 @@ Nội dung tệp:
             <Button
               testID="offline-course-data-download"
               label={
-                courseDataStatus === "installed"
+                offlineAction === "course-data-download"
+                  ? "Dừng tải"
+                  : courseDataStatus === "installed"
                   ? "Đã cài"
                    : courseDataStatus === "damaged"
                      ? "Tải lại"
@@ -1587,21 +1611,29 @@ Nội dung tệp:
                       : "Tải gói"
               }
               icon={
-                courseDataStatus === "damaged" ||
+                offlineAction === "course-data-download"
+                  ? "x-circle"
+                  : courseDataStatus === "damaged" ||
                 courseDataStatus === "updateAvailable"
                   ? "refresh-cw"
                   : "download"
               }
               onPress={() => {
-                void handleDownloadCourseData();
+                if (offlineAction === "course-data-download") {
+                  courseDownloadController.current?.abort();
+                } else {
+                  void handleDownloadCourseData();
+                }
               }}
-              loading={offlineAction === "course-data-download"}
+              loading={false}
               disabled={
-                Boolean(offlineAction) ||
-                syncBusy ||
-                courseDataStatus === "installed" ||
-                courseDataStatus === "checking" ||
-                courseDataStatus === "unavailable"
+                (Boolean(offlineAction) &&
+                  offlineAction !== "course-data-download") ||
+                (syncBusy && offlineAction !== "course-data-download") ||
+                (offlineAction !== "course-data-download" &&
+                  (courseDataStatus === "installed" ||
+                    courseDataStatus === "checking" ||
+                    courseDataStatus === "unavailable"))
               }
               style={{ flex: 1 }}
             />
@@ -1624,6 +1656,54 @@ Nội dung tệp:
               style={{ flex: 1 }}
             />
           </View>
+          {offlineAction === "course-data-download" ? (
+            <View style={styles.courseDownloadProgress}>
+              <View
+                accessibilityRole="progressbar"
+                accessibilityLabel="Tiến độ tải gói khóa học"
+                accessibilityValue={{
+                  min: 0,
+                  max: 100,
+                  now: Math.min(
+                    100,
+                    Math.round(
+                      (offlineProgress.bytesWritten /
+                        Math.max(1, offlineProgress.totalBytes)) *
+                        100,
+                    ),
+                  ),
+                }}
+                style={[
+                  styles.courseDownloadTrack,
+                  { backgroundColor: c.secondary },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.courseDownloadFill,
+                    {
+                      backgroundColor: c.primary,
+                      width: `${Math.min(
+                        100,
+                        Math.round(
+                          (offlineProgress.bytesWritten /
+                            Math.max(1, offlineProgress.totalBytes)) *
+                            100,
+                        ),
+                      )}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <Text
+                testID="offline-progress"
+                accessibilityLiveRegion="polite"
+                style={[styles.appearanceDetail, { color: c.primary }]}
+              >
+                {offlineProgressText}
+              </Text>
+            </View>
+          ) : null}
           <View style={[styles.offlineDivider, { borderColor: c.border }]} />
           <View style={styles.offlineResource}>
             <View
@@ -1843,7 +1923,8 @@ Nội dung tệp:
               style={{ flex: 1 }}
             />
           </View>
-          {offlineProgressText ? (
+          {offlineProgressText &&
+          offlineAction !== "course-data-download" ? (
             <Text
               testID="offline-progress"
               accessibilityLiveRegion="polite"
@@ -1983,6 +2064,9 @@ const styles = StyleSheet.create({
   },
   offlineResourceText: { flex: 1, gap: 3 },
   offlineActions: { flexDirection: "row", gap: 10 },
+  courseDownloadProgress: { gap: 7 },
+  courseDownloadTrack: { height: 6, borderRadius: 6, overflow: "hidden" },
+  courseDownloadFill: { height: "100%", borderRadius: 6 },
   ipaPartRow: {
     minHeight: 72,
     paddingTop: 10,
