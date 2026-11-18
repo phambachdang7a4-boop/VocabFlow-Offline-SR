@@ -428,6 +428,27 @@ export function DictionaryEntryView({
             <Feather name="volume-2" size={23} color={c.dictHead} />
           </Pressable>
         </View>
+        {entry.courseTags?.length ? (
+          <View
+            testID="dictionary-course-tags"
+            style={styles.courseTags}
+            accessibilityLabel={`Thuộc khóa học: ${entry.courseTags.join(", ")}`}
+          >
+            {entry.courseTags.map((tag) => (
+              <View
+                key={tag}
+                style={[
+                  styles.courseTag,
+                  { backgroundColor: c.dictChip, borderColor: c.dictLine },
+                ]}
+              >
+                <Text style={[styles.courseTagText, { color: c.dictHead }]}>
+                  {tag}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
         {inflectionRoots.length ? (
           <View style={styles.rootsRow}>
             {inflectionRoots.map((root) => (
@@ -773,6 +794,14 @@ const styles = StyleSheet.create({
   backText: { fontFamily: F.s, fontSize: 14 },
   term: { fontFamily: F.b, fontSize: 36, letterSpacing: -0.8 },
   termRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  courseTags: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  courseTag: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  courseTagText: { fontFamily: F.s, fontSize: 12 },
   rootsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   rootShortcut: {
     flexDirection: "row",

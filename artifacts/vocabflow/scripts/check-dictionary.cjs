@@ -78,6 +78,14 @@ function adapter(filename, readOnly = false) {
     join(__dirname, "../data/dictionary-local-additions.ts"),
     { "../domain/dictionary-local-additions": localAdditionData },
   );
+  const courseIndexData = require("../domain/course-dictionary-index.json");
+  const courseIndexModule = loadTs(
+    join(__dirname, "../data/dictionary-course-index.ts"),
+    {
+      "../domain/dictionary": domain,
+      "../domain/course-dictionary-index.json": courseIndexData,
+    },
+  );
   const spelling = loadTs(
     join(__dirname, "../domain/dictionary-suggestions.ts"),
   );
@@ -99,7 +107,7 @@ function adapter(filename, readOnly = false) {
     join(__dirname, "../domain/dictionary-inflections.ts"),
   );
   const expectedDownloadChunks = Math.ceil(
-    DICTIONARY.bytes / (8 * 1024 * 1024),
+    DICTIONARY.bytes / (4 * 1024 * 1024),
   );
   function rangeResponse(source, options, includeContentRange = true) {
     const match = /^bytes=(\d+)-(\d+)$/.exec(options?.headers?.Range ?? "");
@@ -469,10 +477,16 @@ function adapter(filename, readOnly = false) {
   // Exercise production initialization, backed by real Node SQLite.
   const { sha256 } = await import("@noble/hashes/sha2.js");
   let downloads = 0;
+  let nextDeserializeFailure = null;
   const deleted = [];
   const sqlite = {
     openDatabaseAsync: async (filename) => adapter(join(root, filename)),
     deserializeDatabaseAsync: async (data) => {
+      if (nextDeserializeFailure) {
+        const failure = nextDeserializeFailure;
+        nextDeserializeFailure = null;
+        throw failure;
+      }
       assert.equal(
         data[18],
         1,
@@ -587,6 +601,7 @@ function adapter(filename, readOnly = false) {
         "../domain/dictionary-example-updates": exampleUpdates,
         "../domain/dictionary-local-additions": localAdditionData,
         "./dictionary-local-additions": localAdditions,
+        "./dictionary-course-index": courseIndexModule,
         "./offline-regional-pronunciations": {
           getRegionalIpaForTerm: async () => [],
           getRegionalIpaForTerms: async (terms) =>
@@ -812,9 +827,19 @@ function adapter(filename, readOnly = false) {
       entry.term.trim().replace(/\s+/g, " ").toLocaleLowerCase("en"),
     ),
   );
+  const newCourseTerms = new Set(
+    courseIndexData.terms
+      .filter((term) => term.senses?.length)
+      .map((term) =>
+        term.term.trim().replace(/\s+/g, " ").toLocaleLowerCase("en"),
+      ),
+  );
   const expectedFinalWordCount =
     DICTIONARY.wordCount +
-    [...newLocalTerms].filter((term) => !baseTerms.has(term)).length;
+    [...newLocalTerms].filter((term) => !baseTerms.has(term)).length +
+    [...newCourseTerms].filter(
+      (term) => !baseTerms.has(term) && !newLocalTerms.has(term),
+    ).length;
   assert.equal(
     (
       await nativeDictionary.getFirstAsync(
@@ -888,7 +913,7 @@ function adapter(filename, readOnly = false) {
   );
   assert.equal(
     revision.example_revision,
-    `${exampleUpdates.DICTIONARY_EXAMPLE_REVISION}+${localAdditionData.LOCAL_DICTIONARY_ADDITIONS_REVISION}`,
+    `${exampleUpdates.DICTIONARY_EXAMPLE_REVISION}+${localAdditionData.LOCAL_DICTIONARY_ADDITIONS_REVISION}+${courseIndexData.contentSha256}`,
   );
   for (const entry of localAdditionData.ALL_LOCAL_DICTIONARY_ADDITIONS) {
     const result = await repo.searchDictionary(entry.term);
@@ -974,6 +999,28 @@ function adapter(filename, readOnly = false) {
   await recovered.closeAsync();
 
   rmSync(join(root, name));
+  const deletionsBeforeMemoryFailure = deleted.length;
+  const lowMemoryRepo = repository(
+    async (_url, options) => rangeResponse(bytes, options),
+    "https://phone.expo.example",
+  );
+  nextDeserializeFailure = new Error("memory access out of bounds");
+  await assert.rejects(
+    lowMemoryRepo.openDictionary(undefined, { allowDownload: true }),
+    /SQLite Web không đủ bộ nhớ tạm/,
+  );
+  assert.equal(
+    deleted.length,
+    deletionsBeforeMemoryFailure,
+    "A WebAssembly memory failure must not delete the database cache",
+  );
+  assert.deepEqual(
+    (await personal.repo.listWords())[0],
+    snapshot,
+    "A WebAssembly memory failure must preserve personal words and progress",
+  );
+
+  rmSync(join(root, name), { force: true });
   const corruptBytes = Buffer.alloc(DICTIONARY.bytes);
   repo = repository(async (url, options) =>
     rangeResponse(corruptBytes, options),

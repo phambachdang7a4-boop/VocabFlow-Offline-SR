@@ -20,7 +20,29 @@ export const DICTIONARY = {
 export const DICTIONARY_PAGE_SIZE = 30;
 export const DICTIONARY_ASSET_PATH = '/api/dictionary/asset';
 export type DictionaryStage = 'checking' | 'awaiting-consent' | 'downloading' | 'verifying' | 'importing' | 'ready';
-export interface DictionaryMatch { id: number; term: string; meaning: string }
+export interface DictionaryCourseIndexSense {
+  definition: string;
+  example: string;
+  pos: string | null;
+  subPos: string | null;
+}
+export interface DictionaryCourseIndexTerm {
+  term: string;
+  courseIds: string[];
+  senses?: DictionaryCourseIndexSense[];
+}
+export interface DictionaryCourseIndex {
+  sourceSha256: string;
+  contentSha256: string;
+  courses: Array<{ id: string; title: string }>;
+  terms: DictionaryCourseIndexTerm[];
+}
+export interface DictionaryMatch {
+  id: number;
+  term: string;
+  meaning: string;
+  courseTags?: string[];
+}
 export interface DictionarySuggestion { id: number; term: string }
 export interface DictionarySense { id: number; definition: string; pos: string | null; subPos: string | null; example: string | null }
 export interface DictionaryPronunciation { ipa: string; region: string | null }
@@ -65,6 +87,7 @@ export interface DictionaryEntry {
   senses: DictionarySense[];
   hasMore: boolean;
   partsOfSpeech: DictionaryPartOfSpeech[];
+  courseTags?: string[];
 }
 export interface DictionaryMatches { items: DictionaryMatch[]; hasMore: boolean }
 

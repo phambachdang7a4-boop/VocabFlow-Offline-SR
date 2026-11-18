@@ -6,6 +6,8 @@ import {
 import { canSuggest, rankSuggestions, spellingVariants, suggestionTerm } from '../domain/dictionary-suggestions';
 import { explicitInflectionLemmas } from '../domain/dictionary-inflections';
 
+const courseTagTableExists = new WeakMap<object, Promise<boolean>>();
+
 function checkPage(offset: number) {
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) {
     throw new Error('Trang từ điển không hợp lệ.');
@@ -13,6 +15,46 @@ function checkPage(offset: number) {
 }
 function checkId(id: number) {
   if (!validDictionaryId(id)) throw new Error('Mã từ điển không hợp lệ.');
+}
+
+async function courseTagsForWordIds(
+  db: SQLiteDatabase,
+  wordIds: number[],
+): Promise<Map<number, string[]>> {
+  const tagsByWordId = new Map<number, string[]>();
+  if (!wordIds.length) return tagsByWordId;
+
+  let tableExists = courseTagTableExists.get(db);
+  if (!tableExists) {
+    tableExists = db
+      .getFirstAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master
+         WHERE type = 'table' AND name = 'vocabflow_course_tags'`,
+      )
+      .then((row) => Boolean(row));
+    courseTagTableExists.set(db, tableExists);
+  }
+  if (!(await tableExists)) return tagsByWordId;
+
+  for (let offset = 0; offset < wordIds.length; offset += 400) {
+    const batch = wordIds.slice(offset, offset + 400);
+    const rows = await db.getAllAsync<{
+      wordId: number;
+      courseTitle: string;
+    }>(
+      `SELECT word_id AS wordId, course_title AS courseTitle
+       FROM vocabflow_course_tags
+       WHERE word_id IN (${batch.map(() => '?').join(',')})
+       ORDER BY course_title COLLATE NOCASE`,
+      ...batch,
+    );
+    for (const row of rows) {
+      const tags = tagsByWordId.get(row.wordId) ?? [];
+      if (!tags.includes(row.courseTitle)) tags.push(row.courseTitle);
+      tagsByWordId.set(row.wordId, tags);
+    }
+  }
+  return tagsByWordId;
 }
 
 export async function searchInDictionary(db: SQLiteDatabase, query: string, offset = 0): Promise<DictionaryMatches> {
@@ -27,7 +69,18 @@ export async function searchInDictionary(db: SQLiteDatabase, query: string, offs
      ORDER BY w.word COLLATE NOCASE, w.id LIMIT ? OFFSET ?`,
     `${lookupPrefix(query)}%`, DICTIONARY_PAGE_SIZE + 1, offset,
   );
-  return { items: rows.slice(0, DICTIONARY_PAGE_SIZE), hasMore: rows.length > DICTIONARY_PAGE_SIZE };
+  const items = rows.slice(0, DICTIONARY_PAGE_SIZE);
+  const tagsByWordId = await courseTagsForWordIds(
+    db,
+    items.map((item) => item.id),
+  );
+  return {
+    items: items.map((item) => {
+      const courseTags = tagsByWordId.get(item.id);
+      return courseTags?.length ? { ...item, courseTags } : item;
+    }),
+    hasMore: rows.length > DICTIONARY_PAGE_SIZE,
+  };
 }
 
 // Codes and IDs are trusted constants, never user input. Both filtering and
@@ -53,6 +106,7 @@ export async function entryInDictionary(db: SQLiteDatabase, id: number, offset =
      FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id WHERE wd.word_id = ?
      GROUP BY part ORDER BY MIN(wd.id)`, id,
   );
+  const courseTags = (await courseTagsForWordIds(db, [id])).get(id);
   const selected = parts === 'first' ? available.slice(0, 1).map(row => row.part) : [...new Set(parts)];
   const senses = await db.getAllAsync<DictionarySense>(
     `SELECT wd.id, d.definition, d.pos, d.sub_pos AS subPos, wd.example
@@ -62,7 +116,8 @@ export async function entryInDictionary(db: SQLiteDatabase, id: number, offset =
     id, ...selected, DICTIONARY_PAGE_SIZE + 1, offset,
   );
   return { ...word, pronunciations, senses: senses.slice(0, DICTIONARY_PAGE_SIZE), hasMore: senses.length > DICTIONARY_PAGE_SIZE,
-    partsOfSpeech: available.map(row => row.part) };
+    partsOfSpeech: available.map(row => row.part),
+    ...(courseTags?.length ? { courseTags } : {}) };
 }
 
 export async function inflectionRootsInDictionary(

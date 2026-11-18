@@ -411,6 +411,19 @@ export default function DictionaryScreen() {
             ) : null}
           </View>
           <Text style={[styles.meaning, { color: c.dictMuted }]} numberOfLines={2}>{item.meaning}</Text>
+          {item.courseTags?.length ? (
+            <View
+              testID={`dictionary-result-course-tags-${item.id}`}
+              style={styles.courseTags}
+              accessibilityLabel={`Thuộc khóa học: ${item.courseTags.join(", ")}`}
+            >
+              {item.courseTags.map((tag) => (
+                <View key={tag} style={[styles.pill, { backgroundColor: c.dictChip }]}>
+                  <Text style={[styles.pillText, { color: c.dictHead }]}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
         <Feather name="chevron-right" size={18} color={c.dictMuted} />
       </Pressable>
@@ -877,6 +890,7 @@ const styles = StyleSheet.create({
   go: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  courseTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 3 },
   term: { fontFamily: F.b, fontSize: 18, flexShrink: 1 },
   meaning: { fontFamily: F.r, fontSize: 14, lineHeight: 20 },
   pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },

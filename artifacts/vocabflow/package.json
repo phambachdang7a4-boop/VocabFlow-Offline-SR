@@ -28,6 +28,8 @@
     "check:basic-vocabulary-course": "node scripts/check-basic-vocabulary-course.cjs",
     "check:review-ui": "node scripts/check-review-ui.cjs && node scripts/check-review-match-game.cjs",
     "check:course-word-selection": "node scripts/check-course-word-selection.cjs",
+    "course:build-dictionary-index": "node scripts/build-course-dictionary-index.cjs",
+    "check:course-dictionary-index": "node scripts/check-course-dictionary-index.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
     "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
     "check:offline-audio-download": "node scripts/check-offline-audio-download.cjs",

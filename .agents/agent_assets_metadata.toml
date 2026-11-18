@@ -196,3 +196,17 @@ mtime_ms = 1794949493815
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/b8b56301-a676-4c74-98a0-f9402ca4fdf9/00268a77-e5cb-462d-bcb8-d440927028b6"
 storage_version_token = "1794949764858448"
 content_type = "text/csv"
+
+[[outputs]]
+id = "hHb_yvVuNtPx-flrzSKUQ"
+uri = "file://generated-artifacts/vocabflow-course-vocabulary.xlsx"
+type = "table"
+title = "Từ vựng các khóa học VocabFlow"
+description = "14.610 dòng từ 8 nhóm khóa học, đúng 7 cột và theo thứ tự trong từng khóa. Phiên âm lấy từ từ điển offline; ô để trống khi dữ liệu khóa học hoặc từ điển hiện có không cung cấp thông tin."
+logical_id = "aadecac5-1202-4807-841d-65c0200b2b28"
+content_hash = "sha256:4e3de62f92ee74e3c1b5b6c285c656f3c97e87713da5cbddad95984cbe5f1d09"
+size = 1643489
+mtime_ms = 1794981589043
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:0b7801c7-40e7-42be-a38b-c7719da0b17c/aadecac5-1202-4807-841d-65c0200b2b28/bbe294ea-2a05-4d74-9c73-0daa3e0c4894"
+storage_version_token = "1794981731813151"
+content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

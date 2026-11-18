@@ -26,6 +26,10 @@ import {
 } from "../domain/dictionary-local-additions";
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
 import {
+  applyCourseDictionaryIndex,
+  COURSE_DICTIONARY_INDEX_REVISION,
+} from "./dictionary-course-index";
+import {
   getRegionalIpaForTerm,
   getRegionalIpaForTerms,
   installOfflineRegionalIpa,
@@ -44,9 +48,9 @@ import type { DictionaryPartOfSpeech } from "../domain/dictionary";
 import { openDatabaseSafely, storageFailureMessage } from "./sqlite-connection";
 
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
-const DICTIONARY_DOWNLOAD_CHUNK_BYTES = 8 * 1024 * 1024;
+const DICTIONARY_DOWNLOAD_CHUNK_BYTES = 4 * 1024 * 1024;
 const DICTIONARY_CONTENT_REVISION =
-  `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}`;
+  `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}+${COURSE_DICTIONARY_INDEX_REVISION}`;
 let connection: Promise<SQLiteDatabase> | undefined;
 
 function sha256Hex(bytes: Uint8Array): string {
@@ -230,7 +234,7 @@ async function initialize(
         );
       onStage?.("importing");
       const imported = await deserializeDatabaseAsync(
-        dictionaryImportBytes(buffer),
+        dictionaryImportBytes(buffer, { copy: false }),
       );
       try {
         const check = await imported.getFirstAsync<{ quick_check: string }>(
@@ -260,6 +264,8 @@ async function initialize(
       } finally {
         await imported.closeAsync();
       }
+      buffer = new Uint8Array(0);
+      await applyCourseDictionaryIndex(db);
       await db.execAsync(
         "CREATE INDEX IF NOT EXISTS idx_vocabflow_words_nocase ON words(word COLLATE NOCASE, id);",
       );
@@ -294,6 +300,7 @@ async function initialize(
       await db.execAsync("PRAGMA query_only = OFF;");
       await applyExampleUpdates(db);
       await applyLocalDictionaryAdditions(db);
+      await applyCourseDictionaryIndex(db);
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
@@ -352,6 +359,14 @@ export function openDictionary(
       connection = undefined;
       if (failure instanceof DictionaryDownloadConsentRequired) throw failure;
       const detail = failure instanceof Error ? failure.message : "";
+      if (
+        Platform.OS === "web" &&
+        /memory access out of bounds|out of memory/i.test(detail)
+      ) {
+        throw new Error(
+          "SQLite Web không đủ bộ nhớ tạm để nhập kho từ điển 42,2 MiB. Hãy đóng các tab VocabFlow khác rồi tải lại trang; trên Android, có thể dùng Expo Go. Sổ cá nhân không bị thay đổi.",
+        );
+      }
       throw new Error(
         storageFailureMessage(
           failure,
