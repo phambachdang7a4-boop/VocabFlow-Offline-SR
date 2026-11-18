@@ -125,9 +125,12 @@ export function ChestTierArtwork({
   const chestLidImage = CHEST_LID_IMAGE_SOURCES[rarity];
 
   if (chestImage && chestLidImage) {
+    // The Gold PNG has more transparent padding than Copper and Silver.
+    const imageScale = rarity === "rare" ? 1.15 : 1;
     const imageStyle = {
       width: size,
       height: size,
+      transform: [{ scale: imageScale }],
       ...(Platform.OS === "web" ? { imageRendering: "pixelated" } : {}),
     } as ImageStyle;
 

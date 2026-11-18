@@ -47,6 +47,7 @@ const { DailyMissionArtwork } = loadTs(
     "../assets/images/icon-combo.png": "combo-image",
     "../assets/images/icon-words.png": "words-image",
     "../assets/images/icon-add-words.png": "add-words-image",
+    "../assets/images/quest-rank-a.png": "rank-a-image",
   },
 );
 let activeColors = colors.light;
@@ -84,24 +85,23 @@ const { ChestTierArtwork } = loadTs(
   },
 );
 
-const expectedArtwork = {
-  grade: {
-    type: "Path",
-    props: { d: "m40 15 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" },
-  },
-};
 const missionImageTypes = {
   time: "timer-image",
   combo: "combo-image",
   review: "words-image",
   "add-words": "add-words-image",
+  grade: "rank-a-image",
 };
 const missionTypes = ["review", "add-words", "grade", "time", "combo"];
 const artworkSizes = [48, 62, 70];
 assert.equal(
   new Set(Object.values(missionImageTypes)).size,
   Object.keys(missionImageTypes).length,
-  "The four image-based mission illustrations use distinct artwork.",
+  "Each mission type maps to its own illustration.",
+);
+assert.ok(
+  readFileSync(join(__dirname, "../assets/images/quest-rank-a.png")).length > 0,
+  "The supplied rank medal image is present in the app assets.",
 );
 const collectElements = (node, result = []) => {
   if (Array.isArray(node)) {
@@ -132,34 +132,13 @@ const contrastRatio = (foreground, background) => {
 for (const size of artworkSizes) {
   for (const missionType of missionTypes) {
     const tree = DailyMissionArtwork({ type: missionType, size });
-    if (missionImageTypes[missionType]) {
-      assert.equal(tree.type, "Image", `${missionType} uses the supplied image.`);
-      assert.equal(tree.props.source, missionImageTypes[missionType]);
-      assert.equal(tree.props.resizeMode, "contain");
-      assert.equal(tree.props.resizeMethod, "scale");
-      assert.equal(tree.props.style.width, size);
-      assert.equal(tree.props.style.height, size);
-      assert.equal(tree.props.style.imageRendering, "pixelated");
-    } else {
-      assert.equal(
-        tree.type.default,
-        "Svg",
-        `${missionType} retains its existing SVG illustration at ${size}px.`,
-      );
-      assert.equal(tree.props.width, size);
-      assert.equal(tree.props.height, size);
-      assert.equal(tree.props.viewBox, "0 0 80 80");
-      assert.ok(
-        collectElements(tree).some(
-          (element) =>
-            element.type === expectedArtwork[missionType].type &&
-            Object.entries(expectedArtwork[missionType].props).every(
-              ([key, value]) => String(element.props[key]) === String(value),
-            ),
-          ),
-        `${missionType} retains its identifying illustration at ${size}px.`,
-      );
-    }
+    assert.equal(tree.type, "Image", `${missionType} uses its mapped image.`);
+    assert.equal(tree.props.source, missionImageTypes[missionType]);
+    assert.equal(tree.props.resizeMode, "contain");
+    assert.equal(tree.props.resizeMethod, "scale");
+    assert.equal(tree.props.style.width, size);
+    assert.equal(tree.props.style.height, size);
+    assert.equal(tree.props.style.imageRendering, "pixelated");
   }
 }
 

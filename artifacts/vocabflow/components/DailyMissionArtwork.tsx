@@ -16,6 +16,7 @@ const MISSION_IMAGE_SOURCES: Partial<
   combo: require("../assets/images/icon-combo.png"),
   review: require("../assets/images/icon-words.png"),
   "add-words": require("../assets/images/icon-add-words.png"),
+  grade: require("../assets/images/quest-rank-a.png"),
 };
 
 export function DailyMissionArtwork({
