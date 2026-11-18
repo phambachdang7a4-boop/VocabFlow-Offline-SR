@@ -22,6 +22,7 @@ import {
   activateGuestDatabase,
   initializeAccountDatabase,
 } from "@/data/vocabulary-sync";
+import { storageFailureMessage } from "@/data/sqlite-connection";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -168,10 +169,13 @@ function RootLayoutNav() {
       .then(() => {
         if (active) setScopedUserId(nextUserId);
       })
-      .catch(() => {
+      .catch((failure) => {
         if (active)
           setScopeError(
-            "Không thể mở dữ liệu của tài khoản này. Dữ liệu chưa bị xóa.",
+            storageFailureMessage(
+              failure,
+              "Không thể mở dữ liệu của tài khoản này. Dữ liệu chưa bị xóa.",
+            ),
           );
       });
 

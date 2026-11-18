@@ -35,10 +35,11 @@ export function useDictionary() {
       return false;
     } catch (failure) {
       if (!current()) return false;
-      setStage('awaiting-consent');
       if (failure instanceof DictionaryDownloadConsentRequired) {
+        setStage('awaiting-consent');
         if (allowDownload) setError(failure.message);
       } else {
+        setStage('checking');
         setError(failure instanceof Error ? failure.message : 'Không thể nạp từ điển.');
       }
       return false;

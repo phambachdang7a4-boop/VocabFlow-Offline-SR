@@ -16,6 +16,7 @@ const source = resolve(
 const handles = new Set();
 const regionalIpaByTerm = new Map();
 let personal;
+let failNextDictionaryRead = false;
 
 function adapter(filename, readOnly = false) {
   const handle = new DatabaseSync(filename, { readOnly });
@@ -24,7 +25,16 @@ function adapter(filename, readOnly = false) {
     handle,
     filename,
     execAsync: async (sql) => handle.exec(sql),
-    getFirstAsync: async (sql, ...params) => handle.prepare(sql).get(...params),
+    getFirstAsync: async (sql, ...params) => {
+      if (
+        failNextDictionaryRead &&
+        filename.includes("vocabflow-dictionary-")
+      ) {
+        failNextDictionaryRead = false;
+        throw new Error("temporary SQLite read failure");
+      }
+      return handle.prepare(sql).get(...params);
+    },
     getAllAsync: async (sql, ...params) => handle.prepare(sql).all(...params),
     runAsync: async (sql, ...params) => {
       const result = handle.prepare(sql).run(...params);
@@ -902,6 +912,38 @@ function adapter(filename, readOnly = false) {
   );
   await reopened.closeAsync();
 
+  const downloadsBeforeTransientRead = downloads;
+  const deletionsBeforeTransientRead = deleted.length;
+  const transientRepo = repository(async (_url, options) => {
+    downloads++;
+    return rangeResponse(bytes, options);
+  }, "https://phone.expo.example");
+  failNextDictionaryRead = true;
+  assert.deepEqual(
+    await transientRepo.getOfflineDictionaryStatus(),
+    { state: "unavailable", bytes: DICTIONARY.bytes },
+    "A temporary SQLite read failure is not a missing or damaged dictionary",
+  );
+  assert.equal(
+    deleted.length,
+    deletionsBeforeTransientRead,
+    "A temporary SQLite read failure must preserve the installed dictionary",
+  );
+  assert.equal(
+    downloads,
+    downloadsBeforeTransientRead,
+    "Checking an unavailable installed dictionary must not trigger a download",
+  );
+  const reopenedAfterTransientRead = await transientRepo.openDictionary();
+  assert.ok((await transientRepo.searchDictionary("hello")).items.length);
+  assert.deepEqual(
+    await transientRepo.getOfflineDictionaryStatus(),
+    { state: "installed", bytes: DICTIONARY.bytes },
+    "The preserved dictionary opens normally after the transient failure",
+  );
+  assert.equal(downloads, downloadsBeforeTransientRead);
+  await reopenedAfterTransientRead.closeAsync();
+
   // Remove ONLY the disposable reference cache to emulate first use without a network.
   rmSync(join(root, name));
   let online = false;
@@ -913,7 +955,11 @@ function adapter(filename, readOnly = false) {
     repo.openDictionary(undefined, { allowDownload: true }),
     /Không thể nạp/,
   );
-  assert.equal(deleted.at(-1), name);
+  assert.equal(
+    deleted.length,
+    deletionsBeforeTransientRead,
+    "A failed transfer must not trigger cleanup of an installed cache",
+  );
   assert.deepEqual((await personal.repo.listWords())[0], snapshot);
   await assert.rejects(
     repo.openDictionary(),

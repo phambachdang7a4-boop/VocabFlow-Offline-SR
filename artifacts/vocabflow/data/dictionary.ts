@@ -140,10 +140,15 @@ async function initialize(
 ): Promise<SQLiteDatabase> {
   onStage?.("checking");
   const db = await openDatabaseSafely(() => openDatabaseAsync(filename));
+  let deleteCacheOnFailure = false;
   try {
     const table = await db.getFirstAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'vocabflow_dictionary_meta'",
     );
+    const wordsTable = await db.getFirstAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'words'",
+    );
+    const hasExistingWords = Boolean(wordsTable);
     if (table) {
       const columns = await db.getAllAsync<{ name: string }>(
         "PRAGMA table_info(vocabflow_dictionary_meta)",
@@ -247,6 +252,7 @@ async function initialize(
         );
         if ((totalWordCount?.count ?? 0) < DICTIONARY.wordCount)
           throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
+        deleteCacheOnFailure = !hasExistingWords;
         await backupDatabaseAsync({
           sourceDatabase: imported,
           destDatabase: db,
@@ -275,21 +281,26 @@ async function initialize(
           count.count,
         );
       });
+      deleteCacheOnFailure = false;
     } else if (cached.example_revision !== DICTIONARY_CONTENT_REVISION) {
       // Upgrade an already-downloaded offline copy in place: no second 44 MB download.
       const check = await db.getFirstAsync<{ quick_check: string }>(
         "PRAGMA quick_check",
       );
-      if (check?.quick_check !== "ok")
+      if (check?.quick_check !== "ok") {
+        deleteCacheOnFailure = allowDownload;
         throw new Error("Kho từ điển bị lỗi. Hãy tải lại.");
+      }
       await db.execAsync("PRAGMA query_only = OFF;");
       await applyExampleUpdates(db);
       await applyLocalDictionaryAdditions(db);
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
-      if (!count || count.count < DICTIONARY.wordCount)
+      if (!count || count.count < DICTIONARY.wordCount) {
+        deleteCacheOnFailure = allowDownload;
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
+      }
       await db.runAsync(
         "UPDATE vocabflow_dictionary_meta SET example_revision = ?, dictionary_word_count = ?",
         DICTIONARY_CONTENT_REVISION,
@@ -299,8 +310,10 @@ async function initialize(
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
-      if (count?.count !== cached.dictionary_word_count)
+      if (count?.count !== cached.dictionary_word_count) {
+        deleteCacheOnFailure = allowDownload;
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
+      }
     }
     // No application query may mutate the reference dictionary after setup.
     await db.execAsync("PRAGMA query_only = ON;");
@@ -309,10 +322,15 @@ async function initialize(
     onStage?.("ready");
     return db;
   } catch (failure) {
-    await db.closeAsync();
-    // Only this disposable reference cache is removed; never vocabflow.db.
-    // A failed/partial import must be recoverable with the Retry button.
-    if (!(failure instanceof DictionaryDownloadConsentRequired))
+    try {
+      await db.closeAsync();
+    } catch {
+      // Keep the original initialization error.
+    }
+    // Preserve a previously installed cache on transient open/query failures.
+    // Only remove a fresh partial import, or known-corrupt data after the user
+    // explicitly approved a retry.
+    if (deleteCacheOnFailure)
       await deleteDatabaseAsync(filename);
     throw failure;
   }
@@ -362,8 +380,16 @@ async function hasExpectedDictionaryWordCount(
   );
 }
 
+function isDictionaryIntegrityFailure(failure: unknown): boolean {
+  const detail =
+    failure instanceof Error ? failure.message : String(failure ?? "");
+  return /Kho từ điển bị lỗi|Số lượng từ điển|database disk image is malformed|file is not a database|not a database|no such table|no such column|SQLITE_CORRUPT|SQLITE_NOTADB/i.test(
+    detail,
+  );
+}
+
 export async function getOfflineDictionaryStatus(): Promise<{
-  state: "missing" | "installed" | "damaged";
+  state: "missing" | "installed" | "damaged" | "unavailable";
   bytes: number;
 }> {
   if (Platform.OS === "web") {
@@ -376,7 +402,10 @@ export async function getOfflineDictionaryStatus(): Promise<{
     } catch (error) {
       if (error instanceof DictionaryDownloadConsentRequired)
         return { state: "missing", bytes: 0 };
-      return { state: "damaged", bytes: DICTIONARY.bytes };
+      return {
+        state: isDictionaryIntegrityFailure(error) ? "damaged" : "unavailable",
+        bytes: DICTIONARY.bytes,
+      };
     }
   }
   const file = new File(Paths.document, "SQLite", filename);
@@ -391,7 +420,10 @@ export async function getOfflineDictionaryStatus(): Promise<{
   } catch (error) {
     if (error instanceof DictionaryDownloadConsentRequired)
       return { state: "missing", bytes: 0 };
-    return { state: "damaged", bytes };
+    return {
+      state: isDictionaryIntegrityFailure(error) ? "damaged" : "unavailable",
+      bytes,
+    };
   }
 }
 

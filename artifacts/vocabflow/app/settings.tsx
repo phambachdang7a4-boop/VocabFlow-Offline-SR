@@ -91,7 +91,7 @@ export default function SettingsScreen() {
   const [restoreCandidate, setRestoreCandidate] =
     React.useState<AccountBackupFile | null>(null);
   const [dictionaryStatus, setDictionaryStatus] = React.useState<
-    "checking" | "missing" | "installed" | "damaged"
+    "checking" | "missing" | "installed" | "damaged" | "unavailable"
   >("checking");
   const [audioStatus, setAudioStatus] = React.useState<
     "checking" | "missing" | "installed" | "damaged" | "unavailable"
@@ -153,7 +153,7 @@ export default function SettingsScreen() {
       setRegionalIpaEntryCount(regionalIpa.entryCount);
       setRegionalIpaParts(regionalIpaPartsStatus);
     } catch {
-      setDictionaryStatus("damaged");
+      setDictionaryStatus("unavailable");
       setAudioStatus("damaged");
       setRegionalIpaStatus("damaged");
       setRegionalIpaParts({
@@ -173,7 +173,7 @@ export default function SettingsScreen() {
       ? `${Math.min(100, Math.round((offlineProgress.bytesWritten / offlineProgress.totalBytes) * 100))}% · ${sizeLabel(offlineProgress.bytesWritten)} / ${sizeLabel(offlineProgress.totalBytes)}`
       : `${sizeLabel(offlineProgress.bytesWritten)} đã tải`;
   const offlineProgressText = offlineAction
-    ? `${offlineStage ?? "Đang xử lý"}${offlineAction.endsWith("download") ? ` · ${progressLabel}` : "…"}`
+    ? `${offlineStage ?? "Đang xử lý"}${offlineAction.endsWith("download") && !(offlineAction === "dictionary-download" && dictionaryStatus === "unavailable") ? ` · ${progressLabel}` : "…"}`
     : null;
 
   const handleDownloadDictionary = async () => {
@@ -197,7 +197,7 @@ export default function SettingsScreen() {
           );
         },
         {
-          allowDownload: true,
+          allowDownload: dictionaryStatus !== "unavailable",
           onProgress: (bytesWritten, totalBytes) =>
             setOfflineProgress({ bytesWritten, totalBytes }),
         },
@@ -1401,6 +1401,8 @@ Nội dung tệp:
                   ? `Đã cài · ${sizeLabel(DICTIONARY.bytes)}`
                   : dictionaryStatus === "damaged"
                     ? "Tệp bị thiếu hoặc lỗi · cần tải lại"
+                    : dictionaryStatus === "unavailable"
+                      ? "Không kiểm tra được · dữ liệu chưa bị xóa"
                     : dictionaryStatus === "checking"
                       ? "Đang kiểm tra…"
                       : `Chưa cài · ${sizeLabel(DICTIONARY.bytes)}`}
@@ -1410,8 +1412,16 @@ Nội dung tệp:
           <View style={styles.offlineActions}>
             <Button
               testID="offline-dictionary-download"
-              label={dictionaryStatus === "damaged" ? "Tải lại" : "Tải từ điển"}
-              icon="download"
+              label={
+                dictionaryStatus === "damaged"
+                  ? "Tải lại"
+                  : dictionaryStatus === "unavailable"
+                    ? "Thử lại"
+                    : "Tải từ điển"
+              }
+              icon={
+                dictionaryStatus === "unavailable" ? "refresh-cw" : "download"
+              }
               onPress={() => {
                 void handleDownloadDictionary();
               }}
@@ -1437,6 +1447,7 @@ Nội dung tệp:
                 Boolean(offlineAction) ||
                 syncBusy ||
                 dictionaryStatus === "missing" ||
+                dictionaryStatus === "unavailable" ||
                 dictionaryStatus === "checking"
               }
               style={{ flex: 1 }}
