@@ -464,8 +464,9 @@ export async function searchDictionary(
   query: string,
   offset = 0,
   courseId: string | null = null,
+  partOfSpeech: DictionaryPartOfSpeech | null = null,
 ) {
-  return searchInDictionary(await openDictionary(), query, offset, courseId);
+  return searchInDictionary(await openDictionary(), query, offset, courseId, partOfSpeech);
 }
 export async function suggestDictionary(query: string) {
   return suggestInDictionary(await openDictionary(), query);

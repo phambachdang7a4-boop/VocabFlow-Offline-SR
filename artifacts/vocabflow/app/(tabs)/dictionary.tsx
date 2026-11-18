@@ -8,7 +8,12 @@ import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getRandomUnlearnedDictionaryWord, searchDictionary, suggestDictionary } from '@/data/dictionary';
 import { COURSE_DICTIONARY_COURSES } from '@/data/dictionary-course-index';
-import { type DictionaryMatch, type DictionarySuggestion } from '@/domain/dictionary';
+import {
+  DICTIONARY_PARTS,
+  type DictionaryMatch,
+  type DictionaryPartOfSpeech,
+  type DictionarySuggestion,
+} from '@/domain/dictionary';
 import { DictionarySuggestions } from '@/components/DictionarySuggestions';
 import { DictionaryGate } from '@/components/DictionaryGate';
 import { DictionaryEntryView } from '@/components/DictionaryEntryView';
@@ -162,6 +167,8 @@ export default function DictionaryScreen() {
   const [q, setQ] = useState('');
   const [lookup, setLookup] = useState({ term: '', openExact: false });
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedPartOfSpeech, setSelectedPartOfSpeech] = useState<DictionaryPartOfSpeech | null>(null);
+  const [partFilterOpen, setPartFilterOpen] = useState(false);
   const debounced = lookup.term;
   const [items, setItems] = useState<DictionaryMatch[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -311,7 +318,7 @@ export default function DictionaryScreen() {
     setSuggestions([]);
     if (!dict.ready || !debounced) { setItems([]); setHasMore(false); setLoading(false); return; }
     setLoading(true);
-    searchDictionary(debounced, 0, selectedCourseId).then(
+    searchDictionary(debounced, 0, selectedCourseId, selectedPartOfSpeech).then(
       (r) => {
         if (reqRef.current !== id) return;
         setItems(r.items); setHasMore(r.hasMore);
@@ -319,7 +326,7 @@ export default function DictionaryScreen() {
           const exact = r.items.find((item) => normalizeTerm(item.term) === normalizeTerm(debounced));
           if (exact) setOpenId(exact.id);
         }
-        if (r.items.length === 0 && selectedCourseId === null) {
+        if (r.items.length === 0 && selectedCourseId === null && selectedPartOfSpeech === null) {
           // Typo help only after an empty first page; loading stays on until done.
           return suggestDictionary(debounced).then(
             (s) => { if (reqRef.current === id) setSuggestions(s); },
@@ -331,7 +338,7 @@ export default function DictionaryScreen() {
       setItems([]); setSuggestions([]); setHasMore(false);
       setError(e instanceof Error ? e.message : 'Không thể tra cứu hoặc gợi ý từ.');
     }).finally(() => { if (reqRef.current === id) setLoading(false); });
-  }, [lookup, dict.ready, retryTick, selectedCourseId]);
+  }, [lookup, dict.ready, retryTick, selectedCourseId, selectedPartOfSpeech]);
 
   const selectCourse = (courseId: string | null) => {
     if (courseId === selectedCourseId) return;
@@ -339,6 +346,23 @@ export default function DictionaryScreen() {
     if (debounceRef.current !== null) clearTimeout(debounceRef.current);
     debounceRef.current = null;
     setSelectedCourseId(courseId);
+    setItems([]);
+    setSuggestions([]);
+    setHasMore(false);
+    setOpenId(null);
+    setError(null);
+    setLoading(!!q.trim());
+    setLoadingMore(false);
+    setLookup({ term: q.trim(), openExact: false });
+  };
+
+  const selectPartOfSpeech = (part: DictionaryPartOfSpeech | null) => {
+    setPartFilterOpen(false);
+    if (part === selectedPartOfSpeech) return;
+    reqRef.current += 1;
+    if (debounceRef.current !== null) clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    setSelectedPartOfSpeech(part);
     setItems([]);
     setSuggestions([]);
     setHasMore(false);
@@ -397,7 +421,7 @@ export default function DictionaryScreen() {
     const id = reqRef.current;
     setError(null);
     setLoadingMore(true);
-    searchDictionary(debounced, items.length, selectedCourseId).then(
+    searchDictionary(debounced, items.length, selectedCourseId, selectedPartOfSpeech).then(
       (r) => {
         if (reqRef.current !== id) return;
         setItems((prev) => {
@@ -665,8 +689,8 @@ export default function DictionaryScreen() {
       <EmptyState
         icon="feather"
         title="Không có mục từ phù hợp"
-        body={selectedCourseId
-          ? `Không tìm thấy từ bắt đầu bằng “${debounced}” trong khóa học đã chọn.`
+        body={selectedCourseId || selectedPartOfSpeech
+          ? `Không tìm thấy từ bắt đầu bằng “${debounced}” phù hợp với bộ lọc đã chọn.`
           : `Không tìm thấy từ bắt đầu bằng “${debounced}”. Bạn vẫn có thể tự ghi từ này vào sổ.`}
       >
         <Button testID="dictionary-add-manual" label="Tự ghi từ mới" icon="edit-3" variant="ghost" onPress={() => router.push('/word')} />
@@ -774,59 +798,152 @@ export default function DictionaryScreen() {
           </View>
         )}
         {!corviConversationOpen && dict.ready ? (
-          <View testID="dictionary-course-filter" style={styles.courseFilter}>
-            <Text style={[styles.courseFilterLabel, { color: c.dictHead }]}>Lọc khóa học</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.courseFilterOptions}
-            >
+          <View style={styles.filters}>
+            <View testID="dictionary-course-filter" style={styles.courseFilter}>
+              <Text style={[styles.courseFilterLabel, { color: c.dictHead }]}>Lọc khóa học</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.courseFilterOptions}
+              >
+                <Pressable
+                  testID="dictionary-course-filter-all"
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedCourseId === null }}
+                  accessibilityLabel="Tất cả khóa học"
+                  onPress={() => selectCourse(null)}
+                  style={({ pressed }) => [
+                    styles.courseFilterChip,
+                    {
+                      backgroundColor: selectedCourseId === null ? c.dictHead : c.dictPage,
+                      borderColor: selectedCourseId === null ? c.dictHead : c.dictLine,
+                      opacity: pressed ? 0.72 : 1,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.courseFilterText, { color: selectedCourseId === null ? c.dictPage : c.dictHead }]}>Tất cả</Text>
+                </Pressable>
+                {COURSE_DICTIONARY_COURSES.map((course) => {
+                  const selected = selectedCourseId === course.id;
+                  return (
+                    <Pressable
+                      key={course.id}
+                      testID={`dictionary-course-filter-${course.id}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={`Khóa học ${course.title}`}
+                      onPress={() => selectCourse(course.id)}
+                      style={({ pressed }) => [
+                        styles.courseFilterChip,
+                        {
+                          backgroundColor: selected ? c.dictHead : c.dictPage,
+                          borderColor: selected ? c.dictHead : c.dictLine,
+                          opacity: pressed ? 0.72 : 1,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.courseFilterText, { color: selected ? c.dictPage : c.dictHead }]}>{course.title}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+            <View testID="dictionary-part-filter" style={styles.partFilter}>
+              <Text style={[styles.courseFilterLabel, { color: c.dictHead }]}>Từ loại</Text>
               <Pressable
-                testID="dictionary-course-filter-all"
+                testID="dictionary-part-filter-open"
                 accessibilityRole="button"
-                accessibilityState={{ selected: selectedCourseId === null }}
-                accessibilityLabel="Tất cả khóa học"
-                onPress={() => selectCourse(null)}
+                accessibilityLabel={`Chọn từ loại, hiện tại: ${selectedPartOfSpeech
+                  ? DICTIONARY_PARTS.find((part) => part.id === selectedPartOfSpeech)?.viLabel
+                  : 'Tất cả từ loại'}`}
+                accessibilityState={{ expanded: partFilterOpen }}
+                onPress={() => setPartFilterOpen(true)}
                 style={({ pressed }) => [
-                  styles.courseFilterChip,
-                  {
-                    backgroundColor: selectedCourseId === null ? c.dictHead : c.dictPage,
-                    borderColor: selectedCourseId === null ? c.dictHead : c.dictLine,
-                    opacity: pressed ? 0.72 : 1,
-                  },
+                  styles.partFilterTrigger,
+                  { backgroundColor: c.dictPage, borderColor: c.dictLine, opacity: pressed ? 0.76 : 1 },
                 ]}
               >
-                <Text style={[styles.courseFilterText, { color: selectedCourseId === null ? c.dictPage : c.dictHead }]}>Tất cả</Text>
+                <Text
+                  testID="dictionary-part-filter-value"
+                  numberOfLines={1}
+                  style={[styles.courseFilterText, { color: c.dictHead, flex: 1 }]}
+                >
+                  {selectedPartOfSpeech
+                    ? DICTIONARY_PARTS.find((part) => part.id === selectedPartOfSpeech)?.viLabel
+                    : 'Tất cả từ loại'}
+                </Text>
+                <Feather name="chevron-down" size={18} color={c.dictHead} />
               </Pressable>
-              {COURSE_DICTIONARY_COURSES.map((course) => {
-                const selected = selectedCourseId === course.id;
-                return (
-                  <Pressable
-                    key={course.id}
-                    testID={`dictionary-course-filter-${course.id}`}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={`Khóa học ${course.title}`}
-                    onPress={() => selectCourse(course.id)}
-                    style={({ pressed }) => [
-                      styles.courseFilterChip,
-                      {
-                        backgroundColor: selected ? c.dictHead : c.dictPage,
-                        borderColor: selected ? c.dictHead : c.dictLine,
-                        opacity: pressed ? 0.72 : 1,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.courseFilterText, { color: selected ? c.dictPage : c.dictHead }]}>{course.title}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+            </View>
           </View>
         ) : null}
       </View>
       <View style={{ flex: 1, backgroundColor: c.dictPage }}>{body}</View>
+      <Modal
+        testID="dictionary-part-filter-modal"
+        visible={partFilterOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPartFilterOpen(false)}
+      >
+        <Pressable
+          testID="dictionary-part-filter-backdrop"
+          accessibilityRole="button"
+          accessibilityLabel="Đóng bộ lọc từ loại"
+          onPress={() => setPartFilterOpen(false)}
+          style={[styles.partFilterOverlay, { backgroundColor: c.overlay, paddingBottom: Math.max(insets.bottom, 16) }]}
+        >
+          <Pressable
+            accessibilityRole="none"
+            onPress={(event) => event.stopPropagation()}
+            style={[styles.partFilterSheet, { backgroundColor: c.card, borderColor: c.border, borderRadius: c.radius + 8 }]}
+          >
+            <View style={styles.partFilterSheetHeader}>
+              <Text style={[styles.partFilterTitle, { color: c.foreground }]}>Lọc theo từ loại</Text>
+              <Pressable
+                testID="dictionary-part-filter-close"
+                accessibilityRole="button"
+                accessibilityLabel="Đóng bộ lọc"
+                onPress={() => setPartFilterOpen(false)}
+                hitSlop={8}
+              >
+                <Feather name="x" size={22} color={c.foreground} />
+              </Pressable>
+            </View>
+            <ScrollView
+              testID="dictionary-part-filter-options"
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {[
+                { id: null, label: 'Tất cả từ loại' },
+                ...DICTIONARY_PARTS.map((part) => ({ id: part.id, label: part.viLabel })),
+              ].map((option) => {
+                const selected = option.id === selectedPartOfSpeech;
+                return (
+                  <Pressable
+                    key={option.id ?? 'all'}
+                    testID={`dictionary-part-filter-option-${option.id ?? 'all'}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => selectPartOfSpeech(option.id)}
+                    style={({ pressed }) => [
+                      styles.partFilterOption,
+                      { borderBottomColor: c.border, opacity: pressed ? 0.65 : 1 },
+                    ]}
+                  >
+                    <Text style={[styles.partFilterOptionText, { color: selected ? c.primary : c.foreground }]}>
+                      {option.label}
+                    </Text>
+                    {selected ? <Feather name="check" size={19} color={c.primary} /> : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
       <Modal
         testID="dictionary-guide-modal"
         visible={guideOpen}
@@ -917,11 +1034,20 @@ const styles = StyleSheet.create({
   iconBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   search: { position: 'relative', flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 6, minHeight: 54, borderWidth: 1 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: F.m, fontSize: 18, paddingVertical: 12 },
-  courseFilter: { paddingTop: 10, gap: 6 },
+  filters: { paddingTop: 10, gap: 8 },
+  courseFilter: { gap: 6 },
   courseFilterLabel: { fontFamily: F.s, fontSize: 12 },
   courseFilterOptions: { alignItems: 'center', gap: 7, paddingRight: 4 },
   courseFilterChip: { minHeight: 32, justifyContent: 'center', paddingHorizontal: 11, borderRadius: 16, borderWidth: 1 },
   courseFilterText: { fontFamily: F.s, fontSize: 12 },
+  partFilter: { gap: 5 },
+  partFilterTrigger: { minHeight: 38, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, borderRadius: 11, borderWidth: 1 },
+  partFilterOverlay: { flex: 1, justifyContent: 'flex-end', paddingHorizontal: 12, paddingTop: 24 },
+  partFilterSheet: { width: '100%', maxWidth: 520, maxHeight: '78%', alignSelf: 'center', borderWidth: 1, paddingHorizontal: 18, paddingTop: 17, paddingBottom: 8, overflow: 'hidden' },
+  partFilterSheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10 },
+  partFilterTitle: { fontFamily: F.b, fontSize: 18 },
+  partFilterOption: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: StyleSheet.hairlineWidth },
+  partFilterOptionText: { fontFamily: F.m, fontSize: 15 },
   corviAssistantScreen: { width: '100%', maxWidth: 560, alignSelf: 'center', gap: 16, paddingBottom: 18 },
   corviAssistantHero: { alignItems: 'center', gap: 10 },
   corviAssistantBubble: { width: '100%', maxWidth: 520, borderWidth: 1, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, gap: 6 },

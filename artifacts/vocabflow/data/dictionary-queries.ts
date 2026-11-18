@@ -67,29 +67,45 @@ export async function searchInDictionary(
   query: string,
   offset = 0,
   courseId: string | null = null,
+  partOfSpeech: DictionaryPartOfSpeech | null = null,
 ): Promise<DictionaryMatches> {
   checkPage(offset);
   if (!query.trim()) return { items: [], hasMore: false };
   if (query.length > 200) throw new Error('Từ tra cứu tối đa 200 ký tự.');
+  if (partOfSpeech !== null && !DICTIONARY_PARTS.some((part) => part.id === partOfSpeech)) {
+    throw new Error('Bộ lọc từ loại không hợp lệ.');
+  }
   if (courseId !== null) {
     if (!COURSE_DICTIONARY_COURSES.some((course) => course.id === courseId)) {
       throw new Error('Khóa học được chọn không hợp lệ.');
     }
     if (!(await hasCourseTagTable(db))) return { items: [], hasMore: false };
   }
+  const parameters: (string | number)[] = [];
+  const meaningPartFilter = partOfSpeech === null ? '' : `AND (${PART_SQL}) = ?`;
+  if (partOfSpeech !== null) parameters.push(partOfSpeech);
+  parameters.push(`${lookupPrefix(query)}%`);
+  const courseFilter = courseId === null ? '' : `AND EXISTS (
+         SELECT 1 FROM vocabflow_course_tags ct
+         WHERE ct.word_id = w.id AND ct.course_id = ?
+       )`;
+  if (courseId !== null) parameters.push(courseId);
+  const posFilter = partOfSpeech === null ? '' : `AND EXISTS (
+         SELECT 1 FROM word_definitions pos_wd
+         JOIN definitions pos_d ON pos_d.id = pos_wd.definition_id
+         WHERE pos_wd.word_id = w.id AND (${partSql('pos_d')}) = ?
+       )`;
+  if (partOfSpeech !== null) parameters.push(partOfSpeech);
+  parameters.push(DICTIONARY_PAGE_SIZE + 1, offset);
   const rows = await db.getAllAsync<DictionaryMatch>(
     `SELECT w.id, w.word AS term,
        COALESCE((SELECT d.definition FROM word_definitions wd JOIN definitions d ON d.id = wd.definition_id
-         WHERE wd.word_id = w.id ORDER BY wd.id LIMIT 1), '') AS meaning
+         WHERE wd.word_id = w.id ${meaningPartFilter} ORDER BY wd.id LIMIT 1), '') AS meaning
      FROM words w WHERE w.word LIKE ? ESCAPE '\\'
-       ${courseId === null ? '' : `AND EXISTS (
-         SELECT 1 FROM vocabflow_course_tags ct
-         WHERE ct.word_id = w.id AND ct.course_id = ?
-       )`}
+       ${courseFilter}
+       ${posFilter}
      ORDER BY w.word COLLATE NOCASE, w.id LIMIT ? OFFSET ?`,
-    ...(courseId === null
-      ? [`${lookupPrefix(query)}%`, DICTIONARY_PAGE_SIZE + 1, offset]
-      : [`${lookupPrefix(query)}%`, courseId, DICTIONARY_PAGE_SIZE + 1, offset]),
+    ...parameters,
   );
   const items = rows.slice(0, DICTIONARY_PAGE_SIZE);
   const tagsByWordId = await courseTagsForWordIds(
@@ -107,9 +123,12 @@ export async function searchInDictionary(
 
 // Codes and IDs are trusted constants, never user input. Both filtering and
 // available options share this classification; unknown/empty tags are Others.
-const PART_SQL = `CASE ${DICTIONARY_PARTS.filter(part => part.id !== 'other').map(part =>
-  `WHEN LOWER(TRIM(COALESCE(d.pos, ''))) IN (${part.codes.map(code => `'${code}'`).join(',')}) THEN '${part.id}'`,
-).join(' ')} ELSE 'other' END`;
+function partSql(definitionAlias: 'd' | 'pos_d' = 'd') {
+  return `CASE ${DICTIONARY_PARTS.filter(part => part.id !== 'other').map(part =>
+    `WHEN LOWER(TRIM(COALESCE(${definitionAlias}.pos, ''))) IN (${part.codes.map(code => `'${code}'`).join(',')}) THEN '${part.id}'`,
+  ).join(' ')} ELSE 'other' END`;
+}
+const PART_SQL = partSql();
 
 export async function entryInDictionary(db: SQLiteDatabase, id: number, offset = 0, parts: DictionaryPartOfSpeech[] | 'first' = []): Promise<DictionaryEntry> {
   checkId(id);

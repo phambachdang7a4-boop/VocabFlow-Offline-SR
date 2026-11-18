@@ -168,6 +168,7 @@ function adapter(filename, readOnly = false) {
     "../domain/dictionary": domain,
     "../domain/dictionary-suggestions": spelling,
     "../domain/dictionary-inflections": inflections,
+    "./dictionary-course-index": courseIndexModule,
   });
   const reference = adapter(source, true);
   assert.equal(
@@ -208,6 +209,85 @@ function adapter(filename, readOnly = false) {
   const hello = result.items.find((row) => row.term === "hello");
   assert.ok(hello);
   assert.ok(hello.meaning.length);
+  const prepositionMatches = await queries.searchInDictionary(
+    reference,
+    "in",
+    0,
+    null,
+    "preposition",
+  );
+  const exactPreposition = prepositionMatches.items.find(
+    (row) => row.term === "in",
+  );
+  assert.ok(exactPreposition, "A selected part of speech can find its headword.");
+  assert.ok(exactPreposition.meaning.length);
+  assert.ok(
+    reference.handle.prepare(
+      `SELECT d.pos FROM word_definitions wd
+       JOIN definitions d ON d.id = wd.definition_id
+       WHERE wd.word_id = ? AND d.definition = ?`,
+    ).all(exactPreposition.id, exactPreposition.meaning)
+      .some((row) => domain.dictionaryPartOfSpeech(row.pos) === "preposition"),
+    "The displayed meaning belongs to the selected part of speech.",
+  );
+  assert.ok(
+    prepositionMatches.items.every((row) =>
+      reference.handle.prepare(
+        `SELECT d.pos FROM word_definitions wd
+         JOIN definitions d ON d.id = wd.definition_id
+         WHERE wd.word_id = ?`,
+      ).all(row.id)
+        .some((sense) => domain.dictionaryPartOfSpeech(sense.pos) === "preposition"),
+    ),
+    "Every listed headword has a matching sense.",
+  );
+  const filterFixture = new DatabaseSync(":memory:");
+  filterFixture.exec(`
+    CREATE TABLE words (id INTEGER PRIMARY KEY, word TEXT, lang_code TEXT);
+    CREATE TABLE definitions (
+      id INTEGER PRIMARY KEY, definition TEXT, pos TEXT, sub_pos TEXT,
+      definition_lang TEXT
+    );
+    CREATE TABLE word_definitions (
+      id INTEGER PRIMARY KEY, word_id INTEGER, definition_id INTEGER, example TEXT
+    );
+    CREATE TABLE vocabflow_course_tags (
+      word_id INTEGER, course_id TEXT, course_title TEXT
+    );
+    INSERT INTO words VALUES (1, 'survey', 'en'), (2, 'surveyor', 'en'), (3, 'surviving', 'en');
+    INSERT INTO definitions VALUES
+      (1, 'một cuộc khảo sát', 'n', NULL, 'vi'),
+      (2, 'khảo sát, xem xét', 'v', NULL, 'vi'),
+      (3, 'người khảo sát', 'n', NULL, 'vi'),
+      (4, 'đang sống sót', 'v', NULL, 'vi');
+    INSERT INTO word_definitions VALUES
+      (1, 1, 1, NULL), (2, 1, 2, NULL), (3, 2, 3, NULL), (4, 3, 4, NULL);
+    INSERT INTO vocabflow_course_tags VALUES
+      (1, 'ielts-topic-vocabulary-v1', 'IELTS'),
+      (2, 'ielts-topic-vocabulary-v1', 'IELTS');
+  `);
+  const filterFixtureDb = {
+    getFirstAsync: async (sql, ...params) => filterFixture.prepare(sql).get(...params),
+    getAllAsync: async (sql, ...params) => filterFixture.prepare(sql).all(...params),
+  };
+  const courseAndNounMatches = await queries.searchInDictionary(
+    filterFixtureDb,
+    "surv",
+    0,
+    "ielts-topic-vocabulary-v1",
+    "noun",
+  );
+  assert.deepEqual(
+    courseAndNounMatches.items.map((row) => row.term),
+    ["survey", "surveyor"],
+    "Course and part-of-speech filters both constrain the headword list.",
+  );
+  assert.equal(
+    courseAndNounMatches.items.find((row) => row.term === "survey").meaning,
+    "một cuộc khảo sát",
+    "Combined filtering shows the matching noun sense, not the first unrelated verb sense.",
+  );
+  filterFixture.close();
   const recommended = await queries.randomUnlearnedInDictionary(
     reference,
     new Set(["hello"]),
@@ -245,6 +325,10 @@ function adapter(filename, readOnly = false) {
     queries.searchInDictionary(reference, "a".repeat(201)),
     /200/,
   );
+  await assert.rejects(
+    queries.searchInDictionary(reference, "a", 0, null, "invalid"),
+    /từ loại/i,
+  );
   const first = await queries.searchInDictionary(reference, "a");
   const next = await queries.searchInDictionary(
     reference,
@@ -255,6 +339,28 @@ function adapter(filename, readOnly = false) {
   assert.equal(first.hasMore, true);
   assert.ok(
     next.items.every((row) => !first.items.some((old) => old.id === row.id)),
+  );
+  const filteredFirst = await queries.searchInDictionary(
+    reference,
+    "a",
+    0,
+    null,
+    "noun",
+  );
+  const filteredNext = await queries.searchInDictionary(
+    reference,
+    "a",
+    DICTIONARY_PAGE_SIZE,
+    null,
+    "noun",
+  );
+  assert.equal(filteredFirst.items.length, DICTIONARY_PAGE_SIZE);
+  assert.ok(filteredFirst.hasMore);
+  assert.ok(
+    filteredNext.items.every(
+      (row) => !filteredFirst.items.some((old) => old.id === row.id),
+    ),
+    "Part-of-speech filtering preserves stable pagination.",
   );
   const entry = await queries.entryInDictionary(reference, hello.id);
   assert.ok(entry.partsOfSpeech.length > 0);

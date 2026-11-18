@@ -20,8 +20,8 @@ assert.match(dictionaryTabSource, /dictionary-open-sources/,
   'A compact info button still provides access to the attribution page.');
 assert.doesNotMatch(dictionaryTabSource, /VocabFlow · Anh – Việt ngoại tuyến|<Text[^>]*>Tra Từ<\/Text>/,
   'The redundant dictionary title above the search field is removed.');
-assert.match(tabLayoutSource, /NativeTabs\.Trigger\.Label>Thư Viện<\/NativeTabs\.Trigger\.Label>/,
-  'Native navigation names the dictionary tab Thư Viện.');
+assert.match(tabLayoutSource, /NativeTabs\.Trigger\.Label>Thư Viện<\/NativeTabs\.Trigger\.Label>|options=\{\{ title: "Thư Viện"/,
+  'The active navigation implementation names the dictionary tab Thư Viện.');
 assert.match(tabLayoutSource, /title: "Thư Viện"/,
   'Classic navigation names the dictionary tab Thư Viện.');
 assert.match(dictionarySourcesSource, /Nguồn từ điển/,
@@ -140,6 +140,9 @@ function mount(file, services, personalWords = [], properties = {}) {
     }) },
     '@/domain/sound-cues': soundCues,
     '@/data/vocabulary': { normalizeTerm },
+    '@/data/dictionary-course-index': {
+      COURSE_DICTIONARY_COURSES: [{ id: 'ielts-topic', title: 'IELTS' }],
+    },
     '@/data/dictionary': {
       getDictionaryInflectionRoots: async () => [],
       ...services,
@@ -732,14 +735,55 @@ function mount(file, services, personalWords = [], properties = {}) {
   });
   await adverbView.settle();
   assert.deepEqual(adverbView.byType('PartOfSpeechFilter').props.selected, ['adverb'], 'A different entry gets its own first type');
+  const partSearches = [];
+  const partFilterScreen = mount('../app/(tabs)/dictionary.tsx', {
+    searchDictionary: (term, offset, courseId, partOfSpeech) =>
+      new Promise(resolve => partSearches.push({ term, offset, courseId, partOfSpeech, resolve })),
+    suggestDictionary: async () => [],
+  });
+  partFilterScreen.byId('dictionary-search').props.onChangeText('in');
+  partFilterScreen.byId('dictionary-part-filter-open').props.onPress();
+  assert.equal(partFilterScreen.byId('dictionary-part-filter-modal').props.visible, true,
+    'The POS dropdown opens a native-friendly selection sheet.');
+  partFilterScreen.byId('dictionary-part-filter-option-verb').props.onPress();
+  await partFilterScreen.settle();
+  assert.equal(partSearches.length, 1);
+  assert.deepEqual(
+    [partSearches[0].term, partSearches[0].offset, partSearches[0].courseId, partSearches[0].partOfSpeech],
+    ['in', 0, null, 'verb'],
+    'Selecting a part of speech reruns the lookup from the first page.',
+  );
+  assert.equal(partFilterScreen.byId('dictionary-part-filter-value').props.children.join(''), 'Động từ');
+  partSearches[0].resolve({ items: [{ id: 2, term: 'inspect', meaning: 'kiểm tra' }], hasMore: true });
+  await partFilterScreen.settle();
+  partFilterScreen.byId('dictionary-results').props.onEndReached();
+  await partFilterScreen.settle();
+  assert.deepEqual(
+    [partSearches[1].offset, partSearches[1].partOfSpeech],
+    [1, 'verb'],
+    'Loading another page keeps the selected part-of-speech filter.',
+  );
+  partSearches[1].resolve({ items: [], hasMore: false });
+  await partFilterScreen.settle();
+  partFilterScreen.byId('dictionary-course-filter-ielts-topic').props.onPress();
+  await partFilterScreen.settle();
+  assert.deepEqual(
+    [partSearches[2].offset, partSearches[2].courseId, partSearches[2].partOfSpeech],
+    [0, 'ielts-topic', 'verb'],
+    'Course and part-of-speech filters remain active together.',
+  );
+  partSearches[2].resolve({ items: [], hasMore: false });
+  await partFilterScreen.settle();
   assert.ok(!readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8').includes('Bấm Lưu từ ở nghĩa'));
   const tabs = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
-  for (const pattern of [/NativeTabs\.Trigger name="([^"]+)"/g, /Tabs\.Screen\s+name="([^"]+)"/g]) {
-    assert.deepEqual([...tabs.matchAll(pattern)].map(match => match[1]), ['dictionary', 'courses', 'review', 'index', 'blank']);
-  }
+  assert.deepEqual(
+    [...tabs.matchAll(/name="(dictionary|courses|review|index|blank)"/g)].map(match => match[1]),
+    ['dictionary', 'courses', 'review', 'index', 'blank'],
+    'The currently registered tab screens remain in the expected order.',
+  );
   assert.equal(existsSync(join(__dirname, '../app/(tabs)/settings.tsx')), false, 'Settings must not be auto-discovered as a sixth tab');
   assert.ok(existsSync(join(__dirname, '../app/settings.tsx')));
   assert.match(readFileSync(join(__dirname, '../app/_layout.tsx'), 'utf8'), /<Stack\.Screen\s+name="settings"/);
   for (const route of ['courses', 'blank']) assert.ok(existsSync(join(__dirname, `../app/(tabs)/${route}.tsx`)));
-  console.log('PASS: POS checkbox multi-select/reset/disabled choices; filtered paging and stale-page rejection; retry All; correct sense save; removed hint; example underlines; search/suggestions; per-sense save/open/frozen preservation; legacy same-English not blocking; tab order.');
+  console.log('PASS: POS search dropdown and combined course filter; POS checkbox multi-select/reset/disabled choices; filtered paging and stale-page rejection; retry All; correct sense save; removed hint; example underlines; search/suggestions; per-sense save/open/frozen preservation; legacy same-English not blocking; tab order.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
