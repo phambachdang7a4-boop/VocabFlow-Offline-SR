@@ -4,6 +4,7 @@ const { readFileSync, existsSync } = require('node:fs');
 const { loadTs, loadDictionaryDomain } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const dictionaryDomain = loadDictionaryDomain();
+const courseDictionaryIndex = require('../domain/course-dictionary-index.json');
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const { exampleSegments, pronunciationAccent } = dictionaryDomain;
 const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
@@ -22,6 +23,8 @@ assert.doesNotMatch(dictionaryTabSource, /VocabFlow · Anh – Việt ngoại tu
   'The redundant dictionary title above the search field is removed.');
 assert.match(tabLayoutSource, /NativeTabs\.Trigger\.Label>Thư Viện<\/NativeTabs\.Trigger\.Label>|options=\{\{ title: "Thư Viện"/,
   'The active navigation implementation names the dictionary tab Thư Viện.');
+assert.match(tabLayoutSource, /name="dictionary"/,
+  'The dictionary remains available as a main navigation tab.');
 assert.match(tabLayoutSource, /title: "Thư Viện"/,
   'Classic navigation names the dictionary tab Thư Viện.');
 assert.match(dictionarySourcesSource, /Nguồn từ điển/,
@@ -126,6 +129,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     'react-native-keyboard-controller': { KeyboardAvoidingView: 'KeyboardAvoidingView' },
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
     'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: () => {} },
+    '@/domain/course-dictionary-index.json': courseDictionaryIndex,
     '@/contexts/VocabularyContext': { useVocabulary: () => ({
       words: personalWords, saveWord: services.saveWord,
       loading: services.bookLoading ?? false, error: services.bookError ?? null, reload: async () => {},
@@ -141,7 +145,9 @@ function mount(file, services, personalWords = [], properties = {}) {
     '@/domain/sound-cues': soundCues,
     '@/data/vocabulary': { normalizeTerm },
     '@/data/dictionary-course-index': {
-      COURSE_DICTIONARY_COURSES: [{ id: 'ielts-topic', title: 'IELTS' }],
+      COURSE_DICTIONARY_COURSES: file.includes('app/(tabs)/dictionary.tsx')
+        ? [{ id: 'ielts-topic', title: 'IELTS' }]
+        : courseDictionaryIndex.courses,
     },
     '@/data/dictionary': {
       getDictionaryInflectionRoots: async () => [],
@@ -540,6 +546,38 @@ function mount(file, services, personalWords = [], properties = {}) {
   const btn = (view, sense, index = 0) => find(view.byId('entry-senses').props.renderItem({ item: sense, index }), node => node.props?.accessibilityRole === 'button');
   const header = view => view.byId('entry-senses').props.ListHeaderComponent;
   {
+    const taggedEntry = {
+      ...entry,
+      term: 'person',
+      courseTags: ['Từ vựng tiếng Anh cơ bản'],
+    };
+    const view = mount('../components/DictionaryEntryView.tsx', {
+      getDictionaryEntry: async () => taggedEntry,
+      saveWord: async () => {},
+    });
+    await view.settle();
+    const courseIndexEntry = courseDictionaryIndex.terms.find(
+      term => term.term.toLowerCase() === taggedEntry.term,
+    );
+    const courseId = courseDictionaryIndex.courses.find(
+      course => course.title === taggedEntry.courseTags[0],
+    ).id;
+    const courseLink = find(
+      header(view),
+      node => node.props?.testID === `entry-course-${courseId}`,
+    );
+    assert.ok(courseLink, 'A course tag opens its related lesson.');
+    courseLink.props.onPress();
+    assert.deepEqual(view.routes[0], {
+      pathname: '/(tabs)/courses',
+      params: {
+        courseId,
+        term: taggedEntry.term,
+        lessonIds: courseIndexEntry.lessonIdsByCourse[courseId].join(','),
+      },
+    });
+  }
+  {
     const rootRequests = [];
     const rootView = mount('../components/DictionaryEntryView.tsx', {
       getDictionaryEntry: async () => entry,
@@ -777,7 +815,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(!readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8').includes('Bấm Lưu từ ở nghĩa'));
   const tabs = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
   assert.deepEqual(
-    [...tabs.matchAll(/name="(dictionary|courses|review|index|blank)"/g)].map(match => match[1]),
+    [...tabs.matchAll(/(?:NativeTabs\.Trigger|Tabs\.Screen)\s+name="([^"]+)"/g)]
+      .map(match => match[1]),
     ['dictionary', 'courses', 'review', 'index', 'blank'],
     'The currently registered tab screens remain in the expected order.',
   );

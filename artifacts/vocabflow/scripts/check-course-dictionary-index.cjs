@@ -10,6 +10,9 @@ const {
 const root = join(__dirname, "..");
 const index = require("../domain/course-dictionary-index.json");
 const domain = loadDictionaryDomain();
+const courseLessonLinks = loadTs(
+  join(root, "domain/course-lesson-links.ts"),
+);
 const courseIndexModule = loadTs(
   join(root, "data/dictionary-course-index.ts"),
   {
@@ -63,6 +66,42 @@ function normalizeTerm(term) {
     index.terms.filter((term) => term.senses?.length).length,
     2_450,
     "Every source-missing course term includes a learner-facing meaning.",
+  );
+  for (const term of index.terms) {
+    for (const courseId of term.courseIds) {
+      assert.ok(
+        term.lessonIdsByCourse?.[courseId]?.length,
+        `${term.term} must link to a lesson in ${courseId}.`,
+      );
+    }
+  }
+
+  const repeatedTermLessons = courseLessonLinks.findCourseLessonsForTerm(
+    [
+      { id: "lesson-one", questions: [{ term: "offline study" }] },
+      { id: "lesson-two", questions: [{ term: "Offline   Study" }] },
+      { id: "unrelated", questions: [{ term: "different term" }] },
+    ],
+    "offline study",
+  );
+  assert.deepEqual(
+    repeatedTermLessons.map((lesson) => lesson.id),
+    ["lesson-one", "lesson-two"],
+    "Repeated terms offer every matching lesson.",
+  );
+  assert.deepEqual(
+    courseLessonLinks
+      .findCourseLessonsForTerm(
+        [
+          { id: "lesson-one", questions: [{ term: "offline study" }] },
+          { id: "lesson-two", questions: [{ term: "offline study" }] },
+        ],
+        "offline study",
+        ["lesson-two"],
+      )
+      .map((lesson) => lesson.id),
+    ["lesson-two"],
+    "A dictionary link can restrict matches to the selected course.",
   );
 
   const buildCheck = spawnSync(

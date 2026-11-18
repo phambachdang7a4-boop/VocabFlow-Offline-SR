@@ -13,7 +13,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useBottomPad } from "@/components/ScreenHeader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, F, MaterialSheen } from "@/components/ui";
@@ -115,6 +115,7 @@ import {
   isSingleWordCourseTerm,
   type CourseWordCandidate,
 } from "@/domain/course-word-selection";
+import { findCourseLessonsForTerm } from "@/domain/course-lesson-links";
 import { useColors } from "@/hooks/useColors";
 
 type CourseQuestion = {
@@ -204,6 +205,16 @@ type CourseCatalogItem = {
   topicCount?: number;
   progressPrefixes?: readonly string[];
 };
+
+type RelatedLessonChoice = {
+  courseId: string;
+  courseTitle: string;
+  lesson: CourseLesson;
+};
+
+function firstSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 const COURSE_CATALOG: readonly CourseCatalogItem[] = [
   {
@@ -329,6 +340,14 @@ const COURSE_CATALOG: readonly CourseCatalogItem[] = [
 ];
 
 export default function CoursesScreen() {
+  const routeParams = useLocalSearchParams<{
+    courseId?: string | string[];
+    term?: string | string[];
+    lessonIds?: string | string[];
+  }>();
+  const requestedCourseId = firstSearchParam(routeParams.courseId);
+  const requestedTerm = firstSearchParam(routeParams.term);
+  const requestedLessonIds = firstSearchParam(routeParams.lessonIds);
   const c = useColors();
   const bottom = useBottomPad();
   const insets = useSafeAreaInsets();
@@ -367,6 +386,9 @@ export default function CoursesScreen() {
   } | null>(null);
   const [bulkCourseWordsSavedMessage, setBulkCourseWordsSavedMessage] =
     useState<string | null>(null);
+  const [relatedLessonChoices, setRelatedLessonChoices] = useState<
+    RelatedLessonChoice[]
+  >([]);
   const { words: savedWords, saveWords } = useVocabulary();
 
   const activeCourse =
@@ -506,7 +528,10 @@ export default function CoursesScreen() {
     }
   };
 
-  const startLesson = async (lesson: CourseLesson) => {
+  const startLesson = useCallback(async (
+    lesson: CourseLesson,
+    courseId?: string,
+  ) => {
     setSaving(true);
     try {
       const storedAttempt = (await getCourseLessonAttempts(lesson.id)).find(
@@ -547,6 +572,7 @@ export default function CoursesScreen() {
         ...previous.filter((item) => item.lessonId !== lesson.id),
         persistedAttempt,
       ]);
+      if (courseId) setActiveCourseId(courseId);
       setActiveLesson(lesson);
       setQuestionIndex(persistedAttempt.currentIndex);
       setWrongQuestionIndices(persistedAttempt.wrongQuestionIndices);
@@ -575,7 +601,53 @@ export default function CoursesScreen() {
     } finally {
       setSaving(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!requestedCourseId || !requestedTerm) return;
+    const course = COURSE_CATALOG.find(
+      (candidate) => candidate.id === requestedCourseId,
+    );
+    const lessonIds = new Set(
+      (requestedLessonIds ?? "")
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean),
+    );
+    const choices = course
+      ? findCourseLessonsForTerm(
+          course.lessons,
+          requestedTerm,
+          lessonIds.size > 0 ? [...lessonIds] : undefined,
+        )
+          .map((lesson) => ({
+            courseId: course.id,
+            courseTitle: course.title,
+            lesson,
+          }))
+      : [];
+
+    router.setParams({
+      courseId: undefined,
+      term: undefined,
+      lessonIds: undefined,
+    });
+    setError(null);
+    if (choices.length === 1) {
+      void startLesson(choices[0].lesson, choices[0].courseId);
+    } else if (choices.length > 1) {
+      setRelatedLessonChoices(choices);
+    } else {
+      setError(
+        `Không tìm thấy bài học cho “${requestedTerm}” trong khóa học này.`,
+      );
+    }
+  }, [
+    requestedCourseId,
+    requestedLessonIds,
+    requestedTerm,
+    startLesson,
+  ]);
 
   const leaveLesson = () => {
     setActiveLesson(null);
@@ -1522,6 +1594,137 @@ export default function CoursesScreen() {
           </View>
         )}
       </ScrollView>
+      <Modal
+        testID="dictionary-related-lesson-picker"
+        visible={relatedLessonChoices.length > 1}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRelatedLessonChoices([])}
+      >
+        <View
+          style={[
+            styles.bulkAddBackdrop,
+            { backgroundColor: c.overlay },
+          ]}
+        >
+          <View
+            accessibilityViewIsModal
+            style={[
+              styles.relatedLessonDialog,
+              {
+                backgroundColor: c.card,
+                borderColor: c.border,
+                borderRadius: c.radius + 6,
+              },
+            ]}
+          >
+            <View style={styles.bulkAddDialogHeading}>
+              <View
+                style={[
+                  styles.bulkAddInfoIcon,
+                  { backgroundColor: c.secondary },
+                ]}
+              >
+                <Feather name="book-open" size={21} color={c.primary} />
+              </View>
+              <View style={styles.bulkAddDialogTitleCopy}>
+                <Text
+                  style={[styles.bulkAddDialogTitle, { color: c.foreground }]}
+                >
+                  Chọn bài học
+                </Text>
+                <Text
+                  style={[
+                    styles.bulkAddDialogSubtitle,
+                    { color: c.mutedForeground },
+                  ]}
+                >
+                  Từ “{requestedTerm}” có trong nhiều bài
+                </Text>
+              </View>
+            </View>
+            <ScrollView
+              style={styles.relatedLessonList}
+              contentContainerStyle={styles.bulkAddDialogContent}
+              showsVerticalScrollIndicator
+            >
+              {relatedLessonChoices.map(({ courseId, courseTitle, lesson }) => (
+                <Pressable
+                  key={`${courseId}-${lesson.id}`}
+                  testID={`dictionary-related-lesson-${lesson.id}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Mở ${lesson.title}${lesson.topicTitle ? `, ${lesson.topicTitle}` : ""} trong khóa ${courseTitle}`}
+                  onPress={() => {
+                    setRelatedLessonChoices([]);
+                    void startLesson(lesson, courseId);
+                  }}
+                  style={({ pressed }) => [
+                    styles.relatedLessonOption,
+                    {
+                      backgroundColor: c.secondary,
+                      borderColor: c.border,
+                      opacity: pressed ? 0.78 : 1,
+                    },
+                  ]}
+                >
+                  <View style={styles.relatedLessonCopy}>
+                    <Text
+                      style={[
+                        styles.relatedLessonCourse,
+                        { color: c.primary },
+                      ]}
+                    >
+                      {courseTitle}
+                    </Text>
+                    {lesson.topicTitle ? (
+                      <Text
+                        style={[
+                          styles.relatedLessonCourse,
+                          { color: c.mutedForeground },
+                        ]}
+                      >
+                        {lesson.topicTitle}
+                      </Text>
+                    ) : null}
+                    <Text
+                      style={[
+                        styles.relatedLessonTitle,
+                        { color: c.foreground },
+                      ]}
+                    >
+                      {lesson.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.relatedLessonFocus,
+                        { color: c.mutedForeground },
+                      ]}
+                    >
+                      {lesson.focus}
+                    </Text>
+                  </View>
+                  <Feather name="chevron-right" size={21} color={c.primary} />
+                </Pressable>
+              ))}
+            </ScrollView>
+            <Pressable
+              testID="dictionary-related-lesson-cancel"
+              accessibilityRole="button"
+              onPress={() => setRelatedLessonChoices([])}
+              style={styles.relatedLessonCancel}
+            >
+              <Text
+                style={[
+                  styles.relatedLessonCancelText,
+                  { color: c.mutedForeground },
+                ]}
+              >
+                Để sau
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       {activeCourse ? (
         <Modal
           testID={`${activeCourse.testIdPrefix}-bulk-add-confirmation`}
@@ -2759,6 +2962,35 @@ const styles = StyleSheet.create({
     gap: 14,
     overflow: "hidden",
   },
+  relatedLessonDialog: {
+    width: "100%",
+    maxWidth: 460,
+    maxHeight: "90%",
+    borderWidth: 1,
+    padding: 18,
+    gap: 12,
+    overflow: "hidden",
+  },
+  relatedLessonList: { flexShrink: 1 },
+  relatedLessonOption: {
+    minHeight: 72,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  relatedLessonCopy: { flex: 1, gap: 3 },
+  relatedLessonCourse: { fontFamily: F.s, fontSize: 11 },
+  relatedLessonTitle: { fontFamily: F.b, fontSize: 15 },
+  relatedLessonFocus: { fontFamily: F.r, fontSize: 12, lineHeight: 17 },
+  relatedLessonCancel: {
+    minHeight: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  relatedLessonCancelText: { fontFamily: F.s, fontSize: 13 },
   bulkAddDialogHeading: {
     flexDirection: "row",
     alignItems: "center",

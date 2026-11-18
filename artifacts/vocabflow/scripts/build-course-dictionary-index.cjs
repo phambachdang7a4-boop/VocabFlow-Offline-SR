@@ -128,16 +128,19 @@ function buildIndex() {
       id: basic.BASIC_VOCABULARY_COURSE_ID,
       title: basic.BASIC_VOCABULARY_COURSE_TITLE,
       entries: basic.BASIC_VOCABULARY_COURSE_ENTRIES,
+      lessons: basic.BASIC_VOCABULARY_COURSE_LESSONS,
     },
     {
       id: idioms.IDIOM_COURSE_ID,
       title: idioms.IDIOM_COURSE_TITLE,
       entries: idioms.IDIOM_COURSE_ENTRIES,
+      lessons: idioms.IDIOM_COURSE_LESSONS,
     },
     {
       id: phrasalVerbs.PHRASAL_VERB_COURSE_ID,
       title: phrasalVerbs.PHRASAL_VERB_COURSE_TITLE,
       entries: phrasalVerbs.PHRASAL_VERB_COURSE_ENTRIES,
+      lessons: phrasalVerbs.PHRASAL_VERB_COURSE_LESSONS,
     },
     {
       id: conjunctions.CONJUNCTION_COURSE_ID,
@@ -147,26 +150,35 @@ function buildIndex() {
         ...entriesOf(linkingAdverbs.LINKING_ADVERB_COURSE_ENTRIES),
         ...entriesOf(sentencePatterns.SENTENCE_STRUCTURE_PATTERN_ENTRIES),
       ]),
+      lessons: [
+        ...conjunctions.CONJUNCTION_COURSE_LESSONS,
+        ...linkingAdverbs.LINKING_ADVERB_COURSE_LESSONS,
+        ...sentencePatterns.SENTENCE_STRUCTURE_PATTERN_LESSONS,
+      ],
     },
     {
       id: ielts.IELTS_TOPIC_COURSE_ID,
       title: ielts.IELTS_TOPIC_COURSE_TITLE,
       entries: ielts.IELTS_TOPIC_COURSE_ENTRIES,
+      lessons: ielts.IELTS_TOPIC_COURSE_LESSONS,
     },
     {
       id: ielts.IELTS_ADVANCED_COURSE_ID,
       title: ielts.IELTS_ADVANCED_COURSE_TITLE,
       entries: ielts.IELTS_ADVANCED_COURSE_ENTRIES,
+      lessons: ielts.IELTS_ADVANCED_COURSE_LESSONS,
     },
     {
       id: toeic.TOEIC_TOPIC_COURSE_ID,
       title: toeic.TOEIC_TOPIC_COURSE_TITLE,
       entries: toeic.TOEIC_TOPIC_COURSE_ENTRIES,
+      lessons: toeic.TOEIC_TOPIC_COURSE_LESSONS,
     },
     {
       id: office.OFFICE_APPS_COURSE_ID,
       title: office.OFFICE_APPS_COURSE_TITLE,
       entries: office.OFFICE_APPS_COURSE_ENTRIES,
+      lessons: office.OFFICE_APPS_COURSE_LESSONS,
     },
   ];
 
@@ -179,9 +191,22 @@ function buildIndex() {
       const row = termMap.get(key) ?? {
         term,
         courseIds: [],
+        lessonIdsByCourse: {},
         senses: [],
       };
       if (!row.courseIds.includes(course.id)) row.courseIds.push(course.id);
+      const lessonIds = course.lessons
+        .filter((lesson) =>
+          lesson.questions.some(
+            (question) => normalizeTerm(question.term) === key,
+          ),
+        )
+        .map((lesson) => lesson.id);
+      if (lessonIds.length) {
+        row.lessonIdsByCourse[course.id] = [
+          ...new Set([...(row.lessonIdsByCourse[course.id] ?? []), ...lessonIds]),
+        ];
+      }
       const sense = cleanSense(rawEntry);
       if (sense) row.senses.push(sense);
       termMap.set(key, row);
@@ -207,6 +232,14 @@ function buildIndex() {
       const term = {
         term: row.term,
         courseIds: row.courseIds.sort(),
+        lessonIdsByCourse: Object.fromEntries(
+          Object.entries(row.lessonIdsByCourse)
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([courseId, lessonIds]) => [
+              courseId,
+              [...new Set(lessonIds)].sort(),
+            ]),
+        ),
       };
       if (!baseTerms.has(normalizeTerm(row.term))) {
         const senses = uniqueSenses(row.senses);

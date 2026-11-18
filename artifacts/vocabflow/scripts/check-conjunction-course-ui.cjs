@@ -63,6 +63,9 @@ const combinedLessonCount =
 const courseWordSelectionDomain = loadTs(
   join(__dirname, "../domain/course-word-selection.ts"),
 );
+const courseLessonLinksDomain = loadTs(
+  join(__dirname, "../domain/course-lesson-links.ts"),
+);
 const savedWordMetadataDomain = loadTs(
   join(__dirname, "../domain/saved-word-metadata.ts"),
 );
@@ -144,7 +147,9 @@ function mount(initialSavedWords = [], options = {}) {
     "react-native": native,
     "@expo/vector-icons": { Feather: "Feather" },
     "expo-router": {
+      router: { setParams() {} },
       useFocusEffect: (callback) => focusCallbacks.push(callback),
+      useLocalSearchParams: () => options.searchParams ?? {},
     },
     "react-native-safe-area-context": {
       useSafeAreaInsets: () => ({ top: 24, bottom: 0, left: 0, right: 0 }),
@@ -237,6 +242,7 @@ function mount(initialSavedWords = [], options = {}) {
       }),
     },
     "@/domain/course-word-selection": courseWordSelectionDomain,
+    "@/domain/course-lesson-links": courseLessonLinksDomain,
     "@/hooks/useColors": {
       useColors: () => ({ ...colors, radius: 14 }),
     },
