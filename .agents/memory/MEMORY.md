@@ -22,3 +22,4 @@
 - [Khóa cấu trúc câu](sentence-structure-course.md) — Tập hợp từ nối, giới từ và mẫu ngữ pháp ít gặp nhưng có tác dụng nối ý hoặc dựng câu.
 - [Cập nhật nghĩa từ điển offline](offline-dictionary-meaning-updates.md) — Khi sửa nghĩa biên soạn, cập nhật riêng liên kết mục nghĩa để không làm đổi định nghĩa dùng chung.
 - [Từ khóa học trong từ điển](course-dictionary-index.md) — Sinh chỉ mục tag gọn từ dữ liệu khóa; chỉ thêm nghĩa cho mục chưa có trong từ điển nguồn.
+- [Tra cứu CEFR bằng Cambridge](cambridge-cefr-audit.md) — Trang Cambridge bị chặn không xác nhận nhãn; giữ Oxford và để từ chưa xác minh.
