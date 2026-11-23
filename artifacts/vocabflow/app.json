@@ -16,7 +16,7 @@
       "supportsTablet": false
     },
     "android": {
-      "versionCode": 14,
+      "versionCode": 15,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/corvi-app-icon.png",
         "backgroundColor": "#1E2130"
@@ -34,7 +34,8 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-sharing",
-      "expo-asset"
+      "expo-asset",
+      "./plugins/with-android-phone-architectures"
     ],
     "extra": {
       "eas": {
