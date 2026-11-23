@@ -46,6 +46,11 @@ async function run() {
   assert.equal(Number(metadata.courseCount), manifest.courses.courseCount);
   assert.equal(Number(metadata.lessonCount), manifest.courses.lessonCount);
   assert.equal(
+    JSON.parse(metadata.dictionaryIndex).contentSha256,
+    manifest.courses.dictionaryIndexSha256,
+    "The lightweight course-index revision matches the bundled index.",
+  );
+  assert.equal(
     sourceDb.prepare("SELECT COUNT(*) AS count FROM courses").get().count,
     manifest.courses.courseCount,
   );
@@ -72,6 +77,10 @@ async function run() {
         openDatabaseAsync: async (name) => {
           runtimeDb = new DatabaseSync(join(tempDir, name));
           return {
+            getFirstAsync: async (query, ...params) => {
+              runtimeQueries.push(query);
+              return runtimeDb.prepare(query).get(...params);
+            },
             getAllAsync: async (query, ...params) => {
               runtimeQueries.push(query);
               return runtimeDb.prepare(query).all(...params);
@@ -83,6 +92,9 @@ async function run() {
       },
       "../assets/offline/bundle-manifest.json": manifest,
       "../assets/offline/vocabflow-courses.db": 1,
+      "../domain/course-ids": loadTs(
+        join(appDir, "domain/course-ids.ts"),
+      ),
     },
   );
 
@@ -91,6 +103,22 @@ async function run() {
   assert.equal(status.bytes, dbManifest.bytes);
   assert.match(runtimeQueries[0], /WHERE key IN/);
   assert.doesNotMatch(runtimeQueries[0], /SELECT key, value FROM course_metadata\s*$/);
+  assert.equal(
+    sqliteModule.getBundledCourseDictionaryIndexRevision(),
+    manifest.courses.dictionaryIndexSha256,
+    "The lightweight revision marker comes from the bundled SQLite manifest.",
+  );
+  const indexQueryStart = runtimeQueries.length;
+  const indexData = await sqliteModule.getBundledCourseDictionaryIndexData();
+  const indexQueries = runtimeQueries.slice(indexQueryStart);
+  assert.equal(indexData.dictionaryIndex.terms.length > 10_000, true);
+  assert.ok(Object.keys(indexData.toeicEntriesByTerm).length > 0);
+  assert.equal(indexQueries.length, 2);
+  assert.doesNotMatch(
+    indexQueries.join("\n"),
+    /FROM lessons|FROM questions|ORDER BY course_id, sequence/,
+    "Dictionary migration data must not materialize all course lessons/questions.",
+  );
   const bundle = await sqliteModule.getBundledOfflineCourseBundle();
   assert.equal(bundle.courses.length, 9);
   assert.equal(
@@ -187,7 +215,7 @@ async function run() {
   assert.match(courseScreen, /TOEIC_ADVANCED_COURSE_ID/);
   const appConfig = require("../app.json").expo;
   assert.equal(appConfig.version, "1.08");
-  assert.equal(appConfig.android.versionCode, 14);
+  assert.equal(appConfig.android.versionCode, 15);
 
   console.log(
     "Bundled SQLite course package verified: 9 courses, 1,594 lessons, 14,610 questions; native reads are query-only.",

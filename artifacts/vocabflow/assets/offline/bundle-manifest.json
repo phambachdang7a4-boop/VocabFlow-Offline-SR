@@ -39,6 +39,7 @@
     "sha256": "c9c667efef3d0bfcc263da93b99752a5298be2185e106ce3519fac3f708ac0ad",
     "courseCount": 9,
     "lessonCount": 1594,
+    "dictionaryIndexSha256": "8688d91ebca889b4cd8d8ce546de02db172110026207a8d1789141f938ce6b67",
     "database": {
       "filename": "vocabflow-courses.db",
       "schemaVersion": 2,

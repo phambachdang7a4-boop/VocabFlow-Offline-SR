@@ -17,6 +17,8 @@ const handles = new Set();
 const regionalIpaByTerm = new Map();
 let personal;
 let failNextDictionaryRead = false;
+let dictionaryWordCountScans = 0;
+let fullCourseBundleReads = 0;
 
 function adapter(filename, readOnly = false) {
   const handle = new DatabaseSync(filename, { readOnly });
@@ -26,6 +28,12 @@ function adapter(filename, readOnly = false) {
     filename,
     execAsync: async (sql) => handle.exec(sql),
     getFirstAsync: async (sql, ...params) => {
+      if (
+        filename.includes("vocabflow-dictionary-") &&
+        /SELECT\s+COUNT\(\*\)\s+AS\s+count\s+FROM\s+words/i.test(sql)
+      ) {
+        dictionaryWordCountScans += 1;
+      }
       if (
         failNextDictionaryRead &&
         filename.includes("vocabflow-dictionary-")
@@ -721,7 +729,16 @@ function adapter(filename, readOnly = false) {
         "./dictionary-local-additions": localAdditions,
         "./dictionary-course-index": courseIndexModule,
         "./offline-course-data": {
-          getOfflineCourseBundle: async () => offlineCourseBundle,
+          getOfflineCourseBundle: async () => {
+            fullCourseBundleReads += 1;
+            return offlineCourseBundle;
+          },
+          getOfflineCourseDictionaryIndexRevision: async () =>
+            courseIndexData.contentSha256,
+          getOfflineCourseDictionaryIndexData: async () => ({
+            dictionaryIndex: courseIndexData,
+            toeicEntriesByTerm: {},
+          }),
         },
         "../domain/course-ids": courseIds,
         "./offline-regional-pronunciations": {
@@ -833,6 +850,16 @@ function adapter(filename, readOnly = false) {
     await repo.getOfflineDictionaryStatus(),
     { state: "installed", bytes: DICTIONARY.bytes },
     "An installed browser SQLite dictionary is recognized without FileSystem",
+  );
+  assert.equal(
+    dictionaryWordCountScans,
+    1,
+    "The initial install verifies its full word count once.",
+  );
+  assert.equal(
+    fullCourseBundleReads,
+    0,
+    "Dictionary setup reads only its index data, not every lesson and question.",
   );
   const pronunciationProgress = [];
   const bulkPronunciations = await repo.getDictionaryPronunciationsForTerms(
@@ -1080,6 +1107,7 @@ function adapter(filename, readOnly = false) {
 
   const downloadsBeforeTransientRead = downloads;
   const deletionsBeforeTransientRead = deleted.length;
+  const wordCountScansBeforeStableReopen = dictionaryWordCountScans;
   const transientRepo = repository(async (_url, options) => {
     downloads++;
     return rangeResponse(bytes, options);
@@ -1089,6 +1117,11 @@ function adapter(filename, readOnly = false) {
     await transientRepo.getOfflineDictionaryStatus(),
     { state: "unavailable", bytes: DICTIONARY.bytes },
     "A temporary SQLite read failure is not a missing or damaged dictionary",
+  );
+  assert.equal(
+    dictionaryWordCountScans,
+    wordCountScansBeforeStableReopen,
+    "A cached dictionary status check never scans all words.",
   );
   assert.equal(
     deleted.length,
@@ -1106,6 +1139,16 @@ function adapter(filename, readOnly = false) {
     await transientRepo.getOfflineDictionaryStatus(),
     { state: "installed", bytes: DICTIONARY.bytes },
     "The preserved dictionary opens normally after the transient failure",
+  );
+  assert.equal(
+    dictionaryWordCountScans,
+    wordCountScansBeforeStableReopen,
+    "Reopening an unchanged cached dictionary never runs COUNT(*).",
+  );
+  assert.equal(
+    fullCourseBundleReads,
+    0,
+    "Reopening the dictionary does not load the entire course bundle.",
   );
   assert.equal(downloads, downloadsBeforeTransientRead);
   await reopenedAfterTransientRead.closeAsync();

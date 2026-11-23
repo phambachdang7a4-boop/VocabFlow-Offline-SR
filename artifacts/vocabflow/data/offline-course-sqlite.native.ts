@@ -7,10 +7,17 @@ import bundleManifest from "../assets/offline/bundle-manifest.json";
 import type {
   OfflineCourse,
   OfflineCourseBundle,
+  OfflineCourseDictionaryIndexData,
   OfflineCourseEntry,
   OfflineCourseLesson,
   OfflineCourseQuestion,
 } from "./offline-course-data";
+import {
+  TOEIC_ADVANCED_COURSE_ID,
+  TOEIC_BASIC_COURSE_ID,
+  TOEIC_TOPIC_COURSE_ID,
+} from "../domain/course-ids";
+import type { DictionaryCourseIndex } from "../domain/dictionary";
 
 type DatabaseCourseRow = {
   id: string;
@@ -163,6 +170,61 @@ export async function getBundledCourseDataStatus(): Promise<{
 }> {
   await getCourseDatabase();
   return { state: "installed", bytes: expectedDatabase.bytes };
+}
+
+/**
+ * A stable, bundled revision marker that does not materialize all lessons and
+ * questions just to decide whether the dictionary needs a course-index update.
+ */
+export function getBundledCourseDictionaryIndexRevision(): string {
+  return expectedCourseManifest.dictionaryIndexSha256;
+}
+
+/**
+ * Read only the course dictionary index and TOEIC entries required by the
+ * dictionary migration. The full course bundle stays lazy until the Courses
+ * screen actually needs lessons and questions.
+ */
+export async function getBundledCourseDictionaryIndexData(): Promise<OfflineCourseDictionaryIndexData> {
+  const database = await getCourseDatabase();
+  const indexRow = await database.getFirstAsync<{ value: string }>(
+    "SELECT value FROM course_metadata WHERE key = 'dictionaryIndex' LIMIT 1",
+  );
+  if (!indexRow?.value) {
+    throw new Error("Không tìm thấy chỉ mục từ vựng khóa học.");
+  }
+  const dictionaryIndex = parseJson<DictionaryCourseIndex>(
+    indexRow.value,
+    "dictionaryIndex",
+  );
+  const entries = await database.getAllAsync<DatabaseEntryRow>(
+    `SELECT ce.course_id, ce.term, ce.definition, ce.example,
+            ce.example_translation, ce.spelling_note, ce.part_of_speech
+       FROM course_entries ce
+       JOIN courses c ON c.id = ce.course_id
+      WHERE ce.course_id IN (?, ?, ?)
+      ORDER BY c.sequence, ce.term`,
+    TOEIC_BASIC_COURSE_ID,
+    TOEIC_ADVANCED_COURSE_ID,
+    TOEIC_TOPIC_COURSE_ID,
+  );
+  const toeicEntriesByTerm: Record<string, OfflineCourseEntry> = {};
+  for (const row of entries) {
+    toeicEntriesByTerm[row.term] = {
+      definition: row.definition,
+      example: row.example,
+      ...(row.example_translation === null
+        ? {}
+        : { exampleTranslation: row.example_translation }),
+      ...(row.spelling_note === null
+        ? {}
+        : { spellingNote: row.spelling_note }),
+      ...(row.part_of_speech === null
+        ? {}
+        : { partOfSpeech: row.part_of_speech }),
+    };
+  }
+  return { dictionaryIndex, toeicEntriesByTerm };
 }
 
 async function readBundleFromDatabase(): Promise<OfflineCourseBundle> {

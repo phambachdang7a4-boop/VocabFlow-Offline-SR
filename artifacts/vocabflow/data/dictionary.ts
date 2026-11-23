@@ -12,7 +12,6 @@ import {
   DICTIONARY,
   formatDictionaryPronunciations,
   mergeDictionaryPronunciations,
-  type DictionaryCourseIndex,
   type DictionaryStage,
   type DictionaryPronunciation,
 } from "../domain/dictionary";
@@ -28,14 +27,11 @@ import {
 import { applyLocalDictionaryAdditions } from "./dictionary-local-additions";
 import {
   applyCourseDictionaryIndex,
-  courseDictionaryIndexRevision,
 } from "./dictionary-course-index";
-import { getOfflineCourseBundle } from "./offline-course-data";
 import {
-  TOEIC_ADVANCED_COURSE_ID,
-  TOEIC_BASIC_COURSE_ID,
-  TOEIC_TOPIC_COURSE_ID,
-} from "../domain/course-ids";
+  getOfflineCourseDictionaryIndexData,
+  getOfflineCourseDictionaryIndexRevision,
+} from "./offline-course-data";
 import {
   getRegionalIpaForTerm,
   getRegionalIpaForTerms,
@@ -57,33 +53,22 @@ import { openDatabaseSafely, storageFailureMessage } from "./sqlite-connection";
 const filename = `vocabflow-dictionary-${DICTIONARY.sha256.slice(0, 16)}.db`;
 const DICTIONARY_DOWNLOAD_CHUNK_BYTES = 4 * 1024 * 1024;
 function dictionaryContentRevision(
-  courseIndex: DictionaryCourseIndex | null,
+  courseIndexRevision: string | null,
 ): string {
-  return `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}+${courseDictionaryIndexRevision(courseIndex)}`;
+  return `${DICTIONARY_EXAMPLE_REVISION}+${LOCAL_DICTIONARY_ADDITIONS_REVISION}+${courseIndexRevision ?? "course-index-not-installed"}`;
 }
 
 async function applyInstalledCourseIndex(
   db: SQLiteDatabase,
-  courseBundle: Awaited<ReturnType<typeof getOfflineCourseBundle>>,
+  courseIndexData: Awaited<ReturnType<typeof getOfflineCourseDictionaryIndexData>>,
   onStage?: (stage: DictionaryStage) => void,
 ): Promise<void> {
-  if (!courseBundle) return;
-  const toeicCourseIds = new Set([
-    TOEIC_BASIC_COURSE_ID,
-    TOEIC_ADVANCED_COURSE_ID,
-    TOEIC_TOPIC_COURSE_ID,
-  ]);
-  const toeicEntries = Object.assign(
-    {},
-    ...courseBundle.courses
-      .filter((course) => toeicCourseIds.has(course.id))
-      .map((course) => course.entriesByTerm),
-  );
+  if (!courseIndexData) return;
   onStage?.("indexing-courses");
   await applyCourseDictionaryIndex(
     db,
-    courseBundle.dictionaryIndex,
-    toeicEntries,
+    courseIndexData.dictionaryIndex,
+    courseIndexData.toeicEntriesByTerm,
   );
 }
 let connection: Promise<SQLiteDatabase> | undefined;
@@ -275,9 +260,9 @@ async function initialize(
 ): Promise<SQLiteDatabase> {
   onStage?.("checking");
   const db = await openDatabaseSafely(() => openDatabaseAsync(filename));
-  const courseBundle = await getOfflineCourseBundle().catch(() => null);
-  const courseIndex = courseBundle?.dictionaryIndex ?? null;
-  const contentRevision = dictionaryContentRevision(courseIndex);
+  const courseIndexRevision =
+    await getOfflineCourseDictionaryIndexRevision().catch(() => null);
+  const contentRevision = dictionaryContentRevision(courseIndexRevision);
   let deleteCacheOnFailure = false;
   try {
     const table = await db.getFirstAsync<{ name: string }>(
@@ -392,7 +377,10 @@ async function initialize(
         await imported.closeAsync();
       }
       buffer = new Uint8Array(0);
-      await applyInstalledCourseIndex(db, courseBundle, onStage);
+      const courseIndexData = courseIndexRevision
+        ? await getOfflineCourseDictionaryIndexData()
+        : null;
+      await applyInstalledCourseIndex(db, courseIndexData, onStage);
       await db.execAsync(
         "CREATE INDEX IF NOT EXISTS idx_vocabflow_words_nocase ON words(word COLLATE NOCASE, id);",
       );
@@ -427,7 +415,10 @@ async function initialize(
       await db.execAsync("PRAGMA query_only = OFF;");
       await applyExampleUpdates(db);
       await applyLocalDictionaryAdditions(db);
-      await applyInstalledCourseIndex(db, courseBundle, onStage);
+      const courseIndexData = courseIndexRevision
+        ? await getOfflineCourseDictionaryIndexData()
+        : null;
+      await applyInstalledCourseIndex(db, courseIndexData, onStage);
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
@@ -440,14 +431,23 @@ async function initialize(
         contentRevision,
         count.count,
       );
-    } else if (cached?.dictionary_word_count) {
+    } else if (!cached?.dictionary_word_count) {
+      // One-time migration for older metadata rows. Once recorded, normal
+      // startup trusts the versioned marker and never counts 100k+ words.
       const count = await db.getFirstAsync<{ count: number }>(
         "SELECT COUNT(*) AS count FROM words",
       );
-      if (count?.count !== cached.dictionary_word_count) {
+      if (!count || count.count < DICTIONARY.wordCount) {
         deleteCacheOnFailure = allowDownload;
         throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
       }
+      await db.runAsync(
+        "UPDATE vocabflow_dictionary_meta SET dictionary_word_count = ?",
+        count.count,
+      );
+    } else if (cached.dictionary_word_count < DICTIONARY.wordCount) {
+      deleteCacheOnFailure = allowDownload;
+      throw new Error("Số lượng từ điển không khớp phiên bản đã kiểm tra.");
     }
     // No application query may mutate the reference dictionary after setup.
     await db.execAsync("PRAGMA query_only = ON;");
@@ -507,21 +507,6 @@ export function openDictionary(
   return connection;
 }
 
-async function hasExpectedDictionaryWordCount(
-  db: SQLiteDatabase,
-): Promise<boolean> {
-  const [actual, expected] = await Promise.all([
-    db.getFirstAsync<{ count: number }>("SELECT COUNT(*) AS count FROM words"),
-    db.getFirstAsync<{ dictionary_word_count: number }>(
-      "SELECT dictionary_word_count FROM vocabflow_dictionary_meta LIMIT 1",
-    ),
-  ]);
-  return (
-    (actual?.count ?? 0) >= DICTIONARY.wordCount &&
-    actual?.count === expected?.dictionary_word_count
-  );
-}
-
 function isDictionaryIntegrityFailure(failure: unknown): boolean {
   const detail =
     failure instanceof Error ? failure.message : String(failure ?? "");
@@ -539,9 +524,7 @@ export async function getOfflineDictionaryStatus(): Promise<{
   }
 
   try {
-    const db = await openDictionary();
-    if (!(await hasExpectedDictionaryWordCount(db)))
-      return { state: "damaged", bytes: DICTIONARY.bytes };
+    await openDictionary();
     return { state: "installed", bytes: DICTIONARY.bytes };
   } catch (error) {
     if (error instanceof DictionaryDownloadConsentRequired)

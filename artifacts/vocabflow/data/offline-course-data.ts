@@ -11,6 +11,8 @@ import {
   courseDataResumeOffset,
 } from "../domain/course-data-package";
 import {
+  getBundledCourseDictionaryIndexData,
+  getBundledCourseDictionaryIndexRevision,
   clearBundledOfflineCourseBundleCache,
   getBundledCourseDataStatus,
   getBundledOfflineCourseBundle,
@@ -76,6 +78,11 @@ export type OfflineCourseBundle = {
     Record<string, Readonly<Record<string, string>>>
   >;
   courses: readonly OfflineCourse[];
+};
+
+export type OfflineCourseDictionaryIndexData = {
+  dictionaryIndex: DictionaryCourseIndex;
+  toeicEntriesByTerm: Readonly<Record<string, OfflineCourseEntry>>;
 };
 
 type CourseChunkRecord = { offset: number; bytes: Uint8Array };
@@ -330,6 +337,42 @@ export async function getOfflineCourseBundle(): Promise<OfflineCourseBundle | nu
     }
     throw error;
   }
+}
+
+/**
+ * Native builds can compare the bundled course database revision without
+ * reading and rebuilding every lesson/question object at app startup.
+ */
+export async function getOfflineCourseDictionaryIndexRevision(): Promise<string | null> {
+  if (Platform.OS !== "web") {
+    return getBundledCourseDictionaryIndexRevision();
+  }
+  const bundle = await getOfflineCourseBundle().catch(() => null);
+  return bundle?.dictionaryIndex.contentSha256 ?? null;
+}
+
+/**
+ * Materialize only the course index and TOEIC definitions when the installed
+ * dictionary actually needs a one-time content/index migration.
+ */
+export async function getOfflineCourseDictionaryIndexData(): Promise<OfflineCourseDictionaryIndexData | null> {
+  if (Platform.OS !== "web") {
+    return getBundledCourseDictionaryIndexData();
+  }
+  const bundle = await getOfflineCourseBundle().catch(() => null);
+  if (!bundle) return null;
+  const toeicCourseIds = new Set([
+    "toeic-basic-collocations-v1",
+    "toeic-advanced-collocations-v1",
+    "toeic-topic-collocations-v2",
+  ]);
+  const toeicEntriesByTerm = Object.assign(
+    {},
+    ...bundle.courses
+      .filter((course) => toeicCourseIds.has(course.id))
+      .map((course) => course.entriesByTerm),
+  );
+  return { dictionaryIndex: bundle.dictionaryIndex, toeicEntriesByTerm };
 }
 
 export async function getOfflineCourseDataStatus(): Promise<{

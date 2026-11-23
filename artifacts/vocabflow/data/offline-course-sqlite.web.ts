@@ -1,4 +1,7 @@
-import type { OfflineCourseBundle } from "./offline-course-data";
+import type {
+  OfflineCourseBundle,
+  OfflineCourseDictionaryIndexData,
+} from "./offline-course-data";
 
 export async function getBundledCourseDataStatus(): Promise<{
   state: "unavailable";
@@ -8,6 +11,14 @@ export async function getBundledCourseDataStatus(): Promise<{
 }
 
 export async function getBundledOfflineCourseBundle(): Promise<OfflineCourseBundle> {
+  throw new Error("Gói SQLite khóa học chỉ khả dụng trong ứng dụng.");
+}
+
+export function getBundledCourseDictionaryIndexRevision(): string {
+  return "";
+}
+
+export async function getBundledCourseDictionaryIndexData(): Promise<OfflineCourseDictionaryIndexData> {
   throw new Error("Gói SQLite khóa học chỉ khả dụng trong ứng dụng.");
 }
 
