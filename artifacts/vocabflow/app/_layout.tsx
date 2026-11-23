@@ -10,7 +10,6 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { VocabularyProvider } from "@/contexts/VocabularyContext";
-import { SyncProvider } from "@/contexts/SyncContext";
 import {
   AppearanceProvider,
   useAppearance,
@@ -19,13 +18,7 @@ import { SpeechPreferencesProvider } from "@/contexts/SpeechPreferencesContext";
 import { ReviewPreferencesProvider } from "@/contexts/ReviewPreferencesContext";
 import { SoundEffectsProvider } from "@/contexts/SoundEffectsContext";
 import { useColors } from "@/hooks/useColors";
-import { ClerkProvider, useAuth } from "@clerk/expo";
-import { tokenCache } from "@clerk/expo/token-cache";
-import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
-import {
-  activateGuestDatabase,
-  initializeAccountDatabase,
-} from "@/data/vocabulary-sync";
+import { activateGuestDatabase } from "@/data/vocabulary-sync";
 import { storageFailureMessage } from "@/data/sqlite-connection";
 import {
   Inter_400Regular,
@@ -38,7 +31,7 @@ import { Appearance, Platform, Pressable } from "react-native";
 import * as SystemUI from "expo-system-ui";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
-import { Redirect, router, Stack, useSegments } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { MissionRewardCoordinator } from "@/components/MissionRewardCoordinator";
 import { WebOfflineDataDialog } from "@/components/WebOfflineDataDialog";
@@ -48,15 +41,6 @@ SplashScreen.preventAutoHideAsync();
 export const unstable_settings = { anchor: "(tabs)" };
 
 const queryClient = new QueryClient();
-const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
-const clerkProxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL ?? "";
-const apiDomain = process.env.EXPO_PUBLIC_DOMAIN;
-
-if (!clerkPublishableKey) {
-  throw new Error("Thiếu cấu hình đăng nhập Clerk cho VocabFlow.");
-}
-
-if (apiDomain) setBaseUrl(`https://${apiDomain}`);
 
 function RootStack() {
   const c = useColors();
@@ -76,7 +60,6 @@ function RootStack() {
           contentStyle: { backgroundColor: c.background },
         }}
       >
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen
         name="(tabs)"
         options={{
@@ -141,47 +124,26 @@ function RootStack() {
 
 function RootLayoutNav() {
   const c = useColors();
-  const { isLoaded, isSignedIn, userId, getToken } = useAuth();
-  const segments = useSegments();
-  const [scopedUserId, setScopedUserId] = useState<string | null | undefined>(
-    undefined,
-  );
+  const [scopeReady, setScopeReady] = useState(false);
   const [scopeError, setScopeError] = useState<string | null>(null);
   const [scopeAttempt, setScopeAttempt] = useState(0);
   const startupMeasurementStarted = useRef(false);
-  const inAuthFlow = segments.some(
-    (segment) =>
-      segment === "(auth)" || segment === "sign-in" || segment === "sign-up",
-  );
-
-  useEffect(() => {
-    setAuthTokenGetter(
-      Platform.OS !== "web" && isSignedIn ? () => getToken() : null,
-    );
-    return () => setAuthTokenGetter(null);
-  }, [getToken, isSignedIn]);
 
   useEffect(() => {
     let active = true;
-    const nextUserId =
-      isLoaded && isSignedIn ? (userId ?? null) : null;
-    setScopedUserId(undefined);
+    setScopeReady(false);
     setScopeError(null);
 
-    const setup = nextUserId
-      ? initializeAccountDatabase(nextUserId)
-      : activateGuestDatabase();
-
-    void setup
+    void activateGuestDatabase()
       .then(() => {
-        if (active) setScopedUserId(nextUserId);
+        if (active) setScopeReady(true);
       })
       .catch((failure) => {
         if (active)
           setScopeError(
             storageFailureMessage(
               failure,
-              "Không thể mở dữ liệu của tài khoản này. Dữ liệu chưa bị xóa.",
+              "Không thể mở dữ liệu cục bộ. Dữ liệu chưa bị xóa.",
             ),
           );
       });
@@ -189,15 +151,10 @@ function RootLayoutNav() {
     return () => {
       active = false;
     };
-  }, [isLoaded, isSignedIn, scopeAttempt, userId]);
+  }, [scopeAttempt]);
 
   useEffect(() => {
-    if (
-      !isLoaded ||
-      scopedUserId === undefined ||
-      scopeError ||
-      startupMeasurementStarted.current
-    ) {
+    if (!scopeReady || scopeError || startupMeasurementStarted.current) {
       return;
     }
     const timer = setTimeout(() => {
@@ -206,17 +163,7 @@ function RootLayoutNav() {
       void measureStartupDataReadiness(APP_RUNTIME_STARTED_AT);
     }, 0);
     return () => clearTimeout(timer);
-  }, [isLoaded, scopedUserId, scopeError]);
-
-  if (isLoaded && isSignedIn === undefined) {
-    return (
-      <View
-        testID="startup-loading-backdrop"
-        style={{ flex: 1, backgroundColor: c.background }}
-      />
-    );
-  }
-  if (isLoaded && isSignedIn && inAuthFlow) return <Redirect href="/(tabs)" />;
+  }, [scopeReady, scopeError]);
 
   if (scopeError) {
     return (
@@ -275,25 +222,7 @@ function RootLayoutNav() {
     );
   }
 
-  if (isSignedIn) {
-    if (scopedUserId !== userId) {
-      return (
-        <View
-          testID="startup-loading-backdrop"
-          style={{ flex: 1, backgroundColor: c.background }}
-        />
-      );
-    }
-    return (
-      <SyncProvider key={userId} userId={userId}>
-        <VocabularyProvider key={userId}>
-          <RootStack />
-        </VocabularyProvider>
-      </SyncProvider>
-    );
-  }
-
-  if (scopedUserId !== null) {
+  if (!scopeReady) {
     return (
       <View
         testID="startup-loading-backdrop"
@@ -303,11 +232,9 @@ function RootLayoutNav() {
   }
 
   return (
-    <SyncProvider key="guest" userId="">
-      <VocabularyProvider key="guest">
-        <RootStack />
-      </VocabularyProvider>
-    </SyncProvider>
+    <VocabularyProvider key="local">
+      <RootStack />
+    </VocabularyProvider>
   );
 }
 

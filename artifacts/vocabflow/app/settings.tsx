@@ -11,9 +11,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useClerk, useUser } from "@clerk/expo";
 import { useVocabulary } from "@/contexts/VocabularyContext";
-import { useSyncStatus } from "@/contexts/SyncContext";
 import { useColors } from "@/hooks/useColors";
 import {
   Button,
@@ -47,7 +45,9 @@ import {
 import {
   exportSyncSnapshot,
   replaceAccountSyncSnapshot,
+  clearLocalAccountAfterCloudReset,
 } from "@/data/vocabulary-sync";
+import { resetLocalOnly } from "@/domain/data-reset";
 import {
   deleteOfflineDictionary,
   downloadOfflineDictionary,
@@ -86,10 +86,6 @@ export default function SettingsScreen() {
   const speech = useSpeechPreferences();
   const reviewPreferences = useReviewPreferences();
   const sound = useSoundEffects();
-  const sync = useSyncStatus();
-  const { signOut } = useClerk();
-  const { user, isLoaded: userLoaded } = useUser();
-  const [accountError, setAccountError] = React.useState<string | null>(null);
   const [transferState, setTransferState] = React.useState<
     "exporting" | "importing" | "restoring" | null
   >(null);
@@ -153,9 +149,7 @@ export default function SettingsScreen() {
   const courseDownloadController = React.useRef<AbortController | null>(null);
   const audioDownloadController = React.useRef<AbortController | null>(null);
   const [offlineError, setOfflineError] = React.useState<string | null>(null);
-  const [resetDialog, setResetDialog] = React.useState<
-    "local" | "cloud" | null
-  >(null);
+  const [resetDialog, setResetDialog] = React.useState<"local" | null>(null);
   const [resetBusy, setResetBusy] = React.useState(false);
   const [resetError, setResetError] = React.useState<string | null>(null);
   const [resetNotice, setResetNotice] = React.useState<string | null>(null);
@@ -168,7 +162,7 @@ export default function SettingsScreen() {
   const offlineBusy = Boolean(offlineAction) || dictionaryDownloadActive;
   const insets = useSafeAreaInsets();
   const bottom = (Platform.OS === "web" ? 34 : insets.bottom) + 24;
-  const syncBusy = sync.state === "checking" || sync.state === "syncing";
+  const syncBusy = false;
   const restoreSummary = restoreCandidate
     ? summarizeAccountBackup(restoreCandidate)
     : null;
@@ -486,16 +480,6 @@ export default function SettingsScreen() {
   const handleResetAppData = async () => {
     if (!resetDialog || resetBusy || offlineBusy || transferState || syncBusy)
       return;
-    if (!userLoaded) {
-      setResetError("Đang kiểm tra tài khoản. Hãy thử lại sau giây lát.");
-      return;
-    }
-    if (resetDialog === "cloud" && (!user || !sync.online)) {
-      setResetError(
-        "Cần đăng nhập và có kết nối Internet để xóa dữ liệu cloud. Dữ liệu chưa bị thay đổi.",
-      );
-      return;
-    }
     setResetError(null);
     setResetNotice(null);
     setResetBusy(true);
@@ -506,18 +490,18 @@ export default function SettingsScreen() {
         await deleteOfflineDictionary();
         await deleteOfflineCourseData();
       };
-      if (resetDialog === "cloud") {
-        await sync.resetAccountData(clearOfflineResources);
-      } else {
-        await sync.resetLocalData(clearOfflineResources);
-      }
+      const snapshot = await exportSyncSnapshot();
+      await resetLocalOnly({
+        currentRevision: snapshot.payload.revision,
+        clearLocal: async (revision) =>
+          clearLocalAccountAfterCloudReset(revision),
+        clearOfflineResources,
+      });
       await reload();
       await refreshOfflineStatus();
       setResetDialog(null);
       setResetNotice(
-        resetDialog === "cloud"
-          ? "Đã xóa dữ liệu học trên cloud và thiết bị này."
-          : "Đã xóa dữ liệu học và tài nguyên offline, gồm gói khóa học, trên thiết bị này. Dữ liệu cloud không bị xóa.",
+        "Đã xóa dữ liệu học và tài nguyên offline trên thiết bị này.",
       );
     } catch (cause) {
       setResetError(
@@ -541,23 +525,14 @@ export default function SettingsScreen() {
     {
       icon: "wifi-off",
       title: "Học offline",
-      body: "Tra từ, học và ôn tập dùng SQLite cục bộ. Khi có mạng, sổ từ và tiến độ sẽ đồng bộ với tài khoản.",
+      body: "Tra từ, học và ôn tập dùng SQLite cục bộ; mở ứng dụng không cần mạng.",
     },
     {
       icon: "alert-triangle",
-      title: "Dữ liệu tài khoản",
-      body: "Đăng xuất không xóa dữ liệu. Bản chưa đồng bộ chỉ nằm trên thiết bị; hãy kết nối mạng trước khi gỡ ứng dụng.",
+      title: "Dữ liệu trên thiết bị",
+      body: "Sổ từ và tiến độ chỉ lưu trên máy này. Hãy xuất bản sao lưu trước khi gỡ ứng dụng.",
     },
   ];
-
-  const syncStatus = {
-    checking: "Đang kiểm tra kết nối…",
-    offline: "Ngoại tuyến · dữ liệu vẫn lưu trên thiết bị",
-    syncing: "Đang đồng bộ dữ liệu…",
-    synced: "Đã đồng bộ với tài khoản",
-    pending: "Có thay đổi đang chờ đồng bộ",
-    error: sync.message ?? "Đồng bộ chưa thành công.",
-  }[sync.state];
 
   const handleExportData = async () => {
     setTransferError(null);
@@ -643,21 +618,13 @@ export default function SettingsScreen() {
 
   const handleConfirmRestore = async () => {
     if (!restoreCandidate || transferState) return;
-    if (syncBusy) {
-      setRestoreError(
-        "Đang đồng bộ dữ liệu. Hãy đợi xong rồi xác nhận khôi phục.",
-      );
-      return;
-    }
     setRestoreError(null);
     setTransferState("restoring");
     try {
       await replaceAccountSyncSnapshot(restoreCandidate.payload);
       await reload();
       setRestoreCandidate(null);
-      setTransferNotice(
-        "Đã khôi phục trên thiết bị. Tài khoản sẽ được thay thế khi đồng bộ thành công.",
-      );
+      setTransferNotice("Đã khôi phục dữ liệu trên thiết bị này.");
     } catch (cause) {
       setRestoreError(
         cause instanceof Error
@@ -666,15 +633,6 @@ export default function SettingsScreen() {
       );
     } finally {
       setTransferState(null);
-    }
-  };
-
-  const handleSignOut = async () => {
-    setAccountError(null);
-    try {
-      await signOut();
-    } catch {
-      setAccountError("Không thể đăng xuất lúc này. Hãy thử lại.");
     }
   };
 
@@ -1035,7 +993,7 @@ export default function SettingsScreen() {
           />
         ) : null}
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          TÀI KHOẢN
+          CHẾ ĐỘ LƯU TRỮ
         </Text>
         <View
           style={[
@@ -1048,167 +1006,45 @@ export default function SettingsScreen() {
           ]}
         >
           <MaterialSheen radius={c.radius} />
-          {user ? (
-            <>
-              <View style={styles.accountHeader}>
-                <View
-                  style={[styles.accountIcon, { backgroundColor: c.secondary }]}
-                >
-                  <Feather name="user" size={19} color={c.primary} />
-                </View>
-                <View style={{ flex: 1, gap: 3 }}>
-                  <Text
-                    style={[styles.appearanceTitle, { color: c.foreground }]}
-                  >
-                    Đang đăng nhập
-                  </Text>
-                  <Text
-                    style={[
-                      styles.appearanceDetail,
-                      { color: c.mutedForeground },
-                    ]}
-                  >
-                    {user?.primaryEmailAddress?.emailAddress ??
-                      "Tài khoản VocabFlow"}
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.syncRow, { borderTopColor: c.border }]}>
-                {sync.state === "syncing" || sync.state === "checking" ? (
-                  <ActivityIndicator size="small" color={c.primary} />
-                ) : (
-                  <Feather
-                    name={
-                      sync.state === "synced"
-                        ? "check-circle"
-                        : sync.state === "error"
-                          ? "alert-circle"
-                          : "cloud"
-                    }
-                    size={18}
-                    color={sync.state === "error" ? "#C0392B" : c.primary}
-                  />
-                )}
-                <View style={{ flex: 1, gap: 3 }}>
-                  <Text
-                    accessibilityLiveRegion="polite"
-                    style={[styles.appearanceTitle, { color: c.foreground }]}
-                  >
-                    {syncStatus}
-                  </Text>
-                  {sync.lastSyncedAt ? (
-                    <Text
-                      style={[
-                        styles.appearanceDetail,
-                        { color: c.mutedForeground },
-                      ]}
-                    >
-                      Lần gần nhất:{" "}
-                      {new Date(sync.lastSyncedAt).toLocaleString("vi-VN")}
-                    </Text>
-                  ) : null}
-                </View>
-                {sync.state === "error" ||
-                sync.state === "pending" ||
-                sync.state === "offline" ? (
-                  <Pressable
-                    testID="sync-retry"
-                    accessibilityRole="button"
-                    accessibilityLabel="Thử đồng bộ lại"
-                    onPress={() => {
-                      void sync.retry();
-                    }}
-                    style={[
-                      styles.smallAction,
-                      { backgroundColor: c.secondary },
-                    ]}
-                  >
-                    <Feather name="refresh-cw" size={16} color={c.primary} />
-                    <Text
-                      style={[styles.smallActionText, { color: c.primary }]}
-                    >
-                      Thử lại
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-              {sync.state === "error" || accountError ? (
-                <Text
-                  accessibilityRole="alert"
-                  style={[styles.accountError, { color: "#C0392B" }]}
-                >
-                  {accountError ?? sync.message}
-                </Text>
-              ) : null}
-              <Pressable
-                testID="account-sign-out"
-                accessibilityRole="button"
-                onPress={() => {
-                  void handleSignOut();
-                }}
-                style={[styles.signOutButton, { borderColor: c.border }]}
-              >
-                <Feather name="log-out" size={17} color={c.primary} />
-                <Text style={[styles.signOutText, { color: c.primary }]}>
-                  Đăng xuất
-                </Text>
-              </Pressable>
-              <Text
-                style={[styles.appearanceDetail, { color: c.mutedForeground }]}
-              >
-                Đăng xuất không xóa sổ từ hoặc dữ liệu trên máy.
+          <View style={styles.accountHeader}>
+            <View
+              style={[styles.accountIcon, { backgroundColor: c.secondary }]}
+            >
+              <Feather name="smartphone" size={19} color={c.primary} />
+            </View>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={[styles.appearanceTitle, { color: c.foreground }]}>
+                Chỉ lưu trên thiết bị
               </Text>
-            </>
-          ) : (
-            <>
-              <View style={styles.accountHeader}>
-                <View
-                  style={[styles.accountIcon, { backgroundColor: c.secondary }]}
-                >
-                  <Feather name="smartphone" size={19} color={c.primary} />
-                </View>
-                <View style={{ flex: 1, gap: 3 }}>
-                  <Text
-                    style={[styles.appearanceTitle, { color: c.foreground }]}
-                  >
-                    Chế độ khách
-                  </Text>
-                  <Text
-                    style={[
-                      styles.appearanceDetail,
-                      { color: c.mutedForeground },
-                    ]}
-                  >
-                    Từ và tiến độ chỉ lưu trên thiết bị này.
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.syncRow, { borderTopColor: c.border }]}>
-                <Feather name="cloud-off" size={18} color={c.mutedForeground} />
-                <Text
-                  style={[
-                    styles.appearanceDetail,
-                    { flex: 1, color: c.mutedForeground },
-                  ]}
-                >
-                  Đăng nhập để đồng bộ giữa các thiết bị.
-                </Text>
-              </View>
-              <Button
-                testID="guest-sign-in"
-                label="Đăng nhập hoặc tạo tài khoản"
-                icon="log-in"
-                onPress={() => router.push("/(auth)/sign-in")}
-              />
-            </>
-          )}
+              <Text
+                style={[
+                  styles.appearanceDetail,
+                  { color: c.mutedForeground },
+                ]}
+              >
+                Không cần đăng nhập hoặc kết nối mạng để mở ứng dụng.
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.syncRow, { borderTopColor: c.border }]}>
+            <Feather name="lock" size={18} color={c.primary} />
+            <Text
+              style={[
+                styles.appearanceDetail,
+                { flex: 1, color: c.mutedForeground },
+              ]}
+            >
+              Sổ từ và tiến độ nằm trong bộ nhớ ứng dụng. Hãy sao lưu trước khi
+              gỡ ứng dụng hoặc đổi điện thoại.
+            </Text>
+          </View>
         </View>
         <Text style={[styles.section, { color: c.mutedForeground }]}>
           SAO LƯU & KHÔI PHỤC
         </Text>
         <Text style={[styles.appearanceHint, { color: c.mutedForeground }]}>
           Gói gồm sổ từ, tiến độ ôn, thống kê và phần thưởng; không gồm từ điển
-          offline, audio hay thông tin đăng nhập.
+          offline, audio hay thông tin tài khoản.
         </Text>
         <View
           style={[
@@ -1229,7 +1065,7 @@ export default function SettingsScreen() {
               void handleExportData();
             }}
             loading={transferState === "exporting"}
-            disabled={!user || transferState !== null}
+            disabled={transferState !== null}
           />
           <Button
             testID="account-import-data"
@@ -1240,12 +1076,12 @@ export default function SettingsScreen() {
               void handleImportData();
             }}
             loading={transferState === "importing"}
-            disabled={!user || transferState !== null || syncBusy}
+            disabled={transferState !== null || syncBusy}
           />
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            Bản xuất lấy dữ liệu đang có trên thiết bị, kể cả thay đổi chưa đồng
-            bộ. Tệp JSON có thể đọc được; chỉ gửi cho người bạn tin cậy. Khôi
-            phục sẽ thay toàn bộ dữ liệu học hiện tại.
+            Bản xuất lấy dữ liệu đang có trên thiết bị. Tệp JSON có thể đọc
+            được; chỉ gửi cho người bạn tin cậy. Khôi phục sẽ thay toàn bộ dữ
+            liệu học hiện tại trên máy này.
           </Text>
           {transferError ? <ErrorBanner message={transferError} /> : null}
           {transferNotice ? (
@@ -1260,7 +1096,7 @@ export default function SettingsScreen() {
         <ConfirmDialog
           visible={restoreCandidate !== null}
           title="Thay thế dữ liệu hiện tại?"
-          message={`Sổ từ, tiến độ ôn, trạng thái đóng băng, thống kê và phần thưởng trên thiết bị cùng tài khoản sẽ được thay bằng tệp này. Các thiết bị khác sẽ nhận dữ liệu mới khi đồng bộ; thay đổi chưa đồng bộ ở đó có thể bị thay thế. Nếu đang ngoại tuyến, tài khoản sẽ được cập nhật khi có mạng. Hãy xuất bản sao lưu trước nếu bạn muốn giữ dữ liệu hiện tại.
+          message={`Sổ từ, tiến độ ôn, trạng thái đóng băng, thống kê và phần thưởng trên thiết bị này sẽ được thay bằng tệp sao lưu. Hãy xuất bản sao lưu trước nếu bạn muốn giữ dữ liệu hiện tại.
 
 Nội dung tệp:
 • Từ cá nhân: ${restoreSummary?.personalWordCount ?? 0}
@@ -1278,7 +1114,7 @@ Nội dung tệp:
           error={restoreError}
         />
         <Text style={[styles.section, { color: c.mutedForeground }]}>
-          ĐẶT LẠI TÀI KHOẢN
+          ĐẶT LẠI DỮ LIỆU
         </Text>
         <View
           style={[
@@ -1292,9 +1128,8 @@ Nội dung tệp:
         >
           <MaterialSheen radius={c.radius} />
           <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-            Đặt lại cục bộ chỉ xóa dữ liệu học và tài nguyên offline trên thiết
-            bị này; không xóa dữ liệu cloud. Dữ liệu cloud vẫn có thể đồng bộ
-            lại sau đó.
+            Đặt lại sẽ xóa dữ liệu học và tài nguyên offline trên thiết bị này.
+            Hãy xuất bản sao lưu trước nếu muốn giữ dữ liệu.
           </Text>
           <Button
             testID="reset-app-data"
@@ -1306,38 +1141,12 @@ Nội dung tệp:
               setResetDialog("local");
             }}
             disabled={
-              !userLoaded ||
               syncBusy ||
-                offlineBusy ||
+              offlineBusy ||
               transferState !== null ||
               resetBusy
             }
           />
-          {user ? (
-            <>
-              <Text style={[styles.appearanceDetail, { color: c.mutedForeground }]}>
-                Xóa cloud là thao tác riêng: xóa dữ liệu học trên tài khoản và
-                thiết bị này, cần Internet và không thể hoàn tác.
-              </Text>
-              <Button
-                testID="reset-cloud-data"
-                label="Xóa cloud và thiết bị"
-                icon="cloud-off"
-                variant="danger"
-                onPress={() => {
-                  setResetError(null);
-                  setResetDialog("cloud");
-                }}
-                disabled={
-                  !userLoaded ||
-                  syncBusy ||
-                  offlineBusy ||
-                  transferState !== null ||
-                  resetBusy
-                }
-              />
-            </>
-          ) : null}
           {resetNotice ? (
             <Text
               accessibilityLiveRegion="polite"
@@ -1350,21 +1159,9 @@ Nội dung tệp:
         </View>
         <ConfirmDialog
           visible={resetDialog !== null}
-          title={
-            resetDialog === "cloud"
-              ? "Xóa dữ liệu cloud?"
-              : "Đặt lại dữ liệu trên thiết bị?"
-          }
-          message={
-            resetDialog === "cloud"
-              ? "Sẽ xóa vĩnh viễn sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và dữ liệu học trên thiết bị này cùng tài khoản cloud ở tất cả thiết bị. Từ điển, khóa học, IPA và audio offline cũng bị xóa khỏi thiết bị này. Cần Internet. Nếu máy chủ không xác nhận, dữ liệu trên thiết bị và tài nguyên offline vẫn được giữ nguyên. Không thể hoàn tác."
-              : "Sẽ xóa sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và tài nguyên offline (gồm gói khóa học) chỉ trên thiết bị này. Dữ liệu cloud không bị xóa và có thể đồng bộ lại sau đó. Không thể hoàn tác."
-          }
-          confirmLabel={
-            resetDialog === "cloud"
-              ? "Xóa cloud và thiết bị"
-              : "Xóa dữ liệu thiết bị"
-          }
+          title="Đặt lại dữ liệu trên thiết bị?"
+          message="Sẽ xóa sổ từ, tiến độ, lịch sử ôn, nhiệm vụ, phần thưởng và tài nguyên offline trên thiết bị này. Không thể hoàn tác."
+          confirmLabel="Xóa dữ liệu thiết bị"
           onCancel={() => {
             if (!resetBusy) {
               setResetDialog(null);
