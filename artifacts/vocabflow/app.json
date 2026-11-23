@@ -36,6 +36,11 @@
       "expo-sharing",
       "expo-asset"
     ],
+    "extra": {
+      "eas": {
+        "projectId": "30448dab-044a-45a3-a1da-fc95ba694732"
+      }
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
