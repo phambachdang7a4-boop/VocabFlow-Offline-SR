@@ -1,4 +1,4 @@
-- [Phạm vi VocabFlow](vocabflow-scope.md) — App Android offline-first; khách không cần đăng nhập, đồng bộ tài khoản là tùy chọn.
+- [Phạm vi VocabFlow](vocabflow-scope.md) — App Android offline-first; không cần mạng khi mở, khách không cần đăng nhập, đồng bộ là tùy chọn.
 - [Expo preview khởi động chậm](expo-preview-startup.md) — Ảnh trắng có thể do các route đang biên dịch lần đầu; kiểm tra tải xong trước khi kết luận app lỗi.
 - [SQLite trên trình duyệt](sqlite-web-startup.md) — Khởi tạo worker/VFS phải tuần tự giữa các kho; OPFS cần một tab sở hữu, không sửa lỗi bằng cách xóa dữ liệu.
 - [Tải dữ liệu công khai](public-dictionary-download.md) — GitHub có thể ẩn Content-Range qua CORS; kiểm 206, độ dài từng đoạn và SHA-256 toàn tệp.
@@ -25,3 +25,4 @@
 - [Tra cứu CEFR bằng Cambridge](cambridge-cefr-audit.md) — Trang Cambridge bị chặn không xác nhận nhãn; giữ Oxford và để từ chưa xác minh.
 - [Tải gói khóa học offline](offline-course-download.md) — Native dùng khối 4 MiB để giảm lượt mạng; web giữ 1 MiB để hạn chế bộ nhớ tạm.
 - [Tải gói công khai từ R2](cloudflare-r2-downloads.md) — Chỉ bật tải trực tiếp theo nền tảng sau khi xác minh hash; web cần CORS cho Range và header.
+- [Ưu tiên hiệu năng VocabFlow](performance-principle.md) — Có thể tăng dung lượng APK nếu cần; ưu tiên app mượt và phản hồi nhanh.

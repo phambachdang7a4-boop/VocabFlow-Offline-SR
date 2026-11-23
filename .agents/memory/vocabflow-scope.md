@@ -3,7 +3,11 @@ name: Phạm vi VocabFlow
 description: Yêu cầu sản phẩm và cách triển khai do người dùng quy định.
 ---
 
-VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, offline-first; không bắt buộc đăng nhập. Khách dùng SQLite cục bộ, còn đăng nhập là tùy chọn để đồng bộ thiết bị; không gọi API trả phí. SQLite cục bộ là nguồn dữ liệu chính cho từ và tiến độ. Không thêm dữ liệu mẫu hay từ khởi tạo. Giao diện tiếng Việt.
+VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, offline-first; không bắt buộc đăng nhập hoặc kết nối mạng khi mở app. Khách dùng SQLite cục bộ, còn đăng nhập là tùy chọn để đồng bộ thiết bị; không gọi API trả phí. SQLite cục bộ là nguồn dữ liệu chính cho từ và tiến độ. Không thêm dữ liệu mẫu hay từ khởi tạo. Giao diện tiếng Việt.
+
+**Why:** Người dùng yêu cầu không ép app cần Wi-Fi hoặc dữ liệu di động mỗi lần mở; app phải dùng được ngoại tuyến sau khi dữ liệu đã có trên máy.
+
+**How to apply:** Không chặn khởi động, tab học/ôn, hay dữ liệu cục bộ vì kiểm tra mạng hoặc dịch vụ từ xa. Chỉ truy cập mạng cho tải/cập nhật dữ liệu hoặc đồng bộ tùy chọn; báo trạng thái và cho thử lại khi không có mạng.
 
 Với Mắt Quạ, dán/đọc văn bản và tra từ phải dùng dữ liệu cục bộ, không gọi dịch vụ mạng. Từ được thêm đi qua luồng lưu hiện có như Tra Từ/Khóa học; nếu tài khoản đã đăng nhập và có mạng, đồng bộ tài khoản hiện có vẫn được phép.
 
