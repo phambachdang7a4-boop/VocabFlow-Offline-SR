@@ -255,10 +255,6 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.equal(cleared.pending, false);
 
   const settings = readFileSync(join(__dirname, "../app/settings.tsx"), "utf8");
-  const context = readFileSync(
-    join(__dirname, "../contexts/SyncContext.tsx"),
-    "utf8",
-  );
   const audio = readFileSync(
     join(__dirname, "../data/offline-audio.ts"),
     "utf8",
@@ -289,26 +285,15 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(settings, /offline-regional-ipa-download-\$\{id\}/);
   assert.match(settings, /deleteOfflineRegionalIpa/);
   assert.match(settings, /testID="reset-app-data"/);
-  assert.match(settings, /testID="reset-cloud-data"/);
-  assert.match(settings, /resetLocalData/);
-  assert.match(settings, /Dữ liệu cloud không bị xóa/);
+  assert.match(settings, /resetLocalOnly/);
+  assert.doesNotMatch(settings, /reset-cloud-data|Xóa cloud và thiết bị/);
+  assert.match(settings, /Không cần đăng nhập hoặc kết nối mạng để mở ứng dụng/);
   assert.match(settings, /testID="graphics-quality-placeholder"/);
   assert.match(settings, /HÌNH ẢNH/);
   assert.match(settings, /ÂM THANH/);
   assert.match(settings, /DỮ LIỆU HỌC TẬP/);
-  assert.match(settings, /Xóa cloud và thiết bị/);
   assert.match(settings, /Xóa dữ liệu thiết bị/);
-  assert.match(settings, /disabled=\{\s*!userLoaded/);
-  assert.match(settings, /resetDialog === "cloud" && \(!user \|\| !sync\.online\)/);
-  assert.match(context, /resetCloudFirst/);
-  assert.match(context, /resetLocalOnly/);
-  assert.match(
-    context,
-    /if \(userId\) \{\s*await clearLocalAccountAfterCloudReset\(local\.payload\.revision\)/,
-  );
-  assert.match(context, /if \(userId && online !== true\)/);
-  assert.match(context, /reviewComboRewards:\s*\[\]/);
-  assert.match(context, /cloudResetNeedsLocalRetry/);
+  assert.doesNotMatch(settings, /Đồng bộ dữ liệu|Đăng nhập/);
   assert.match(audio, /digest\(["']SHA-256["']\)/);
   assert.match(audio, /audio_dictionary WHERE entry_id = \?/);
   assert.match(dictionary, /onProgress\?\.\(end \+ 1, DICTIONARY\.bytes\)/);

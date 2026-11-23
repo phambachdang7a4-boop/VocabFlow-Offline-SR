@@ -299,19 +299,13 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AppearanceProvider>
           <ErrorBoundary>
-            <ClerkProvider
-              publishableKey={clerkPublishableKey}
-              tokenCache={tokenCache}
-              proxyUrl={clerkProxyUrl}
-            >
-              <ReviewPreferencesProvider>
-                <SpeechPreferencesProvider>
-                  <SoundEffectsProvider>
-                    <AppearanceFrame />
-                  </SoundEffectsProvider>
-                </SpeechPreferencesProvider>
-              </ReviewPreferencesProvider>
-            </ClerkProvider>
+            <ReviewPreferencesProvider>
+              <SpeechPreferencesProvider>
+                <SoundEffectsProvider>
+                  <AppearanceFrame />
+                </SoundEffectsProvider>
+              </SpeechPreferencesProvider>
+            </ReviewPreferencesProvider>
           </ErrorBoundary>
         </AppearanceProvider>
       </QueryClientProvider>
