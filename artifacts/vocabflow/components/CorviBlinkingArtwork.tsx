@@ -29,7 +29,6 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
   const floatProgress = useSharedValue(0);
   const gazeProgress = useSharedValue(0);
   const pageTurnProgress = useSharedValue(0);
-  const wingProgress = useSharedValue(0);
   const eyelidMotion = useAnimatedStyle(() => ({
     opacity: blinkProgress.value,
     transform: [{ scaleY: Math.max(0.04, blinkProgress.value) }],
@@ -44,18 +43,19 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
     ],
   }));
   const pageMotion = useAnimatedStyle(() => ({
-    opacity: Math.sin(pageTurnProgress.value * Math.PI),
+    opacity: Math.sin(pageTurnProgress.value * Math.PI * 0.5) * 0.9,
     transform: [
-      { scaleX: Math.max(0.08, 1 - pageTurnProgress.value * 0.92) },
-      { rotateZ: `${pageTurnProgress.value * -8}deg` },
+      { translateX: pageTurnProgress.value * artSize * 0.045 },
+      { scaleX: Math.max(0.12, 1 - pageTurnProgress.value * 0.88) },
+      { rotateZ: `${pageTurnProgress.value * -28}deg` },
     ],
   }));
   const wingMotion = useAnimatedStyle(() => ({
-    opacity: Math.min(1, wingProgress.value * 1.5),
+    opacity: Math.sin(pageTurnProgress.value * Math.PI * 0.5) * 0.9,
     transform: [
-      { translateX: wingProgress.value * artSize * 0.045 },
-      { translateY: wingProgress.value * -artSize * 0.025 },
-      { rotateZ: `${wingProgress.value * -18}deg` },
+      { translateX: pageTurnProgress.value * artSize * 0.065 },
+      { translateY: pageTurnProgress.value * -artSize * 0.025 },
+      { rotateZ: `${pageTurnProgress.value * -24}deg` },
     ],
   }));
 
@@ -64,13 +64,11 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
     cancelAnimation(floatProgress);
     cancelAnimation(gazeProgress);
     cancelAnimation(pageTurnProgress);
-    cancelAnimation(wingProgress);
     if (reduceMotion) {
       blinkProgress.value = 0;
       floatProgress.value = 0;
       gazeProgress.value = gazeToUser ? 1 : 0;
       pageTurnProgress.value = 0;
-      wingProgress.value = 0;
     } else {
       blinkProgress.value = withRepeat(
         withSequence(
@@ -102,18 +100,9 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
         );
       pageTurnProgress.value = withRepeat(
         withSequence(
-          withDelay(5200, withTiming(1, { duration: 360 })),
-          withTiming(0, { duration: 420 }),
-          withDelay(2800, withTiming(0, { duration: 1 })),
-        ),
-        -1,
-        false,
-      );
-      wingProgress.value = withRepeat(
-        withSequence(
-          withDelay(5000, withTiming(1, { duration: 320 })),
-          withTiming(0, { duration: 300 }),
-          withDelay(2800, withTiming(0, { duration: 1 })),
+          withTiming(1, { duration: 520 }),
+          withTiming(0, { duration: 520 }),
+          withDelay(1600, withTiming(0, { duration: 1 })),
         ),
         -1,
         false,
@@ -124,9 +113,8 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
       cancelAnimation(floatProgress);
       cancelAnimation(gazeProgress);
       cancelAnimation(pageTurnProgress);
-      cancelAnimation(wingProgress);
     };
-  }, [blinkProgress, floatProgress, gazeProgress, gazeToUser, pageTurnProgress, reduceMotion, wingProgress]);
+  }, [blinkProgress, floatProgress, gazeProgress, gazeToUser, pageTurnProgress, reduceMotion]);
 
   return (
     <Animated.View
@@ -188,10 +176,10 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
         style={[
           styles.turningPage,
           {
-            left: artSize * 0.716,
-            top: artSize * 0.501,
-            width: Math.max(12, artSize * 0.074),
-            height: Math.max(16, artSize * 0.13),
+            left: artSize * 0.702,
+            top: artSize * 0.416,
+            width: Math.max(22, artSize * 0.15),
+            height: Math.max(28, artSize * 0.18),
             backgroundColor: c.dictField,
             borderColor: c.dictLine,
           },
@@ -199,6 +187,8 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
         ]}
       >
         <View style={[styles.pageEdge, { backgroundColor: c.dictLine }]} />
+        <View style={[styles.pageRule, styles.pageRuleUpper, { backgroundColor: c.dictLine }]} />
+        <View style={[styles.pageRule, styles.pageRuleLower, { backgroundColor: c.dictLine }]} />
       </Animated.View>
       <Animated.View
         testID={`${testID}-wing-sweep`}
@@ -206,10 +196,10 @@ export function CorviBlinkingArtwork({ source, backgroundSource, testID, artSize
         style={[
           styles.wingSweep,
           {
-            left: artSize * 0.57,
-            top: artSize * 0.475,
-            width: artSize * 0.17,
-            height: artSize * 0.085,
+            left: artSize * 0.535,
+            top: artSize * 0.458,
+            width: artSize * 0.23,
+            height: artSize * 0.14,
           },
           wingMotion,
         ]}
@@ -244,17 +234,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   pageEdge: { position: 'absolute', right: 2, top: 2, bottom: 2, width: 1 },
+  pageRule: { position: 'absolute', left: '18%', height: 1, width: '45%', opacity: 0.55 },
+  pageRuleUpper: { top: '28%' },
+  pageRuleLower: { top: '48%' },
   wingSweep: { position: 'absolute', zIndex: 2 },
   wingCore: {
     position: 'absolute',
-    left: '12%',
-    top: '18%',
+    left: '9%',
+    top: '15%',
     width: '72%',
-    height: '52%',
+    height: '48%',
     borderWidth: 1,
     borderRadius: 2,
+    transform: [{ rotateZ: '-24deg' }],
   },
-  wingFeatherOne: { position: 'absolute', left: '4%', top: '54%', width: '44%', height: '24%' },
-  wingFeatherTwo: { position: 'absolute', left: '14%', top: '76%', width: '40%', height: '18%' },
-  wingTip: { position: 'absolute', right: '4%', top: '7%', width: '18%', height: '30%' },
+  wingFeatherOne: { position: 'absolute', left: '10%', top: '57%', width: '48%', height: '23%', transform: [{ rotateZ: '18deg' }] },
+  wingFeatherTwo: { position: 'absolute', left: '21%', top: '76%', width: '43%', height: '16%', transform: [{ rotateZ: '12deg' }] },
+  wingTip: { position: 'absolute', right: '8%', top: '4%', width: '18%', height: '28%' },
 });

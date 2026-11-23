@@ -4,11 +4,13 @@ const { readFileSync, existsSync } = require('node:fs');
 const { loadTs, loadDictionaryDomain } = require('./test-support.cjs');
 const palette = loadTs(join(__dirname, '../constants/colors.ts')).default.light;
 const dictionaryDomain = loadDictionaryDomain();
+const courseIds = loadTs(join(__dirname, '../domain/course-ids.ts'));
 const courseDictionaryIndex = require('../domain/course-dictionary-index.json');
 const soundCues = loadTs(join(__dirname, '../domain/sound-cues.ts'));
 const { exampleSegments, pronunciationAccent } = dictionaryDomain;
 const dictionaryEntrySource = readFileSync(join(__dirname, '../components/DictionaryEntryView.tsx'), 'utf8');
 const dictionaryTabSource = readFileSync(join(__dirname, '../app/(tabs)/dictionary.tsx'), 'utf8');
+const corviArtworkSource = readFileSync(join(__dirname, '../components/CorviBlinkingArtwork.tsx'), 'utf8');
 const tabLayoutSource = readFileSync(join(__dirname, '../app/(tabs)/_layout.tsx'), 'utf8');
 const dictionarySourcesSource = readFileSync(join(__dirname, '../app/dictionary-sources.tsx'), 'utf8');
 for (const tab of ['courses', 'index', 'review', 'blank']) {
@@ -130,6 +132,7 @@ function mount(file, services, personalWords = [], properties = {}) {
     'react-native-safe-area-context': { useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) },
     'expo-router': { router: { push: route => routes.push(route) }, useFocusEffect: () => {} },
     '@/domain/course-dictionary-index.json': courseDictionaryIndex,
+    '@/domain/course-ids': courseIds,
     '@/contexts/VocabularyContext': { useVocabulary: () => ({
       words: personalWords, saveWord: services.saveWord,
       loading: services.bookLoading ?? false, error: services.bookError ?? null, reload: async () => {},
@@ -222,12 +225,15 @@ function mount(file, services, personalWords = [], properties = {}) {
     'The base illustration receives explicit dimensions so it cannot collapse on mobile.');
   assert.ok(animatedArt.byId('corvi-blink-test-blink'), 'Corvi’s blinking eyelid is rendered above the eye.');
   assert.ok(animatedArt.byId('corvi-blink-test-gaze'), 'A pixel-sized pupil overlay provides the gaze motion.');
-  assert.ok(animatedArt.byId('corvi-blink-test-page-turn'), 'A restrained page overlay is rendered over the open book.');
+  assert.ok(animatedArt.byId('corvi-blink-test-page-turn'), 'A broad page overlay is rendered over the open book.');
   assert.equal(animatedArt.byId('corvi-blink-test-page-turn').props.style.at(-1).opacity, 0,
     'The turning-page layer stays invisible between page turns.');
   assert.ok(animatedArt.byId('corvi-blink-test-wing-sweep'), 'A separate pixel-art wing layer sweeps toward the page.');
   assert.equal(animatedArt.byId('corvi-blink-test-wing-sweep').props.style.at(-1).opacity, 0,
     'Corvi’s wing stays still between page turns.');
+  assert.match(corviArtworkSource, /const wingMotion = useAnimatedStyle\(\(\) => \(\{[\s\S]*?pageTurnProgress\.value/);
+  assert.doesNotMatch(corviArtworkSource, /wingProgress/,
+    'The wing follows the same animation progress as the turning page.');
   const gazeCycle = animationCalls.find(call => call.type === 'repeat'
     && call.animation.type === 'sequence'
     && call.animation.animations.some(part => part.type === 'delay' && part.delay === 2500)
@@ -235,14 +241,12 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(gazeCycle, 'Idle gaze repeatedly shifts between the user and the book with pauses.');
   const pageCycle = animationCalls.find(call => call.type === 'repeat'
     && call.animation.type === 'sequence'
-    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 5200)
-    && call.animation.animations.some(part => part.type === 'timing' && part.options?.duration === 420));
-  assert.ok(pageCycle, 'The book page turns occasionally and settles back in a short, restrained motion.');
-  const wingCycle = animationCalls.find(call => call.type === 'repeat'
-    && call.animation.type === 'sequence'
-    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 5000)
-    && call.animation.animations.some(part => part.type === 'timing' && part.options?.duration === 300));
-  assert.ok(wingCycle, 'Corvi’s wing sweeps in sync with the periodic book-page animation.');
+    && call.animation.animations[0]?.type === 'timing'
+    && call.animation.animations[0].options?.duration === 520
+    && call.animation.animations.some(part => part.type === 'delay' && part.delay === 1600));
+  assert.ok(pageCycle, 'The book page starts turning immediately and repeats every few seconds.');
+  assert.equal(pageCycle.animation.animations[1].options?.duration, 520,
+    'The page settles back with the same visible movement duration.');
   animationCalls.length = 0;
   const eyeContactArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
     source: 1, testID: 'corvi-eye-contact-test', artSize: 210, gazeToUser: true,
@@ -251,8 +255,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   assert.ok(!animationCalls.some(call => call.animation?.type === 'sequence'
     && call.animation.animations.some(part => part.type === 'delay' && part.delay === 2500)),
   'Locked eye contact replaces idle gaze cycling with a direct gaze.');
-  assert.equal(sharedValues.at(-3).value?.type, 'timing');
-  assert.equal(sharedValues.at(-3).value?.value, 1, 'Conversation gaze animates toward the learner and remains there.');
+  assert.equal(sharedValues.at(-2).value?.type, 'timing');
+  assert.equal(sharedValues.at(-2).value?.value, 1, 'Conversation gaze animates toward the learner and remains there.');
   reducedMotionEnabled = true;
   animationCalls.length = 0;
   const reducedArt = mount('../components/CorviBlinkingArtwork.tsx', {}, [], {
@@ -260,8 +264,8 @@ function mount(file, services, personalWords = [], properties = {}) {
   });
   assert.ok(reducedArt.byId('corvi-reduced-motion-test-page-turn'));
   assert.equal(animationCalls.length, 0, 'Reduced motion disables all repeating character animations.');
-  assert.deepEqual(sharedValues.slice(-5).map(value => value.value), [0, 0, 1, 0, 0],
-    'Reduced motion keeps blink, float, page, and wing static while preserving choice-state eye contact.');
+  assert.deepEqual(sharedValues.slice(-4).map(value => value.value), [0, 0, 1, 0],
+    'Reduced motion keeps blink, float, and the linked page/wing animation static while preserving choice-state eye contact.');
   reducedMotionEnabled = false;
   assert.ok(screen.byId('dictionary-search-idle'), 'Dictionary shows a welcoming idle state before a search');
   assert.ok(screen.byId('dictionary-search-idle-scroll'), 'The empty state can scroll when it exceeds the viewport');
@@ -556,9 +560,6 @@ function mount(file, services, personalWords = [], properties = {}) {
       saveWord: async () => {},
     });
     await view.settle();
-    const courseIndexEntry = courseDictionaryIndex.terms.find(
-      term => term.term.toLowerCase() === taggedEntry.term,
-    );
     const courseId = courseDictionaryIndex.courses.find(
       course => course.title === taggedEntry.courseTags[0],
     ).id;
@@ -573,7 +574,6 @@ function mount(file, services, personalWords = [], properties = {}) {
       params: {
         courseId,
         term: taggedEntry.term,
-        lessonIds: courseIndexEntry.lessonIdsByCourse[courseId].join(','),
       },
     });
   }
@@ -803,11 +803,11 @@ function mount(file, services, personalWords = [], properties = {}) {
   );
   partSearches[1].resolve({ items: [], hasMore: false });
   await partFilterScreen.settle();
-  partFilterScreen.byId('dictionary-course-filter-ielts-topic').props.onPress();
+  partFilterScreen.byId('dictionary-course-filter-ielts-topic-vocabulary-v1').props.onPress();
   await partFilterScreen.settle();
   assert.deepEqual(
     [partSearches[2].offset, partSearches[2].courseId, partSearches[2].partOfSpeech],
-    [0, 'ielts-topic', 'verb'],
+    [0, 'ielts-topic-vocabulary-v1', 'verb'],
     'Course and part-of-speech filters remain active together.',
   );
   partSearches[2].resolve({ items: [], hasMore: false });
