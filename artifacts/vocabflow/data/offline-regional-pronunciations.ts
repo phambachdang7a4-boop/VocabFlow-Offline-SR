@@ -338,6 +338,56 @@ export async function getOfflineRegionalIpaStatus(): Promise<{
   }
 }
 
+/**
+ * Fast launch-time check using the verified revision marker and one sample row.
+ * Full integrity/count verification remains in the explicit status/install path.
+ */
+export async function getOfflineRegionalIpaReadiness(): Promise<{
+  state: "missing" | "installed" | "damaged";
+  bytes: number;
+  entryCount: number;
+}> {
+  try {
+    const db = await openSupplementDatabase();
+    const table = await db.getFirstAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      metadataTable,
+    );
+    if (!table) return { state: "missing", bytes: 0, entryCount: 0 };
+    const metadata = await db.getFirstAsync<{
+      revision: string;
+      us_sha256: string;
+      uk_sha256: string;
+      uk_supplement_sha256: string;
+      entry_count: number;
+    }>(
+      `SELECT revision, us_sha256, uk_sha256, uk_supplement_sha256, entry_count
+       FROM ${metadataTable} LIMIT 1`,
+    );
+    const sample = await db.getFirstAsync<{ term_key: string }>(
+      `SELECT term_key FROM ${dataTable} LIMIT 1`,
+    );
+    if (
+      !sample ||
+      metadata?.revision !== REGIONAL_IPA_DICTIONARY.version ||
+      metadata.us_sha256 !== REGIONAL_IPA_DICTIONARY.us.sha256 ||
+      metadata.uk_sha256 !== REGIONAL_IPA_DICTIONARY.uk.sha256 ||
+      metadata.uk_supplement_sha256 !==
+        REGIONAL_IPA_DICTIONARY.ukSupplement.sha256 ||
+      metadata.entry_count <= 0
+    ) {
+      return { state: "damaged", bytes: 0, entryCount: 0 };
+    }
+    return {
+      state: "installed",
+      bytes: REGIONAL_IPA_DICTIONARY.sourceBytes,
+      entryCount: metadata.entry_count,
+    };
+  } catch {
+    return { state: "damaged", bytes: 0, entryCount: 0 };
+  }
+}
+
 export async function getOfflineRegionalIpaPartsStatus(): Promise<
   Record<RegionalIpaSourceId, "missing" | "verified" | "installed">
 > {

@@ -77,6 +77,7 @@ import {
   getOfflineCourseDataStatus,
 } from "@/data/offline-course-data";
 import { OFFLINE_COURSE_DATA } from "@/domain/course-data-package";
+import { StartupPerformanceCard } from "@/components/StartupPerformanceCard";
 
 export default function SettingsScreen() {
   const c = useColors();
@@ -1383,6 +1384,7 @@ Nội dung tệp:
           Từ điển, IPA và audio được tải riêng vào bộ nhớ ứng dụng, không nằm
           trong APK. Audio chiếm khoảng 307 MB; nên tải bằng Wi-Fi.
         </Text>
+        <StartupPerformanceCard />
         <View
           testID="review-word-limit-settings"
           style={[

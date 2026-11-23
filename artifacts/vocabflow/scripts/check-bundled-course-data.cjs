@@ -215,7 +215,7 @@ async function run() {
   assert.match(courseScreen, /TOEIC_ADVANCED_COURSE_ID/);
   const appConfig = require("../app.json").expo;
   assert.equal(appConfig.version, "1.08");
-  assert.equal(appConfig.android.versionCode, 15);
+  assert.equal(appConfig.android.versionCode, 16);
 
   console.log(
     "Bundled SQLite course package verified: 9 courses, 1,594 lessons, 14,610 questions; native reads are query-only.",

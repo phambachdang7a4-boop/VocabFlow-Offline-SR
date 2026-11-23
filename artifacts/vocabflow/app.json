@@ -16,7 +16,7 @@
       "supportsTablet": false
     },
     "android": {
-      "versionCode": 15,
+      "versionCode": 16,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/corvi-app-icon.png",
         "backgroundColor": "#1E2130"

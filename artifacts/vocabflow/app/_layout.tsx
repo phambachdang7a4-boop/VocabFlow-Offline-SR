@@ -1,3 +1,7 @@
+import {
+  APP_RUNTIME_STARTED_AT,
+  measureStartupDataReadiness,
+} from "@/data/startup-performance";
 import React, { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -144,6 +148,7 @@ function RootLayoutNav() {
   );
   const [scopeError, setScopeError] = useState<string | null>(null);
   const [scopeAttempt, setScopeAttempt] = useState(0);
+  const startupMeasurementStarted = useRef(false);
   const inAuthFlow = segments.some(
     (segment) =>
       segment === "(auth)" || segment === "sign-in" || segment === "sign-up",
@@ -185,6 +190,23 @@ function RootLayoutNav() {
       active = false;
     };
   }, [isLoaded, isSignedIn, scopeAttempt, userId]);
+
+  useEffect(() => {
+    if (
+      !isLoaded ||
+      scopedUserId === undefined ||
+      scopeError ||
+      startupMeasurementStarted.current
+    ) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (startupMeasurementStarted.current) return;
+      startupMeasurementStarted.current = true;
+      void measureStartupDataReadiness(APP_RUNTIME_STARTED_AT);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isLoaded, scopedUserId, scopeError]);
 
   if (isLoaded && isSignedIn === undefined) {
     return (
