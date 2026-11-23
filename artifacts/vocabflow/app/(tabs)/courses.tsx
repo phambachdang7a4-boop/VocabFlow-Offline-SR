@@ -27,7 +27,8 @@ import {
   OFFICE_APPS_COURSE_ID,
   PHRASAL_VERB_COURSE_ID,
   SENTENCE_STRUCTURE_PATTERN_COURSE_ID,
-  TOEIC_TOPIC_COURSE_ID,
+  TOEIC_ADVANCED_COURSE_ID,
+  TOEIC_BASIC_COURSE_ID,
 } from "@/domain/course-ids";
 import {
   getOfflineCourseBundle,
@@ -36,7 +37,10 @@ import {
   type OfflineCourseLesson,
   type OfflineCourseQuestion,
 } from "@/data/offline-course-data";
-import { mapIeltsStandardAttempt } from "@/domain/course-attempt-migration";
+import {
+  mapIeltsStandardAttempt,
+  mapToeicSplitCourseAttempt,
+} from "@/domain/course-attempt-migration";
 import {
   getCourseLessonAttempts,
   getCourseLessonCompletions,
@@ -186,10 +190,16 @@ const COURSE_PRESENTATION: readonly Pick<
     testIdPrefix: "ielts-advanced",
   },
   {
-    id: TOEIC_TOPIC_COURSE_ID,
+    id: TOEIC_BASIC_COURSE_ID,
     icon: "briefcase",
     catalogArtwork: require("../../assets/courses/toeic.png"),
-    testIdPrefix: "toeic",
+    testIdPrefix: "toeic-basic",
+  },
+  {
+    id: TOEIC_ADVANCED_COURSE_ID,
+    icon: "briefcase",
+    catalogArtwork: require("../../assets/courses/toeic.png"),
+    testIdPrefix: "toeic-advanced",
   },
   {
     id: OFFICE_APPS_COURSE_ID,
@@ -330,9 +340,18 @@ export default function CoursesScreen() {
   const loadProgress = useCallback(async () => {
     setLoading(true);
     try {
-      const progressPrefixes = COURSE_PRESENTATION.flatMap(
-        (course) => course.progressPrefixes ?? [course.id],
+      const bundledCoursesById = new Map(
+        (courseBundle?.courses ?? []).map((course) => [course.id, course]),
       );
+      const progressPrefixes = [
+        ...new Set(
+          COURSE_PRESENTATION.flatMap((course) =>
+            course.progressPrefixes ??
+            bundledCoursesById.get(course.id)?.progressPrefixes ??
+            [course.id],
+          ),
+        ),
+      ];
       const progress = await Promise.all(
         progressPrefixes.map((prefix) => getCourseLessonCompletions(prefix)),
       );
@@ -350,20 +369,61 @@ export default function CoursesScreen() {
           completedIds.add(advancedLessonId);
         }
       }
+      const attemptsById = new Map<string, CourseLessonAttempt>();
+      for (const attempt of attempts.flat()) {
+        const existing = attemptsById.get(attempt.lessonId);
+        if (
+          !existing ||
+          existing.updatedAt.localeCompare(attempt.updatedAt) < 0
+        ) {
+          attemptsById.set(attempt.lessonId, attempt);
+        }
+      }
+      const toeicMigration = courseBundle?.toeicAttemptMigration;
+      const toeicCourses = [
+        {
+          courseId: TOEIC_BASIC_COURSE_ID,
+          sourceIdsByLesson: toeicMigration?.basicSourceLessonIdsByLesson,
+        },
+        {
+          courseId: TOEIC_ADVANCED_COURSE_ID,
+          sourceIdsByLesson: toeicMigration?.advancedSourceLessonIdsByLesson,
+        },
+      ];
+      const migratedToeicAttempts: CourseLessonAttempt[] = [];
+      for (const { courseId, sourceIdsByLesson } of toeicCourses) {
+        const toeicCourse = bundledCoursesById.get(courseId);
+        if (!toeicCourse || !sourceIdsByLesson) continue;
+        for (const lesson of toeicCourse.lessons) {
+          if (attemptsById.has(lesson.id)) continue;
+          const sourceLessonIds = sourceIdsByLesson[lesson.id] ?? [];
+          const migration = mapToeicSplitCourseAttempt(
+            lesson,
+            sourceLessonIds,
+            toeicMigration,
+            [...attemptsById.values()],
+            completedIds,
+          );
+          if (migration.completed) completedIds.add(lesson.id);
+          else if (migration.attempt) {
+            migratedToeicAttempts.push(migration.attempt);
+          }
+        }
+      }
       setCompletedLessons([...completedIds]);
       const standardLessons =
-        courseBundle?.courses.find(
-          (course) => course.id === IELTS_TOPIC_COURSE_ID,
-        )?.lessons ?? [];
-      setLessonAttempts(
-        attempts.flat().map((attempt) =>
-          mapIeltsStandardAttempt(
-            attempt,
-            courseBundle?.ieltsAttemptMigration,
-            standardLessons,
-          ),
+        bundledCoursesById.get(IELTS_TOPIC_COURSE_ID)?.lessons ?? [];
+      const mappedAttempts = [...attemptsById.values()].map((attempt) =>
+        mapIeltsStandardAttempt(
+          attempt,
+          courseBundle?.ieltsAttemptMigration,
+          standardLessons,
         ),
       );
+      for (const attempt of migratedToeicAttempts) {
+        if (!attemptsById.has(attempt.lessonId)) mappedAttempts.push(attempt);
+      }
+      setLessonAttempts(mappedAttempts);
       setError(null);
     } catch (failure) {
       setError(
@@ -453,7 +513,7 @@ export default function CoursesScreen() {
     try {
       const storedAttempt = (await getCourseLessonAttempts(lesson.id)).find(
         (attempt) => attempt.lessonId === lesson.id,
-      );
+      ) ?? lessonAttempts.find((attempt) => attempt.lessonId === lesson.id);
       const standardLessons =
         courseBundle?.courses.find(
           (course) => course.id === IELTS_TOPIC_COURSE_ID,
@@ -526,7 +586,7 @@ export default function CoursesScreen() {
     } finally {
       setSaving(false);
     }
-  }, [courseBundle]);
+  }, [courseBundle, lessonAttempts]);
 
   useEffect(() => {
     if (!requestedCourseId || !requestedTerm) return;
@@ -1038,18 +1098,24 @@ export default function CoursesScreen() {
                 {courseDataStatus === "checking"
                   ? "Đang kiểm tra dữ liệu khóa học"
                   : courseDataStatus === "damaged"
-                    ? "Gói khóa học cần được tải lại"
+                    ? "Không mở được dữ liệu khóa học trong APK"
                     : "Tải dữ liệu khóa học để bắt đầu"}
               </Text>
               <Text style={[styles.lessonFocus, { color: c.mutedForeground }]}>
-                Tám khóa học được lưu thành gói riêng, không làm tăng bộ cài ứng dụng.
+                Chín khóa học được tích hợp trong APK; tiến độ bài học vẫn lưu riêng trên máy.
               </Text>
               {courseDataStatus !== "checking" ? (
                 <Button
                   testID="course-data-open-settings"
-                  label="Mở Cài đặt"
-                  icon="settings"
-                  onPress={() => router.push("/settings")}
+                  label={Platform.OS === "web" ? "Mở Cài đặt" : "Thử lại"}
+                  icon={Platform.OS === "web" ? "settings" : "refresh-cw"}
+                  onPress={() => {
+                    if (Platform.OS === "web") {
+                      router.push("/settings");
+                    } else {
+                      void refreshCourseBundle();
+                    }
+                  }}
                   style={styles.courseDataSettingsButton}
                 />
               ) : null}

@@ -32,6 +32,7 @@
     "check:course-dictionary-index": "node scripts/check-course-dictionary-index.cjs",
     "course:build-package": "node scripts/build-course-data-package.cjs",
     "check:offline-course-data": "node scripts/build-course-data-package.cjs --check && node scripts/check-offline-course-data.cjs",
+    "check:bundled-course-data": "node scripts/check-bundled-course-data.cjs",
     "check:review-statistics": "node scripts/check-review-statistics.cjs && node scripts/check-review-sessions.cjs",
     "check:reset-and-offline-data": "node scripts/check-reset-and-offline-data.cjs",
     "check:offline-audio-download": "node scripts/check-offline-audio-download.cjs",

@@ -2,7 +2,7 @@
   "expo": {
     "name": "VocabFlow",
     "slug": "vocabflow",
-    "version": "1.0.0",
+    "version": "1.08",
     "orientation": "portrait",
     "icon": "./assets/images/corvi-app-icon.png",
     "scheme": "vocabflow",
@@ -16,6 +16,7 @@
       "supportsTablet": false
     },
     "android": {
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/corvi-app-icon.png",
         "backgroundColor": "#1E2130"

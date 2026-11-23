@@ -5,11 +5,19 @@ import {
 } from "../domain/dictionary";
 import {
   COURSE_DICTIONARY_COURSES,
+  TOEIC_ADVANCED_COURSE_ID,
+  TOEIC_BASIC_COURSE_ID,
   TOEIC_TOPIC_COURSE_ID,
 } from "../domain/course-ids";
 import type { OfflineCourseEntry } from "./offline-course-data";
 
 export { COURSE_DICTIONARY_COURSES };
+
+const TOEIC_COURSE_IDS = new Set([
+  TOEIC_BASIC_COURSE_ID,
+  TOEIC_ADVANCED_COURSE_ID,
+  TOEIC_TOPIC_COURSE_ID,
+]);
 
 export function courseDictionaryIndexRevision(
   courseIndex: DictionaryCourseIndex | null,
@@ -204,7 +212,9 @@ export async function applyCourseDictionaryIndex(
     }
 
     for (const term of courseIndex.terms) {
-      if (!term.courseIds.includes(TOEIC_TOPIC_COURSE_ID)) continue;
+      if (!term.courseIds.some((courseId) => TOEIC_COURSE_IDS.has(courseId))) {
+        continue;
+      }
       const entry = normalizedToeicEntries.get(normalizedTerm(term.term));
       if (!entry?.definition?.trim()) continue;
       const definition = entry.definition.trim();

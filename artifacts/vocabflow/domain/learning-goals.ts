@@ -5,7 +5,7 @@ import {
   IELTS_TOPIC_COURSE_ID,
   OFFICE_APPS_COURSE_ID,
   PHRASAL_VERB_COURSE_ID,
-  TOEIC_TOPIC_COURSE_ID,
+  TOEIC_BASIC_COURSE_ID,
 } from "./course-ids";
 
 export type LearningGoalId =
@@ -44,7 +44,7 @@ export const LEARNING_GOAL_OPTIONS: readonly LearningGoalOption[] = [
     id: "toeic",
     title: "TOEIC",
     description: "Cụm từ thường gặp trong công việc",
-    courseId: TOEIC_TOPIC_COURSE_ID,
+    courseId: TOEIC_BASIC_COURSE_ID,
     icon: "briefcase",
   },
   {

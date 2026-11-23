@@ -31,7 +31,11 @@ import {
   courseDictionaryIndexRevision,
 } from "./dictionary-course-index";
 import { getOfflineCourseBundle } from "./offline-course-data";
-import { TOEIC_TOPIC_COURSE_ID } from "../domain/course-ids";
+import {
+  TOEIC_ADVANCED_COURSE_ID,
+  TOEIC_BASIC_COURSE_ID,
+  TOEIC_TOPIC_COURSE_ID,
+} from "../domain/course-ids";
 import {
   getRegionalIpaForTerm,
   getRegionalIpaForTerms,
@@ -64,9 +68,17 @@ async function applyInstalledCourseIndex(
   onStage?: (stage: DictionaryStage) => void,
 ): Promise<void> {
   if (!courseBundle) return;
-  const toeicEntries = courseBundle.courses.find(
-    (course) => course.id === TOEIC_TOPIC_COURSE_ID,
-  )?.entriesByTerm;
+  const toeicCourseIds = new Set([
+    TOEIC_BASIC_COURSE_ID,
+    TOEIC_ADVANCED_COURSE_ID,
+    TOEIC_TOPIC_COURSE_ID,
+  ]);
+  const toeicEntries = Object.assign(
+    {},
+    ...courseBundle.courses
+      .filter((course) => toeicCourseIds.has(course.id))
+      .map((course) => course.entriesByTerm),
+  );
   onStage?.("indexing-courses");
   await applyCourseDictionaryIndex(
     db,

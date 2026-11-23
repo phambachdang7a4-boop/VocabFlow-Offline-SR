@@ -185,7 +185,9 @@ export default function SettingsScreen() {
           getOfflineAudioStatus(),
           getOfflineRegionalIpaStatus(),
           getOfflineRegionalIpaPartsStatus(),
-          getOfflineCourseDataStatus(),
+          Platform.OS === "web"
+            ? getOfflineCourseDataStatus()
+            : Promise.resolve(null),
         ]);
       setDictionaryStatus(dictionary.state);
       setAudioStatus(audio.state);
@@ -193,8 +195,10 @@ export default function SettingsScreen() {
       setRegionalIpaStatus(regionalIpa.state);
       setRegionalIpaEntryCount(regionalIpa.entryCount);
       setRegionalIpaParts(regionalIpaPartsStatus);
-      setCourseDataStatus(courseData.state);
-      setCourseDataBytes(courseData.bytes);
+      if (courseData) {
+        setCourseDataStatus(courseData.state);
+        setCourseDataBytes(courseData.bytes);
+      }
     } catch {
       setDictionaryStatus("unavailable");
       setAudioStatus("damaged");
@@ -205,8 +209,10 @@ export default function SettingsScreen() {
         uk: "missing",
         ukSupplement: "missing",
       });
-      setCourseDataStatus("damaged");
-      setCourseDataBytes(0);
+      if (Platform.OS === "web") {
+        setCourseDataStatus("damaged");
+        setCourseDataBytes(0);
+      }
     }
   }, []);
   React.useEffect(() => {
@@ -1640,6 +1646,8 @@ Nội dung tệp:
           dictionaryDownload.error ? (
             <ErrorBanner message={dictionaryDownload.error} />
           ) : null}
+          {Platform.OS === "web" ? (
+            <>
           <View style={[styles.offlineDivider, { borderColor: c.border }]} />
           <View style={styles.offlineResource}>
             <View
@@ -1786,6 +1794,8 @@ Nội dung tệp:
             </View>
           ) : null}
           <View style={[styles.offlineDivider, { borderColor: c.border }]} />
+            </>
+          ) : null}
           <View style={styles.offlineResource}>
             <View
               style={[styles.offlineIcon, { backgroundColor: c.secondary }]}

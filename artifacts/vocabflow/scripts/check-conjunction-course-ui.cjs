@@ -156,14 +156,38 @@ const offlineCourseBundle = {
       topicCount: ieltsTopicDomain.IELTS_ADVANCED_TOPIC_WORD_LIST.length,
     },
     {
-      id: toeicTopicDomain.TOEIC_TOPIC_COURSE_ID,
-      title: toeicTopicDomain.TOEIC_TOPIC_COURSE_TITLE,
+      id: courseIds.TOEIC_BASIC_COURSE_ID,
+      title: "TOEIC Cơ Bản",
       description: `Học ${toeicTopicDomain.TOEIC_TOPIC_COURSE_WORD_COUNT.toLocaleString("vi-VN")} cụm từ thực tế qua ${toeicTopicDomain.TOEIC_TOPIC_WORD_LIST.length} chủ đề TOEIC. Mỗi cụm có nghĩa tiếng Việt, câu ví dụ và bản dịch. ${toeicTopicDomain.TOEIC_TOPIC_COURSE_SPELLING_CONVENTION}`,
       lessons: toeicTopicDomain.TOEIC_TOPIC_COURSE_LESSONS,
       entriesByTerm: toeicTopicDomain.TOEIC_TOPIC_COURSE_ENTRIES,
       wordCount: toeicTopicDomain.TOEIC_TOPIC_COURSE_WORD_COUNT,
       unitLabel: "cụm từ",
       topicCount: toeicTopicDomain.TOEIC_TOPIC_WORD_LIST.length,
+      progressPrefixes: [
+        courseIds.TOEIC_BASIC_COURSE_ID,
+        courseIds.TOEIC_TOPIC_COURSE_ID,
+      ],
+    },
+    {
+      id: courseIds.TOEIC_ADVANCED_COURSE_ID,
+      title: "TOEIC Nâng Cao",
+      description: "Nâng cao TOEIC",
+      lessons: toeicTopicDomain.TOEIC_TOPIC_COURSE_LESSONS.map((lesson) => ({
+        ...lesson,
+        id: lesson.id.replace(
+          toeicTopicDomain.TOEIC_TOPIC_COURSE_ID,
+          courseIds.TOEIC_ADVANCED_COURSE_ID,
+        ),
+      })),
+      entriesByTerm: toeicTopicDomain.TOEIC_TOPIC_COURSE_ENTRIES,
+      wordCount: toeicTopicDomain.TOEIC_TOPIC_COURSE_WORD_COUNT,
+      unitLabel: "cụm từ",
+      topicCount: toeicTopicDomain.TOEIC_TOPIC_WORD_LIST.length,
+      progressPrefixes: [
+        courseIds.TOEIC_ADVANCED_COURSE_ID,
+        courseIds.TOEIC_TOPIC_COURSE_ID,
+      ],
     },
     {
       id: officeAppsDomain.OFFICE_APPS_COURSE_ID,
@@ -608,7 +632,8 @@ function mount(initialSavedWords = [], options = {}) {
     ["phrasal-verbs-course-card", "phrasal-verbs-course-artwork"],
     ["conjunction-course-card", "sentence-structures-course-artwork"],
     ["ielts-course-card", "ielts-course-artwork"],
-    ["toeic-course-card", "toeic-course-artwork"],
+    ["toeic-basic-course-card", "toeic-course-artwork"],
+    ["toeic-advanced-course-card", "toeic-course-artwork"],
     ["office-apps-course-card", "office-apps-course-artwork"],
   ]) {
     const card = screen.byId(testId);
@@ -1062,21 +1087,21 @@ function mount(initialSavedWords = [], options = {}) {
   assert.ok(screen.byId("ielts-lesson-complete"));
   screen.byId("ielts-leave-lesson").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
-  assert.ok(screen.byId("toeic-course-card"));
-  screen.byId("toeic-course-card").props.onPress();
+  assert.ok(screen.byId("toeic-basic-course-card"));
+  screen.byId("toeic-basic-course-card").props.onPress();
   const toeicLesson = toeicTopicDomain.TOEIC_TOPIC_COURSE_LESSONS[0];
-  screen.byId("toeic-lesson-1").props.onPress();
+  screen.byId("toeic-basic-lesson-1").props.onPress();
   await screen.settle();
   for (let index = 0; index < toeicLesson.questions.length; index++) {
     const question = toeicLesson.questions[index];
     assert.deepEqual(
-      screen.byId("toeic-question-prompt").props.children,
+      screen.byId("toeic-basic-question-prompt").props.children,
       [question.prompt],
     );
-    screen.byId(`toeic-choice-${question.term}`).props.onPress();
-    assert.ok(screen.byId("toeic-answer-feedback"));
+    screen.byId(`toeic-basic-choice-${question.term}`).props.onPress();
+    assert.ok(screen.byId("toeic-basic-answer-feedback"));
     assert.equal(
-      screen.byId("toeic-correct-popup").props.visible,
+      screen.byId("toeic-basic-correct-popup").props.visible,
       true,
       "Correct TOEIC answers open the success popup.",
     );
@@ -1086,16 +1111,16 @@ function mount(initialSavedWords = [], options = {}) {
     assert.ok(toeicTranslation.trim());
     assert.ok(
       find(
-        screen.byId("toeic-answer-feedback"),
+        screen.byId("toeic-basic-answer-feedback"),
         (node) => node.props?.children?.includes?.(toeicTranslation),
       ),
       "TOEIC answer feedback shows the Vietnamese example translation.",
     );
-    screen.byId("toeic-next").props.onPress();
+    screen.byId("toeic-basic-next").props.onPress();
     await screen.settle();
   }
-  assert.ok(screen.byId("toeic-lesson-complete"));
-  screen.byId("toeic-leave-lesson").props.onPress();
+  assert.ok(screen.byId("toeic-basic-lesson-complete"));
+  screen.byId("toeic-basic-leave-lesson").props.onPress();
   screen.byId("return-to-course-list").props.onPress();
   assert.ok(screen.byId("office-apps-course-card"));
   screen.byId("office-apps-course-card").props.onPress();

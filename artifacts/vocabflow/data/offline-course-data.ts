@@ -10,6 +10,11 @@ import {
   OFFLINE_COURSE_DATA_NATIVE_CHUNK_BYTES,
   courseDataResumeOffset,
 } from "../domain/course-data-package";
+import {
+  clearBundledOfflineCourseBundleCache,
+  getBundledCourseDataStatus,
+  getBundledOfflineCourseBundle,
+} from "./offline-course-sqlite";
 
 export type OfflineCourseQuestion = {
   term: string;
@@ -57,6 +62,15 @@ export type OfflineCourseBundle = {
     originalLessonTerms: Readonly<Record<string, readonly string[]>>;
     standardTerms: readonly string[];
     advancedSourceLessonIds: Readonly<Record<string, readonly string[]>>;
+  };
+  toeicAttemptMigration?: {
+    originalLessonTerms: Readonly<Record<string, readonly string[]>>;
+    basicSourceLessonIdsByLesson: Readonly<
+      Record<string, readonly string[]>
+    >;
+    advancedSourceLessonIdsByLesson: Readonly<
+      Record<string, readonly string[]>
+    >;
   };
   sentenceStructureDistractorExplanations: Readonly<
     Record<string, Readonly<Record<string, string>>>
@@ -279,6 +293,19 @@ async function readInstalledBundle(
 }
 
 export async function getOfflineCourseBundle(): Promise<OfflineCourseBundle | null> {
+  if (Platform.OS !== "web") {
+    const bundle = await getBundledOfflineCourseBundle();
+    const translations: [string, string][] = [];
+    for (const course of bundle.courses) {
+      for (const entry of Object.values(course.entriesByTerm)) {
+        if (entry.example?.trim() && entry.exampleTranslation?.trim()) {
+          translations.push([entry.example, entry.exampleTranslation]);
+        }
+      }
+    }
+    setOfflineCourseExampleTranslations(translations);
+    return bundle;
+  }
   if (
     installedBundle?.fileSize === OFFLINE_COURSE_DATA.bytes
   ) {
@@ -314,6 +341,13 @@ export async function getOfflineCourseDataStatus(): Promise<{
     | "unavailable";
   bytes: number;
 }> {
+  if (Platform.OS !== "web") {
+    try {
+      return await getBundledCourseDataStatus();
+    } catch {
+      return { state: "damaged", bytes: 0 };
+    }
+  }
   try {
     if (Platform.OS === "web") {
       const [bundle, chunks] = await Promise.all([
@@ -508,6 +542,13 @@ export async function downloadOfflineCourseData(
   if (activeDownload) throw new Error("Đang tải dữ liệu khóa học. Hãy đợi.");
   activeDownload = true;
   try {
+    if (Platform.OS !== "web") {
+      onStage?.("validating");
+      await getBundledOfflineCourseBundle();
+      onProgress?.(OFFLINE_COURSE_DATA.bytes, OFFLINE_COURSE_DATA.bytes);
+      onStage?.("saving");
+      return;
+    }
     if (signal?.aborted) throw new Error("Đã hủy tải gói khóa học.");
     const url = packageUrl();
     let downloadedBytes = 0;
@@ -628,24 +669,22 @@ export async function downloadOfflineCourseData(
 export async function deleteOfflineCourseData(): Promise<void> {
   installedBundle = undefined;
   setOfflineCourseExampleTranslations(null);
-  if (Platform.OS === "web") {
-    const database = await getIndexedDb();
-    const transaction = database.transaction(
-      ["bundle", "chunks"],
-      "readwrite",
-    );
-    transaction.objectStore("bundle").clear();
-    transaction.objectStore("chunks").clear();
-    await transactionDone(transaction);
+  if (Platform.OS !== "web") {
+    clearBundledOfflineCourseBundleCache();
     return;
   }
-  const current = nativePackageFile();
-  const partial = nativePartialFile();
-  if (current.exists) current.delete();
-  if (partial.exists) partial.delete();
+  const database = await getIndexedDb();
+  const transaction = database.transaction(
+    ["bundle", "chunks"],
+    "readwrite",
+  );
+  transaction.objectStore("bundle").clear();
+  transaction.objectStore("chunks").clear();
+  await transactionDone(transaction);
 }
 
 export function clearOfflineCourseDataMemoryCache(): void {
   installedBundle = undefined;
   setOfflineCourseExampleTranslations(null);
+  clearBundledOfflineCourseBundleCache();
 }

@@ -8,6 +8,8 @@ export const SENTENCE_STRUCTURE_PATTERN_COURSE_ID =
 export const IELTS_TOPIC_COURSE_ID = "ielts-topic-vocabulary-v1";
 export const IELTS_ADVANCED_COURSE_ID = "ielts-advanced-vocabulary-v1";
 export const TOEIC_TOPIC_COURSE_ID = "toeic-topic-collocations-v2";
+export const TOEIC_BASIC_COURSE_ID = "toeic-basic-collocations-v1";
+export const TOEIC_ADVANCED_COURSE_ID = "toeic-advanced-collocations-v1";
 export const OFFICE_APPS_COURSE_ID = "office-apps-vocabulary-v1";
 
 export const COURSE_DICTIONARY_COURSES = [
@@ -20,9 +22,16 @@ export const COURSE_DICTIONARY_COURSES = [
   { id: CONJUNCTION_COURSE_ID, title: "Cấu trúc câu & từ nối" },
   { id: IELTS_TOPIC_COURSE_ID, title: "IELTS" },
   { id: IELTS_ADVANCED_COURSE_ID, title: "IELTS Nâng cao" },
+  { id: TOEIC_BASIC_COURSE_ID, title: "TOEIC Cơ Bản" },
+  { id: TOEIC_ADVANCED_COURSE_ID, title: "TOEIC Nâng Cao" },
   { id: TOEIC_TOPIC_COURSE_ID, title: "Cụm từ TOEIC theo chủ đề" },
   {
     id: OFFICE_APPS_COURSE_ID,
     title: "Tiếng Anh văn phòng: Excel, Word, PowerPoint",
   },
 ] as const;
+
+export const CURRENT_COURSE_DICTIONARY_COURSES =
+  COURSE_DICTIONARY_COURSES.filter(
+    (course) => course.id !== TOEIC_TOPIC_COURSE_ID,
+  );

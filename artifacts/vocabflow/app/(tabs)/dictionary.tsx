@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 import { useVocabulary } from '@/contexts/VocabularyContext';
 import { normalizeTerm } from '@/data/vocabulary';
 import { getRandomUnlearnedDictionaryWord, searchDictionary, suggestDictionary } from '@/data/dictionary';
-import { COURSE_DICTIONARY_COURSES } from '@/domain/course-ids';
+import { CURRENT_COURSE_DICTIONARY_COURSES } from '@/domain/course-ids';
 import {
   DICTIONARY_PARTS,
   type DictionaryMatch,
@@ -824,7 +824,7 @@ export default function DictionaryScreen() {
                 >
                   <Text style={[styles.courseFilterText, { color: selectedCourseId === null ? c.dictPage : c.dictHead }]}>Tất cả</Text>
                 </Pressable>
-                {COURSE_DICTIONARY_COURSES.map((course) => {
+                {CURRENT_COURSE_DICTIONARY_COURSES.map((course) => {
                   const selected = selectedCourseId === course.id;
                   return (
                     <Pressable
