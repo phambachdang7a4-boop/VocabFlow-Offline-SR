@@ -3,17 +3,17 @@ name: Phạm vi VocabFlow
 description: Yêu cầu sản phẩm và cách triển khai do người dùng quy định.
 ---
 
-VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, offline-first; không bắt buộc đăng nhập hoặc kết nối mạng khi mở app. Khách dùng SQLite cục bộ, còn đăng nhập là tùy chọn để đồng bộ thiết bị; không gọi API trả phí. SQLite cục bộ là nguồn dữ liệu chính cho từ và tiến độ. Không thêm dữ liệu mẫu hay từ khởi tạo. Giao diện tiếng Việt.
+VocabFlow là app Android học từ vựng tiếng Anh cho người Việt, offline-first; không có đăng nhập hay đồng bộ cloud. SQLite cục bộ là nguồn dữ liệu chính cho từ và tiến độ; mở app không cần mạng. Không thêm dữ liệu mẫu hay từ khởi tạo. Giao diện tiếng Việt.
 
 **Why:** Người dùng yêu cầu không ép app cần Wi-Fi hoặc dữ liệu di động mỗi lần mở; app phải dùng được ngoại tuyến sau khi dữ liệu đã có trên máy.
 
-**How to apply:** Không chặn khởi động, tab học/ôn, hay dữ liệu cục bộ vì kiểm tra mạng hoặc dịch vụ từ xa. Chỉ truy cập mạng cho tải/cập nhật dữ liệu hoặc đồng bộ tùy chọn; báo trạng thái và cho thử lại khi không có mạng.
+**How to apply:** Không chặn khởi động, tab học/ôn, hay dữ liệu cục bộ vì kiểm tra mạng hoặc dịch vụ từ xa. Chỉ truy cập mạng khi người dùng chủ động tải/cập nhật tài nguyên. Giữ sổ từ, tiến độ, sao lưu và khôi phục trên máy.
 
-Với Mắt Quạ, dán/đọc văn bản và tra từ phải dùng dữ liệu cục bộ, không gọi dịch vụ mạng. Từ được thêm đi qua luồng lưu hiện có như Tra Từ/Khóa học; nếu tài khoản đã đăng nhập và có mạng, đồng bộ tài khoản hiện có vẫn được phép.
+Với Mắt Quạ, dán/đọc văn bản và tra từ phải dùng dữ liệu cục bộ, không gọi dịch vụ mạng. Từ được thêm đi qua luồng lưu hiện có như Tra Từ/Khóa học; dữ liệu chỉ lưu trên máy.
 
-**Why:** Người dùng chọn giữ cách lưu và đồng bộ như khi thêm từ trong Tra Từ hoặc Khóa học, sau khi biết rằng lưu trực tuyến có thể kích hoạt đồng bộ cloud.
+**Why:** Người dùng chọn bỏ Clerk ngay và giữ sổ cục bộ, không chuyển qua tài khoản.
 
-**How to apply:** Không thêm API cho bước trích xuất hay tra nghĩa. Dùng hàm lưu từ hiện có và không tạo cơ chế đồng bộ riêng cho các từ này.
+**How to apply:** Không thêm API hoặc cơ chế đồng bộ cloud cho Mắt Quạ. Giữ các tệp SQLite tài khoản cũ không bị xóa; nếu cần dữ liệu đó, yêu cầu xuất bản sao lưu từ bản cũ rồi nhập vào sổ cục bộ.
 
 Từ vựng khóa học dùng chung nguồn dữ liệu mục từ với từ điển offline; không tạo bản sao riêng của cùng một từ. Cấu trúc bài, câu hỏi và thứ tự học vẫn thuộc khóa học. Ưu tiên ví dụ nguyên văn trong từ điển; nếu cần ví dụ theo ngữ cảnh, khóa học có thể giữ câu riêng theo yêu cầu.
 
@@ -25,7 +25,7 @@ Với khóa ngữ pháp, mỗi câu trắc nghiệm cần có một đáp án t�
 
 Từ đã lưu chỉ được xem, đóng băng/bỏ đóng băng hoặc xóa; không cho người dùng sửa nội dung. Form thêm từ không có trường ghi chú. Ghi chú cũ được giữ trong dữ liệu, không xóa khi ẩn trường.
 
-**Why:** Người dùng yêu cầu app dùng được không cần tài khoản và chỉ đồng bộ sau khi đăng nhập; trước đó họ yêu cầu offline-first và SQLite. Người dùng cũng quy định từ đã lưu không được chỉnh sửa và yêu cầu bỏ ghi chú. Giữ ghi chú cũ tránh xóa dữ liệu ngoài yêu cầu.
+**Why:** Người dùng yêu cầu bỏ đăng nhập và lưu dữ liệu cục bộ. Người dùng cũng quy định từ đã lưu không được chỉnh sửa và yêu cầu bỏ ghi chú. Giữ ghi chú cũ tránh xóa dữ liệu ngoài yêu cầu.
 
 **How to apply:** Trước khi viết code phải tóm tắt kế hoạch tối đa 10 dòng và chờ đồng ý. Sau đó làm từng bước nhỏ chạy được; sau mỗi bước báo cách kiểm tra trên điện thoại. Giữ giao diện từ đã lưu ở chế độ chỉ đọc; không hiển thị trường ghi chú, không xóa ghi chú cũ nếu chưa được yêu cầu rõ. Trong Sổ từ, từ đã đóng băng không xuất hiện khi lọc Cấp 1–6 nhưng vẫn tính vào tổng số từ; bỏ lọc thì có thể tra cứu từ đó. Không tự thêm truyện, nội dung từ điển, hay kế hoạch thu phí nếu chưa được yêu cầu. Phạm vi sản phẩm và các lựa chọn hiện tại được ghi trong `replit.md`.
 

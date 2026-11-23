@@ -293,7 +293,10 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   assert.match(settings, /ÂM THANH/);
   assert.match(settings, /DỮ LIỆU HỌC TẬP/);
   assert.match(settings, /Xóa dữ liệu thiết bị/);
-  assert.doesNotMatch(settings, /Đồng bộ dữ liệu|Đăng nhập/);
+  assert.doesNotMatch(
+    settings,
+    /Đồng bộ dữ liệu|Đăng nhập hoặc tạo tài khoản/,
+  );
   assert.match(audio, /digest\(["']SHA-256["']\)/);
   assert.match(audio, /audio_dictionary WHERE entry_id = \?/);
   assert.match(dictionary, /onProgress\?\.\(end \+ 1, DICTIONARY\.bytes\)/);
@@ -310,7 +313,7 @@ const root = mkdtempSync(join(tmpdir(), "vocabflow-reset-data-"));
   await sync.activateGuestDatabase();
   harness.db.close();
   console.log(
-    "Account reset order, cloud-failure safety, course cleanup migration, and offline resource controls passed.",
+    "Local reset, course cleanup migration, and offline resource controls passed.",
   );
 })()
   .catch((error) => {

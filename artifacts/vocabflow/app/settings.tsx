@@ -1034,8 +1034,9 @@ export default function SettingsScreen() {
                 { flex: 1, color: c.mutedForeground },
               ]}
             >
-              Sổ từ và tiến độ nằm trong bộ nhớ ứng dụng. Hãy sao lưu trước khi
-              gỡ ứng dụng hoặc đổi điện thoại.
+              Sổ từ và tiến độ nằm trong bộ nhớ ứng dụng. Sổ từ của bản cũ có
+              đăng nhập không tự nhập vào đây; hãy xuất bản sao lưu từ bản cũ rồi
+              nhập ở mục Sao lưu. Tệp dữ liệu cũ không bị xóa.
             </Text>
           </View>
         </View>

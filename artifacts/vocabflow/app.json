@@ -31,7 +31,6 @@
       "expo-router",
       "expo-sqlite",
       "expo-audio",
-      "expo-secure-store",
       "expo-web-browser",
       "expo-sharing",
       "expo-asset",

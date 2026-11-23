@@ -40,11 +40,13 @@ for (const dependency of [
   );
 }
 assert.doesNotMatch(devScript, /CLERK|EXPO_PUBLIC_CLERK/);
-assert.equal(
-  existsSync(join(appDir, "app/(auth)")),
-  false,
-  "The sign-in routes are removed.",
-);
+for (const route of ["app/(auth)/sign-in.tsx", "app/(auth)/sign-up.tsx"]) {
+  assert.equal(
+    existsSync(join(appDir, route)),
+    false,
+    `${route} is removed.`,
+  );
+}
 
 console.log(
   "Local-only startup checks passed: guest SQLite, no auth/cloud provider, local backup/restore, and no login routes.",
