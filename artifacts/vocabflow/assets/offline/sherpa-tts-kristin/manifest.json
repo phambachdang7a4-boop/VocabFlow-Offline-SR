@@ -1,0 +1,9 @@
+{
+  "version": "kristin-medium-int8-v1",
+  "license": "Public domain voice data from LibriVox",
+  "files": {
+    "en_US-kristin-medium.onnx": "1ad109f578f24dc0008bcf5d2f6e2812ebde2572cf3aa6ce36569a074ee2258a",
+    "tokens.txt": "ef3a7e4a8d1af0c9d4dc45aaae1a6242ebe24a7ed6f3d025a49eb29682784c6d",
+    "lexicon-en-us.txt": "8b67ae549a465eee78f92ecb74644ad90c3c58ce65f19c68baf85878a10ef73a"
+  }
+}

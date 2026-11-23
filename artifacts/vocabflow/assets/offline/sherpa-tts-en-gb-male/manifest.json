@@ -1,0 +1,9 @@
+{
+  "version": "en-gb-northern-male-medium-int8-v1",
+  "license": "CC BY-SA 4.0 International",
+  "modelCard": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/northern_english_male/medium",
+  "files": {
+    "en_GB-northern_english_male-medium.onnx": "59ec096e3dd57bbf029faecf576dc2dd73bc0f92fb3e2a14fab0d54a29fd90fa",
+    "tokens.txt": "2619c1a9de1bcf928162f40c583caf39368cfd6b2340c7bcad51dc634411ec36"
+  }
+}

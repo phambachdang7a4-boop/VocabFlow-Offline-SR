@@ -1,0 +1,49 @@
+{
+  "formatVersion": 1,
+  "dictionary": {
+    "filename": "vocabflow-dictionary.db",
+    "sourceSha256": "2b65bea9577c2a4149caa90940c806f321d1c6cfac503ed8bbd9f93e43a0033a",
+    "bytes": 56184832,
+    "sha256": "865c2943a19053e07abfed07a32c6722cf01ac35c83415b72ca7f75de108c3ea",
+    "dictVersion": "dictionary-meta-v2:2b65bea9577c2a4149caa90940c806f321d1c6cfac503ed8bbd9f93e43a0033a:family-examples-v1:local-additions-v8:courses-3-c9c667efef3d0bfcc263da93b99752a5298be2185e106ce3519fac3f708ac0ad:bundle-prebuilt-official-ipa-v1",
+    "wordCount": 107280,
+    "licensedIpaPronunciationCount": 64452,
+    "ipaRevision": "prebuilt-official-ipa-v1",
+    "includedIpaSources": [
+      "us",
+      "uk"
+    ],
+    "ipaProvenance": {
+      "repository": "https://github.com/open-dict-data/ipa-dict",
+      "commit": "972cd67dd5f96bc5660e28070cde26e3928abcd7",
+      "sources": [
+        {
+          "accent": "us",
+          "file": "data/en_US.txt",
+          "license": "MIT",
+          "sha256": "2af6f154a5c363275f052d1f85acedef38ed185ca9745aa4314be77f6b70de67"
+        },
+        {
+          "accent": "uk",
+          "file": "data/en_UK.txt",
+          "license": "GPL-3.0",
+          "sha256": "221394caef0cf723b4f2df81a98ac33191293257b88aed5b1fb89466d3a0dc77"
+        }
+      ]
+    }
+  },
+  "courses": {
+    "filename": "vocabflow-courses.coursepack",
+    "sourceVersion": 3,
+    "bytes": 11383237,
+    "sha256": "c9c667efef3d0bfcc263da93b99752a5298be2185e106ce3519fac3f708ac0ad",
+    "courseCount": 9,
+    "lessonCount": 1594,
+    "database": {
+      "filename": "vocabflow-courses.db",
+      "schemaVersion": 2,
+      "bytes": 19161088,
+      "sha256": "30d97c230808e85517265a19b600cb6d3c40f82c18cea74787a0f10420f3820f"
+    }
+  }
+}
